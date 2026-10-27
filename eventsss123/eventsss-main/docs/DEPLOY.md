@@ -39,12 +39,47 @@ stable outbound IP.
 
 ## Connect web and Android builds
 
-After deploying the API, set GitHub Actions repository variable `VITE_API_URL`
-to the public HTTPS API base ending in `/api/v1` (for example,
-`https://your-api-host.example/api/v1`). The web build and Android APK use this
-same setting. The app routes relative API calls to the configured host on web
-and in Capacitor, and the APK build workflow checks `/health` and `/ready`
-before publishing a Release.
+### Optional Supabase HTTPS gateway
+
+The Supabase Edge Function in `supabase/functions/ess-api-proxy` provides a
+Supabase HTTPS URL in front of the existing API. It forwards `/api/v1/*`,
+`/health`, and `/ready` requests to that API, while the Node API continues to
+connect to Aiven. This avoids rewriting the application backend for Deno, but
+it does **not** host or replace the Node API.
+
+1. Deploy the existing Node API to a compatible host and configure its Aiven
+   `DATABASE_URL`, `JWT_SECRET`, migrations, and seed data as described above.
+   The API host must allow connections from Supabase Edge Functions.
+2. Set these GitHub Actions settings:
+   - Secret `SUPABASE_ACCESS_TOKEN`: create a scoped access token in your
+     Supabase account's Access Tokens settings with `edge_functions_write`.
+   - Variable `SUPABASE_PROJECT_REF`: the project reference from the Supabase
+     project URL.
+3. In a trusted terminal, install/authenticate the Supabase CLI, link the
+   project, then set the API host's HTTPS origin as a Supabase secret. It must
+   be the API origin only, with no path:
+
+   ```sh
+   supabase link --project-ref YOUR_PROJECT_REF
+   supabase secrets set ESS_API_BASE_URL=https://your-api-host.example
+   supabase secrets set ALLOWED_ORIGINS=https://your-web-app.example
+   ```
+
+   Add each production web origin to `ALLOWED_ORIGINS`, comma-separated.
+   Capacitor origins are already allowed. Do not set these values to the Aiven
+   database URL or put database credentials in Supabase function secrets.
+4. Run **Deploy Supabase API Gateway** from the GitHub Actions tab on `main`.
+   It type-checks and tests the function before deploying it. Use
+   `https://YOUR_PROJECT_REF.supabase.co/functions/v1/ess-api-proxy/api/v1`
+   as GitHub Actions repository variable `VITE_API_URL`.
+5. Verify the gateway's `/health` and `/ready` paths. `/ready` must return
+   success before treating the online API as ready.
+
+The regular API host can also be used directly: set `VITE_API_URL` to its
+HTTPS base ending in `/api/v1` (for example,
+`https://your-api-host.example/api/v1`). Both web and Android builds route their
+API calls through this configured URL. The APK workflow checks `/health` and
+`/ready` before publishing a Release.
 
 Download a tested APK from the GitHub Release only when the API is configured
 and ready. If the API URL is not set, Actions can still create an APK artifact
@@ -54,10 +89,10 @@ Planner drafts and eligible offline edits stay on the device until connectivity
 returns. Login, account creation, payments, wallet, escrow, and checkout require
 a live API. Payment operations also require valid payment-provider credentials.
 
-## Current deployment blocker
+## Remaining deployment requirement
 
-The repository is prepared to use an API URL from any compatible provider, but
-there is currently no active API host configured. Aiven alone cannot serve the
-Express API. Add an API host/account, then configure its secrets and the
-`VITE_API_URL` Actions variable before expecting shared online app functions or
-an online-ready APK to work.
+The Supabase gateway can be deployed only after both a Supabase project and a
+separately hosted Node API exist. Aiven alone cannot serve the Express API.
+Configure the API host first, deploy the gateway if desired, then set
+`VITE_API_URL` and run the APK workflow. Without an active upstream API the
+gateway responds with a clear 503 and online app functions cannot work.

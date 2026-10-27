@@ -1,0 +1,2 @@
+[functions.ess-api-proxy]
+verify_jwt = false
