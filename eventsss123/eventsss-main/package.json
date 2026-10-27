@@ -9,7 +9,9 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "node scripts/dev-safe.mjs",
+    "dev": "npm run dev:verify && npm run dev:serve",
+    "dev:verify": "npm run check && npm run build && npm run build:web",
+    "dev:serve": "node scripts/dev-safe.mjs",
     "build": "npm run prisma:generate && npm run build -w apps/api",
     "start": "npm run start -w apps/api",
     "check": "npm run check -w apps/api && npm run test -w apps/web",

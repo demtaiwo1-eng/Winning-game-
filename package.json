@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
+    "dev": "npm --prefix eventsss123/eventsss-main run dev",
+    "dev:quick": "npm --prefix eventsss123/eventsss-main run dev:serve",
+    "dev:landing": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },

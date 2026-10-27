@@ -4,7 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 const services = [
   {
     name: "API",
-    url: "http://127.0.0.1:5000/health",
+    url: "http://127.0.0.1:5000/ready",
     command: "npm",
     args: ["run", "dev", "-w", "apps/api"],
     log: "/tmp/ephinta-api-dev.log",
@@ -128,6 +128,9 @@ if (children.length === 0) {
 }
 
 console.log("EPHINTA development services are running. Press Ctrl+C to stop only services started by this launcher.");
+console.log("Open the application: http://localhost:5173/");
+console.log("API health: http://localhost:5000/health");
+console.log("Database readiness: http://localhost:5000/ready");
 await new Promise((resolve) => {
   for (const child of children) child.once("exit", resolve);
 });
