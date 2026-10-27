@@ -7,8 +7,8 @@ credentials in frontend code, APK builds, or GitHub Actions variables.
 
 ## Requirements for any API host
 
-Choose a host that can run this repository's Node.js 20/Express API continuously
-or as compatible serverless functions, provide a public HTTPS URL, and make
+Choose a host that can run this repository's Node.js 20/Express API as a
+persistent Node service, provide a public HTTPS URL, and make
 outbound TLS connections to Aiven PostgreSQL. Configure the following on that
 host as secret environment variables:
 
@@ -22,6 +22,11 @@ host as secret environment variables:
 - `CORS_ORIGINS`: comma-separated allowed browser origins when the web app and
   API are hosted on different domains. Capacitor origins are included in the
   API defaults.
+
+The API currently uses in-memory rate limiting and runs periodic payment
+reconciliation in its server process, so a plain serverless function conversion
+would need a shared rate-limit store and a separately scheduled reconciliation
+job.
 
 The host must run the API's Prisma migrations before serving a new schema. Run
 the idempotent seed task when required. Verify both `/health` and `/ready`;
