@@ -9,10 +9,16 @@ test("public landing page explains the event-planning service and its menu", asy
   await expect(page.getByRole("img", { name: "EPHINTA" }).first()).toBeVisible();
 
   await page.getByRole("button", { name: "Open menu" }).click();
+  const menuButton = page.getByRole("button", { name: "Close menu" });
+  await expect(menuButton.locator(".eph-menu-bars span")).toHaveCount(3);
   const menu = page.getByRole("navigation", { name: "Main navigation" });
   await expect(menu).toBeVisible();
   await expect(menu.locator(".eph-menu-brand")).toContainText("EPHINTA");
+  await expect(menu.locator(".eph-menu-brand img")).toHaveCSS("width", "20px");
+  await expect(menu.locator(".eph-menu-primary img")).toHaveCSS("width", "16px");
   await expect(menu.getByRole("button", { name: /Plan your next event here/ })).toBeVisible();
+  await page.getByRole("heading", { name: /Plan the event you imagine/i }).click();
+  await expect(page.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
 });
 test("event builder saves a brief and opens registration", async ({ page }) => {
   await page.goto("/plan");

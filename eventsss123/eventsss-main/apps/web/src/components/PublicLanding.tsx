@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 
 
@@ -129,6 +129,36 @@ export default function PublicLanding({
   });
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      const target = event.target;
+      if (
+        target instanceof Node &&
+        !menuRef.current?.contains(target) &&
+        !menuButtonRef.current?.contains(target)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [menuOpen]);
 
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
 
@@ -380,13 +410,15 @@ export default function PublicLanding({
 
         .eph-nav{height:78px;background:var(--navy);color:white;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5.8vw,84px);gap:28px;position:relative;z-index:5}
 
-        .eph-brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:white;flex-shrink:0}.eph-brand img{width:34px;height:34px;object-fit:contain;border-radius:6px}.eph-brand span{font-size:16px;font-weight:900;letter-spacing:.12em}
+        .eph-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:white;flex-shrink:0}.eph-brand img{width:24px;height:24px;object-fit:contain;border-radius:5px}.eph-brand span{font-size:14px;font-weight:900;letter-spacing:.12em}
 
         .eph-links{display:flex;align-items:center;gap:30px;margin-right:auto;margin-left:24px}.eph-links a{color:#f5f3ff;text-decoration:none;font-size:13px;font-weight:750;opacity:.92}.eph-links a:hover{color:var(--gold)}
 
         .eph-nav-actions{display:flex;align-items:center;gap:20px}.eph-signin{border:0;background:transparent;color:#fff;font-weight:700;padding:12px 4px}.eph-btn{border:0;border-radius:14px;padding:15px 22px;font-weight:850;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}.eph-btn:hover{transform:translateY(-2px)}.eph-btn-gold{background:var(--gold);color:#17152a;box-shadow:0 8px 22px #ffbd4338}.eph-btn-purple{background:var(--purple);color:#fff;box-shadow:0 12px 24px #6d42d82c}.eph-btn-outline{background:#fff;border:1px solid var(--line);color:var(--navy)}
 
         .eph-menu{display:none;border:1px solid #ffffff35;background:#ffffff10;color:white;border-radius:10px;padding:9px 12px}
+        .eph-menu-bars{display:grid;gap:4px;width:18px}
+        .eph-menu-bars span{display:block;width:18px;height:2px;border-radius:2px;background:currentColor}
 
         .eph-hero{position:relative;background:radial-gradient(ellipse at 82% 14%,#e9ddff 0,transparent 33%),radial-gradient(ellipse at 15% 95%,#fff0ce 0,transparent 28%),linear-gradient(125deg,#fbfaff 0%,#f4f0ff 48%,#fffaf0 100%);padding:68px clamp(20px,6vw,88px) 76px;min-height:590px}
 
@@ -449,6 +481,9 @@ export default function PublicLanding({
         .eph-menu{display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:42px}
 
         .eph-links{display:none;position:absolute;right:clamp(16px,5vw,76px);left:auto;top:calc(100% - 1px);z-index:30;min-width:250px;max-width:min(360px,calc(100vw - 28px));padding:12px 16px 16px;margin:0;flex-direction:column;align-items:stretch;gap:0;border:1px solid #ffffff20;border-radius:0 0 16px 16px;box-shadow:0 22px 40px #0003;background:var(--navy)}
+        .eph-menu-brand img{width:20px;height:20px;object-fit:contain}
+        .eph-menu-primary img{width:16px;height:16px;object-fit:contain}
+        .eph-nav-actions{gap:12px}
 
         .eph-links.open{display:flex}
 
@@ -612,7 +647,7 @@ export default function PublicLanding({
 
           </label>
 
-          <nav id="eph-information-menu" className={`eph-links ${menuOpen ? 'open' : ''}`} aria-label="Main navigation">
+          <nav ref={menuRef} id="eph-information-menu" className={`eph-links ${menuOpen ? 'open' : ''}`} aria-label="Main navigation">
 
           <div className="eph-menu-brand"><img src="/brand/ephinta_logo4.png?v=20261010-092247" alt="" />EPHINTA</div>
 
@@ -666,7 +701,9 @@ export default function PublicLanding({
 
           <button className="eph-btn eph-btn-gold" onClick={startPlanning}>Plan your next event here <span aria-hidden="true">â†—</span></button>
 
-          <button type="button" className="eph-menu" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-controls="eph-information-menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}>{menuOpen ? 'âœ•' : 'â˜°'}</button>
+          <button ref={menuButtonRef} type="button" className="eph-menu" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-controls="eph-information-menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}>
+            <span className="eph-menu-bars" aria-hidden="true"><span /><span /><span /></span>
+          </button>
 
         </div>
 
