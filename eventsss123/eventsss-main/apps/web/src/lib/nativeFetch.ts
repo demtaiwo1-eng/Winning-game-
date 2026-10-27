@@ -1,15 +1,11 @@
 import { offlineFetch } from './offline/fetch';
+import { resolveApiRequest } from './apiUrl';
 
 /**
- * Inside the Capacitor shell the page origin is https://localhost, so relative
- * calls like fetch("/api/v1/...") would hit the phone itself. This rewrites them
- * to the real API origin taken from VITE_API_URL (e.g. https://api.example.com/api/v1).
- * It does nothing on the normal web build.
+ * Route relative API requests to the configured HTTPS host on both web and
+ * Capacitor; without this, a separately hosted client would call its own origin.
  */
 const raw = (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL;
-const isNative =
-  typeof window !== "undefined" &&
-  !!(window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
 
 let origin = "";
 try {
@@ -19,10 +15,7 @@ try {
 }
 
 window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
-  if (isNative && origin && typeof input === "string" && input.startsWith("/api/")) {
-    input = origin + input;
-  }
-  return offlineFetch(input, init);
+  return offlineFetch(resolveApiRequest(input, origin), init);
 };
 
 export {};
