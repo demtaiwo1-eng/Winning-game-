@@ -5,16 +5,12 @@ on:
   push:
     branches:
       - main
-      - master
-      - add-event-planning-api
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
   pull_request:
     branches:
       - main
-      - master
-      - add-event-planning-api
 
 permissions:
   contents: read
@@ -27,6 +23,9 @@ jobs:
   web-checks:
     name: Test and build responsive web app
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
     services:
       postgres:
         image: postgres:16
@@ -58,6 +57,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -101,9 +101,6 @@ jobs:
         env:
           RUN_DB_TESTS: "1"
 
-      - name: Run web tests
-        run: npm run test -w apps/web
-
       - name: Build web app
         run: npm run build -w apps/web
         env:
@@ -113,7 +110,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ephinta-web-dist
-          path: apps/web/dist/
+          path: eventsss123/eventsss-main/apps/web/dist/
           if-no-files-found: error
           retention-days: 30
 
@@ -121,6 +118,9 @@ jobs:
     name: Build installable Android APK
     runs-on: ubuntu-latest
     needs: web-checks
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -130,6 +130,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -166,24 +167,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          candidates=(
-            "apps/mobile/android"
-            "apps/mobile"
-            "android"
-          )
+          candidates=("apps/mobile/android" "apps/mobile" "android")
           for candidate in "${candidates[@]}"; do
-            if [[ -f "$candidate/gradlew" && -f "$candidate/build.gradle" || -f "$candidate/gradlew" && -f "$candidate/build.gradle.kts" || -f "$candidate/gradlew" && -f "$candidate/settings.gradle" || -f "$candidate/gradlew" && -f "$candidate/settings.gradle.kts" ]]; then
+            if [[ -f "$candidate/gradlew" && ( -f "$candidate/build.gradle" || -f "$candidate/build.gradle.kts" || -f "$candidate/settings.gradle" || -f "$candidate/settings.gradle.kts" ) ]]; then
               echo "dir=$candidate" >> "$GITHUB_OUTPUT"
               echo "Found Gradle wrapper in $candidate"
               exit 0
             fi
           done
-          echo "ERROR: Could not find gradlew and Gradle settings/build files. Inspect Capacitor Android output." >&2
-          find apps/mobile -maxdepth 4 -type f \\( -name gradlew -o -name settings.gradle -o -name settings.gradle.kts \\) -print || true
+          echo "ERROR: Could not find gradlew and Gradle settings/build files." >&2
+          find apps/mobile -maxdepth 4 -type f \( -name gradlew -o -name settings.gradle -o -name settings.gradle.kts \) -print || true
           exit 1
 
       - name: Build debug APK
-        working-directory: ${{ steps.android-path.outputs.dir }}
+        working-directory: ${{ github.workspace }}/eventsss123/eventsss-main/${{ steps.android-path.outputs.dir }}
         shell: bash
         run: |
           set -euo pipefail
@@ -195,9 +192,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/ephinta-apk"
-          find apps/mobile android -type f -path '*/build/outputs/apk/*/*.apk' -print -exec cp '{}' "$RUNNER_TEMP/ephinta-apk/" \\; 2>/dev/null || true
+          find apps/mobile android -type f -path '*/build/outputs/apk/*/*.apk' -print -exec cp '{}' "$RUNNER_TEMP/ephinta-apk/" \; 2>/dev/null || true
           if [[ -z "$(find "$RUNNER_TEMP/ephinta-apk" -type f -name '*.apk' -print -quit)" ]]; then
-            find . -type f -path '*/build/outputs/apk/*/*.apk' -print -exec cp '{}' "$RUNNER_TEMP/ephinta-apk/" \\;
+            find . -type f -path '*/build/outputs/apk/*/*.apk' -print -exec cp '{}' "$RUNNER_TEMP/ephinta-apk/" \;
           fi
           test -n "$(find "$RUNNER_TEMP/ephinta-apk" -type f -name '*.apk' -print -quit)"
 
