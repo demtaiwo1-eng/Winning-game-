@@ -28,7 +28,7 @@ jobs:
       - name: Check API URL
         run: |
           if [ -z "$VITE_API_URL" ]; then
-            echo "::error::Add repo variable VITE_API_URL (e.g. https://eventsss.onrender.com/api/v1) under Settings > Secrets and variables > Actions > Variables"; exit 1
+            echo "::error::Add the public HTTPS API base URL as repo variable VITE_API_URL (ending in /api/v1) under Settings > Secrets and variables > Actions > Variables"; exit 1
           fi
           case "$VITE_API_URL" in https://*) ;; *) echo "::error::VITE_API_URL must start with https://"; exit 1;; esac
           base="${VITE_API_URL%/api/v1}"
