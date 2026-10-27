@@ -1,0 +1,27 @@
+{
+  "name": "@ess/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Capacitor Android/iOS shell wrapping the ESS web app",
+  "scripts": {
+    "sync": "npx cap sync android",
+    "add:android": "npx cap add android",
+    "open:android": "npx cap open android",
+    "apk:debug": "cd android && ./gradlew assembleDebug",
+    "apk:release": "cd android && ./gradlew assembleRelease",
+    "verify:android": "test -x android/gradlew && test -d android/app && cd android && ./gradlew lint testDebugUnitTest assembleDebug",
+    "ios:add": "npx cap add ios --config capacitor.config.ts",
+    "ios:sync": "npx cap sync ios --config capacitor.config.ts"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/ios": "^6.2.2",
+    "@capacitor/push-notifications": "^6.0.2",
+    "@capgo/capacitor-updater": "^6.51.23"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}

@@ -1,0 +1,62 @@
+/* EPHINTA: high-contrast text for the hero feature-panel description and tagline. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast *,
+.eph-landing[data-theme="colorful"] [class*="feature-card"],
+.eph-landing[data-theme="colorful"] [class*="feature-card"] *,
+.eph-landing[data-theme="colorful"] [class*="people-card"],
+.eph-landing[data-theme="colorful"] [class*="people-card"] *,
+.eph-landing[data-theme="colorful"] [class*="hero-card"],
+.eph-landing[data-theme="colorful"] [class*="hero-card"] * {
+  opacity: 1 !important;
+}
+
+/* The two requested copy blocks: crisp white with comfortable line-height. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast p,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] p,
+.eph-landing[data-theme="colorful"] [class*="people-card"] p,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] p {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  font-size: 1rem !important;
+  font-weight: 550 !important;
+  line-height: 1.75 !important;
+  letter-spacing: 0.005em !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 2px rgba(14, 8, 34, 0.28) !important;
+}
+
+/* Ensure inline muted/dark color styles do not override the requested copy. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast p[style],
+.eph-landing[data-theme="colorful"] [class*="feature-card"] p[style],
+.eph-landing[data-theme="colorful"] [class*="hero-card"] p[style] {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  opacity: 1 !important;
+}
+
+/* The small eyebrow should be visibly distinct from the body copy. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] [class*="feature-card"] [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] [class*="hero-card"] [class*="eyebrow"] {
+  color: #FFE18A !important;
+  -webkit-text-fill-color: #FFE18A !important;
+  font-weight: 850 !important;
+  opacity: 1 !important;
+}
+
+/* Keep the customer/professional illustrations fully visible. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast img,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] img,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] img {
+  opacity: 1 !important;
+  filter: none;
+}
+
+@media (max-width: 760px) {
+  .eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast p,
+  .eph-landing[data-theme="colorful"] [class*="feature-card"] p,
+  .eph-landing[data-theme="colorful"] [class*="hero-card"] p {
+    font-size: 0.98rem !important;
+    line-height: 1.7 !important;
+  }
+}

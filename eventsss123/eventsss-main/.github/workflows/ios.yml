@@ -1,0 +1,100 @@
+name: EPHINTA iOS Simulator Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'apps/web/**'
+      - 'apps/mobile/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'apps/web/**'
+      - 'apps/mobile/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ios.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ios-simulator:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test web app
+        run: npm run test -w apps/web
+
+      - name: Build web app
+        run: npm run build -w apps/web
+
+      - name: Add iOS platform if missing
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -d apps/mobile/ios ]]; then
+            npx cap add ios --config apps/mobile/capacitor.config.ts
+          fi
+
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios --config apps/mobile/capacitor.config.ts
+
+      - name: List Xcode schemes
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKSPACE="$(find apps/mobile/ios -maxdepth 6 -name '*.xcworkspace' -print -quit)"
+          if [[ -z "$WORKSPACE" ]]; then
+            echo "No .xcworkspace found under apps/mobile/ios."
+            find apps/mobile/ios -maxdepth 5 -type f -print | head -200
+            exit 1
+          fi
+          echo "Workspace: $WORKSPACE"
+          xcodebuild -list -workspace "$WORKSPACE"
+
+      - name: Build for iOS Simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKSPACE="$(find apps/mobile/ios -maxdepth 6 -name '*.xcworkspace' -print -quit)"
+          SCHEME="$(xcodebuild -list -workspace "$WORKSPACE" 2>/dev/null | awk '/Schemes:/{flag=1;next} flag && NF {gsub(/^[[:space:]]+/, ""); print; exit}')"
+          if [[ -z "$SCHEME" ]]; then
+            echo "Could not automatically detect the Xcode scheme."
+            exit 1
+          fi
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Upload simulator build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-ios-simulator-build
+          path: ${{ runner.temp }}/DerivedData/Build/Products/Debug-iphonesimulator/
+          if-no-files-found: error
+          retention-days: 14

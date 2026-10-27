@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ephinta</string>
+    <string name="title_activity_main">Event Self Solutions</string>
+    <string name="package_name">com.eventselfsolutions.app</string>
+    <string name="custom_url_scheme">com.eventselfsolutions.app</string>
+</resources>

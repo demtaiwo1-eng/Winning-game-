@@ -1,0 +1,45 @@
+/* EPHINTA marker underline and theme-control placement refinement */
+.ephinta-marker-phrase {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  z-index: 0;
+  white-space: normal;
+}
+
+.ephinta-marker-phrase::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -0.04em;
+  right: -0.035em;
+  bottom: 0.025em;
+  height: 0.22em;
+  border-radius: 48% 35% 42% 30%;
+  background: linear-gradient(90deg, #ffd66b 0%, #ffbd58 55%, #f59e72 100%);
+  opacity: 0.9;
+  transform: rotate(-1.4deg);
+  pointer-events: none;
+}
+
+.ephinta-theme-menu-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.ephinta-theme-menu-control select {
+  max-width: 9rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ephinta-marker-phrase::after {
+    animation: ephinta-marker-stroke 420ms ease-out both;
+  }
+  @keyframes ephinta-marker-stroke {
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+}

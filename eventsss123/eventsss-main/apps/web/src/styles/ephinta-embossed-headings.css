@@ -1,0 +1,113 @@
+/*
+ * EPHINTA Multicolor typography: bold, dimensional, lifted headings.
+ * Uses restrained layered shadows to create depth without hurting legibility.
+ */
+
+/* Main hero headline: visibly bold and raised from the background. */
+.eph-landing[data-theme="colorful"] .eph-title,
+.eph-landing[data-theme="colorful"] h1.eph-title {
+  font-weight: 950 !important;
+  letter-spacing: -0.052em !important;
+  line-height: 1.02 !important;
+  -webkit-text-stroke: 0.45px rgba(34, 16, 65, 0.18);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.72),
+    0 2px 0 rgba(79, 49, 116, 0.12),
+    0 4px 0 rgba(79, 49, 116, 0.08),
+    0 8px 18px rgba(55, 28, 89, 0.16) !important;
+  filter: drop-shadow(0 3px 5px rgba(49, 26, 79, 0.12));
+}
+
+/* First part of hero heading: rich ink with a soft top highlight. */
+.eph-landing[data-theme="colorful"] .eph-title {
+  color: #24143f !important;
+  -webkit-text-fill-color: #24143f !important;
+}
+
+/* Gradient word remains vivid but gets subtle dimensional edges and depth. */
+.eph-landing[data-theme="colorful"] .eph-title em {
+  font-weight: 950 !important;
+  -webkit-text-stroke: 0.35px rgba(65, 23, 112, 0.16);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65),
+    0 3px 0 rgba(84, 38, 133, 0.14),
+    0 7px 13px rgba(93, 42, 141, 0.2) !important;
+  filter: drop-shadow(0 2px 2px rgba(67, 33, 108, 0.12));
+}
+
+/* Major section headings throughout the landing page: lifted, strong hierarchy. */
+.eph-landing[data-theme="colorful"] main h1,
+.eph-landing[data-theme="colorful"] main h2,
+.eph-landing[data-theme="colorful"] main h3,
+.eph-landing[data-theme="colorful"] main h4,
+.eph-landing[data-theme="colorful"] footer h1,
+.eph-landing[data-theme="colorful"] footer h2,
+.eph-landing[data-theme="colorful"] footer h3,
+.eph-landing[data-theme="colorful"] footer h4 {
+  font-weight: 800 !important;
+  letter-spacing: -0.028em;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5),
+    0 3px 0 rgba(68, 44, 104, 0.12),
+    0 7px 16px rgba(42, 24, 73, 0.15) !important;
+  -webkit-text-stroke: 0.18px currentColor;
+}
+
+/* The right feature-panel headline and its small heading labels also gain depth. */
+.eph-landing[data-theme="colorful"] [class*="feature"] h1,
+.eph-landing[data-theme="colorful"] [class*="feature"] h2,
+.eph-landing[data-theme="colorful"] [class*="feature"] h3,
+.eph-landing[data-theme="colorful"] [class*="people"] h1,
+.eph-landing[data-theme="colorful"] [class*="people"] h2,
+.eph-landing[data-theme="colorful"] [class*="people"] h3,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] h1,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] h2,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] h3 {
+  font-weight: 800 !important;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.22),
+    0 3px 0 rgba(12, 7, 35, 0.22),
+    0 8px 16px rgba(12, 7, 35, 0.2) !important;
+}
+
+/* Slogans and eyebrow headings: embossed edges, but keep the color treatment. */
+.eph-landing[data-theme="colorful"] [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] [class*="kicker"],
+.eph-landing[data-theme="colorful"] [class*="slogan"],
+.eph-landing[data-theme="colorful"] [class*="tagline"] {
+  font-weight: 850 !important;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4),
+    0 2px 0 rgba(62, 30, 98, 0.14),
+    0 4px 10px rgba(62, 30, 98, 0.1);
+}
+
+/* Avoid a blurred or flattened look on text due to inherited filters. */
+.eph-landing[data-theme="colorful"] .eph-title,
+.eph-landing[data-theme="colorful"] main h1,
+.eph-landing[data-theme="colorful"] main h2,
+.eph-landing[data-theme="colorful"] main h3,
+.eph-landing[data-theme="colorful"] main h4 {
+  opacity: 1 !important;
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eph-landing[data-theme="colorful"] .eph-title,
+  .eph-landing[data-theme="colorful"] main h1,
+  .eph-landing[data-theme="colorful"] main h2,
+  .eph-landing[data-theme="colorful"] main h3,
+  .eph-landing[data-theme="colorful"] main h4 {
+    transform: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .eph-landing[data-theme="colorful"] .eph-title {
+    letter-spacing: -0.04em !important;
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.62),
+      0 3px 0 rgba(79, 49, 116, 0.1),
+      0 6px 12px rgba(55, 28, 89, 0.14) !important;
+  }
+}

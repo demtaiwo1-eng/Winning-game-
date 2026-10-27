@@ -1,0 +1,95 @@
+/* EPHINTA: right-hand hero panel. Every non-button text element must be legible. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast *,
+.eph-landing[data-theme="colorful"] [class*="feature-card"],
+.eph-landing[data-theme="colorful"] [class*="feature-card"] *,
+.eph-landing[data-theme="colorful"] [class*="people-card"],
+.eph-landing[data-theme="colorful"] [class*="people-card"] *,
+.eph-landing[data-theme="colorful"] [class*="professional-card"],
+.eph-landing[data-theme="colorful"] [class*="professional-card"] *,
+.eph-landing[data-theme="colorful"] [class*="hero-card"],
+.eph-landing[data-theme="colorful"] [class*="hero-card"] * {
+  opacity: 1 !important;
+}
+
+/* Main title stays crisp white; supporting copy is also white, not dark purple. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h1,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h2,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h3,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h4,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast p,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast span,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast small,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast li,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast strong,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] h1,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] h2,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] h3,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] p,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] span,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] small,
+.eph-landing[data-theme="colorful"] [class*="people-card"] p,
+.eph-landing[data-theme="colorful"] [class*="people-card"] span,
+.eph-landing[data-theme="colorful"] [class*="professional-card"] p,
+.eph-landing[data-theme="colorful"] [class*="professional-card"] span,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] p,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] span {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+}
+
+/* Keep the panel headline bold and lifted. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h1,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h2,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h3,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] h1,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] h2,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] h3,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] h1,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] h2 {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  font-weight: 850 !important;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2),
+    0 3px 0 rgba(10, 7, 30, 0.24),
+    0 8px 16px rgba(10, 7, 30, 0.18) !important;
+}
+
+/* Small top label: bright gold, high weight and readable tracking. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast [class*="label"],
+.eph-landing[data-theme="colorful"] [class*="feature-card"] [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] [class*="hero-card"] [class*="eyebrow"] {
+  color: #ffe18a !important;
+  -webkit-text-fill-color: #ffe18a !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.12em !important;
+}
+
+/* Inline dark colors and muted utility classes must not override the contrast fix. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast [style*="color"],
+.eph-landing[data-theme="colorful"] [class*="feature-card"] [style*="color"],
+.eph-landing[data-theme="colorful"] [class*="hero-card"] [style*="color"] {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Keep actions crisp; buttons keep their own background/foreground choices. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast button,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] button,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] button {
+  opacity: 1 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+@media (max-width: 760px) {
+  .eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast p,
+  .eph-landing[data-theme="colorful"] [class*="feature-card"] p,
+  .eph-landing[data-theme="colorful"] [class*="hero-card"] p {
+    font-size: 1rem !important;
+    line-height: 1.65 !important;
+  }
+}

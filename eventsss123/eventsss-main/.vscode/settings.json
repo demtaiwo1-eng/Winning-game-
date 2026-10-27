@@ -1,0 +1,17 @@
+{
+    "prisma.pinToPrisma6": true,
+    "chat.tools.terminal.autoApprove": {
+        "/^git status --short && printf '\\\\n--- root ---\\\\n' && ls -la && printf '\\\\n--- top-level tracked files ---\\\\n' && git ls-files \\| sed -n '1,180p'$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "printf": true
+    },
+    "python-envs.pythonProjects": [
+        {
+            "path": "ESS-Patch-054-Phase12-E2E-Testing",
+            "envManager": "ms-python.python:venv",
+            "packageManager": "ms-python.python:pip"
+        }
+    ]
+}

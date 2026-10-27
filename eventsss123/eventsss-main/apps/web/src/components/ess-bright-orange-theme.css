@@ -1,0 +1,638 @@
+/**
+ * ESS Bright Orange Theme
+ * Global design layer — bright surfaces + orange accent across the whole web app.
+ * Import AFTER index.css (and other app CSS) so it wins cascade for shared tokens.
+ */
+
+:root {
+  /* Core palette */
+  --ess-bg: #fff7f0;
+  --ess-bg-2: #ffe8d6;
+  --ess-surface: #ffffff;
+  --ess-surface-soft: #fffaf6;
+  --ess-ink: #1a120b;
+  --ess-ink-soft: #4a3728;
+  --ess-mute: #7a6354;
+  --ess-line: #f0dcc8;
+  --ess-line-strong: #e8c4a0;
+
+  /* Orange system */
+  --ess-orange: #ff6a00;
+  --ess-orange-hot: #ff4d00;
+  --ess-orange-soft: #ff8500;
+  --ess-orange-pale: #fff0e6;
+  --ess-orange-glow: rgba(255, 106, 0, 0.28);
+  --ess-amber: #ffb020;
+  --ess-coral: #ff6b4a;
+
+  /* Semantic */
+  --ess-success: #16a34a;
+  --ess-success-bg: #ecfdf3;
+  --ess-danger: #dc2626;
+  --ess-danger-bg: #fef2f2;
+  --ess-info: #0284c7;
+  --ess-info-bg: #e0f2fe;
+
+  /* Radii & shadow */
+  --ess-radius: 16px;
+  --ess-radius-sm: 10px;
+  --ess-radius-pill: 999px;
+  --ess-shadow: 0 10px 30px rgba(255, 106, 0, 0.08), 0 2px 8px rgba(26, 18, 11, 0.04);
+  --ess-shadow-lg: 0 18px 48px rgba(255, 106, 0, 0.14), 0 4px 12px rgba(26, 18, 11, 0.06);
+
+  color-scheme: light;
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--ess-ink);
+  background: var(--ess-bg);
+}
+
+/* ---------- Global shell ---------- */
+html,
+body,
+#root {
+  margin: 0 !important;
+  min-height: 100% !important;
+  min-width: 100% !important;
+  background: linear-gradient(165deg, #fff7f0 0%, #ffe8d6 42%, #fff3ea 100%) !important;
+  color: var(--ess-ink) !important;
+}
+
+body {
+  min-height: 100vh !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--ess-orange-hot);
+}
+
+a:hover {
+  color: var(--ess-orange);
+}
+
+::selection {
+  background: rgba(255, 106, 0, 0.25);
+  color: var(--ess-ink);
+}
+
+/* ---------- Loading ---------- */
+.session-loading {
+  min-height: 100vh !important;
+  display: grid !important;
+  place-items: center !important;
+  color: var(--ess-orange-hot) !important;
+  background: linear-gradient(160deg, #fff7f0, #ffd8b5) !important;
+  font-weight: 800 !important;
+  font-size: 1.05rem !important;
+}
+
+/* ---------- Buttons (shared across portal) ---------- */
+.primary-button,
+.secondary-button,
+button.primary-button,
+button.secondary-button {
+  border-radius: var(--ess-radius-pill) !important;
+  padding: 0.7rem 1.25rem !important;
+  font-weight: 700 !important;
+  font-size: 0.92rem !important;
+  border: 1.5px solid transparent !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, var(--ess-orange-soft) 0%, var(--ess-orange) 45%, var(--ess-orange-hot) 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 22px var(--ess-orange-glow) !important;
+  border-color: transparent !important;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 12px 28px rgba(255, 106, 0, 0.4) !important;
+  filter: brightness(1.03);
+}
+
+.primary-button:disabled {
+  opacity: 0.55 !important;
+  transform: none !important;
+  cursor: not-allowed !important;
+}
+
+.secondary-button {
+  background: var(--ess-surface) !important;
+  color: var(--ess-ink) !important;
+  border-color: var(--ess-line-strong) !important;
+  box-shadow: none !important;
+}
+
+.secondary-button:hover {
+  border-color: var(--ess-orange) !important;
+  color: var(--ess-orange-hot) !important;
+  background: var(--ess-orange-pale) !important;
+}
+
+.back-button {
+  background: transparent !important;
+  color: var(--ess-orange-hot) !important;
+  font-weight: 700 !important;
+  border: none !important;
+}
+
+.back-button:hover {
+  color: var(--ess-orange) !important;
+  text-decoration: underline;
+}
+
+/* ---------- Workspace / portal shell ---------- */
+.workspace-shell {
+  min-height: 100vh !important;
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+  padding: 48px 24px 88px !important;
+  color: var(--ess-ink) !important;
+}
+
+.workspace-header,
+.section-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+}
+
+.workspace-header h1,
+.workspace-card h2 {
+  color: var(--ess-ink) !important;
+  letter-spacing: -0.03em !important;
+}
+
+.workspace-header h1 {
+  font-size: clamp(1.6rem, 3vw, 2.1rem) !important;
+  font-weight: 900 !important;
+}
+
+.workspace-subtitle,
+.workspace-card > p {
+  color: var(--ess-mute) !important;
+}
+
+.eyebrow {
+  color: var(--ess-orange-hot) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+}
+
+.workspace-grid {
+  display: grid !important;
+  gap: 18px !important;
+}
+
+.workspace-card {
+  background: var(--ess-surface) !important;
+  border: 1.5px solid var(--ess-line) !important;
+  border-radius: var(--ess-radius) !important;
+  box-shadow: var(--ess-shadow) !important;
+  padding: 1.25rem 1.35rem !important;
+  color: var(--ess-ink) !important;
+}
+
+.workspace-card:hover {
+  border-color: #f5c49a !important;
+  box-shadow: var(--ess-shadow-lg) !important;
+}
+
+.workspace-intro {
+  background: linear-gradient(135deg, #1a120b 0%, #3d2314 50%, #5c2e12 100%) !important;
+  color: #fff8f3 !important;
+  border-radius: calc(var(--ess-radius) + 4px) !important;
+  border: none !important;
+  box-shadow: 0 16px 40px rgba(255, 77, 0, 0.25) !important;
+}
+
+.workspace-intro .workspace-subtitle,
+.workspace-intro > p:not(.eyebrow) {
+  color: #ffd8b8 !important;
+}
+
+.workspace-intro .eyebrow {
+  color: var(--ess-amber) !important;
+}
+
+.workspace-feedback {
+  color: var(--ess-success) !important;
+  background: var(--ess-success-bg) !important;
+  border: 1px solid #bbf7d0 !important;
+  border-radius: var(--ess-radius-sm) !important;
+  padding: 0.65rem 0.9rem !important;
+}
+
+/* ---------- Forms ---------- */
+.event-form input,
+.event-form-grid input,
+.event-form-grid select,
+.event-form textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  color: var(--ess-ink) !important;
+  background: var(--ess-surface) !important;
+  border: 1.5px solid var(--ess-line-strong) !important;
+  border-radius: var(--ess-radius-sm) !important;
+  padding: 0.65rem 0.85rem !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.event-form input:focus,
+.event-form-grid input:focus,
+.event-form-grid select:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: var(--ess-orange) !important;
+  box-shadow: 0 0 0 3px var(--ess-orange-glow) !important;
+}
+
+.event-form,
+.event-form-grid {
+  gap: 12px !important;
+}
+
+/* ---------- Event list / rows ---------- */
+.event-list {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.event-row,
+.event-row-button {
+  background: var(--ess-surface) !important;
+  color: var(--ess-ink) !important;
+  border: 1.5px solid var(--ess-line) !important;
+  border-radius: var(--ess-radius-sm) !important;
+}
+
+.event-row-button:hover {
+  color: var(--ess-orange-hot) !important;
+  border-color: var(--ess-orange) !important;
+  background: var(--ess-orange-pale) !important;
+}
+
+/* ---------- Detail / nav ---------- */
+.detail-nav {
+  background: var(--ess-orange-pale) !important;
+  border: 1.5px solid var(--ess-line) !important;
+  border-radius: var(--ess-radius-pill) !important;
+  padding: 4px !important;
+}
+
+.detail-nav-button {
+  background: transparent !important;
+  color: var(--ess-mute) !important;
+  border-radius: var(--ess-radius-pill) !important;
+  font-weight: 700 !important;
+  border: none !important;
+}
+
+.detail-nav-button:hover,
+.detail-nav-button.active {
+  background: linear-gradient(135deg, var(--ess-orange-soft), var(--ess-orange-hot)) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px var(--ess-orange-glow) !important;
+}
+
+.detail-feedback {
+  color: #166534 !important;
+  background: var(--ess-success-bg) !important;
+  border-radius: var(--ess-radius-sm) !important;
+  padding: 0.6rem 0.85rem !important;
+}
+
+.detail-summary-card,
+.summary-stats {
+  background: linear-gradient(135deg, #ffffff 0%, #fff0e6 100%) !important;
+  border: 1.5px solid var(--ess-line) !important;
+  border-radius: var(--ess-radius) !important;
+}
+
+.summary-stats strong {
+  color: var(--ess-orange-hot) !important;
+  font-weight: 900 !important;
+}
+
+.detail-grid {
+  gap: 16px !important;
+}
+
+/* ---------- Marketplace / cards ---------- */
+.empty-marketplace,
+.marketplace-card,
+.listing-card,
+.vendor-card {
+  background: var(--ess-surface) !important;
+  border: 1.5px solid var(--ess-line) !important;
+  border-radius: var(--ess-radius) !important;
+  box-shadow: var(--ess-shadow) !important;
+  color: var(--ess-ink) !important;
+}
+
+.empty-marketplace strong {
+  color: var(--ess-ink) !important;
+}
+
+.empty-marketplace span {
+  color: var(--ess-mute) !important;
+}
+
+/* ---------- Rider / jobs ---------- */
+.rider-portal,
+.rider-job-list,
+.rider-job {
+  color: var(--ess-ink) !important;
+}
+
+.rider-job {
+  background: var(--ess-surface) !important;
+  border: 1.5px solid var(--ess-line) !important;
+  border-radius: var(--ess-radius-sm) !important;
+  padding: 1rem !important;
+}
+
+.row-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+/* ---------- Portal menu / sidebar-ish ---------- */
+.portal-menu-container button,
+.portal-menu-container a {
+  border-radius: var(--ess-radius-sm) !important;
+  font-weight: 700 !important;
+}
+
+.portal-menu-container button.active,
+.portal-menu-container .active {
+  background: linear-gradient(135deg, var(--ess-orange-soft), var(--ess-orange-hot)) !important;
+  color: #fff !important;
+}
+
+/* ---------- Public landing overrides (class-based landings) ---------- */
+.landing-nav-inner {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-bottom: 1px solid var(--ess-line) !important;
+  backdrop-filter: blur(10px);
+}
+
+.landing-audience-menu button {
+  border-radius: var(--ess-radius-pill) !important;
+  border: 1.5px solid var(--ess-line-strong) !important;
+  background: var(--ess-surface) !important;
+  color: var(--ess-ink) !important;
+  font-weight: 700 !important;
+}
+
+.landing-audience-menu button:hover {
+  border-color: var(--ess-orange) !important;
+  color: var(--ess-orange-hot) !important;
+  background: var(--ess-orange-pale) !important;
+}
+
+/* ---------- ESS self-contained landing (.esg) — recolor to orange ---------- */
+.esg {
+  --bg: #fff7f0 !important;
+  --card: #ffffff !important;
+  --ink: #1a120b !important;
+  --mute: #7a6354 !important;
+  --line: #f0dcc8 !important;
+  --cyan: #ff6a00 !important;
+  --blue: #ff8500 !important;
+  --indigo: #ff4d00 !important;
+  --emerald: #16a34a !important;
+  --amber: #ffb020 !important;
+  --rose: #e11d48 !important;
+  --purple: #ea580c !important;
+  background: linear-gradient(165deg, #fff7f0 0%, #ffe8d6 50%, #fff3ea 100%) !important;
+  color: #1a120b !important;
+}
+
+.esg-nav {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-bottom: 1px solid #f0dcc8 !important;
+}
+
+.esg-mark {
+  background: linear-gradient(135deg, #ffb020, #ff6a00, #ff4d00) !important;
+  box-shadow: 0 0 24px rgba(255, 106, 0, 0.4) !important;
+}
+
+.esg-brand {
+  background: linear-gradient(90deg, #1a120b, #ff6a00, #ff4d00) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.esg-btn.p {
+  background: linear-gradient(135deg, #ff8500, #ff6a00, #ff4d00) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 28px rgba(255, 106, 0, 0.35) !important;
+}
+
+.esg-btn.g {
+  background: #fff !important;
+  border-color: #e8c4a0 !important;
+  color: #1a120b !important;
+}
+
+.esg-btn.g:hover {
+  border-color: #ff6a00 !important;
+  color: #ff4d00 !important;
+  background: #fff0e6 !important;
+}
+
+.esg-badge {
+  background: rgba(255, 106, 0, 0.12) !important;
+  border-color: rgba(255, 106, 0, 0.4) !important;
+  color: #c2410c !important;
+}
+
+.esg-hero h1 em {
+  background: linear-gradient(90deg, #ff8500, #ff6a00, #ff4d00) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.esg-card {
+  background: #fff !important;
+  border-color: #f0dcc8 !important;
+  color: #1a120b !important;
+}
+
+.esg-card:hover {
+  border-color: #ffb020 !important;
+  box-shadow: 0 12px 40px rgba(255, 106, 0, 0.12) !important;
+}
+
+.esg-card p {
+  color: #7a6354 !important;
+}
+
+.esg-stats {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: #f0dcc8 !important;
+}
+
+.esg-stats strong,
+.esg-stats strong.em,
+.esg-stats strong.am,
+.esg-stats strong.ro,
+.esg-stats strong.pu,
+.esg-stats strong.bl {
+  color: #ff4d00 !important;
+}
+
+.esg-ico.cyan,
+.esg-ico.em,
+.esg-ico.am,
+.esg-ico.ro,
+.esg-ico.pu,
+.esg-ico.bl {
+  background: #fff0e6 !important;
+  border-color: #ffc090 !important;
+  color: #ff4d00 !important;
+}
+
+.esg-step,
+.esg-phone {
+  background: #fff !important;
+  border-color: #f0dcc8 !important;
+}
+
+.esg-phone {
+  border-color: rgba(255, 106, 0, 0.45) !important;
+  box-shadow: 0 0 48px rgba(255, 106, 0, 0.15) !important;
+}
+
+.esg-band {
+  background: linear-gradient(135deg, #fff 0%, #fff0e6 100%) !important;
+  border-color: rgba(255, 106, 0, 0.35) !important;
+}
+
+.esg-dialog {
+  background: #fff !important;
+  border-color: rgba(255, 106, 0, 0.35) !important;
+  color: #1a120b !important;
+}
+
+.esg-dialog input {
+  background: #fffaf6 !important;
+  border-color: #e8c4a0 !important;
+  color: #1a120b !important;
+}
+
+.esg-splash {
+  background: radial-gradient(ellipse at center, #ffe8d6 0%, #fff7f0 70%) !important;
+}
+
+.esg-splash-mark {
+  background: linear-gradient(135deg, #ffb020, #ff6a00, #ff4d00) !important;
+  box-shadow: 0 0 40px rgba(255, 106, 0, 0.45) !important;
+}
+
+.esg-float {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(255, 106, 0, 0.45) !important;
+  box-shadow: 0 8px 32px rgba(255, 106, 0, 0.18) !important;
+}
+
+.esg-ft {
+  background: #fffaf6 !important;
+  border-color: #f0dcc8 !important;
+}
+
+.esg-drawer nav {
+  background: #fff !important;
+  border-color: #f0dcc8 !important;
+}
+
+/* ---------- Enterprise / dark modules → brighten where possible ---------- */
+.ess-shell,
+.ess-sidebar,
+.ess-content {
+  background: var(--ess-bg) !important;
+  color: var(--ess-ink) !important;
+}
+
+.ess-sidebar {
+  background: #fff !important;
+  border-right: 1.5px solid var(--ess-line) !important;
+}
+
+.ess-brand {
+  color: var(--ess-orange-hot) !important;
+  font-weight: 900 !important;
+}
+
+/* ---------- Utility helpers for any new markup ---------- */
+.ess-orange-text {
+  color: var(--ess-orange-hot) !important;
+}
+.ess-orange-bg {
+  background: linear-gradient(135deg, var(--ess-orange-soft), var(--ess-orange-hot)) !important;
+  color: #fff !important;
+}
+.ess-card {
+  background: var(--ess-surface);
+  border: 1.5px solid var(--ess-line);
+  border-radius: var(--ess-radius);
+  box-shadow: var(--ess-shadow);
+  padding: 1.25rem;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 980px) {
+  .workspace-shell {
+    padding: 28px 16px 64px !important;
+  }
+
+  .workspace-header,
+  .section-header {
+    flex-direction: column !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

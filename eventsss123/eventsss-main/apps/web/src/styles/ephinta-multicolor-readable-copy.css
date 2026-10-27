@@ -1,0 +1,108 @@
+/*
+ * EPHINTA: Multicolor mode text-contrast correction.
+ * Targets the low-contrast copy visible in the three-step cards, safety section,
+ * FAQ details/summary rows and footer. Other themes are not changed.
+ */
+.eph-landing[data-theme="colorful"] {
+  --ephinta-copy-bright: #f5f2ff;
+  --ephinta-copy-secondary: #dcd8ff;
+  --ephinta-copy-cyan: #70e7ff;
+  --ephinta-copy-pink: #ff9cde;
+  --ephinta-copy-gold: #ffd579;
+}
+
+/* Keep white cards readable: do not apply pale text on light surfaces. */
+.eph-landing[data-theme="colorful"] main [class*="card"],
+.eph-landing[data-theme="colorful"] main article,
+.eph-landing[data-theme="colorful"] main [class*="step"] {
+  color: #21183c;
+}
+
+.eph-landing[data-theme="colorful"] main [class*="card"] p,
+.eph-landing[data-theme="colorful"] main article p,
+.eph-landing[data-theme="colorful"] main [class*="step"] p {
+  color: #4d4269 !important;
+}
+
+/* General lower-page headings and copy on dark backgrounds. */
+.eph-landing[data-theme="colorful"] main h1,
+.eph-landing[data-theme="colorful"] main h2,
+.eph-landing[data-theme="colorful"] main h3,
+.eph-landing[data-theme="colorful"] main h4 {
+  color: var(--ephinta-copy-bright) !important;
+  text-shadow: 0 1px 18px rgba(112, 231, 255, 0.08);
+}
+
+.eph-landing[data-theme="colorful"] main p,
+.eph-landing[data-theme="colorful"] main li,
+.eph-landing[data-theme="colorful"] main label,
+.eph-landing[data-theme="colorful"] main small,
+.eph-landing[data-theme="colorful"] main summary,
+.eph-landing[data-theme="colorful"] main details,
+.eph-landing[data-theme="colorful"] main [class*="description"],
+.eph-landing[data-theme="colorful"] main [class*="subtitle"],
+.eph-landing[data-theme="colorful"] main [class*="caption"] {
+  color: var(--ephinta-copy-secondary) !important;
+}
+
+/* Restore dark copy inside light cards for legibility. */
+.eph-landing[data-theme="colorful"] main [class*="card"] h1,
+.eph-landing[data-theme="colorful"] main [class*="card"] h2,
+.eph-landing[data-theme="colorful"] main [class*="card"] h3,
+.eph-landing[data-theme="colorful"] main [class*="card"] h4,
+.eph-landing[data-theme="colorful"] main [class*="card"] li,
+.eph-landing[data-theme="colorful"] main [class*="card"] label,
+.eph-landing[data-theme="colorful"] main [class*="card"] small,
+.eph-landing[data-theme="colorful"] main [class*="card"] [class*="description"],
+.eph-landing[data-theme="colorful"] main [class*="card"] [class*="subtitle"],
+.eph-landing[data-theme="colorful"] main [class*="card"] [class*="caption"],
+.eph-landing[data-theme="colorful"] main article h1,
+.eph-landing[data-theme="colorful"] main article h2,
+.eph-landing[data-theme="colorful"] main article h3,
+.eph-landing[data-theme="colorful"] main article h4 {
+  color: #2a2043 !important;
+}
+
+/* FAQ questions are nearly invisible in the screenshots: use bright cyan/violet. */
+.eph-landing[data-theme="colorful"] main details > summary,
+.eph-landing[data-theme="colorful"] main summary {
+  color: var(--ephinta-copy-cyan) !important;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.eph-landing[data-theme="colorful"] main details[open] > summary {
+  color: var(--ephinta-copy-pink) !important;
+}
+
+/* Footer sits outside main in this page, so handle it explicitly. */
+.eph-landing[data-theme="colorful"] footer,
+.eph-landing[data-theme="colorful"] footer p,
+.eph-landing[data-theme="colorful"] footer li,
+.eph-landing[data-theme="colorful"] footer small {
+  color: var(--ephinta-copy-secondary) !important;
+}
+
+.eph-landing[data-theme="colorful"] footer a {
+  color: var(--ephinta-copy-cyan) !important;
+  text-decoration-color: rgba(112, 231, 255, 0.7);
+}
+
+.eph-landing[data-theme="colorful"] main a {
+  color: var(--ephinta-copy-cyan);
+}
+
+.eph-landing[data-theme="colorful"] main button,
+.eph-landing[data-theme="colorful"] main [role="button"] {
+  font-weight: 600;
+}
+
+/* Keep the colorful brand headline gradient intact. */
+.eph-landing[data-theme="colorful"] .ephinta-bright-slogan,
+.eph-landing[data-theme="colorful"] [class*="slogan"],
+.eph-landing[data-theme="colorful"] [class*="tagline"] {
+  background-image: linear-gradient(95deg, #70e7ff, #c0a1ff 45%, #ff8bd8 75%, #ffd579);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

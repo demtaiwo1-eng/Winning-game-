@@ -1,0 +1,116 @@
+/* EPHINTA: high-contrast, bright copy with balanced color accents. */
+.eph-landing {
+  --ephinta-copy-bright: #f8f7ff;
+  --ephinta-copy-muted: #e4e4f6;
+  --ephinta-copy-accent: #6fe7ff;
+  --ephinta-copy-accent-2: #ff9cdb;
+  --ephinta-copy-gold: #ffd36e;
+}
+
+/* Slogan: brighter, balanced, and clearly readable on gradient or dark surfaces. */
+.eph-landing .ephinta-bright-slogan {
+  display: inline-block;
+  color: #fffdfd !important;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  text-shadow: 0 2px 16px rgba(73, 37, 126, 0.24);
+  background: linear-gradient(100deg, #ffffff 0%, #b8f4ff 38%, #ffd0ef 72%, #ffe29b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Improve contrast for the hero's secondary copy and supporting content below it. */
+.eph-landing .eph-hero p,
+.eph-landing .eph-hero .eph-subtitle,
+.eph-landing .eph-hero [class*="description"],
+.eph-landing .eph-hero [class*="subtitle"] {
+  color: #f1efff !important;
+  text-shadow: 0 1px 8px rgba(46, 25, 83, 0.18);
+}
+
+/* General lower-page copy: readable bright text without making every element neon. */
+.eph-landing main p,
+.eph-landing main li,
+.eph-landing main label,
+.eph-landing main small,
+.eph-landing main .eph-muted,
+.eph-landing main [class*="description"],
+.eph-landing main [class*="subtitle"],
+.eph-landing main [class*="eyebrow"],
+.eph-landing main [class*="caption"] {
+  color: var(--ephinta-copy-muted);
+}
+
+/* Bright headings across all landing sections. */
+.eph-landing main h1,
+.eph-landing main h2,
+.eph-landing main h3,
+.eph-landing main h4 {
+  color: #fffaff;
+  text-wrap: balance;
+}
+
+/* Keep supporting text readable over the light pink/lavender landing background. */
+.eph-landing main {
+  color: #292344;
+}
+.eph-landing main [class*="card"],
+.eph-landing main [class*="panel"],
+.eph-landing main [class*="feature"] {
+  --ephinta-card-copy: #f8f5ff;
+}
+
+/* Marker underline sits a little below the glyphs instead of crossing through text. */
+.eph-landing .ephinta-marker-phrase,
+.eph-landing .eph-title em {
+  position: relative;
+  z-index: 0;
+}
+
+.eph-landing .ephinta-marker-phrase::after {
+  bottom: -0.13em !important;
+  height: 0.16em !important;
+  opacity: 0.92;
+  transform: rotate(-1deg);
+}
+
+.eph-landing .eph-title em {
+  text-decoration: none;
+}
+
+/* Ensure the main hero remains high contrast if existing inline colors are pale. */
+.eph-landing .eph-title {
+  color: #fffaff;
+  text-shadow: 0 3px 18px rgba(78, 42, 126, 0.18);
+}
+
+/* Bright interactive labels with clear focus visibility. */
+.eph-landing main a,
+.eph-landing main button {
+  outline-offset: 3px;
+}
+.eph-landing main a:focus-visible,
+.eph-landing main button:focus-visible {
+  outline: 2px solid #2fcfe9;
+}
+
+/* Dark/colorful theme surfaces: keep lower-page text light and legible. */
+.eph-landing[data-theme="dark"] main,
+.eph-landing[data-theme="colorful"] main {
+  color: #f8f5ff;
+}
+.eph-landing[data-theme="dark"] main p,
+.eph-landing[data-theme="dark"] main li,
+.eph-landing[data-theme="colorful"] main p,
+.eph-landing[data-theme="colorful"] main li {
+  color: #e9e7f8;
+}
+
+@media (max-width: 760px) {
+  .eph-landing .ephinta-bright-slogan {
+    letter-spacing: -0.02em;
+  }
+}

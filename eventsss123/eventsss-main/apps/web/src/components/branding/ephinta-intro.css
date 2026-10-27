@@ -1,0 +1,18 @@
+.ephinta-intro {
+  position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center;
+  padding: max(24px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+  overflow: hidden; color: #fff;
+  background: radial-gradient(ellipse at 50% 42%, rgba(255,106,0,.17), transparent 38%), radial-gradient(ellipse at 50% 100%, rgba(255,77,0,.10), transparent 48%), #090909;
+  animation: ephinta-fade-in .28s ease-out both;
+}
+.ephinta-intro__lockup { display:flex; flex-direction:column; align-items:center; justify-content:center; width:min(100%,360px); text-align:center; animation:ephinta-arrive .65s cubic-bezier(.2,.75,.25,1) both; }
+.ephinta-intro__logo { display:block; width:clamp(76px,20vw,116px); height:clamp(76px,20vw,116px); margin:0 auto 22px; object-fit:contain; filter:drop-shadow(0 8px 26px rgba(255,106,0,.20)); }
+.ephinta-intro__wordmark { color:#fff; font:800 clamp(25px,6vw,34px)/1.05 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:.18em; padding-left:.18em; }
+.ephinta-intro__tagline { margin-top:11px; color:rgba(255,255,255,.65); font:600 10px/1.4 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:.22em; padding-left:.22em; }
+.ephinta-intro__progress { position:absolute; bottom:max(26px,env(safe-area-inset-bottom)); left:50%; width:76px; height:2px; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.16); transform:translateX(-50%); }
+.ephinta-intro__progress i { display:block; width:42%; height:100%; border-radius:inherit; background:linear-gradient(90deg,#ffb020,#ff6a00); animation:ephinta-progress 1.05s ease-in-out infinite; }
+@keyframes ephinta-fade-in { from { opacity:0 } to { opacity:1 } }
+@keyframes ephinta-arrive { from { opacity:0; transform:translateY(10px) scale(.97) } to { opacity:1; transform:translateY(0) scale(1) } }
+@keyframes ephinta-progress { from { transform:translateX(-120%) } to { transform:translateX(260%) } }
+@media(max-width:480px) { .ephinta-intro__logo { margin-bottom:18px; } .ephinta-intro__tagline { font-size:9px; letter-spacing:.16em; } }
+@media(prefers-reduced-motion:reduce) { .ephinta-intro,.ephinta-intro__lockup,.ephinta-intro__progress i { animation:none !important; } }

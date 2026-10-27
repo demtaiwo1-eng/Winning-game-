@@ -1,0 +1,82 @@
+name: ESS Phase 11-15 Release Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ess-release-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-gates:
+    name: PostgreSQL, regression, security and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ess
+          POSTGRES_PASSWORD: ess_test_password
+          POSTGRES_DB: ess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ess -d ess_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://ess:ess_test_password@localhost:5432/ess_test?schema=public
+      JWT_SECRET: ci-only-secret-change-me-0123456789abcdef0123456789abcdef
+      APP_BASE_URL: http://localhost:3000
+      RUN_DB_TESTS: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema and generate client
+        run: |
+          npx prisma validate --schema apps/api/prisma/schema.prisma
+          npm run prisma:generate
+
+      - name: Apply database migrations
+        run: npm run db:deploy -w apps/api
+
+      - name: Run API unit and database integration tests
+        run: npm run test:db -w apps/api
+
+      - name: Run web regression tests
+        run: npm run test -w apps/web
+
+      - name: Build web production bundle and PWA
+        run: npm run build:web
+
+      - name: Build API
+        run: npm run build -w apps/api
+
+      - name: Upload production web bundle for inspection
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ess-web-dist
+          path: apps/web/dist/
+          if-no-files-found: error
+          retention-days: 7

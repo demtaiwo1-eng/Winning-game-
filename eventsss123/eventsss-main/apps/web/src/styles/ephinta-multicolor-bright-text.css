@@ -1,0 +1,83 @@
+/* EPHINTA bright typography for colorful/multicolor mode */
+.eph-landing[data-theme="colorful"] {
+  --ephinta-bright-white: #fffaff;
+  --ephinta-bright-muted: #f2eaff;
+  --ephinta-bright-cyan: #65e6ff;
+  --ephinta-bright-violet: #b99aff;
+  --ephinta-bright-pink: #ff8bd8;
+  --ephinta-bright-gold: #ffd36e;
+}
+
+/* Slogan: bright gradient lettering with sufficient contrast. */
+.eph-landing[data-theme="colorful"] .ephinta-bright-slogan,
+.eph-landing[data-theme="colorful"] [class*="slogan"],
+.eph-landing[data-theme="colorful"] [class*="tagline"] {
+  color: var(--ephinta-bright-white) !important;
+  background: linear-gradient(95deg, #65e6ff 0%, #b99aff 38%, #ff8bd8 72%, #ffd36e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 22px rgba(185, 154, 255, 0.12);
+  text-wrap: balance;
+}
+
+/* Hero and headings remain bright in multicolor mode. */
+.eph-landing[data-theme="colorful"] h1,
+.eph-landing[data-theme="colorful"] h2,
+.eph-landing[data-theme="colorful"] h3,
+.eph-landing[data-theme="colorful"] .eph-title,
+.eph-landing[data-theme="colorful"] .eph-title em {
+  color: var(--ephinta-bright-white);
+}
+
+/* Lower-page copy: override faded low-contrast colors without affecting dark/light themes. */
+.eph-landing[data-theme="colorful"] main p,
+.eph-landing[data-theme="colorful"] main li,
+.eph-landing[data-theme="colorful"] main label,
+.eph-landing[data-theme="colorful"] main small,
+.eph-landing[data-theme="colorful"] main .muted,
+.eph-landing[data-theme="colorful"] main [class*="description"],
+.eph-landing[data-theme="colorful"] main [class*="subtitle"],
+.eph-landing[data-theme="colorful"] main [class*="caption"] {
+  color: var(--ephinta-bright-muted);
+}
+
+/* Bright, distinct links and supporting labels. */
+.eph-landing[data-theme="colorful"] main a,
+.eph-landing[data-theme="colorful"] main [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] main [class*="label"] {
+  color: var(--ephinta-bright-cyan);
+}
+
+/* Marker stroke sits clearly below the lettering rather than crossing the text. */
+.eph-landing[data-theme="colorful"] .ephinta-marker-phrase {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  z-index: 0;
+  padding-bottom: 0.13em;
+}
+
+.eph-landing[data-theme="colorful"] .ephinta-marker-phrase::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -0.025em;
+  right: -0.025em;
+  bottom: -0.09em;
+  height: 0.12em;
+  border-radius: 999px 75% 999px 60%;
+  background: linear-gradient(90deg, #ffd36e, #ff9e73);
+  opacity: 0.96;
+  transform: rotate(-1deg);
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .eph-landing[data-theme="colorful"] .ephinta-bright-slogan {
+    line-height: 1.2;
+  }
+  .eph-landing[data-theme="colorful"] .ephinta-marker-phrase {
+    padding-bottom: 0.16em;
+  }
+}

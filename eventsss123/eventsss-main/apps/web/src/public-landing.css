@@ -1,0 +1,48 @@
+.eph-theme-select {
+  display: none !important;
+}
+
+.eph-menu-primary {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #f7c948;
+  border-radius: 9px;
+  background: #f7c948;
+  color: #21162f;
+  padding: 10px 11px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.eph-menu-primary:hover {
+  background: #ffe08a;
+}
+/* Restore the primary orange planning action beside the hamburger menu. */
+.eph-nav-actions .eph-btn-gold {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  background: #ff8a00 !important;
+  color: #17152a !important;
+  border: 0;
+  box-shadow: 0 8px 22px rgba(255, 138, 0, .28);
+}
+
+.eph-nav-actions .eph-btn-gold:hover {
+  background: #ff9f2f !important;
+  box-shadow: 0 10px 26px rgba(255, 138, 0, .36);
+}
+
+.eph-nav-actions .eph-menu {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 760px) {
+  .eph-nav-actions .eph-btn-gold {
+    padding: 12px 13px;
+    font-size: 12px;
+  }
+}

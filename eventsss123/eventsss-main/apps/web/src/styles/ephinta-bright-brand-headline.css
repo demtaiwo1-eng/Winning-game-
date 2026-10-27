@@ -1,0 +1,71 @@
+/* EPHINTA bright hero type: vivid but readable, with marker safely below the glyphs. */
+.eph-landing .eph-title.ephinta-bright-headline {
+  color: #fffaff;
+  text-wrap: balance;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  text-shadow: 0 2px 22px rgba(118, 64, 201, 0.16);
+}
+
+.eph-landing .eph-title.ephinta-bright-headline .ephinta-marker-word {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  padding-bottom: 0.13em;
+  z-index: 0;
+}
+
+.eph-landing .eph-title.ephinta-bright-headline .ephinta-marker-word em {
+  font-style: inherit;
+  color: #ff4fba;
+  background: linear-gradient(100deg, #28d9ff 0%, #a56bff 40%, #ff55bd 72%, #ffb454 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.eph-landing .eph-title.ephinta-bright-headline .ephinta-marker-word::after {
+  content: "";
+  position: absolute;
+  left: 0.02em;
+  right: 0.01em;
+  bottom: -0.02em;
+  height: 0.105em;
+  min-height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd166 0%, #ffb454 48%, #ff8d80 100%);
+  transform: rotate(-1.4deg);
+  transform-origin: left center;
+  z-index: -1;
+  opacity: 0.96;
+  pointer-events: none;
+}
+
+.eph-landing .eph-title.ephinta-bright-headline .ephinta-marker-word::before {
+  content: "";
+  position: absolute;
+  left: 0.16em;
+  right: 0.08em;
+  bottom: -0.12em;
+  height: 0.065em;
+  min-height: 2px;
+  border-radius: 999px;
+  background: #ffc45f;
+  transform: rotate(-0.6deg);
+  z-index: -1;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .eph-landing .eph-title.ephinta-bright-headline {
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+  }
+
+  .eph-landing .eph-title.ephinta-bright-headline .ephinta-marker-word {
+    padding-bottom: 0.17em;
+  }
+}

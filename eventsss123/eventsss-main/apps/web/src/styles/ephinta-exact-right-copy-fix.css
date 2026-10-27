@@ -1,0 +1,23 @@
+/* Exact class attached by the source scan to the actual JSX text elements. */
+.eph-landing[data-theme="colorful"] .ephinta-right-copy-visible,
+.eph-landing[data-theme="colorful"] .ephinta-right-copy-visible * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-shadow: 0 1px 2px rgba(12, 6, 30, 0.32) !important;
+}
+.eph-landing[data-theme="colorful"] .ephinta-right-copy-visible {
+  font-size: 1rem !important;
+  font-weight: 550 !important;
+  line-height: 1.75 !important;
+  letter-spacing: 0.005em !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+@media (max-width: 760px) {
+  .eph-landing[data-theme="colorful"] .ephinta-right-copy-visible {
+    font-size: 0.98rem !important;
+    line-height: 1.7 !important;
+  }
+}

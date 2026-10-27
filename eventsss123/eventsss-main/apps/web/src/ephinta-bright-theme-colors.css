@@ -1,0 +1,204 @@
+/*
+ * EPHINTA Bright Colour System
+ * Intentionally loaded after the existing theme sheets.
+ * Dark mode: bright, high-contrast text and vivid links.
+ * Light mode: dark, readable text and saturated accents.
+ * Colorful mode: multi-colour gradients and distinct portal accents.
+ */
+:root {
+  --ephinta-violet: #8b5cf6;
+  --ephinta-violet-bright: #b69cff;
+  --ephinta-cyan: #22d3ee;
+  --ephinta-blue: #3b82f6;
+  --ephinta-pink: #ff4fa3;
+  --ephinta-orange: #ff8a32;
+  --ephinta-yellow: #ffc247;
+  --ephinta-green: #22c55e;
+  --ephinta-text-on-dark: #f8f7ff;
+  --ephinta-muted-on-dark: #d7d4ec;
+  --ephinta-text-on-light: #17152a;
+  --ephinta-muted-on-light: #45415d;
+  --ephinta-link-on-dark: #a9c7ff;
+  --ephinta-link-on-light: #4f2bbd;
+}
+
+/* DARK: lift text brightness without washing out the navy surfaces. */
+:root[data-ephinta-theme="dark"],
+html[data-ephinta-theme="dark"],
+[data-theme="dark"],
+.theme-dark {
+  color-scheme: dark;
+  --text-primary: #f8f7ff;
+  --text-secondary: #d7d4ec;
+  --text-muted: #b7b1d3;
+  --color-text: #f8f7ff;
+  --color-text-secondary: #d7d4ec;
+  --link-color: #a9c7ff;
+  --primary-color: #b69cff;
+  --accent-color: #ffc247;
+  --border-color: #4c466d;
+}
+:root[data-ephinta-theme="dark"] body,
+html[data-ephinta-theme="dark"] body,
+[data-theme="dark"] body,
+.theme-dark body {
+  color: #f8f7ff;
+}
+:root[data-ephinta-theme="dark"] a,
+html[data-ephinta-theme="dark"] a,
+[data-theme="dark"] a,
+.theme-dark a {
+  color: #a9c7ff;
+  text-decoration-color: rgba(169, 199, 255, .55);
+}
+:root[data-ephinta-theme="dark"] a:hover,
+html[data-ephinta-theme="dark"] a:hover,
+[data-theme="dark"] a:hover,
+.theme-dark a:hover {
+  color: #ffc247;
+}
+:root[data-ephinta-theme="dark"] p,
+:root[data-ephinta-theme="dark"] li,
+:root[data-ephinta-theme="dark"] label,
+:root[data-ephinta-theme="dark"] small,
+html[data-ephinta-theme="dark"] p,
+html[data-ephinta-theme="dark"] li,
+html[data-ephinta-theme="dark"] label,
+html[data-ephinta-theme="dark"] small {
+  color: #e7e3fa;
+}
+
+/* LIGHT: dark copy, clear borders, and bright but legible accents. */
+:root[data-ephinta-theme="light"],
+html[data-ephinta-theme="light"],
+[data-theme="light"],
+.theme-light {
+  color-scheme: light;
+  --text-primary: #17152a;
+  --text-secondary: #35304c;
+  --text-muted: #5c5675;
+  --color-text: #17152a;
+  --color-text-secondary: #35304c;
+  --link-color: #4f2bbd;
+  --primary-color: #5b35c5;
+  --accent-color: #b45309;
+  --border-color: #d4cde8;
+}
+:root[data-ephinta-theme="light"] body,
+html[data-ephinta-theme="light"] body,
+[data-theme="light"] body,
+.theme-light body {
+  color: #17152a;
+}
+:root[data-ephinta-theme="light"] a,
+html[data-ephinta-theme="light"] a,
+[data-theme="light"] a,
+.theme-light a {
+  color: #4f2bbd;
+  text-decoration-color: rgba(79, 43, 189, .45);
+}
+:root[data-ephinta-theme="light"] a:hover,
+html[data-ephinta-theme="light"] a:hover,
+[data-theme="light"] a:hover,
+.theme-light a:hover {
+  color: #c02672;
+}
+:root[data-ephinta-theme="light"] p,
+:root[data-ephinta-theme="light"] li,
+:root[data-ephinta-theme="light"] label,
+:root[data-ephinta-theme="light"] small,
+html[data-ephinta-theme="light"] p,
+html[data-ephinta-theme="light"] li,
+html[data-ephinta-theme="light"] label,
+html[data-ephinta-theme="light"] small {
+  color: #35304c;
+}
+
+/* COLORFUL: multi-colour, bright and sharp, while keeping text contrast high. */
+:root[data-ephinta-theme="colorful"],
+html[data-ephinta-theme="colorful"],
+[data-theme="colorful"],
+.theme-colorful {
+  color-scheme: dark;
+  --text-primary: #ffffff;
+  --text-secondary: #f0eaff;
+  --text-muted: #ded5ff;
+  --color-text: #ffffff;
+  --color-text-secondary: #f0eaff;
+  --link-color: #7deaff;
+  --primary-color: #b69cff;
+  --accent-color: #ffd166;
+  --border-color: rgba(255,255,255,.28);
+}
+:root[data-ephinta-theme="colorful"] body,
+html[data-ephinta-theme="colorful"] body,
+[data-theme="colorful"] body,
+.theme-colorful body {
+  color: #ffffff;
+}
+:root[data-ephinta-theme="colorful"] a,
+html[data-ephinta-theme="colorful"] a,
+[data-theme="colorful"] a,
+.theme-colorful a {
+  color: #7deaff;
+}
+:root[data-ephinta-theme="colorful"] a:hover,
+html[data-ephinta-theme="colorful"] a:hover,
+[data-theme="colorful"] a:hover,
+.theme-colorful a:hover {
+  color: #ffd166;
+}
+
+/* Bright, differentiated CTA and portal surfaces. */
+.eph-btn-gold,
+.ephinta-marketing-zone__cta,
+button.eph-btn-gold {
+  color: #24152d !important;
+  background: linear-gradient(120deg, #ffd166 0%, #ff9f43 100%) !important;
+  border-color: #ffb84d !important;
+}
+.eph-btn-purple,
+button.eph-btn-purple {
+  color: #fff !important;
+  background: linear-gradient(120deg, #7c3aed 0%, #a855f7 48%, #db2777 100%) !important;
+  border-color: #b69cff !important;
+}
+.ephinta-marketing-zone {
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(34,211,238,.24), transparent 31%),
+    radial-gradient(circle at 8% 90%, rgba(255,79,163,.2), transparent 32%),
+    linear-gradient(135deg, #17152f 0%, #29204c 52%, #1b2448 100%);
+}
+.ephinta-marketing-zone h2 { color: #ffffff; }
+.ephinta-marketing-zone p { color: #e8e2ff; }
+.ephinta-marketing-zone__eyebrow { color: #ffc8e3; }
+.ephinta-marketing-zone__benefits span:nth-child(4n+1) { border-color: rgba(34,211,238,.65); }
+.ephinta-marketing-zone__benefits span:nth-child(4n+2) { border-color: rgba(182,156,255,.75); }
+.ephinta-marketing-zone__benefits span:nth-child(4n+3) { border-color: rgba(255,79,163,.65); }
+.ephinta-marketing-zone__benefits span:nth-child(4n) { border-color: rgba(255,194,71,.75); }
+
+/* Keep native form controls legible in both light and dark themes. */
+:root[data-ephinta-theme="dark"] input,
+:root[data-ephinta-theme="dark"] select,
+:root[data-ephinta-theme="dark"] textarea,
+:root[data-ephinta-theme="colorful"] input,
+:root[data-ephinta-theme="colorful"] select,
+:root[data-ephinta-theme="colorful"] textarea {
+  color: #f8f7ff;
+  background-color: #24213c;
+  border-color: #62568e;
+}
+:root[data-ephinta-theme="light"] input,
+:root[data-ephinta-theme="light"] select,
+:root[data-ephinta-theme="light"] textarea {
+  color: #17152a;
+  background-color: #ffffff;
+  border-color: #bcb2d9;
+}
+:root[data-ephinta-theme="dark"] input::placeholder,
+:root[data-ephinta-theme="dark"] textarea::placeholder,
+:root[data-ephinta-theme="colorful"] input::placeholder,
+:root[data-ephinta-theme="colorful"] textarea::placeholder { color: #b7b1d3; }
+:root[data-ephinta-theme="light"] input::placeholder,
+:root[data-ephinta-theme="light"] textarea::placeholder { color: #6b6481; }

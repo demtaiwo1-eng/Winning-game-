@@ -1,0 +1,9 @@
+{
+  "name": "ESS (Node 20 + PostgreSQL 16)",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "forwardPorts": [5000, 5432],
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": { "vscode": { "extensions": ["Prisma.prisma"] } }
+}

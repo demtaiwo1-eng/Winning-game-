@@ -1,0 +1,135 @@
+/*
+ * EPHINTA Multicolor contrast correction v2.
+ * Uses the current .eph-landing[data-theme="colorful"] theme scope.
+ * Hero headline, supporting copy and the purple feature panel are made readable.
+ */
+
+/* HERO HEADLINE: override earlier pale/transparent text rules with higher specificity. */
+.eph-landing[data-theme="colorful"] .eph-title,
+.eph-landing[data-theme="colorful"] h1.eph-title {
+  color: #24143f !important;
+  -webkit-text-fill-color: #24143f !important;
+  font-size: clamp(3.1rem, 5.2vw, 4.7rem) !important;
+  font-weight: 900 !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.055em !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+  text-wrap: balance;
+}
+
+.eph-landing[data-theme="colorful"] .eph-title em {
+  background: linear-gradient(100deg, #2369e8 0%, #8738d5 48%, #d32d9f 76%, #b94736 100%) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  font-style: normal !important;
+  opacity: 1 !important;
+}
+
+/* Make the first line dark and sharp, even if inherited gradient/opacity rules exist. */
+.eph-landing[data-theme="colorful"] .eph-title > span:not(.ephinta-marker-phrase) {
+  color: #24143f !important;
+  -webkit-text-fill-color: #24143f !important;
+  opacity: 1 !important;
+}
+
+/* Hero description: dark enough for the pale pink/cream background. */
+.eph-landing[data-theme="colorful"] .eph-title + p,
+.eph-landing[data-theme="colorful"] .eph-title ~ p,
+.eph-landing[data-theme="colorful"] .eph-hero p,
+.eph-landing[data-theme="colorful"] [class*="hero"] p {
+  color: #453253 !important;
+  -webkit-text-fill-color: #453253 !important;
+  opacity: 1 !important;
+  font-size: clamp(1rem, 1.12vw, 1.125rem) !important;
+  font-weight: 500 !important;
+  line-height: 1.75 !important;
+  text-shadow: none !important;
+}
+
+/* Right-hand purple card: enforce light foreground text on its dark gradient. */
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast,
+.eph-landing[data-theme="colorful"] [class*="feature-card"],
+.eph-landing[data-theme="colorful"] [class*="people-card"],
+.eph-landing[data-theme="colorful"] [class*="professional-card"],
+.eph-landing[data-theme="colorful"] [class*="hero-card"] {
+  color: #fffaff !important;
+}
+
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h1,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h2,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast h3,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast p,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast span,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast li,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast small,
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast strong,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] h1,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] h2,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] h3,
+.eph-landing[data-theme="colorful"] [class*="feature-card"] p,
+.eph-landing[data-theme="colorful"] [class*="people-card"] p,
+.eph-landing[data-theme="colorful"] [class*="professional-card"] p,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] p {
+  color: #fffaff !important;
+  -webkit-text-fill-color: #fffaff !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] .ephinta-feature-panel-contrast [class*="label"],
+.eph-landing[data-theme="colorful"] [class*="feature-card"] [class*="eyebrow"] {
+  color: #ffe18a !important;
+  -webkit-text-fill-color: #ffe18a !important;
+  font-weight: 800 !important;
+}
+
+/* One slim marker stripe below the word. Disable old duplicate pseudo-strokes. */
+.eph-landing[data-theme="colorful"] .ephinta-marker-phrase::before,
+.eph-landing[data-theme="colorful"] .eph-title::before {
+  content: none !important;
+  display: none !important;
+}
+
+.eph-landing[data-theme="colorful"] .ephinta-marker-phrase {
+  position: relative !important;
+  display: inline-block !important;
+  padding-bottom: 0.11em !important;
+  isolation: isolate;
+}
+
+.eph-landing[data-theme="colorful"] .ephinta-marker-phrase::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 0.02em !important;
+  right: 0.015em !important;
+  bottom: -0.025em !important;
+  height: 0.075em !important;
+  min-height: 3px;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #ffe59a 0%, #ffc052 58%, #d94e36 100%) !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  transform: rotate(-0.45deg) !important;
+  pointer-events: none;
+}
+
+/* Do not let broad theme rules fade the hero children. */
+.eph-landing[data-theme="colorful"] .eph-hero,
+.eph-landing[data-theme="colorful"] .eph-hero *,
+.eph-landing[data-theme="colorful"] .eph-title,
+.eph-landing[data-theme="colorful"] .eph-title + p {
+  opacity: 1;
+}
+
+@media (max-width: 760px) {
+  .eph-landing[data-theme="colorful"] .eph-title,
+  .eph-landing[data-theme="colorful"] h1.eph-title {
+    font-size: clamp(2.75rem, 12vw, 3.8rem) !important;
+    line-height: 1.05 !important;
+  }
+}

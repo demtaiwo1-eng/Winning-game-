@@ -1,0 +1,81 @@
+/* EPHINTA full-viewport layout: no browser-default body margin or white gutters. */
+:root, html, body, #root {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+html {
+  height: 100%;
+  overflow-x: clip;
+  background: var(--ep-surface, #17152f);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
+  background: var(--ep-surface, #17152f);
+}
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flow-root;
+  isolation: isolate;
+}
+*, *::before, *::after { box-sizing: border-box; }
+img, video, canvas, svg { max-width: 100%; }
+img { height: auto; }
+button, input, select, textarea { font: inherit; }
+button { touch-action: manipulation; }
+a, button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+
+/* Main app and landing wrappers should occupy the available viewport. */
+.eph-landing,
+.ess-landing,
+.ess-app,
+.ess-app-shell,
+.ess-layout,
+.ess-main,
+.ephinta-app,
+.ephinta-shell,
+.ephinta-intro,
+.ephinta-intro__screen,
+#app,
+#app-root {
+  min-width: 0;
+  max-width: 100%;
+}
+.eph-landing,
+.ess-landing,
+.ephinta-app,
+.ephinta-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Only neutralize page-level outer gutters; retain intentional card/form padding. */
+body > #root { margin: 0; padding: 0; }
+@supports (padding: env(safe-area-inset-top)) {
+  .ephinta-safe-area {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+}
+@media (max-width: 768px) {
+  .eph-landing, .ess-landing, .ephinta-app, .ephinta-shell {
+    width: 100%;
+    border-radius: 0;
+  }
+}
+
+/* The intro watchdog can hide only explicitly opted-in intro overlays. */
+html.ephinta-intro-expired [data-ephinta-intro-overlay] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

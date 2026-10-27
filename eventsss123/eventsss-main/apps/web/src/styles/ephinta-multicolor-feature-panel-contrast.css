@@ -1,0 +1,70 @@
+/*
+ * EPHINTA Multicolor: right-side feature card contrast repair.
+ * The card has a dark purple/blue gradient, so all informational text inside it
+ * must use a high-contrast light foreground regardless of inherited color rules.
+ */
+
+/* Target the right-hand feature card by its common structural classes and content. */
+.eph-landing[data-theme="colorful"] [class*="feature"],
+.eph-landing[data-theme="colorful"] [class*="people"],
+.eph-landing[data-theme="colorful"] [class*="professional"],
+.eph-landing[data-theme="colorful"] [class*="hero-card"],
+.eph-landing[data-theme="colorful"] [class*="spotlight"],
+.eph-landing[data-theme="colorful"] [class*="showcase"] {
+  color: #ffffff !important;
+}
+
+/* Explicitly reset text on descendants, including nested spans with their own dark colors. */
+.eph-landing[data-theme="colorful"] [class*="feature"] h1,
+.eph-landing[data-theme="colorful"] [class*="feature"] h2,
+.eph-landing[data-theme="colorful"] [class*="feature"] h3,
+.eph-landing[data-theme="colorful"] [class*="feature"] h4,
+.eph-landing[data-theme="colorful"] [class*="feature"] p,
+.eph-landing[data-theme="colorful"] [class*="feature"] span,
+.eph-landing[data-theme="colorful"] [class*="feature"] small,
+.eph-landing[data-theme="colorful"] [class*="feature"] li,
+.eph-landing[data-theme="colorful"] [class*="feature"] strong,
+.eph-landing[data-theme="colorful"] [class*="people"] h1,
+.eph-landing[data-theme="colorful"] [class*="people"] h2,
+.eph-landing[data-theme="colorful"] [class*="people"] h3,
+.eph-landing[data-theme="colorful"] [class*="people"] p,
+.eph-landing[data-theme="colorful"] [class*="people"] span,
+.eph-landing[data-theme="colorful"] [class*="professional"] p,
+.eph-landing[data-theme="colorful"] [class*="professional"] span,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] p,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] span,
+.eph-landing[data-theme="colorful"] [class*="spotlight"] p,
+.eph-landing[data-theme="colorful"] [class*="spotlight"] span,
+.eph-landing[data-theme="colorful"] [class*="showcase"] p,
+.eph-landing[data-theme="colorful"] [class*="showcase"] span {
+  color: #fffaff !important;
+  -webkit-text-fill-color: #fffaff !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* Eyebrow/mini-labels get warm gold, but never a dark inherited color. */
+.eph-landing[data-theme="colorful"] [class*="feature"] [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] [class*="feature"] [class*="label"],
+.eph-landing[data-theme="colorful"] [class*="people"] [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] [class*="hero-card"] [class*="eyebrow"] {
+  color: #ffe18a !important;
+  -webkit-text-fill-color: #ffe18a !important;
+  font-weight: 800 !important;
+}
+
+/* Keep text readable if the card uses a custom inline color or muted utility class. */
+.eph-landing[data-theme="colorful"] [class*="feature"] [style*="color"],
+.eph-landing[data-theme="colorful"] [class*="people"] [style*="color"],
+.eph-landing[data-theme="colorful"] [class*="hero-card"] [style*="color"] {
+  color: #fffaff !important;
+  -webkit-text-fill-color: #fffaff !important;
+}
+
+/* Card action buttons retain their own intended contrasting button colors. */
+.eph-landing[data-theme="colorful"] [class*="feature"] button,
+.eph-landing[data-theme="colorful"] [class*="people"] button,
+.eph-landing[data-theme="colorful"] [class*="hero-card"] button {
+  -webkit-text-fill-color: currentColor;
+  opacity: 1 !important;
+}

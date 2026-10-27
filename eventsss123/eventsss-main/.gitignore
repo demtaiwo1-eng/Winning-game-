@@ -1,0 +1,53 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.pem
+*.log
+coverage/
+.DS_Store
+
+# Capacitor
+apps/mobile/android/build/
+apps/mobile/android/app/build/
+apps/mobile/android/.gradle/
+apps/mobile/android/local.properties
+
+# Playwright-generated test artifacts
+apps/web/test-results/
+apps/web/playwright-report/
+
+# Local QA reports and generated backups
+.ess-qa/
+.ess-release/
+.ess-implementation/
+.ess-backups/
+.backups/
+.cleanup-backup-*/
+.ephinta-backups/
+.venv-ephinta-images/
+/artifacts/
+/bash.exe.stackdump
+/node
+/remotion/
+
+# Dependencies and generated build output
+node_modules/
+dist/
+build/
+.next/
+.vite/
+.turbo/
+coverage/
+
+# Local environment secrets
+.env
+.env.*
+!.env.example
+.ess-space-maintenance/
+.ess-release-logs/
+*.tsbuildinfo
+*.bak
+*.bak-*
+*.rej

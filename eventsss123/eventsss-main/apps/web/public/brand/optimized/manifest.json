@@ -1,0 +1,173 @@
+{
+  "note": "Responsive/high-DPI assets; sizes are pixel widths. Original files are unchanged.",
+  "logos": {
+    "ephinta_logo1": {
+      "source": "apps/web/public/brand/ephinta_logo1.png",
+      "original_size": [
+        1254,
+        1254
+      ],
+      "responsive": [
+        {
+          "width": 160,
+          "height": 160,
+          "png": "optimized/full/ephinta_logo1-160w.png",
+          "webp": "optimized/full/ephinta_logo1-160w.webp"
+        },
+        {
+          "width": 240,
+          "height": 240,
+          "png": "optimized/full/ephinta_logo1-240w.png",
+          "webp": "optimized/full/ephinta_logo1-240w.webp"
+        },
+        {
+          "width": 320,
+          "height": 320,
+          "png": "optimized/full/ephinta_logo1-320w.png",
+          "webp": "optimized/full/ephinta_logo1-320w.webp"
+        },
+        {
+          "width": 480,
+          "height": 480,
+          "png": "optimized/full/ephinta_logo1-480w.png",
+          "webp": "optimized/full/ephinta_logo1-480w.webp"
+        },
+        {
+          "width": 640,
+          "height": 640,
+          "png": "optimized/full/ephinta_logo1-640w.png",
+          "webp": "optimized/full/ephinta_logo1-640w.webp"
+        },
+        {
+          "width": 960,
+          "height": 960,
+          "png": "optimized/full/ephinta_logo1-960w.png",
+          "webp": "optimized/full/ephinta_logo1-960w.webp"
+        }
+      ]
+    },
+    "ephinta_logo2": {
+      "source": "apps/web/public/brand/ephinta_logo2.png",
+      "original_size": [
+        1254,
+        1254
+      ],
+      "responsive": [
+        {
+          "width": 32,
+          "height": 32,
+          "png": "optimized/mark/ephinta_logo2-32w.png",
+          "webp": "optimized/mark/ephinta_logo2-32w.webp"
+        },
+        {
+          "width": 48,
+          "height": 48,
+          "png": "optimized/mark/ephinta_logo2-48w.png",
+          "webp": "optimized/mark/ephinta_logo2-48w.webp"
+        },
+        {
+          "width": 64,
+          "height": 64,
+          "png": "optimized/mark/ephinta_logo2-64w.png",
+          "webp": "optimized/mark/ephinta_logo2-64w.webp"
+        },
+        {
+          "width": 96,
+          "height": 96,
+          "png": "optimized/mark/ephinta_logo2-96w.png",
+          "webp": "optimized/mark/ephinta_logo2-96w.webp"
+        },
+        {
+          "width": 128,
+          "height": 128,
+          "png": "optimized/mark/ephinta_logo2-128w.png",
+          "webp": "optimized/mark/ephinta_logo2-128w.webp"
+        },
+        {
+          "width": 192,
+          "height": 192,
+          "png": "optimized/mark/ephinta_logo2-192w.png",
+          "webp": "optimized/mark/ephinta_logo2-192w.webp"
+        },
+        {
+          "width": 256,
+          "height": 256,
+          "png": "optimized/mark/ephinta_logo2-256w.png",
+          "webp": "optimized/mark/ephinta_logo2-256w.webp"
+        },
+        {
+          "width": 384,
+          "height": 384,
+          "png": "optimized/mark/ephinta_logo2-384w.png",
+          "webp": "optimized/mark/ephinta_logo2-384w.webp"
+        },
+        {
+          "width": 512,
+          "height": 512,
+          "png": "optimized/mark/ephinta_logo2-512w.png",
+          "webp": "optimized/mark/ephinta_logo2-512w.webp"
+        },
+        {
+          "width": 1024,
+          "height": 1024,
+          "png": "optimized/mark/ephinta_logo2-1024w.png",
+          "webp": "optimized/mark/ephinta_logo2-1024w.webp"
+        }
+      ],
+      "app_icons": [
+        {
+          "size": 48,
+          "png": "optimized/mark/app-icon-48.png"
+        },
+        {
+          "size": 72,
+          "png": "optimized/mark/app-icon-72.png"
+        },
+        {
+          "size": 96,
+          "png": "optimized/mark/app-icon-96.png"
+        },
+        {
+          "size": 128,
+          "png": "optimized/mark/app-icon-128.png"
+        },
+        {
+          "size": 144,
+          "png": "optimized/mark/app-icon-144.png"
+        },
+        {
+          "size": 152,
+          "png": "optimized/mark/app-icon-152.png"
+        },
+        {
+          "size": 167,
+          "png": "optimized/mark/app-icon-167.png"
+        },
+        {
+          "size": 180,
+          "png": "optimized/mark/app-icon-180.png"
+        },
+        {
+          "size": 192,
+          "png": "optimized/mark/app-icon-192.png"
+        },
+        {
+          "size": 256,
+          "png": "optimized/mark/app-icon-256.png"
+        },
+        {
+          "size": 384,
+          "png": "optimized/mark/app-icon-384.png"
+        },
+        {
+          "size": 512,
+          "png": "optimized/mark/app-icon-512.png"
+        },
+        {
+          "size": 1024,
+          "png": "optimized/mark/app-icon-1024.png"
+        }
+      ]
+    }
+  }
+}

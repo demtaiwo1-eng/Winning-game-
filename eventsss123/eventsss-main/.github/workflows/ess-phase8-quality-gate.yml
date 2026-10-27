@@ -1,0 +1,42 @@
+name: ESS Phase 8 Quality Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://ess:ess@127.0.0.1:5432/ess_test?schema=public
+      JWT_SECRET: ess-phase8-test-secret-not-for-production-000000000000
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173
+      APP_BASE_URL: http://localhost:4173
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate Prisma schema and API tests
+        run: npm run check -w apps/api
+      - name: Run web tests
+        run: npm run test -w apps/web
+      - name: Build web production bundle
+        run: npm run build -w apps/web
+      - name: Verify Workbox output
+        shell: bash
+        run: |
+          test -s apps/web/dist/sw.js
+          test "$(wc -c < apps/web/dist/sw.js)" -gt 1000
+          ! grep -q 'self\.__WB_MANIFEST' apps/web/dist/sw.js

@@ -1,0 +1,27 @@
+# Render Blueprint: API connected to the shared external Aiven PostgreSQL service.
+services:
+  - type: web
+    name: ess-api
+    runtime: node
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /health
+    buildCommand: npm ci --include=dev && npm run prisma:generate && npm run build
+    # Aiven's TLS-enabled connection string is entered as a Render secret.
+    # Migrations and idempotent seed data must succeed before the API starts.
+    startCommand: npm run db:deploy -w apps/api && npm run db:seed -w apps/api && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://localhost,capacitor://localhost,http://localhost
+      - key: ALLOW_CODESPACES
+        value: "false"
+      - key: DEFAULT_CURRENCY
+        value: NGN

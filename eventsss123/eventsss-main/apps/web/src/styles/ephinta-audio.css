@@ -1,0 +1,46 @@
+.eph-audio {
+  width: min(100%, 520px);
+  box-sizing: border-box;
+  padding: 20px;
+  color: #f6f7fb;
+  background: #141b2e;
+  border: 1px solid #3a4762;
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgb(0 0 0 / 18%);
+}
+.eph-audio__heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.eph-audio__heading > span { font-size: 28px; color: #c4b5fd; }
+.eph-audio__heading strong { font-size: 18px; }
+.eph-audio__heading p, .eph-audio__fineprint {
+  color: #c1c9da;
+  font-size: 13px;
+}
+.eph-audio__notice {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #28213e;
+  color: #f6e9ff;
+}
+.eph-audio__controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.eph-audio button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #8064d9;
+  border-radius: 11px;
+  color: white;
+  background: #6d42d8;
+  font-weight: 700;
+  cursor: pointer;
+}
+.eph-audio button:focus-visible,
+.eph-audio input:focus-visible {
+  outline: 3px solid #67e8f9;
+  outline-offset: 3px;
+}
+.eph-audio label { display: block; margin: 14px 0 8px; }
+.eph-audio input[type="range"] { width: 100%; accent-color: #a78bfa; }
+.eph-audio__status { min-height: 1.4em; color: #a7f3d0; }

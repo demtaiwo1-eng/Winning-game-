@@ -1,0 +1,4 @@
+/* EPHINTA testability/accessibility repair: splash must not trap pointer input. */
+.ephinta-intro {
+  pointer-events: none !important;
+}

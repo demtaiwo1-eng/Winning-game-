@@ -1,0 +1,101 @@
+/*
+ * EPHINTA brand refinement:
+ * - coherent jewel-tone palette for colorful mode
+ * - balanced wordmark and brand copy
+ * - keep the centered header clear of the standalone theme dropdown
+ */
+
+/* A more deliberate, coordinated colorful theme: deep indigo, teal, orchid and restrained amber. */
+.eph-landing[data-theme="colorful"] {
+  --ephinta-color-bg: #101426;
+  --ephinta-color-surface: #191e36;
+  --ephinta-color-surface-raised: #222844;
+  --ephinta-color-text: #f7f7ff;
+  --ephinta-color-muted: #c2c7df;
+  --ephinta-color-primary: #8b7cff;
+  --ephinta-color-secondary: #38d9c5;
+  --ephinta-color-accent: #ffbf69;
+  --ephinta-color-border: rgba(196, 199, 255, 0.2);
+  color: var(--ephinta-color-text);
+  background-color: var(--ephinta-color-bg);
+}
+
+/* Restrained accents, avoiding competing saturated gradients on every element. */
+.eph-landing[data-theme="colorful"] .eph-title,
+.eph-landing[data-theme="colorful"] h1 {
+  color: #fbfaff;
+  text-wrap: balance;
+}
+
+.eph-landing[data-theme="colorful"] a,
+.eph-landing[data-theme="colorful"] .eph-link {
+  text-decoration-color: rgba(56, 217, 197, 0.72);
+}
+
+.eph-landing[data-theme="colorful"] button,
+.eph-landing[data-theme="colorful"] [role="button"] {
+  --ephinta-button-accent: #8b7cff;
+}
+
+/* Keep brand/wordmark text balanced beside its logo across desktop and mobile. */
+.eph-landing .eph-brand,
+.eph-landing .eph-brand-name,
+.eph-landing .ephinta-brand,
+.eph-landing [class*="brand-text"],
+.eph-landing [class*="wordmark"] {
+  min-width: 0;
+  max-width: 100%;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  line-height: 1.15;
+  letter-spacing: 0.015em;
+}
+
+.eph-landing .eph-brand img,
+.eph-landing .ephinta-brand img,
+.eph-landing [class*="brand"] img,
+.eph-landing [class*="logo"] img {
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+/*
+ * The current header has a standalone select labelled "Colour theme" and a
+ * separate #ephinta-theme-select. Hide only the standalone labelled control;
+ * retain the ID'd selector so the menu can own theme switching.
+ */
+.eph-landing select[aria-label="Colour theme"] {
+  display: none !important;
+}
+
+.eph-landing #ephinta-theme-select {
+  max-width: 9.5rem;
+  min-width: 6.5rem;
+  box-sizing: border-box;
+  color: inherit;
+  background: rgba(20, 22, 42, 0.94);
+  border: 1px solid rgba(139, 124, 255, 0.55);
+  border-radius: 0.7rem;
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+}
+
+/* Avoid the theme selector forcing the header's central content out of balance. */
+.eph-landing header select[aria-label="Colour theme"] {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .eph-landing .eph-brand,
+  .eph-landing .eph-brand-name,
+  .eph-landing .ephinta-brand,
+  .eph-landing [class*="brand-text"],
+  .eph-landing [class*="wordmark"] {
+    font-size: clamp(0.78rem, 3.5vw, 1rem);
+  }
+
+  .eph-landing #ephinta-theme-select {
+    max-width: 8rem;
+    min-width: 5.5rem;
+  }
+}

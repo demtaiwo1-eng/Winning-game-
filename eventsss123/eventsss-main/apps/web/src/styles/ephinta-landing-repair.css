@@ -1,0 +1,194 @@
+/*
+ * EPHINTA landing-page layout repair.
+ * Scoped to the public landing page; avoids changing authenticated dashboards.
+ * Original brand logo assets are never modified.
+ */
+:root {
+  --ephinta-navy: #0A0F24;
+  --ephinta-slate: #1E2746;
+  --ephinta-orange: #FFB020;
+  --ephinta-purple: #2A06B8;
+  --ephinta-violet: #7B3DFF;
+  --ephinta-magenta: #FF3BD7;
+  --ephinta-electric: #00C2FF;
+  --ephinta-light: #E5EAF2;
+  --ephinta-white: #FFFFFF;
+}
+
+/* Stabilize sizing so padding cannot unexpectedly expand layout widths. */
+body:has(.public-landing),
+body:has(.landing-page),
+body:has([data-page="public-landing"]) {
+  overflow-x: clip;
+}
+.public-landing *,
+.landing-page *,
+[data-page="public-landing"] * {
+  box-sizing: border-box;
+}
+
+/* Prevent flex/grid children from forcing headings into one-word columns. */
+.public-landing h1,
+.landing-page h1,
+[data-page="public-landing"] h1 {
+  max-width: 13ch;
+  min-width: 0;
+  width: auto;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: balance;
+  font-size: clamp(2.75rem, 5.2vw, 5.1rem);
+  line-height: .99;
+  letter-spacing: -.055em;
+}
+.public-landing p,
+.landing-page p,
+[data-page="public-landing"] p {
+  overflow-wrap: break-word;
+}
+
+/* Keep main content centered and stop accidental narrow columns. */
+.public-landing main,
+.landing-page main,
+[data-page="public-landing"] main {
+  width: 100%;
+  min-width: 0;
+}
+.public-landing section,
+.landing-page section,
+[data-page="public-landing"] section {
+  min-width: 0;
+}
+
+/* Common hero patterns: two-column layout, with readable text and planner card. */
+.public-landing .hero,
+.public-landing .landing-hero,
+.public-landing .hero-content,
+.landing-page .hero,
+.landing-page .landing-hero,
+.landing-page .hero-content,
+[data-page="public-landing"] .hero,
+[data-page="public-landing"] .landing-hero,
+[data-page="public-landing"] .hero-content {
+  min-width: 0;
+}
+.public-landing .hero,
+.public-landing .landing-hero,
+.landing-page .hero,
+.landing-page .landing-hero,
+[data-page="public-landing"] .hero,
+[data-page="public-landing"] .landing-hero {
+  grid-template-columns: minmax(0, 1.02fr) minmax(360px, .98fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+.public-landing .hero > *,
+.public-landing .landing-hero > *,
+.landing-page .hero > *,
+.landing-page .landing-hero > *,
+[data-page="public-landing"] .hero > *,
+[data-page="public-landing"] .landing-hero > * {
+  min-width: 0;
+}
+.public-landing .hero p,
+.public-landing .landing-hero p,
+.landing-page .hero p,
+.landing-page .landing-hero p,
+[data-page="public-landing"] .hero p,
+[data-page="public-landing"] .landing-hero p {
+  max-width: 42rem;
+  line-height: 1.7;
+}
+
+/* Planner card should be contained, not float across or below the viewport. */
+.public-landing .planner-card,
+.public-landing .event-planner,
+.public-landing .event-builder-card,
+.landing-page .planner-card,
+.landing-page .event-planner,
+.landing-page .event-builder-card,
+[data-page="public-landing"] .planner-card,
+[data-page="public-landing"] .event-planner,
+[data-page="public-landing"] .event-builder-card {
+  width: 100%;
+  max-width: 34rem;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+/* Keep the navigation and action controls from creating overflow. */
+.public-landing nav,
+.landing-page nav,
+[data-page="public-landing"] nav {
+  min-width: 0;
+}
+.public-landing button,
+.public-landing a,
+.landing-page button,
+.landing-page a,
+[data-page="public-landing"] button,
+[data-page="public-landing"] a {
+  max-width: 100%;
+}
+
+/* Tablet: retain two columns only while there is enough room. */
+@media (max-width: 1024px) {
+  .public-landing h1,
+  .landing-page h1,
+  [data-page="public-landing"] h1 {
+    font-size: clamp(2.6rem, 6vw, 4.2rem);
+    max-width: 14ch;
+  }
+  .public-landing .hero,
+  .public-landing .landing-hero,
+  .landing-page .hero,
+  .landing-page .landing-hero,
+  [data-page="public-landing"] .hero,
+  [data-page="public-landing"] .landing-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, .9fr);
+    gap: 2rem;
+  }
+}
+
+/* Mobile: stack the hero cleanly and make all content fit the viewport. */
+@media (max-width: 767px) {
+  .public-landing .hero,
+  .public-landing .landing-hero,
+  .landing-page .hero,
+  .landing-page .landing-hero,
+  [data-page="public-landing"] .hero,
+  [data-page="public-landing"] .landing-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+  .public-landing h1,
+  .landing-page h1,
+  [data-page="public-landing"] h1 {
+    max-width: 15ch;
+    font-size: clamp(2.45rem, 10vw, 4rem);
+    line-height: 1.02;
+  }
+  .public-landing .planner-card,
+  .public-landing .event-planner,
+  .public-landing .event-builder-card,
+  .landing-page .planner-card,
+  .landing-page .event-planner,
+  .landing-page .event-builder-card,
+  [data-page="public-landing"] .planner-card,
+  [data-page="public-landing"] .event-planner,
+  [data-page="public-landing"] .event-builder-card {
+    max-width: 100%;
+  }
+}
+
+/* Narrow phones. */
+@media (max-width: 390px) {
+  .public-landing h1,
+  .landing-page h1,
+  [data-page="public-landing"] h1 {
+    font-size: clamp(2.2rem, 10.5vw, 3rem);
+    letter-spacing: -.045em;
+  }
+}

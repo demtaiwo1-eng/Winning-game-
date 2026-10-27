@@ -1,0 +1,35 @@
+name: ESS Phase 10 Integration Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ess-phase10-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Prisma validation/generation needs a URL; DB-dependent tests remain skipped unless explicitly enabled.
+      DATABASE_URL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Phase 10 integration gate
+        run: bash scripts/phase10-integration-gate.sh

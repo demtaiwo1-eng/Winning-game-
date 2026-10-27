@@ -1,0 +1,831 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  url      = env("DATABASE_URL")
+  provider = "postgresql"
+}
+
+// Money rule: all amounts are BigInt in minor units (kobo, cents) + ISO currency code.
+
+enum Role {
+  CLIENT
+  ORGANIZATION
+  VENDOR
+  RIDER
+  AFFILIATE
+  CONSULTANT
+  VERIFIER
+  ADMIN
+}
+enum OrganizationMode {
+  EVENT_PLANNING
+  SERVICE_PROVIDER
+}
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+enum VerificationKind {
+  IDENTITY
+  BUSINESS
+}
+enum ListingType {
+  VENUE
+  GOOD
+  SERVICE
+}
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+enum EventType {
+  PERSONAL
+  CORPORATE
+  SOCIAL
+  SPORTS
+  CULTURAL
+  RELIGIOUS
+  POLITICAL
+  ENTERTAINMENT
+  EDUCATIONAL
+  VIRTUAL
+}
+enum EventStatus {
+  DRAFT
+  PLANNING
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+enum RsvpStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  MAYBE
+}
+
+enum GuestCheckInMethod {
+  MANUAL
+  NFC
+  BLUETOOTH
+}
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+}
+enum TaskTier {
+  ESSENTIAL
+  RECOMMENDED
+  OPTIONAL
+}
+enum BookingStatus {
+  PENDING
+  PAID
+  CONFIRMED
+  FULFILLED
+  CANCELLED
+  DISPUTED
+  REFUNDED
+}
+enum LedgerType {
+  DEPOSIT
+  WITHDRAWAL
+  ESCROW_HOLD
+  ESCROW_RELEASE
+  ESCROW_REFUND
+  COMMISSION
+  SUBSCRIPTION
+  ADJUSTMENT
+}
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+enum PromotionStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ENDED
+}
+enum ServiceCheckStatus {
+  PENDING
+  GREEN
+  AMBER
+  RED
+}
+
+enum EventReadinessStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ALL_GREEN
+  AT_RISK
+  BLOCKED
+}
+
+enum DispatchStatus {
+  REQUESTED
+  ASSIGNED
+  PICKED_UP
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+enum CartStatus {
+  ACTIVE
+  CHECKED_OUT
+  ABANDONED
+}
+
+enum CheckoutSessionStatus {
+  OPEN
+  PAYMENT_PENDING
+  PAID
+  EXPIRED
+  CANCELLED
+}
+
+model User {
+  id              String     @id @default(uuid())
+  email           String     @unique
+  phone           String?    @unique
+  passwordHash    String
+  name            String
+  role            Role       @default(CLIENT)
+  organizationMode OrganizationMode?
+  status          UserStatus @default(ACTIVE)
+  locale          String     @default("en")
+  country         String?
+  currency        String     @default("NGN")
+  emailVerifiedAt DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  refreshTokens    RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  vendorProfile    VendorProfile?
+  events           Event[]
+  wallets          Wallet[]
+  bookings         Booking[]             @relation("BuyerBookings")
+  subscriptions    Subscription[]
+  notifications    Notification[]
+  sentMessages     Message[]             @relation("SentMessages")
+  receivedMessages Message[]             @relation("ReceivedMessages")
+  reviews          Review[]
+  payments         PaymentIntent[]
+  carts            Cart[]
+  checkoutSessions  CheckoutSession[]
+  verifications    VerificationRequest[]
+  dispatchJobs     DispatchJob[]
+  auditLogs        AuditLog[]
+  verifierProfile  VerifierProfile?
+  serviceChecksVerified EventServiceCheck[] @relation("ServiceCheckVerifier")
+  readinessAssigned EventReadiness[] @relation("AssignedVerifier")
+  verifierAssignments EventVerifierAssignment[] @relation("VerifierAssignments")
+  verifierReviewsReceived VerifierReview[] @relation("VerifierReviews")
+  verifierReviewsAuthored VerifierReview[] @relation("VerifierReviewAuthor")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model VendorProfile {
+  id           String             @id @default(uuid())
+  userId       String             @unique
+  businessName String
+  slug         String             @unique
+  description  String?
+  country      String?
+  city         String?
+  lat          Float?
+  lng          Float?
+  verification VerificationStatus @default(UNVERIFIED)
+  createdAt    DateTime           @default(now())
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  shops      Shop[]
+  listings   Listing[]
+  bookings   Booking[]   @relation("VendorBookings")
+  promotions Promotion[]
+  reviews    Review[]
+  checkoutItems CheckoutItem[]
+}
+
+model Shop {
+  id          String        @id @default(uuid())
+  vendorId    String
+  name        String
+  slug        String        @unique
+  description String?
+  isShowroom  Boolean       @default(false)
+  mediaUrls   String[]
+  createdAt   DateTime      @default(now())
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  listings    Listing[]
+
+  @@index([vendorId])
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  slug     String    @unique
+  listings Listing[]
+}
+
+model Listing {
+  id          String        @id @default(uuid())
+  vendorId    String
+  shopId      String?
+  categoryId  String
+  type        ListingType
+  title       String
+  description String?
+  priceMinor  BigInt
+  currency    String        @default("NGN")
+  country     String?
+  city        String?
+  lat         Float?
+  lng         Float?
+  capacity    Int?
+  mediaUrls   String[]
+  status      ListingStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  vendor       VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  shop         Shop?         @relation(fields: [shopId], references: [id], onDelete: SetNull)
+  category     Category      @relation(fields: [categoryId], references: [id])
+  bookingItems BookingItem[]
+  promotions   Promotion[]
+  cartItems    CartItem[]
+  checkoutItems CheckoutItem[]
+  events       Event[]       @relation("EventVenue")
+
+  @@index([type, status])
+  @@index([country, city])
+  @@index([categoryId])
+  @@index([vendorId])
+}
+
+model Event {
+  id             String      @id @default(uuid())
+  ownerId        String
+  clientRequestId String?
+  title          String
+  type           EventType   @default(PERSONAL)
+  description    String?
+  startsAt       DateTime?
+  endsAt         DateTime?
+  venueId        String?
+  country        String?
+  city           String?
+  currency       String      @default("NGN")
+  isPublic       Boolean     @default(false)
+  expectedGuests Int?
+  /// SMALL | MEDIUM | LARGE | MEGA — drives default zone templates
+  scaleTier      String      @default("MEDIUM")
+  isVirtual      Boolean     @default(false)
+  /// Optional parent for multi-city / multi-day series
+  parentEventId  String?
+  budgetMinor    BigInt?
+  /// Compendium sector e.g. TECHNOLOGY, HEALTHCARE, FINANCE
+  sector         String?
+  /// IN_PERSON | HYBRID | VIRTUAL | ROADSHOW | INVITE_ONLY
+  format         String      @default("IN_PERSON")
+  /// Free-text special requests from case briefs
+  specialRequests String?
+  /// KPI targets JSON string
+  kpiTargets     String?
+  status         EventStatus @default(DRAFT)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  venue       Listing?     @relation("EventVenue", fields: [venueId], references: [id], onDelete: SetNull)
+  parent      Event?       @relation("EventSeries", fields: [parentEventId], references: [id], onDelete: SetNull)
+  children    Event[]      @relation("EventSeries")
+  guests      Guest[]
+  tasks       EventTask[]
+  planAnswers EventPlanAnswer[]
+  budgetItems BudgetItem[]
+  bookings      Booking[]
+  messages      Message[]
+  serviceChecks EventServiceCheck[]
+  readiness     EventReadiness?
+  verifierAssignments EventVerifierAssignment[]
+  carts           Cart[]
+  checkoutSessions CheckoutSession[]
+
+  @@index([ownerId])
+  @@unique([ownerId, clientRequestId])
+  @@index([isPublic, status])
+  @@index([parentEventId])
+}
+
+model EventPlanAnswer {
+  id          String   @id @default(uuid())
+  eventId     String
+  questionKey String
+  answer      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, questionKey])
+  @@index([eventId])
+}
+
+model Guest {
+  id          String     @id @default(uuid())
+  eventId     String
+  name        String
+  email       String?
+  phone       String?
+  rsvp        RsvpStatus @default(PENDING)
+  plusOnes    Int        @default(0)
+  token       String     @unique @default(uuid())
+  respondedAt DateTime?
+  checkedInAt DateTime?
+  checkInMethod GuestCheckInMethod?
+  event       Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model EventTask {
+  id              String     @id @default(uuid())
+  eventId         String
+  title           String
+  tier            TaskTier   @default(ESSENTIAL)
+  dueAt           DateTime?
+  status          TaskStatus @default(TODO)
+  isAutoGenerated Boolean    @default(false)
+  sortOrder       Int        @default(0)
+  event           Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model BudgetItem {
+  id           String  @id @default(uuid())
+  eventId      String
+  label        String
+  category     String?
+  plannedMinor BigInt  @default(0)
+  actualMinor  BigInt  @default(0)
+  event        Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  buyerId         String
+  vendorId        String
+  eventId         String?
+  status          BookingStatus @default(PENDING)
+  currency        String        @default("NGN")
+  subtotalMinor   BigInt
+  commissionMinor BigInt        @default(0)
+  totalMinor      BigInt
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  buyer        User          @relation("BuyerBookings", fields: [buyerId], references: [id])
+  vendor       VendorProfile @relation("VendorBookings", fields: [vendorId], references: [id])
+  event        Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  items        BookingItem[]
+  review       Review?
+  dispatchJobs DispatchJob[]
+
+  @@index([buyerId])
+  @@index([vendorId, status])
+}
+
+model BookingItem {
+  id             String  @id @default(uuid())
+  bookingId      String
+  listingId      String
+  quantity       Int     @default(1)
+  unitPriceMinor BigInt
+  booking        Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  listing        Listing @relation(fields: [listingId], references: [id])
+
+  @@index([bookingId])
+}
+
+model Wallet {
+  id             String        @id @default(uuid())
+  userId         String
+  currency       String
+  availableMinor BigInt        @default(0)
+  escrowMinor    BigInt        @default(0)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries        LedgerEntry[]
+
+  @@unique([userId, currency])
+}
+
+// Append-only. Never update or delete rows.
+model LedgerEntry {
+  id                String     @id @default(uuid())
+  walletId          String
+  type              LedgerType
+  amountMinor       BigInt
+  balanceAfterMinor BigInt
+  refType           String?
+  refId             String?
+  idempotencyKey    String     @unique
+  createdAt         DateTime   @default(now())
+  wallet            Wallet     @relation(fields: [walletId], references: [id])
+
+  @@index([walletId, createdAt])
+}
+
+model PaymentIntent {
+  id          String        @id @default(uuid())
+  userId      String
+  provider    String
+  providerRef String?       @unique
+  providerTransactionId String?
+  amountMinor BigInt
+  currency    String
+  status      PaymentStatus @default(PENDING)
+  purpose     String        @default("WALLET_DEPOSIT")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id])
+  checkoutSession CheckoutSession? @relation(fields: [checkoutSessionId], references: [id], onDelete: SetNull)
+  checkoutSessionId String?
+
+  @@index([userId])
+  @@index([checkoutSessionId])
+}
+
+model WebhookEvent {
+  id          String    @id @default(uuid())
+  provider    String
+  eventId     String
+  payload     Json
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+
+  @@unique([provider, eventId])
+}
+
+model Cart {
+  id          String     @id @default(uuid())
+  userId      String
+  eventId     String?
+  currency    String     @default("NGN")
+  status      CartStatus @default(ACTIVE)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event       Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  items       CartItem[]
+  checkoutSessions CheckoutSession[]
+
+  @@index([userId, status])
+  @@index([eventId])
+}
+
+model CartItem {
+  id          String   @id @default(uuid())
+  cartId      String
+  listingId   String
+  quantity    Int      @default(1)
+  addedAt     DateTime @default(now())
+  cart        Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  listing     Listing  @relation(fields: [listingId], references: [id])
+
+  @@unique([cartId, listingId])
+  @@index([listingId])
+}
+
+model CheckoutSession {
+  id             String                 @id @default(uuid())
+  userId         String
+  cartId         String?
+  eventId        String?
+  currency       String
+  subtotalMinor  BigInt
+  commissionMinor BigInt @default(0)
+  totalMinor     BigInt
+  status         CheckoutSessionStatus @default(OPEN)
+  expiresAt      DateTime
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cart           Cart?                  @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  event          Event?                 @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  items          CheckoutItem[]
+  payments       PaymentIntent[]
+
+  @@index([userId, status])
+  @@index([expiresAt])
+}
+
+model CheckoutItem {
+  id             String           @id @default(uuid())
+  checkoutSessionId String
+  listingId      String
+  vendorId       String
+  title          String
+  quantity       Int
+  unitPriceMinor BigInt
+  currency       String
+  checkoutSession CheckoutSession @relation(fields: [checkoutSessionId], references: [id], onDelete: Cascade)
+  listing        Listing          @relation(fields: [listingId], references: [id])
+  vendor         VendorProfile    @relation(fields: [vendorId], references: [id])
+
+  @@index([checkoutSessionId])
+  @@index([listingId])
+}
+
+model Plan {
+  id            String          @id @default(uuid())
+  code          String          @unique
+  name          String
+  audience      Role
+  priceMinor    BigInt
+  currency      String          @default("NGN")
+  interval      BillingInterval
+  features      Json
+  active        Boolean         @default(true)
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id               String             @id @default(uuid())
+  userId           String
+  planId           String
+  status           SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd DateTime
+  autoRenew        Boolean            @default(true)
+  cancelledAt      DateTime?
+  createdAt        DateTime           @default(now())
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan             Plan               @relation(fields: [planId], references: [id])
+
+  @@index([userId, status])
+}
+
+model Promotion {
+  id          String          @id @default(uuid())
+  vendorId    String
+  listingId   String?
+  title       String
+  budgetMinor BigInt
+  spentMinor  BigInt          @default(0)
+  startsAt    DateTime
+  endsAt      DateTime
+  status      PromotionStatus @default(DRAFT)
+  vendor      VendorProfile   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  listing     Listing?        @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@index([status, startsAt, endsAt])
+}
+
+model Review {
+  id        String        @id @default(uuid())
+  bookingId String        @unique
+  authorId  String
+  vendorId  String
+  rating    Int
+  comment   String?
+  createdAt DateTime      @default(now())
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  author    User          @relation(fields: [authorId], references: [id])
+  vendor    VendorProfile @relation(fields: [vendorId], references: [id])
+
+  @@index([vendorId])
+}
+
+model Message {
+  id          String    @id @default(uuid())
+  senderId    String
+  recipientId String
+  eventId     String?
+  body        String
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+  sender      User      @relation("SentMessages", fields: [senderId], references: [id])
+  recipient   User      @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  event       Event?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, readAt])
+}
+
+/// Public-facing verifier card: location, rating, jobs for client selection
+model VerifierProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  headline       String?
+  bio            String?
+  city           String?
+  country        String?
+  lat            Float?
+  lng            Float?
+  jobsCompleted  Int      @default(0)
+  ratingAvg      Float    @default(0)
+  ratingCount    Int      @default(0)
+  isAvailable    Boolean  @default(true)
+  specialties    String?  /// comma tags e.g. STAGE,STREAM,MEDICAL
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([country, city])
+  @@index([isAvailable])
+}
+
+model VerifierReview {
+  id         String   @id @default(uuid())
+  verifierId String
+  authorId   String
+  eventId    String?
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  verifier   User     @relation("VerifierReviews", fields: [verifierId], references: [id], onDelete: Cascade)
+  author     User     @relation("VerifierReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([verifierId])
+}
+
+model Notification {
+
+  id        String    @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+
+/// Verifier traffic-light checks for each booked service on an event.
+/// Niche rule: window opens T-6h; all must be GREEN by T-2h before startsAt.
+model EventServiceCheck {
+  id          String             @id @default(uuid())
+  eventId     String
+  bookingId   String?
+  listingId   String?
+  label       String
+  category    String?
+  /// Zone for multi-verifier splits e.g. STAGE, FNB, ACCESS, MEDICAL, STREAM
+  zone        String             @default("GENERAL")
+  status      ServiceCheckStatus @default(PENDING)
+  notes       String?
+  verifiedById String?
+  checkedAt   DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  event      Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  verifiedBy User?  @relation("ServiceCheckVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  @@index([eventId, status])
+  @@index([eventId, zone])
+  @@index([verifiedById])
+}
+
+model EventReadiness {
+  id              String               @id @default(uuid())
+  eventId         String               @unique
+  status          EventReadinessStatus @default(NOT_STARTED)
+  totalChecks     Int                  @default(0)
+  greenCount      Int                  @default(0)
+  amberCount      Int                  @default(0)
+  redCount        Int                  @default(0)
+  pendingCount    Int                  @default(0)
+  windowOpensAt   DateTime?
+  greenDeadlineAt DateTime?
+  startsAt        DateTime?
+  assignedVerifierId String?
+  lastReviewedAt  DateTime?
+  customerNotifiedAt DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  event            Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  assignedVerifier User? @relation("AssignedVerifier", fields: [assignedVerifierId], references: [id], onDelete: SetNull)
+  /// JSON snapshot for sponsors/donors: counts + timestamp when all green
+  snapshotJson     String?
+}
+
+/// Multiple verifiers per event, optionally scoped to a zone
+model EventVerifierAssignment {
+  id         String   @id @default(uuid())
+  eventId    String
+  verifierId String
+  zone       String   @default("GENERAL")
+  isLead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  event    Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  verifier User  @relation("VerifierAssignments", fields: [verifierId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, verifierId, zone])
+  @@index([verifierId])
+}
+
+
+model DispatchJob {
+  id             String         @id @default(uuid())
+  bookingId      String
+  riderId        String?
+  status         DispatchStatus @default(REQUESTED)
+  pickupAddress  String
+  dropoffAddress String
+  feeMinor       BigInt         @default(0)
+  currency       String         @default("NGN")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  booking        Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  rider          User?          @relation(fields: [riderId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+}
+
+model VerificationRequest {
+  id           String             @id @default(uuid())
+  userId       String
+  kind         VerificationKind
+  status       VerificationStatus @default(PENDING)
+  documentUrl  String?
+  notes        String?
+  reviewedById String?
+  createdAt    DateTime           @default(now())
+  reviewedAt   DateTime?
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+}

@@ -1,0 +1,39 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ess
+          POSTGRES_PASSWORD: ess
+          POSTGRES_DB: ess
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ess -d ess"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_MODE: local
+      DATABASE_URL_LOCAL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
+      NODE_ENV: test
+      DATABASE_URL: postgresql://ess:ess@localhost:5432/ess
+      JWT_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
+      APP_BASE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run check
+      - run: npm run db:deploy -w apps/api
+      - name: Run database integration tests
+        run: npm run test:db -w apps/api
+        env:
+          RUN_DB_TESTS: "1"
+      - run: npm run build
+      - run: npm run build:web

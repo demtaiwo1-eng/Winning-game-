@@ -1,0 +1,185 @@
+/*
+ * EPHINTA DESIGN 4 — ENFORCED GLOBAL SYSTEM
+ * Dark Navy #0A0F24 · Sunset Orange #FFB020 · Violet #7B3DFF
+ * Deep Purple #2A06B8 · Magenta #FF3BD7 · Electric Blue #00C2FF
+ * This is a shared visual layer, not a replacement for any page/component.
+ */
+:root {
+  --ephinta-navy: #0A0F24;
+  --ephinta-slate: #1E2746;
+  --ephinta-orange: #FFB020;
+  --ephinta-violet: #7B3DFF;
+  --ephinta-purple: #2A06B8;
+  --ephinta-magenta: #FF3BD7;
+  --ephinta-electric: #00C2FF;
+  --ephinta-grey: #E5EAF2;
+  --ephinta-white: #FFFFFF;
+  --ephinta-page: #F5F6FA;
+  --ephinta-surface: #FFFFFF;
+  --ephinta-text: #0A0F24;
+  --ephinta-muted: #58627A;
+  --ephinta-border: #DCE2EC;
+  --ephinta-primary: #2A06B8;
+  --ephinta-primary-hover: #21058F;
+  --ephinta-accent: #FFB020;
+  --ephinta-focus: #00C2FF;
+  --ephinta-radius-sm: 10px;
+  --ephinta-radius-md: 16px;
+  --ephinta-radius-lg: 22px;
+  --ephinta-shadow-sm: 0 3px 12px rgba(10,15,36,.06);
+  --ephinta-shadow-md: 0 12px 32px rgba(10,15,36,.10);
+  --ephinta-shadow-lg: 0 22px 60px rgba(10,15,36,.16);
+  color-scheme: light;
+}
+html { min-width: 320px; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--ephinta-text);
+  background: var(--ephinta-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body, button, input, select, textarea {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+h1, h2, h3, h4, .page-title, .dashboard-title {
+  font-family: Montserrat, Inter, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -.035em;
+}
+button, input, select, textarea { accent-color: var(--ephinta-purple); }
+button, a, [role="button"] { -webkit-tap-highlight-color: transparent; }
+:focus-visible {
+  outline: 3px solid rgba(0,194,255,.8);
+  outline-offset: 3px;
+}
+::selection { color: var(--ephinta-navy); background: rgba(255,176,32,.45); }
+
+/* Predictable sizing and prevent common responsive overflow failures. */
+*, *::before, *::after { box-sizing: border-box; }
+img, video, canvas, svg { max-width: 100%; }
+img, video { height: auto; }
+#root, #app, [data-app-root] { min-height: 100vh; min-height: 100dvh; width: 100%; }
+main, section, article, aside, header, footer, nav { min-width: 0; }
+table { max-width: 100%; }
+@media (max-width: 767px) {
+  html, body, #root, #app { max-width: 100%; overflow-x: clip; }
+  input, select, textarea, button { max-width: 100%; }
+  pre, code { overflow-wrap: anywhere; }
+  table { display: block; overflow-x: auto; }
+}
+
+/* Public landing page: luxury event lifestyle, not generic real-estate styling. */
+.pl {
+  --bg: #F5F6FA !important;
+  --ink: #0A0F24 !important;
+  --mute: #58627A !important;
+  --line: #DCE2EC !important;
+  --blue: #2A06B8 !important;
+  --coral: #FFB020 !important;
+  --card: #FFFFFF !important;
+  color: var(--ephinta-text);
+  background: radial-gradient(ellipse at 90% 0%, rgba(123,61,255,.12), transparent 34rem), var(--ephinta-page) !important;
+  overflow-x: clip;
+}
+.pl .pl-nav, .pl header {
+  background: rgba(10,15,36,.97) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255,176,32,.35) !important;
+}
+.pl .pl-nav a, .pl .pl-nav button, .pl header a { color: inherit; }
+.pl h1, .pl h2, .pl h3 { color: var(--ephinta-navy); }
+.pl .pl-b.p, .pl .pl-btn-primary, .pl .pl-primary,
+.pl button[class*="primary"], .pl a[class*="primary"] {
+  color: #0A0F24 !important;
+  background: linear-gradient(135deg, #FFD16C, #FFB020) !important;
+  border: 1px solid #EFA014 !important;
+  border-radius: 14px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 8px 22px rgba(255,176,32,.24) !important;
+}
+.pl .pl-b.p:hover, .pl .pl-btn-primary:hover, .pl .pl-primary:hover,
+.pl button[class*="primary"]:hover, .pl a[class*="primary"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(255,176,32,.32) !important;
+}
+.pl .pl-b:not(.p), .pl .pl-btn-secondary, .pl .pl-secondary {
+  color: var(--ephinta-navy) !important;
+  background: #FFFFFF !important;
+  border: 1px solid var(--ephinta-border) !important;
+  border-radius: 14px !important;
+}
+.pl .pl-card, .pl .pl-feature, .pl .pl-role-card, .pl .pl-step, .pl .pl-panel,
+.pl [class*="card"], .pl [class*="Card"] {
+  border-color: #E0E4ED;
+  border-radius: 20px;
+  box-shadow: var(--ephinta-shadow-sm);
+}
+.pl .pl-card:hover, .pl .pl-feature:hover, .pl .pl-role-card:hover {
+  border-color: rgba(123,61,255,.42);
+  box-shadow: var(--ephinta-shadow-md);
+}
+.pl footer, .pl .pl-footer {
+  color: #FFFFFF;
+  background: var(--ephinta-navy);
+  border-top: 3px solid var(--ephinta-orange);
+}
+.pl footer h2, .pl footer h3, .pl .pl-footer h2, .pl .pl-footer h3 { color: #FFFFFF; }
+.pl footer a, .pl .pl-footer a { color: #FFD16C; }
+.pl input:focus, .pl select:focus, .pl textarea:focus {
+  border-color: var(--ephinta-violet) !important;
+  box-shadow: 0 0 0 4px rgba(123,61,255,.14) !important;
+}
+
+/* Global component defaults: target recognizable controls without changing layout logic. */
+:where(button, [role="button"], input[type="submit"], input[type="button"]) {
+  transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  border-color: var(--ephinta-border);
+  border-radius: var(--ephinta-radius-sm);
+}
+:where(input, select, textarea):focus-visible {
+  outline-color: var(--ephinta-violet);
+  border-color: var(--ephinta-violet);
+}
+:where(.ess-card, .workspace-card, .dashboard-card, .stat-card, .panel-card, .surface-card) {
+  border-color: var(--ephinta-border);
+  border-radius: var(--ephinta-radius-md);
+  box-shadow: var(--ephinta-shadow-sm);
+}
+:where(.ess-sidebar, .app-sidebar, .dashboard-sidebar, .sidebar) {
+  background-color: var(--ephinta-navy);
+  color: #FFFFFF;
+}
+:where(.ess-sidebar, .app-sidebar, .dashboard-sidebar, .sidebar) a[aria-current="page"],
+:where(.ess-sidebar, .app-sidebar, .dashboard-sidebar, .sidebar) .active {
+  border-color: var(--ephinta-orange);
+}
+
+/* Responsive guardrails: layouts collapse instead of shrinking into narrow columns. */
+@media (max-width: 1024px) {
+  .pl .pl-w, .pl .pl-wrap, .pl .pl-container, .pl .pl-inner {
+    width: min(100% - 36px, 900px);
+  }
+}
+@media (max-width: 767px) {
+  .pl .pl-w, .pl .pl-wrap, .pl .pl-container, .pl .pl-inner {
+    width: calc(100% - 28px);
+  }
+  .pl .pl-nav .pl-w { min-height: 62px; }
+  .pl .pl-brand-logo, .pl .pl-logo img { max-width: 150px; height: 38px; }
+  .pl h1 { font-size: clamp(2.15rem, 9vw, 3.4rem); line-height: 1.03; overflow-wrap: normal; }
+  .pl h2 { font-size: clamp(1.55rem, 7vw, 2.25rem); line-height: 1.12; }
+  .pl .pl-hero { padding-top: 28px; padding-bottom: 34px; }
+  .pl .pl-hero .pl-w, .pl .pl-hero-grid { gap: 22px; }
+  .pl .pl-hero-ctas, .pl [class*="hero"] [class*="actions"] {
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+  .pl .pl-hero-ctas > *, .pl [class*="hero"] [class*="actions"] > * { flex: 1 1 145px; }
+  .pl button, .pl a { min-height: 42px; }
+  .pl .pl-card, .pl .pl-feature, .pl .pl-role-card { border-radius: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

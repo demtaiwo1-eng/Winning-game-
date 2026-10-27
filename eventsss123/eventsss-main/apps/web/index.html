@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Event Self Solutions dashboard for planning, guest management, budget tracking, and RSVP flow."
+    />
+    <title>EPHINTA | Plan It Yourself </title>
+
+    <!-- Favicons -->
+    <link rel="icon" href="/brand/ephinta_logo2.png?v=20261010-092247" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/ephinta_logo2.png?v=20261010-092247" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/brand/ephinta_logo2.png?v=20261010-092247" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/brand/ephinta_logo2.png?v=20261010-092247" />
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#090909" />
+    <link rel="preload" as="image" href="/ephinta-logo.png" />
+
+    <style>
+      html, body { margin: 0; background: #090909; }
+
+      .ephinta-boot {
+        position: fixed; inset: 0; z-index: 2147483000;
+        display: grid; place-items: center;
+        background:
+          radial-gradient(ellipse at 50% 46%, rgba(255,106,0,.09), transparent 34%),
+          #090909;
+      }
+      .ephinta-boot__logo {
+        display: block;
+        width: clamp(72px, 20vw, 96px);
+        height: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 14px rgba(255,106,0,.14));
+        animation: ephinta-boot-breathe 3.2s ease-in-out infinite;
+      }
+      .ephinta-boot.is-leaving {
+        opacity: 0; visibility: hidden; pointer-events: none;
+        transition: opacity .4s ease, visibility 0s .4s;
+      }
+      @keyframes ephinta-boot-breathe {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.035); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ephinta-boot__logo { animation: none; }
+        .ephinta-boot.is-leaving { transition: none; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="ephinta-boot" class="ephinta-boot" role="status" aria-label="Loading">
+      <img
+        class="ephinta-boot__logo"
+        src="/brand/ephinta_logo2.png?v=20261010-084348"
+        alt="Ephinta"
+        width="96"
+        height="96"
+        decoding="sync"
+        fetchpriority="high"
+      />
+    </div>
+
+    <div id="root" inert></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

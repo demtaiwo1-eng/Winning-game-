@@ -1,0 +1,85 @@
+/* EPHINTA Multicolor hero readability: sharp text, restrained single marker stroke. */
+.eph-landing[data-theme="colorful"] .eph-title,
+.eph-landing[data-theme="colorful"] .eph-title > span,
+.eph-landing[data-theme="colorful"] .eph-title em {
+  color: #21163f;
+  -webkit-text-fill-color: initial;
+  text-shadow: none;
+  font-weight: 850;
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.eph-landing[data-theme="colorful"] .eph-title em {
+  background: linear-gradient(100deg, #2563eb 0%, #8b35df 52%, #d629a7 78%, #c6532f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-style: normal;
+}
+
+.eph-landing[data-theme="colorful"] .eph-title + p,
+.eph-landing[data-theme="colorful"] .eph-title ~ p,
+.eph-landing[data-theme="colorful"] .eph-hero p,
+.eph-landing[data-theme="colorful"] [class*="hero"] p {
+  color: #49385f !important;
+  font-size: clamp(1rem, 1.1vw, 1.125rem);
+  font-weight: 500;
+  line-height: 1.75;
+  text-shadow: none;
+}
+
+.eph-landing[data-theme="colorful"] [class*="eyebrow"],
+.eph-landing[data-theme="colorful"] [class*="badge"],
+.eph-landing[data-theme="colorful"] [class*="kicker"] {
+  color: #5b21b6;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+/* One marker strip only, placed below the word rather than over its glyphs. */
+.eph-landing[data-theme="colorful"] .ephinta-marker-phrase {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.12em;
+  isolation: isolate;
+}
+
+.eph-landing[data-theme="colorful"] .ephinta-marker-phrase::before {
+  content: none !important;
+}
+
+.eph-landing[data-theme="colorful"] .ephinta-marker-phrase::after {
+  content: "";
+  position: absolute;
+  left: 0.02em;
+  right: 0.015em;
+  bottom: -0.025em;
+  height: 0.085em;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffe18a 0%, #ffb84f 50%, #d85a37 100%);
+  box-shadow: none;
+  opacity: 1;
+  transform: rotate(-0.6deg);
+  pointer-events: none;
+}
+
+.eph-landing[data-theme="colorful"] .eph-title:not(:has(.ephinta-marker-phrase))::after {
+  content: none;
+}
+
+@media (max-width: 760px) {
+  .eph-landing[data-theme="colorful"] .eph-title {
+    font-size: clamp(2.6rem, 12vw, 4rem);
+    line-height: 1.06;
+    letter-spacing: -0.04em;
+  }
+  .eph-landing[data-theme="colorful"] .eph-title + p,
+  .eph-landing[data-theme="colorful"] .eph-title ~ p,
+  .eph-landing[data-theme="colorful"] .eph-hero p,
+  .eph-landing[data-theme="colorful"] [class*="hero"] p {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+}

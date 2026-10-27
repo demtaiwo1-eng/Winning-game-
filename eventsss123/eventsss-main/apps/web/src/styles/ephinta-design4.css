@@ -1,0 +1,52 @@
+/* EPHINTA DESIGN 4 — GLOBAL LUXURY EVENT LIFESTYLE SYSTEM
+   Dark Navy #0A0F24 · Sunset Orange #FFB020 · Violet #7B3DFF
+   Supporting: Deep Purple #2A06B8 · Magenta #FF3BD7 · Electric Blue #00C2FF
+   Shared tokens and conservative global primitives; page-specific layouts remain intact. */
+:root {
+  color-scheme: light;
+  --ephinta-navy: #0A0F24;
+  --ephinta-slate: #1E2746;
+  --ephinta-orange: #FFB020;
+  --ephinta-violet: #7B3DFF;
+  --ephinta-purple: #2A06B8;
+  --ephinta-magenta: #FF3BD7;
+  --ephinta-electric: #00C2FF;
+  --ephinta-grey: #E5EAF2;
+  --ephinta-white: #FFFFFF;
+  --ephinta-page: #F5F6FA;
+  --ephinta-surface: #FFFFFF;
+  --ephinta-text: #0A0F24;
+  --ephinta-text-muted: #58627A;
+  --ephinta-border: #DCE2EC;
+  --ephinta-primary: #2A06B8;
+  --ephinta-primary-hover: #21058F;
+  --ephinta-accent: #FFB020;
+  --ephinta-focus: #00C2FF;
+  --ephinta-radius-sm: 10px;
+  --ephinta-radius-md: 16px;
+  --ephinta-radius-lg: 22px;
+  --ephinta-shadow-sm: 0 3px 12px rgba(10,15,36,.06);
+  --ephinta-shadow-md: 0 12px 32px rgba(10,15,36,.10);
+  --ephinta-shadow-lg: 0 22px 60px rgba(10,15,36,.16);
+}
+html { scroll-behavior: smooth; }
+body {
+  color: var(--ephinta-text);
+  background: var(--ephinta-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body, button, input, select, textarea { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+h1, h2, h3, h4, .page-title, .dashboard-title {
+  color: var(--ephinta-navy);
+  font-family: Montserrat, Inter, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -.035em;
+}
+button, input, select, textarea { accent-color: var(--ephinta-purple); }
+button, [role="button"], a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid rgba(0,194,255,.72);
+  outline-offset: 3px;
+}
+::selection { color: var(--ephinta-navy); background: rgba(255,176,32,.45); }

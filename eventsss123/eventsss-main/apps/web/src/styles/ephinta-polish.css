@@ -1,0 +1,101 @@
+/* EPHINTA shared visual polish layer — additive, responsive, high contrast. */
+:root {
+  color-scheme: dark;
+  --eph-bg: #0b1020;
+  --eph-surface: #141b2e;
+  --eph-surface-raised: #1b2540;
+  --eph-text: #f6f7fb;
+  --eph-muted: #c1c9da;
+  --eph-border: #3a4762;
+  --eph-primary: #a78bfa;
+  --eph-primary-strong: #7c3aed;
+  --eph-accent: #fbbf24;
+  --eph-focus: #67e8f9;
+  --eph-radius: 16px;
+  --eph-shadow: 0 18px 50px rgb(0 0 0 / 24%);
+}
+:root[data-ephinta-theme="light"] {
+  color-scheme: light;
+  --eph-bg: #f7f8fc;
+  --eph-surface: #fff;
+  --eph-surface-raised: #f0efff;
+  --eph-text: #17172b;
+  --eph-muted: #505b70;
+  --eph-border: #d6dbea;
+  --eph-primary: #6d28d9;
+  --eph-primary-strong: #5b21b6;
+  --eph-accent: #b45309;
+  --eph-focus: #0369a1;
+}
+:root[data-ephinta-theme="colorful"] {
+  color-scheme: light;
+  --eph-bg: #fff7fc;
+  --eph-surface: #fff;
+  --eph-surface-raised: #f3e8ff;
+  --eph-text: #27113f;
+  --eph-muted: #5c496c;
+  --eph-border: #e8cfe9;
+  --eph-primary: #be185d;
+  --eph-primary-strong: #9d174d;
+  --eph-accent: #047857;
+  --eph-focus: #075985;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--eph-bg); color: var(--eph-text); }
+body, button, input, select, textarea { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { line-height: 1.55; }
+h1,h2,h3,h4 { color: var(--eph-text); line-height: 1.15; letter-spacing: -.025em; }
+p, li, label, small, .muted, [class*="muted"] { color: var(--eph-muted); }
+button, input, select, textarea { font: inherit; }
+button, [role="button"], a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+:where(button,a,input,select,textarea,[tabindex]):focus-visible {
+  outline: 3px solid var(--eph-focus) !important;
+  outline-offset: 3px !important;
+}
+:where(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  color: var(--eph-text);
+  background: var(--eph-surface);
+  border: 1px solid var(--eph-border);
+  border-radius: 12px;
+  min-height: 46px;
+  padding: 11px 14px;
+  max-width: 100%;
+}
+textarea { min-height: 112px; resize: vertical; }
+input::placeholder, textarea::placeholder { color: var(--eph-muted); opacity: .95; }
+label { display: inline-block; font-weight: 650; margin-bottom: 6px; }
+:where(button,[role="button"],a[class*="btn"],a[class*="button"]) { transition: transform .16s ease, filter .16s ease, box-shadow .16s ease; }
+:where(button,[role="button"],a[class*="btn"],a[class*="button"]):hover { filter: brightness(1.07); }
+:where(button,[role="button"]):active { transform: translateY(1px); }
+:where([class*="card"],[class*="panel"],[class*="tile"],[class*="modal"],[class*="dialog"]) {
+  border-radius: var(--eph-radius);
+}
+:where([class*="card"],[class*="panel"],[class*="tile"]) {
+  border-color: var(--eph-border);
+}
+:where(main, [role="main"]) { min-width: 0; }
+img,video,canvas,svg { max-width: 100%; }
+table { width: 100%; border-collapse: collapse; }
+th,td { padding: 12px; border-bottom: 1px solid var(--eph-border); text-align: left; }
+:where(nav,header) a { text-decoration: none; }
+.ephinta-faq { max-width: 1120px; margin: 48px auto; padding: clamp(20px,4vw,48px); color: var(--eph-text); background: var(--eph-surface); border: 1px solid var(--eph-border); border-radius: 24px; box-shadow: var(--eph-shadow); }
+.ephinta-faq__eyebrow { color: var(--eph-primary); font-size: .76rem; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
+.ephinta-faq h2 { font-size: clamp(1.7rem,3vw,2.5rem); margin: 8px 0; }
+.ephinta-faq__intro { color: var(--eph-muted); max-width: 68ch; }
+.ephinta-faq__grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin-top: 22px; }
+.ephinta-faq details { border: 1px solid var(--eph-border); border-radius: 13px; background: var(--eph-bg); padding: 16px 18px; }
+.ephinta-faq summary { color: var(--eph-text); cursor: pointer; font-weight: 750; }
+.ephinta-faq details p { color: var(--eph-muted); margin: 12px 0 0; }
+.ephinta-theme-menu { display: inline-flex; align-items: center; gap: 8px; color: var(--eph-text); font-size: .9rem; }
+.ephinta-theme-menu select { min-height: 38px; padding: 6px 10px; }
+@media (max-width: 760px) {
+  .ephinta-faq { margin: 28px 12px; padding: 20px; }
+  .ephinta-faq__grid { grid-template-columns: minmax(0,1fr); }
+  :where(nav,header) { flex-wrap: wrap; }
+  :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea) { width: 100%; box-sizing: border-box; }
+  :where(button,[role="button"]) { min-height: 42px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

@@ -1,0 +1,103 @@
+/*
+ * EPHINTA Sample 3: portal-focused multicolour menu.
+ * Import this file from the app's global stylesheet or relevant navigation component.
+ * It is token/style support only; it does not create or wire navigation by itself.
+ */
+:root {
+  --ephinta-menu-bg: #151527;
+  --ephinta-menu-panel: #202038;
+  --ephinta-menu-text: #f8f7ff;
+  --ephinta-menu-muted: #b8b6ce;
+  --ephinta-menu-gold: #f0c66a;
+  --ephinta-menu-customer: #282448;
+  --ephinta-menu-vendor: #183c3a;
+  --ephinta-menu-organisation: #42331d;
+  --ephinta-menu-partner: #392638;
+}
+.ephinta-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgb(8 8 20 / 58%);
+  backdrop-filter: blur(4px);
+}
+.ephinta-menu-panel {
+  position: fixed;
+  z-index: 1201;
+  inset: 0 0 0 auto;
+  width: min(420px, 92vw);
+  height: 100dvh;
+  overflow-y: auto;
+  padding: clamp(18px, 4vw, 28px);
+  color: var(--ephinta-menu-text);
+  background: var(--ephinta-menu-bg);
+  box-shadow: -20px 0 60px rgb(0 0 0 / 28%);
+}
+.ephinta-menu-panel a,
+.ephinta-menu-panel button { -webkit-tap-highlight-color: transparent; }
+.ephinta-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 10px;
+  color: var(--ephinta-menu-text);
+  text-decoration: none;
+  border-radius: 12px;
+}
+.ephinta-menu-link:hover,
+.ephinta-menu-link:focus-visible {
+  background: rgb(255 255 255 / 8%);
+  outline: 2px solid var(--ephinta-menu-gold);
+  outline-offset: 1px;
+}
+.ephinta-menu-portals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.ephinta-menu-portal {
+  min-width: 0;
+  min-height: 112px;
+  padding: 14px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 16px;
+  color: var(--ephinta-menu-text);
+  text-align: left;
+}
+.ephinta-menu-portal--customer { background: var(--ephinta-menu-customer); }
+.ephinta-menu-portal--vendor { background: var(--ephinta-menu-vendor); }
+.ephinta-menu-portal--organisation { background: var(--ephinta-menu-organisation); }
+.ephinta-menu-portal--partner { background: var(--ephinta-menu-partner); }
+.ephinta-menu-portal small { display: block; margin-top: 5px; color: var(--ephinta-menu-muted); }
+.ephinta-menu-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ephinta-menu-actions > * { min-height: 46px; border-radius: 12px; }
+.ephinta-menu-actions .ephinta-menu-primary {
+  color: #171525; background: var(--ephinta-menu-gold); border: 1px solid var(--ephinta-menu-gold);
+}
+.ephinta-menu-actions .ephinta-menu-secondary {
+  color: var(--ephinta-menu-text); background: transparent; border: 1px solid rgb(255 255 255 / 28%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ephinta-menu-panel { animation: ephinta-menu-in 180ms ease-out both; }
+  @keyframes ephinta-menu-in { from { transform: translateX(18px); opacity: .75; } to { transform: translateX(0); opacity: 1; } }
+}
+
+/* EPHINTA marketing zone */
+.ephinta-marketing-zone {
+  display:flex; flex-direction:column; align-items:flex-start; gap:1rem;
+  min-height:26rem; padding:clamp(1.5rem,3vw,2.5rem); overflow:hidden;
+  color:var(--text-primary,#fff);
+  background:radial-gradient(ellipse at 90% 8%,rgba(150,91,255,.22),transparent 42%),linear-gradient(145deg,rgba(34,29,61,.98),rgba(21,20,43,.98));
+  border:1px solid rgba(196,170,255,.55); border-radius:1.5rem; box-shadow:0 22px 65px rgba(0,0,0,.2);
+}
+.ephinta-marketing-zone__sparkle {display:grid;place-items:center;width:2.75rem;height:2.75rem;border-radius:.85rem;color:#9e7bff;background:#f2eaff;font-size:1.65rem}
+.ephinta-marketing-zone__eyebrow {margin:0;color:#c5a9ff;font-size:.75rem;font-weight:800;letter-spacing:.14em}
+.ephinta-marketing-zone h2 {max-width:16ch;margin:0;font-size:clamp(1.8rem,3vw,2.65rem);line-height:1.08;letter-spacing:-.035em}
+.ephinta-marketing-zone>p:not(.ephinta-marketing-zone__eyebrow) {max-width:48ch;margin:0;color:#ded8f3;line-height:1.75}
+.ephinta-marketing-zone__benefits {display:flex;flex-wrap:wrap;gap:.55rem}
+.ephinta-marketing-zone__benefits span {padding:.55rem .75rem;border:1px solid rgba(204,185,255,.25);border-radius:.75rem;color:#f3efff;background:rgba(255,255,255,.045);font-size:.88rem}
+.ephinta-marketing-zone__cta {display:inline-flex;align-items:center;gap:.65rem;margin-top:auto;padding:.9rem 1.2rem;border-radius:.85rem;color:#20152f!important;background:#ffbf3f;font-weight:800;text-decoration:none!important;box-shadow:0 10px 25px rgba(255,191,63,.18)}
+.ephinta-marketing-zone__cta:hover {transform:translateY(-1px)}
+@media(max-width:700px){.ephinta-marketing-zone{min-height:0}}
