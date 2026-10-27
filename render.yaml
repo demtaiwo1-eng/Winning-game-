@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ess-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: cd eventsss123/eventsss-main && npm install --include=dev && npm run build
+    startCommand: cd eventsss123/eventsss-main && npm --prefix apps/api run db:deploy && npm --prefix apps/api start
+    healthCheckPath: /ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
