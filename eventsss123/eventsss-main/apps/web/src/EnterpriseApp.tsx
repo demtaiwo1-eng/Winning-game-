@@ -19,6 +19,7 @@ import {
 } from "./lib/eventDraft";
 import { registrationFieldError, type RegistrationField } from "./lib/registrationValidation";
 import "./enterprise.css";
+import "./styles/event-planner-registration.css";
 import "./portal-menu.css";
 import "./public-menu.css";
 import "./event-builder.css";
@@ -1240,7 +1241,12 @@ export default function EnterpriseApp() {
   const location = useLocation();
   const navigate = useNavigate();
   const [session, setSession] = useState<UserSession | null>(null);
-  const [selectedRole, setSelectedRole] = useState<Role>("CLIENT");
+  const initialRouteRole = location.pathname.match(/^\/auth\/(signin|signup|forgot)\/?$/)
+    ? new URLSearchParams(location.search).get("role")
+    : null;
+  const [selectedRole, setSelectedRole] = useState<Role>(() =>
+    initialRouteRole && isRole(initialRouteRole) ? initialRouteRole : "CLIENT",
+  );
   const [organizationMode, setOrganizationMode] = useState<OrganizationMode | "">("");
   const [activeRole, setActiveRole] = useState<Role>("CLIENT");
   const [showOnboard, setShowOnboard] = useState(false);
@@ -2025,7 +2031,17 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
       return defaults;
     }
   });
-  const update = (key: keyof typeof answers, value: string) => setAnswers((current) => ({ ...current, [key]: value }));
+  const update = (key: keyof typeof answers, value: string) => {
+    setAnswers((current) => {
+      const next = { ...current, [key]: value };
+      try {
+        localStorage.setItem("ess_event_builder_progress", JSON.stringify(next));
+      } catch {
+        setSaveError("Your progress could not be saved on this device. Keep this page open to avoid losing it.");
+      }
+      return next;
+    });
+  };
   useEffect(() => {
     try {
       localStorage.setItem("ess_event_builder_progress", JSON.stringify(answers));
@@ -2286,6 +2302,10 @@ function AuthModal({
         <button className="ess-close" onClick={onClose}>
           ×
         </button>
+        <div className="ess-auth-brand">
+          <img src="/brand/ephinta_logo2.png" alt="" />
+          <span>EPHINTA</span>
+        </div>
         <p className="ess-eyebrow">Secure access</p>
         <h2>
           {mode === "signup"

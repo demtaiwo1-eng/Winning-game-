@@ -66,15 +66,16 @@ test("event builder saves a brief and opens registration", async ({ page }) => {
     budget: "NGN 2500000",
   });
 
-  test("the menu planner action opens the guided event planner", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("button", { name: "Open menu" }).click();
-    await page.getByRole("navigation", { name: "Main navigation" })
-      .getByRole("button", { name: /Plan your next event here/ }).click();
+});
 
-    await expect(page).toHaveURL(/\/plan$/);
-    await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
-  });
+test("the menu planner action opens the guided event planner", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: /Plan your next event here/ }).click();
+
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
 });
 
 test("registration blocks a password shorter than the input minimum", async ({ page }) => {
