@@ -32,6 +32,7 @@
     "web:check": "npm run test -w apps/web && npm run build -w apps/web"
   },
   "devDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.65.1",
     "concurrently": "^9.2.4",
     "wait-on": "^9.5.1"
   },

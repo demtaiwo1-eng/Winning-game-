@@ -1585,7 +1585,7 @@ export default function EnterpriseApp() {
         >
           <img className="ess-app-brand-logo" src="/brand/ephinta_logo2.png" alt="EPHINTA" /><span className="ess-brand-mark">EPHINTA</span>
           <span>
-            Event Self Solutions
+            EPHINTA
             <small>International event infrastructure</small>
           </span>
         </button>
@@ -1690,7 +1690,7 @@ export default function EnterpriseApp() {
             {menuOpen && (
               <div className="ess-menu-dropdown ess-public-dropdown">
                 <div className="ess-menu-heading">
-                  <span>Event Self Solutions</span>
+                  <span>EPHINTA</span>
                   <small>Choose how you want to work</small>
                 </div>
                 <button

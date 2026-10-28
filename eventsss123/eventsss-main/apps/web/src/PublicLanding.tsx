@@ -89,7 +89,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
     <div className="pl">
       <style>{CSS}</style>
       <header className="pl-nav"><div className="pl-w">
-        <button className="pl-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><span className="pl-mk">ES</span>Events Self Service</button>
+        <button className="pl-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><span className="pl-mk">EP</span>EPHINTA</button>
         <nav className="pl-lk" aria-label="Main"><a href="#how" onClick={(e) => { e.preventDefault(); go('how'); }}>How it works</a><a href="#vendors" onClick={(e) => { e.preventDefault(); go('vendors'); }}>Vendors</a><a href="#trust" onClick={(e) => { e.preventDefault(); go('trust'); }}>Safety</a><a href="#faq" onClick={(e) => { e.preventDefault(); go('faq'); }}>FAQ</a></nav>
         <button className="pl-t pl-d" onClick={() => open('signin')}>Sign in</button><button className="pl-b p pl-d" onClick={() => open('register')}>Create account</button>
         <button className="pl-burger" aria-label="Open menu" aria-expanded={menu} onClick={() => setMenu(true)}><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M3 5h14M3 10h14M3 15h14" /></svg></button>
@@ -135,7 +135,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
 
       <section className="pl-s" id="faq" style={{ paddingTop: 0 }}><div className="pl-w pl-fq"><h2 style={{ marginBottom: 18 }}>Questions</h2>{FAQ.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div></section>
 
-      <footer className="pl-ft">&copy; {new Date().getFullYear()} Events Self Service Solutions. All rights reserved.</footer>
+      <footer className="pl-ft">&copy; {new Date().getFullYear()} EPHINTA. All rights reserved.</footer>
 
       {modal && <div className="pl-md" onClick={() => setModal(null)}><div className="pl-dl" role="dialog" aria-modal="true" aria-label={modal === 'signin' ? 'Sign in' : 'Create account'} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><h2 style={{ fontSize: 26 }}>{modal === 'signin' ? 'Sign in' : 'Create your account'}</h2><button className="pl-t" aria-label="Close" style={{ fontSize: 26 }} onClick={() => setModal(null)}>×</button></div>

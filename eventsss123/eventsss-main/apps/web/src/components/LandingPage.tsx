@@ -275,7 +275,7 @@
 //         <div className="ess-wrap ess-nav-inner">
 //           <button type="button" className="ess-logo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
 //             <span className="ess-mark">EPHINTA</span>
-//             <span><strong>Event Self Solutions</strong><span>Plan · Vendor · Verify</span></span>
+//             <span><strong>EPHINTA</strong><span>Plan · Vendor · Verify</span></span>
 //           </button>
 //           <nav className="ess-nav-links" aria-label="Primary">
 //             <button type="button" onClick={() => go("portals")}>Portals</button>
@@ -460,7 +460,7 @@
 //             <div>
 //               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
 //                 <span className="ess-mark">EPHINTA</span>
-//                 <strong style={{ color: "var(--ink)" }}>Event Self Solutions</strong>
+//                 <strong style={{ color: "var(--ink)" }}>EPHINTA</strong>
 //               </div>
 //               <p style={{ margin: 0 }}>Event planning workspace, vendor marketplace, escrow, readiness verification.</p>
 //             </div>
@@ -479,7 +479,7 @@
 //               <button type="button" onClick={() => go("faq")}>FAQ</button>
 //             </div>
 //           </div>
-//           <div>© {new Date().getFullYear()} Events Self Service Solutions</div>
+//           <div>© {new Date().getFullYear()} EPHINTA</div>
 //         </div>
 //       </footer>
 

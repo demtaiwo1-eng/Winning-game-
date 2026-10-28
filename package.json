@@ -4,11 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "npm --prefix eventsss123/eventsss-main run dev",
-    "dev:quick": "npm --prefix eventsss123/eventsss-main run dev:serve",
-    "dev:landing": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "dev": "bash -lc 'lsof -ti :4173 2>/dev/null | xargs -r kill -9; cd eventsss123/eventsss-main/apps/web && npm run dev'",
+    "dev:quick": "bash -lc 'lsof -ti :4173 2>/dev/null | xargs -r kill -9; cd eventsss123/eventsss-main/apps/web && npm run dev'",
+    "dev:landing": "bash -lc 'lsof -ti :4173 2>/dev/null | xargs -r kill -9; cd eventsss123/eventsss-main/apps/web && npm run dev'",
+    "build": "cd eventsss123/eventsss-main/apps/web && npm run build",
+    "preview": "cd eventsss123/eventsss-main/apps/web && npm run preview -- --host 0.0.0.0 --port 4173"
   },
   "dependencies": {
     "react": "^18.3.1",

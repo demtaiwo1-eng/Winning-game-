@@ -25,7 +25,7 @@ export default function EphintaIntro() {
       <div className="ephinta-intro__lockup">
         <img src="/brand/ephinta_logo2.png?v=20261010-092247" alt="" className="ephinta-intro__logo" />
         <span className="ephinta-intro__wordmark">EPHINTA</span>
-        <span className="ephinta-intro__tagline">EVENT SELF SOLUTIONS</span>
+        <span className="ephinta-intro__tagline">EPHINTA</span>
       </div>
       <span className="ephinta-intro__progress" aria-hidden="true"><i /></span>
     </div>

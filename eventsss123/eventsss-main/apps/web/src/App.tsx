@@ -472,7 +472,7 @@ function Workspace({ payload, onLogout }: { payload: AuthPayload; onLogout: () =
     <main className="workspace-shell">
       <header className="workspace-header">
         <div>
-          <p className="eyebrow">Client workspace · Event Self Solutions</p>
+          <p className="eyebrow">Client workspace · EPHINTA</p>
           <h1>Welcome, {payload.user.name}</h1>
           <p className="workspace-subtitle">Your event planning workspace is ready. Sign out to switch to a vendor account.</p>
         </div>

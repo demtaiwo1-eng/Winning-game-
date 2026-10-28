@@ -699,7 +699,7 @@ export default function PublicLanding({
 
         <div className="eph-nav-actions">
 
-          <button className="eph-btn eph-btn-gold" onClick={startPlanning}>Plan your next event here <span aria-hidden="true">â†—</span></button>
+          <button className="eph-btn eph-btn-gold" onClick={startPlanning}>Plan your next event here <span aria-hidden="true">→</span></button>
 
           <button ref={menuButtonRef} type="button" className="eph-menu" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-controls="eph-information-menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}>
             <span className="eph-menu-bars" aria-hidden="true"><span /><span /><span /></span>
@@ -727,7 +727,7 @@ export default function PublicLanding({
 
               <div className="eph-hero-cta">
 
-                <button className="eph-btn eph-btn-purple" onClick={startPlanning}>Start planning <span aria-hidden="true">â†’</span></button>
+                <button className="eph-btn eph-btn-purple" onClick={startPlanning}>Start planning <span aria-hidden="true">→</span></button>
 
                 <button className="eph-btn eph-btn-outline" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>Explore how it works</button>
 
@@ -735,7 +735,7 @@ export default function PublicLanding({
 
               <div className="eph-proof">
 
-                <div className="eph-proof-dots ephinta-right-panel-contrast-target" aria-hidden="true"><span>âœ¦</span><span>â™¥</span><span>âœ§</span></div>
+                <div className="eph-proof-dots ephinta-right-panel-contrast-target" aria-hidden="true"><span>✓</span><span>♥</span><span>✦</span></div>
 
                 <span>One clear plan. <strong>More room to enjoy the moment.</strong></span>
 
@@ -775,7 +775,7 @@ export default function PublicLanding({
 
   </div>
 
-  <a className="ephinta-marketing-zone__cta" href="/plan">Plan your event <span aria-hidden="true">â†—</span></a>
+  <a className="ephinta-marketing-zone__cta" href="/plan">Plan your event <span aria-hidden="true">→</span></a>
 
 </section>
 
@@ -805,11 +805,11 @@ export default function PublicLanding({
 
           <div className="eph-cards">
 
-            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">âœ¦</div><h3>01. Shape your vision</h3><p>Choose your event type, guest range, date and style. Your starting brief helps you organize the next steps.</p></article>
+            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">✓</div><h3>01. Shape your vision</h3><p>Choose your event type, guest range, date and style. Your starting brief helps you organize the next steps.</p></article>
 
-            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">âŒ•</div><h3>02. Explore services</h3><p>Identify the vendors and event services that fit your plan. Review details before making a booking decision.</p></article>
+            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">✦</div><h3>02. Explore services</h3><p>Identify the vendors and event services that fit your plan. Review details before making a booking decision.</p></article>
 
-            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">âœ“</div><h3>03. Keep it moving</h3><p>Keep your planning details together and return to your saved draft as your event takes shape.</p></article>
+            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">✓</div><h3>03. Keep it moving</h3><p>Keep your planning details together and return to your saved draft as your event takes shape.</p></article>
 
           </div>
 
@@ -823,7 +823,7 @@ export default function PublicLanding({
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
 
-            <button className="eph-btn eph-btn-gold" onClick={() => openAuth('signup', 'VENDOR')}>Join as a vendor â†—</button>
+            <button className="eph-btn eph-btn-gold" onClick={() => openAuth('signup', 'VENDOR')}>Join as a vendor →</button>
 
             <button className="eph-btn" style={{ background: '#ffffff18', color: '#fff', border: '1px solid #ffffff3d' }} onClick={() => openAuth('signup', 'ORGANIZATION')}>Organization account</button>
 
@@ -839,11 +839,11 @@ export default function PublicLanding({
 
           <div className="eph-cards">
 
-            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">â—Ž</div><h3>Review provider details</h3><p>Check the provider's profile, service description and terms before you proceed.</p></article>
+            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">◌</div><h3>Review provider details</h3><p>Check the provider's profile, service description and terms before you proceed.</p></article>
 
-            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">â–¤</div><h3>Understand the booking</h3><p>Confirm what is included, payment timing and cancellation terms before paying.</p></article>
+            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">◇</div><h3>Understand the booking</h3><p>Confirm what is included, payment timing and cancellation terms before paying.</p></article>
 
-            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">â™¡</div><h3>Get help when needed</h3><p>Use the support options available in your account if you need assistance with a booking.</p></article>
+            <article className="eph-card"><div className="eph-card-icon" aria-hidden="true">♥</div><h3>Get help when needed</h3><p>Use the support options available in your account if you need assistance with a booking.</p></article>
 
           </div>
 
@@ -890,7 +890,7 @@ export default function PublicLanding({
         <section className="eph-modal" role="dialog" aria-modal="true" aria-labelledby="eph-auth-title">
 
           <div className="eph-modal-brand"><img src="/brand/ephinta_logo2.png" alt="" /><span>EPHINTA</span></div>
-          <div className="eph-modal-top"><div><h2 id="eph-auth-title">{authMode === 'signin' ? 'Welcome back' : authMode === 'forgot' ? 'Reset your password' : 'Create your EPHINTA account'}</h2><p>{authMode === 'signin' ? 'Sign in to continue planning.' : authMode === 'forgot' ? 'Enter your email and weâ€™ll send reset instructions if an account exists.' : 'A few details to get you started.'}</p></div><button className="eph-close" onClick={() => setAuthMode(null)} aria-label="Close dialog">&times;</button></div>
+          <div className="eph-modal-top"><div><h2 id="eph-auth-title">{authMode === 'signin' ? 'Welcome back' : authMode === 'forgot' ? 'Reset your password' : 'Create your EPHINTA account'}</h2><p>{authMode === 'signin' ? 'Sign in to continue planning.' : authMode === 'forgot' ? 'Enter your email and we\'ll send reset instructions if an account exists.' : 'A few details to get you started.'}</p></div><button className="eph-close" onClick={() => setAuthMode(null)} aria-label="Close dialog">&times;</button></div>
 
           {error && <div className="eph-auth-error" role="alert">{error}</div>}
 
@@ -912,7 +912,7 @@ export default function PublicLanding({
 
             {authMode !== 'forgot' && <div className="eph-field"><label htmlFor="eph-password">Password</label><div className="eph-password-wrap"><input id="eph-password" className="eph-control" type={showPassword ? 'text' : 'password'} autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'} required minLength={authMode === 'signup' ? 12 : 1} value={password} onChange={e => setPassword(e.target.value)} /><button className="eph-text-btn" type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div>{authMode === 'signup' && <small style={{ color: '#77788d' }}>Use at least 12 characters and meet the password rules shown by the application.</small>}</div>}
 
-            <button className="eph-btn eph-btn-purple eph-planner-submit" type="submit" disabled={busy}>{busy ? 'Please waitâ€¦' : authMode === 'signin' ? 'Sign in' : authMode === 'forgot' ? 'Send reset instructions' : 'Create account'}</button>
+            <button className="eph-btn eph-btn-purple eph-planner-submit" type="submit" disabled={busy}>{busy ? 'Please wait...' : authMode === 'signin' ? 'Sign in' : authMode === 'forgot' ? 'Send reset instructions' : 'Create account'}</button>
 
           </form>
 

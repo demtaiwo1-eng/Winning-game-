@@ -89,7 +89,7 @@ export default function SplashLogo({ children }: { children: React.ReactNode }) 
               textTransform: 'uppercase',
             }}
           >
-            Events Self Service
+            EPHINTA
           </div>
         </div>
       </div>

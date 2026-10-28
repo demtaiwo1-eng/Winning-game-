@@ -1,4 +1,4 @@
--- Unified master schema mirror for the EventSelfSolutions platform.
+-- Unified master schema mirror for the EPHINTA platform.
 -- This file is intentionally kept in sync conceptually with apps/api/prisma/schema.prisma,
 -- and should be treated as the migration baseline for downstream database tooling.
 

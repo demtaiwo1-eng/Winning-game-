@@ -320,7 +320,7 @@ export async function initializeFlutterwave(input: {
       customer: { email: input.email, name: input.name },
       customizations: {
         title: "ESS Wallet Deposit",
-        description: "Event Self Solutions",
+        description: "EPHINTA",
       },
     }),
   });

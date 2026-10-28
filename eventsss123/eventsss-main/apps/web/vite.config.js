@@ -15,7 +15,7 @@ export default defineConfig({
             registerType: "autoUpdate",
             injectRegister: null,
             manifest: {
-                name: "Event Self Solutions",
+                name: "EPHINTA",
                 short_name: "ESS",
                 description: "Event planning, vendors, guests, tasks, budgets and event operations.",
                 start_url: "/",

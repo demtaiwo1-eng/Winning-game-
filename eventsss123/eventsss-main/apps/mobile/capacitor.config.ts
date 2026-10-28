@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.eventselfsolutions.app",
-  appName: "Event Self Solutions",
+  appId: "com.ephinta.app",
+  appName: "EPHINTA",
   webDir: "../web/dist",
   server: { androidScheme: "https" },
   plugins: {

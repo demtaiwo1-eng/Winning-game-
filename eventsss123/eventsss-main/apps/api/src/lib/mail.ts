@@ -16,8 +16,8 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   await transporter.sendMail({
     from: env.SMTP_FROM,
     to,
-    subject: "Reset your Event Self Solutions password",
+    subject: "Reset your EPHINTA password",
     text: `Reset your password using this link: ${resetUrl}\n\nThis link expires in 30 minutes.`,
-    html: `<p>Reset your Event Self Solutions password.</p><p><a href="${resetUrl}">Create a new password</a></p><p>This link expires in 30 minutes.</p>`,
+    html: `<p>Reset your EPHINTA password.</p><p><a href="${resetUrl}">Create a new password</a></p><p>This link expires in 30 minutes.</p>`,
   });
 }

@@ -107,7 +107,7 @@ fi
 # index.html title polish
 HTML="$WEB/index.html"
 if [[ -f "$HTML" ]]; then
-  sed -i 's|<title>.*</title>|<title>ESS — Events Self Service<\/title>|' "$HTML" 2>/dev/null || true
+  sed -i 's|<title>.*</title>|<title>EPHINTA<\/title>|' "$HTML" 2>/dev/null || true
 fi
 
 echo ""

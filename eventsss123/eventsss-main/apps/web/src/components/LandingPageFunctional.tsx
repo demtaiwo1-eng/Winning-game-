@@ -356,7 +356,7 @@ export default function LandingPage({
             <img src="/brand/ephinta_logo2.png" alt="" className="esg-brand-image" />
             <span className="esg-brand-copy">
               <span className="esg-brand">EPHINTA</span>
-              <div className="esg-sub">Event Self Solutions</div>
+              <div className="esg-sub">EPHINTA</div>
             </span>
           </button>
           <nav className="esg-links" aria-label="Main">
@@ -718,7 +718,7 @@ export default function LandingPage({
                 <strong className="esg-brand">EPHINTA</strong>
               </div>
               <p style={{ margin: "0 0 14px", color: "var(--mute)", fontSize: 13, maxWidth: 260 }}>
-                Event Self Solutions. Plan your event and keep the details together.
+                EPHINTA. Plan your event and keep the details together.
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button type="button" className="esg-btn p" style={{ padding: "8px 14px", fontSize: 12 }} onClick={launch}>
@@ -761,7 +761,7 @@ export default function LandingPage({
             </div>
           </div>
           <div className="esg-ft-bot">
-            <span>© {new Date().getFullYear()} Events Self Service Solutions. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} EPHINTA. All rights reserved.</span>
             <span>Availability and payment options are shown in the app.</span>
           </div>
         </div>
