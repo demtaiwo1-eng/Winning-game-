@@ -19,53 +19,10 @@
     <meta name="theme-color" content="#090909" />
     <link rel="preload" as="image" href="/ephinta-logo.png" />
 
-    <style>
-      html, body { margin: 0; background: #090909; }
-
-      .ephinta-boot {
-        position: fixed; inset: 0; z-index: 2147483000;
-        display: grid; place-items: center;
-        background:
-          radial-gradient(ellipse at 50% 46%, rgba(255,106,0,.09), transparent 34%),
-          #090909;
-      }
-      .ephinta-boot__logo {
-        display: block;
-        width: clamp(72px, 20vw, 96px);
-        height: auto;
-        object-fit: contain;
-        filter: drop-shadow(0 4px 14px rgba(255,106,0,.14));
-        animation: ephinta-boot-breathe 3.2s ease-in-out infinite;
-      }
-      .ephinta-boot.is-leaving {
-        opacity: 0; visibility: hidden; pointer-events: none;
-        transition: opacity .4s ease, visibility 0s .4s;
-      }
-      @keyframes ephinta-boot-breathe {
-        0%, 100% { transform: scale(1); }
-        50%      { transform: scale(1.035); }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .ephinta-boot__logo { animation: none; }
-        .ephinta-boot.is-leaving { transition: none; }
-      }
-    </style>
   </head>
 
   <body>
-    <div id="ephinta-boot" class="ephinta-boot" role="status" aria-label="Loading">
-      <img
-        class="ephinta-boot__logo"
-        src="/brand/ephinta_logo2.png?v=20261010-084348"
-        alt="Ephinta"
-        width="96"
-        height="96"
-        decoding="sync"
-        fetchpriority="high"
-      />
-    </div>
-
-    <div id="root" inert></div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

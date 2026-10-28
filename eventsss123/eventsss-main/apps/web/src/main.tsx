@@ -19,29 +19,6 @@ import { initOfflineSync } from './lib/offline/sync';
 import "./styles/ephinta-landing-repair.css";
 import "./styles/ephinta-current-ui-repair.css";
 
-/* ---------- Ephinta boot splash (markup + CSS live in index.html) ---------- */
-const SPLASH_MS = 6000; // total time the splash is on screen
-const FADE_MS = 400;    // must match the transition in index.html
-
-function hideSplash() {
-  const splash = document.getElementById('ephinta-boot');
-  const root = document.getElementById('root');
-
-  // performance.now() = ms since navigation start, so the 6s begin at load.
-  const remaining = Math.max(0, SPLASH_MS - performance.now());
-
-  window.setTimeout(() => {
-    root?.removeAttribute('inert');
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', '#f97316');
-    splash?.classList.add('is-leaving');
-    window.setTimeout(() => splash?.remove(), FADE_MS + 50);
-  }, remaining);
-}
-
-hideSplash(); // start the clock before anything else runs
-
 /* ---------- Platform setup ---------- */
 const capacitor = (window as unknown as {
   Capacitor?: { isNativePlatform?: () => boolean };
@@ -63,7 +40,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AppRouter>
       <>
-        <Suspense fallback={<div className="ess-loading" role="status" aria-live="polite">Loading Event Self Solutions…</div>}>
+        <Suspense fallback={null}>
           <App />
         </Suspense>
         <OfflineStatus />
