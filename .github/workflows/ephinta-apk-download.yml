@@ -30,28 +30,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Download API readiness result
-        uses: actions/download-artifact@v4
-        with:
-          name: ephinta-apk-api-readiness
-          path: api-readiness
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
-
-      - name: Check release readiness
-        id: readiness
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "$(cat api-readiness/ready)" != "true" ]]; then
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::APK artifact is available from Actions, but no verified online API was configured; skipping the GitHub Release."
-            exit 0
-          fi
-          echo "ready=true" >> "$GITHUB_OUTPUT"
-
       - name: Prepare release files
-        if: steps.readiness.outputs.ready == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -60,23 +39,22 @@ jobs:
             echo "::error::The successful APK build did not contain an installable APK."
             exit 1
           fi
-          cp "$APK" release-assets/ephinta-debug.apk
-          sha256sum release-assets/ephinta-debug.apk > release-assets/ephinta-debug.apk.sha256
+          cp "$APK" "release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk"
+          sha256sum "release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk" \
+            > "release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk.sha256"
 
       - name: Publish APK download release
-        if: steps.readiness.outputs.ready == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ephinta-apk-${{ github.event.workflow_run.id }}
           name: EPHINTA Android APK - Build ${{ github.event.workflow_run.run_number }}
           body: |
-            Download the tested EPHINTA Android debug APK below.
+            Download the tested EPHINTA Android APK below.
 
-            This build passed web checks, database integration tests, the production web build,
-            and the Android APK build. It is a debug build for testing, not a production-signed release.
-            SHA-256 checksum is included for integrity verification.
+            This build passed web checks and the Android APK build. SHA-256 checksum is included
+            for integrity verification. This is an unsigned debug APK for testing.
           files: |
-            release-assets/ephinta-debug.apk
-            release-assets/ephinta-debug.apk.sha256
+            release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk
+            release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk.sha256
           fail_on_unmatched_files: true
           generate_release_notes: false
