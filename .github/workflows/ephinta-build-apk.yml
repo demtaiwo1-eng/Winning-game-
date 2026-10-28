@@ -62,6 +62,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Restore Rollup Linux optional dependency
+        run: npm install --no-save --package-lock=false @rollup/rollup-linux-x64-gnu@4.63.5
+
       - name: Check whether a shared online API is configured
         shell: bash
         run: |
@@ -144,6 +147,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Restore Rollup Linux optional dependency
+        run: npm install --no-save --package-lock=false @rollup/rollup-linux-x64-gnu@4.63.5
 
       - name: Build web assets for the deployed API
         run: npm run build -w apps/web
