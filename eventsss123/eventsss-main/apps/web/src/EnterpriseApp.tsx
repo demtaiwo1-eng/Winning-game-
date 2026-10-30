@@ -10,7 +10,7 @@ const GuestCheckInPanel = lazy(() => import("./components/GuestCheckInPanel"));
 const VendorEventMessagesPanel = lazy(() => import("./components/EventMessagesPanel").then((module) => ({ default: module.VendorEventMessagesPanel })));
 const VerifierPicker = lazy(() => import("./components/VerifierPicker"));
 import { OnboardingOverlay, hasCompletedOnboard, ResumeStrip } from "./components/JourneyMoments";
-import { api } from "./lib/api";
+import { api, downloadApiFile } from "./lib/api";
 import {
   eventBuilderProgressFromLandingDraft,
   eventDraftToCreateInput,
@@ -1182,6 +1182,19 @@ function FinanceOperationsPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [exporting, setExporting] = useState<"payments" | "ledger" | null>(null);
+  const exportCsv = async (kind: "payments" | "ledger") => {
+    setExporting(kind);
+    setError("");
+    const params = kind === "payments"
+      ? new URLSearchParams({ ...(provider ? { provider } : {}), ...(status ? { status } : {}), ...(currency ? { currency } : {}) })
+      : new URLSearchParams({ ...(currency ? { currency } : {}) });
+    const path = kind === "payments" ? "payment-intents" : "ledger";
+    const filename = kind === "payments" ? "ephinta-payment-intents.csv" : "ephinta-wallet-ledger.csv";
+    try { await downloadApiFile(`/admin/finance/${path}/export.csv?${params.toString()}`, filename); }
+    catch (exportError) { setError(exportError instanceof Error ? exportError.message : "CSV export failed"); }
+    finally { setExporting(null); }
+  };
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -1205,8 +1218,10 @@ function FinanceOperationsPanel() {
         <label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option><option value="PENDING">Pending</option><option value="SUCCEEDED">Succeeded</option><option value="FAILED">Failed</option><option value="REFUNDED">Refunded</option></select></label>
         <label>Currency<select value={currency} onChange={(event) => setCurrency(event.target.value)}><option value="">All currencies</option><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="USD">USD</option></select></label>
       </div>
-      <div style={{ display: "flex", justifyContent: "flex-end", margin: "12px 0" }}>
-        <button className="ess-outline-button" type="button" disabled={loading} onClick={() => setRefreshKey((key) => key + 1)}>{loading ? "Refreshing…" : "Refresh finance data"}</button>
+      <div style={{ display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: 8, margin: "12px 0" }}>
+        <button className="ess-outline-button" type="button" disabled={loading || exporting !== null} onClick={() => setRefreshKey((key) => key + 1)}>{loading ? "Refreshing…" : "Refresh finance data"}</button>
+        <button className="ess-outline-button" type="button" disabled={exporting !== null} onClick={() => void exportCsv("payments")}>{exporting === "payments" ? "Preparing payments…" : "Export payments CSV"}</button>
+        <button className="ess-outline-button" type="button" disabled={exporting !== null} onClick={() => void exportCsv("ledger")}>{exporting === "ledger" ? "Preparing ledger…" : "Export ledger CSV"}</button>
       </div>
       {error && <p className="ess-form-error" role="alert">{error}</p>}
       {payments && <>
