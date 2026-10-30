@@ -629,10 +629,17 @@ model Promotion {
   startsAt    DateTime
   endsAt      DateTime
   status      PromotionStatus @default(DRAFT)
+  paidAt      DateTime?
+  approvedAt  DateTime?
+  approvedById String?
+  pausedAt    DateTime?
+  impressions Int             @default(0)
+  clicks      Int             @default(0)
   vendor      VendorProfile   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
   listing     Listing?        @relation(fields: [listingId], references: [id], onDelete: SetNull)
 
   @@index([status, startsAt, endsAt])
+  @@index([vendorId])
 }
 
 model Review {
