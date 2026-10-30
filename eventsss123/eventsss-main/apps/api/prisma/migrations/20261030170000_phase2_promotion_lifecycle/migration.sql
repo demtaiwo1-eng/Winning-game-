@@ -7,4 +7,4 @@ ALTER TABLE "Promotion"
   ADD COLUMN "clicks" INTEGER NOT NULL DEFAULT 0;
 
 CREATE INDEX "Promotion_vendorId_createdAt_idx"
-  ON "Promotion"("vendorId", "createdAt");
+  ON "Promotion"("vendorId");
