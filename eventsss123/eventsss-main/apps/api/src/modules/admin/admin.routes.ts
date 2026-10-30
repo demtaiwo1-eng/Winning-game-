@@ -184,11 +184,11 @@ adminRouter.get("/finance/ledger", asyncHandler(async (req, res) => {
 const financeExportLimit = 5000;
 function csvCell(value: unknown): string {
   let text = value === null || value === undefined ? "" : value instanceof Date ? value.toISOString() : String(value);
-  if (/^[\\s\\u0000-\\u001f]*[=+\\-@]/.test(text)) text = "'" + text;
+  if (/^[\s\u0000-\u001f]*[=+\-@]/.test(text)) text = "'" + text;
   return '"' + text.replace(/"/g, '""') + '"';
 }
 function financeCsv(headers: string[], rows: unknown[][]): string {
-  return [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\\r\\n") + "\\r\\n";
+  return [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
 function exportFilters(query: Record<string, unknown>) {
   const params = financePageParams(query);
