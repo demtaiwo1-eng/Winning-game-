@@ -8,6 +8,12 @@ const API_BASE =
     (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL) ||
   "/api/v1";
 
+export function apiUrl(path: string): string {
+  const base = API_BASE.replace(/\/+$/, "");
+  const suffix = path.replace(/^\/+/, "");
+  return base + "/" + suffix;
+}
+
 function token(): string | null {
   try {
     return localStorage.getItem("ess_access_token");
@@ -27,7 +33,7 @@ export async function api<T = unknown>(
   const t = token();
   if (t) headers.Authorization = `Bearer ${t}`;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const res = await fetch(apiUrl(path), { ...options, headers });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const message =
