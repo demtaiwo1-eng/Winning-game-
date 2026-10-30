@@ -84,7 +84,7 @@ paymentsRouter.post(
         currency,
         reference,
         returnUrl: callbackUrl,
-        callbackUrl: new URL("/api/v1/payments/webhooks/opay", env.APP_BASE_URL).toString(),
+        callbackUrl: new URL("/api/v1/payments/webhooks/opay", env.API_BASE_URL).toString(),
       });
     } else if (provider === "paystack") {
       init = await initializePaystack({
