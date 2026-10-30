@@ -18,6 +18,7 @@
 - Tracking never returns private vendor financial data.
 - Added an additive migration for payment/approval/pause timestamps and impression/click counters.
 - Added pure policy tests for exact payment matching, campaign schedule, and allowed tracking actions.
+- Added a vendor dashboard for draft creation, wallet payment and pause, plus an admin dashboard for paid-campaign approval and status control.
 
 ## API routes added
 
@@ -42,7 +43,7 @@
 - Add a tested refund/cancellation process before enabling paid campaign termination.
 - Add scheduled expiry/status reconciliation and robust deduplicated bot-resistant attribution.
 - Confirm all campaign payments originate from verified wallet funding and define the commercial pricing/measurement policy.
-- Add owner/admin UI for campaign review and approval, plus vendor campaign payment/status UI.
+- Review the new vendor/admin screens on small Android viewports and complete authenticated staging journeys.
 - Run staging journeys using test accounts; no production paid campaign until owner sign-off.
 
 A green build is necessary but not sufficient for Phase 2 completion.
