@@ -39,8 +39,8 @@ This ledger tracks the phased delivery programme. A phase is not complete merely
 - PR #1: https://github.com/demtaiwo1-eng/Winning-game-/pull/1
 - Feature head at tracker creation: c101aadb7a9319ceacf121dbc9de3e7843b97b85
 - GitHub Actions run #25: https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41088469325 — overall success; API/web checks, disposable PostgreSQL migrations/integration tests, web build, Android debug APK build and artifact upload completed.
-- CI success does not certify live browser flows, online readiness, physical-device operation, real payments, database restore, or production release.
-- PR #1 was squash-merged to main as 5807b7da69f2ce19bfe01c0db3f89e26d1b0c003. Render frontend deployment is building and API deployment is queued at tracker update time.
+- CI success does not certify live browser flows, online readiness, physical-device operation, real payments, database restore, or production release. Follow-up main commit 9f1a2210196d7257c5966ed6c62c93e6ae86e406 adds a safe public API URL fallback to all four workflow references; GitHub Actions run #27 is pending.
+- PR #1 was squash-merged to main as 5807b7da69f2ce19bfe01c0db3f89e26d1b0c003. Phase 1 frontend deployment completed live; API deployment for the merged commit is still being processed. CI fallback commit 9f1a2210196d7257c5966ed6c62c93e6ae86e406 is in progress.
 
 ## Work log
 | Date UTC | Change | Evidence |
@@ -48,7 +48,7 @@ This ledger tracks the phased delivery programme. A phase is not complete merely
 | 2026-10-30 | Created Render Free static site; configured Vite API base and SPA rewrite. | https://ephinta-web.onrender.com |
 | 2026-10-30 | Added frontend origin to API CORS allowlist; API redeploy completed live. | Render service ephinta_wss |
 | 2026-10-30 | Verified PR #1 CI run #25 passed, including isolated DB tests and Android debug APK build. | https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41088469325 |
-| 2026-10-30 | Added phase statuses and evidence gaps in this tracker on main. | Commit 7082c26b045ba290cfa01c0db3f89e26d1b7f2c4 |\n| 2026-10-30 | Squash-merged the CI-passing Phase 1 patch to main after owner authorization. Render auto-deploys started; live browser acceptance remains open. | Commit 5807b7da69f2ce19bfe01c0db3f89e26d1b0c003; PR #1 |
+| 2026-10-30 | Added phase statuses and evidence gaps in this tracker on main. | Commit 7082c26b045ba290cfa01c0db3f89e26d1b7f2c4 |\n| 2026-10-30 | Squash-merged the CI-passing Phase 1 patch to main after owner authorization. Frontend deployment completed live; API deployment is still processing. | Commit 5807b7da69f2ce19bfe01c0db3f89e26d1b0c003; PR #1 |\n| 2026-10-30 | Added a default public API URL to GitHub Actions so online readiness is checked even if the repository variable is unset. | Commit 9f1a2210196d7257c5966ed6c62c93e6ae86e406; run #27 pending |
 
 ## Definition of done
 A phase is complete only when code review, CI, relevant environment tests, and security/data invariants pass. External dependencies must be recorded as verified or blocked. Overall completion requires evidence for all required phases and owner acceptance of the release checklist.
