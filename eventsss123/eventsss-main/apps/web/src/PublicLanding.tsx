@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import DateWheelPicker from './components/DateWheelPicker';
 
 type AuthPayload = { accessToken: string; refreshToken: string; user: { id: string; email: string; name: string; role: string } };
 interface LandingPageProps { onLoginSuccess: (payload: AuthPayload) => void; }
@@ -111,7 +112,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
         <div className="pl-brief" aria-label="Design your event">
           <h2>Design your event</h2>
           <label>What are you planning?<div className="pl-ch">{Object.keys(NEEDS).map((t) => <button key={t} aria-pressed={d.type === t} onClick={() => setD({ ...d, type: t })}>{t}</button>)}</div></label>
-          <div className="pl-g"><label>Guests<input className="pl-in" type="number" min={1} value={d.guests} onChange={(e) => setD({ ...d, guests: e.target.value })} /></label><label>Date<input className="pl-in" type="date" value={d.date} onChange={(e) => setD({ ...d, date: e.target.value })} /></label></div>
+          <div className="pl-g"><label>Guests<input className="pl-in" type="number" min={1} value={d.guests} onChange={(e) => setD({ ...d, guests: e.target.value })} /></label><DateWheelPicker value={d.date} onChange={(date) => setD({ ...d, date })} label="Event date" /></div>
           <label>Style<div className="pl-ch">{VIBES.map((v) => <button key={v} aria-pressed={d.vibe === v} onClick={() => setD({ ...d, vibe: v })}>{v}</button>)}</div></label>
           <div className="pl-sum" aria-live="polite">{d.type ? <><b>{[d.vibe, d.type.toLowerCase()].filter(Boolean).join(' ')}</b>{d.guests ? `${d.guests} guests` : 'Guest count not set yet'}, {nice}.<br />You will need: {(NEEDS[d.type] ?? []).join(', ')}.</> : 'Choose what you are planning and we will list the services you need.'}</div>
           <button className="pl-b c" disabled={!d.type} style={{ width: '100%', marginTop: 14 }} onClick={() => { saveDraft(); open('register', 'customer'); }}>Save my design and find vendors</button>
