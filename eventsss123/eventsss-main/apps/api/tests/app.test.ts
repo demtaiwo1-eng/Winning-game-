@@ -57,6 +57,31 @@ describe("api foundation (DB-free)", () => {
     expect(invalidDate.status).toBe(400);
     expect(invalidDate.body.error.code).toBe("INVALID_FILTER");
   });
+  it("protects finance CSV exports from unauthenticated and non-admin access", async () => {
+    for (const path of [
+      "/api/v1/admin/finance/payment-intents/export.csv",
+      "/api/v1/admin/finance/ledger/export.csv",
+    ]) {
+      const missing = await request(app).get(path);
+      expect(missing.status).toBe(401);
+      const vendorToken = jwt.sign({ role: "VENDOR" }, env.JWT_SECRET, { subject: "vendor-user" });
+      const forbidden = await request(app).get(path).set("Authorization", `Bearer ${vendorToken}`);
+      expect(forbidden.status).toBe(403);
+    }
+  });
+  it("validates finance CSV filters before reading finance records", async () => {
+    const token = jwt.sign({ role: "ADMIN" }, env.JWT_SECRET, { subject: "admin-user" });
+    const invalidStatus = await request(app)
+      .get("/api/v1/admin/finance/payment-intents/export.csv?status=UNKNOWN")
+      .set("Authorization", `Bearer ${token}`);
+    expect(invalidStatus.status).toBe(400);
+    expect(invalidStatus.body.error.code).toBe("INVALID_FILTER");
+    const invalidCurrency = await request(app)
+      .get("/api/v1/admin/finance/ledger/export.csv?currency=TOOLONG")
+      .set("Authorization", `Bearer ${token}`);
+    expect(invalidCurrency.status).toBe(400);
+    expect(invalidCurrency.body.error.code).toBe("INVALID_FILTER");
+  });
   it("rejects previously issued Rider access tokens", async () => {
     const token = jwt.sign({ role: "RIDER" }, env.JWT_SECRET, { subject: "retired-rider" });
     const res = await request(app).get("/api/v1/auth/me").set("Authorization", `Bearer ${token}`);
