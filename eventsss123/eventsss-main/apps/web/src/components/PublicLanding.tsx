@@ -550,9 +550,22 @@ export default function PublicLanding({
 
     try { localStorage.setItem('ess:eventDraft', JSON.stringify(draft)); } catch { /* storage may be disabled */ }
 
-    if (onStartBuilder) onStartBuilder();
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    else openAuth('signup', 'CLIENT');
+    if (onStartBuilder) {
+      onStartBuilder();
+      return;
+    }
+
+    openAuth('signup', 'CLIENT');
+
+    requestAnimationFrame(() => {
+      const apiModal = document.getElementById('eph-auth-dialog');
+      if (apiModal) {
+        apiModal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
 
   }
 
@@ -1156,7 +1169,7 @@ export default function PublicLanding({
 
       {authMode && <div className="eph-modal-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setAuthMode(null); }}>
 
-        <section className="eph-modal" role="dialog" aria-modal="true" aria-labelledby="eph-auth-title">
+        <section id="eph-auth-dialog" className="eph-modal" role="dialog" aria-modal="true" aria-labelledby="eph-auth-title">
 
           <div className="eph-modal-brand"><img src="/brand/ephinta_logo2.png" alt="" /><span>EPHINTA</span></div>
           <div className="eph-modal-top"><div><h2 id="eph-auth-title">{authMode === 'signin' ? 'Welcome back' : authMode === 'forgot' ? 'Reset your password' : 'Create your EPHINTA account'}</h2><p>{authMode === 'signin' ? 'Sign in to continue planning.' : authMode === 'forgot' ? 'Enter your email and we\'ll send reset instructions if an account exists.' : 'A few details to get you started.'}</p></div><button className="eph-close" onClick={() => setAuthMode(null)} aria-label="Close dialog">&times;</button></div>

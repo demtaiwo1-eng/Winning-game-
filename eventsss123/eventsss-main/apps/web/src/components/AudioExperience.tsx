@@ -1,15 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
 
 type Props = {
-  /** Optional audio URL served by your app. Leave empty to use the test tone. */
+  /** Optional audio URL served by your app. Leave empty to use the local synth instrument. */
   audioUrl?: string;
   /** Set true only for an explicit user-facing sound experience. */
   showPrompt?: boolean;
+  /** Start the audio automatically when the page loads, if the browser allows it. */
+  autoPlay?: boolean;
 };
 
 export default function AudioExperience({
   audioUrl,
   showPrompt = true,
+  autoPlay = false,
 }: Props) {
   const [enabled, setEnabled] = useState(false);
   const [volume, setVolume] = useState(0.35);
@@ -34,6 +37,16 @@ export default function AudioExperience({
       // Private browsing or restricted storage: use safe defaults.
     }
   }, []);
+
+  useEffect(() => {
+    if (!autoPlay) return;
+    const timer = window.setTimeout(() => {
+      if (document.visibilityState === "hidden") return;
+      void enableSound();
+    }, 600);
+
+    return () => window.clearTimeout(timer);
+  }, [autoPlay]);
 
   useEffect(() => {
     if (!audioUrl) return;
@@ -89,7 +102,6 @@ export default function AudioExperience({
 
   async function testSound() {
     try {
-      // Use the Web Audio API only after a button click.
       const AudioContextClass =
         window.AudioContext ||
         (window as typeof window & {
@@ -106,27 +118,29 @@ export default function AudioExperience({
 
       if (ctx.state === "suspended") await ctx.resume();
 
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
+      const notes = [220, 277.18, 329.63];
+      const now = ctx.currentTime;
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(Math.min(volume, 0.35) * 0.1, now);
+      masterGain.connect(ctx.destination);
 
-      oscillator.type = "sine";
-      oscillator.frequency.value = 660;
+      notes.forEach((frequency, index) => {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = index === 0 ? "triangle" : "sine";
+        oscillator.frequency.setValueAtTime(frequency, now + index * 0.08);
+        gain.gain.setValueAtTime(0.0001, now + index * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.08, now + index * 0.08 + 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.08 + 0.7);
+        oscillator.connect(gain);
+        gain.connect(masterGain);
+        oscillator.start(now + index * 0.08);
+        oscillator.stop(now + index * 0.08 + 0.75);
+      });
 
-      // Respect the selected volume; cap test tone to avoid sudden loud audio.
-      gain.gain.setValueAtTime(Math.min(volume, 0.35) * 0.18, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        ctx.currentTime + 0.45
-      );
-
-      oscillator.connect(gain);
-      gain.connect(ctx.destination);
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.46);
-
-      setMessage("Playing a short sound test");
+      setMessage("Playing a short acoustic test");
       setPlaying(true);
-      window.setTimeout(() => setPlaying(false), 500);
+      window.setTimeout(() => setPlaying(false), 900);
     } catch {
       setMessage("Could not play test sound. Check device volume.");
     }

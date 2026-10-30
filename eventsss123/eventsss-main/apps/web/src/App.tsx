@@ -609,7 +609,7 @@ export default function App() {
   return (
     <>
       {appContent}
-      <AudioExperience showPrompt={false} />
+      <AudioExperience showPrompt={false} autoPlay />
     </>
   );
 }
