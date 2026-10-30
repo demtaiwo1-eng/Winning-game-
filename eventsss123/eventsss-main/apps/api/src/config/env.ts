@@ -23,6 +23,12 @@ const schema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   PAYMENT_MODE: z.enum(["test", "live"]).default("test"),
+  OPAY_ENABLED: z.enum(["true", "false"]).default("false"),
+  OPAY_MODE: z.enum(["sandbox", "live"]).default("sandbox"),
+  OPAY_MERCHANT_ID: z.string().optional(),
+  OPAY_PUBLIC_KEY: z.string().optional(),
+  OPAY_SECRET_KEY: z.string().optional(),
+  OPAY_API_BASE_URL: z.string().url().default("https://sandboxapi.opaycheckout.com"),
 });
 
 const rawEnv: NodeJS.ProcessEnv = {};
