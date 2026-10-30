@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../lib/async";
 import { requireAuth, requireRole } from "../../middleware/auth";
