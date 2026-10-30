@@ -11,6 +11,8 @@ import { isPromotionPaymentValid, isPromotionTrackingAction, isPromotionWithinSc
 export const billingRouter = Router();
 
 const promotionTrackingLimit = rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: true, legacyHeaders: false });
+const promotionPaymentsEnabled = () =>
+  process.env.NODE_ENV === "test" || process.env.PROMOTIONS_WALLET_PAYMENTS_ENABLED === "true";
 
 billingRouter.get(
   "/public-promotions",
@@ -257,6 +259,9 @@ billingRouter.post(
   asyncHandler(async (req, res) => {
     const profile = await prisma.vendorProfile.findUnique({ where: { userId: req.user!.id } });
     if (!profile) throw new HttpError(404, "NOT_FOUND", "Vendor profile required");
+    if (!promotionPaymentsEnabled()) {
+      throw new HttpError(503, "PROMOTION_PAYMENTS_DISABLED", "Campaign wallet payments are disabled until production readiness sign-off");
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       const promotion = await tx.promotion.findFirst({
@@ -406,6 +411,9 @@ billingRouter.patch(
       throw new HttpError(409, "INVALID_PROMOTION_STATE", "Ended campaigns cannot be reopened");
     }
     if (requested === PromotionStatus.ACTIVE) {
+      if (!promotionPaymentsEnabled()) {
+        throw new HttpError(503, "PROMOTION_PAYMENTS_DISABLED", "Campaign activation is disabled until production readiness sign-off");
+      }
       if (promotion.status !== PromotionStatus.DRAFT && promotion.status !== PromotionStatus.PAUSED) {
         throw new HttpError(409, "INVALID_PROMOTION_STATE", "Only draft or paused campaigns can be activated");
       }
