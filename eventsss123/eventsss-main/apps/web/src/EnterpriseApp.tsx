@@ -7,6 +7,7 @@ const EventCreatePanel = lazy(() => import("./components/EventCreatePanel"));
 const EventChecklistPanel = lazy(() => import("./components/EventChecklistPanel"));
 const EventMessagesPanel = lazy(() => import("./components/EventMessagesPanel"));
 const GuestCheckInPanel = lazy(() => import("./components/GuestCheckInPanel"));
+const PublicRsvpPage = lazy(() => import("./components/PublicRsvpPage"));
 const VendorEventMessagesPanel = lazy(() => import("./components/EventMessagesPanel").then((module) => ({ default: module.VendorEventMessagesPanel })));
 const VerifierPicker = lazy(() => import("./components/VerifierPicker"));
 import { OnboardingOverlay, hasCompletedOnboard, ResumeStrip } from "./components/JourneyMoments";
