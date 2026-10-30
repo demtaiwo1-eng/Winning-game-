@@ -26,6 +26,7 @@ import "./event-builder.css";
 import "./public-landing.css";
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
+const PromotionsPanel = lazy(() => import("./components/PromotionsPanel"));
 const MarketplaceBrowse = lazy(() => import("./components/MarketplaceBrowse"));
 const FeedbackPanel = lazy(() => import("./components/FeedbackPanel"));
 import { EmptyState } from "./components/EmptyState";
@@ -626,7 +627,7 @@ function VendorPortal({
     setShowForm(false);
   };
   const [vendorTab, setVendorTab] = useDashboardTab(
-    ["catalog", "wallet", "plans", "kyc", "messages"] as const,
+    ["catalog", "wallet", "plans", "kyc", "messages", "promotions"] as const,
     "catalog",
   );
   return (
@@ -656,8 +657,11 @@ function VendorPortal({
         <button type="button" className={vendorTab === "plans" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("plans")}>Plans & promos</button>
         <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
         <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Messages</button>
+        <button type="button" className={vendorTab === "promotions" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("promotions")}>Promotions</button>
       </div>
-      {vendorTab === "wallet" ? (
+      {vendorTab === "promotions" ? (
+        <PromotionsPanel mode="vendor" />
+      ) : vendorTab === "wallet" ? (
         <WalletPanel role="VENDOR" />
       ) : vendorTab === "plans" ? (
         <SubscriptionsPanel audience="VENDOR" />
@@ -1244,6 +1248,7 @@ function AdminPortal() {
           </section>
         </>
       )}
+      <PromotionsPanel mode="admin" />
     </>
   );
 }
