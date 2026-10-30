@@ -81,8 +81,8 @@ const paymentStatuses = ["PENDING", "SUCCEEDED", "FAILED", "REFUNDED"] as const;
 const ledgerTypes = ["DEPOSIT", "WITHDRAWAL", "ESCROW_HOLD", "ESCROW_RELEASE", "ESCROW_REFUND", "COMMISSION", "SUBSCRIPTION", "ADJUSTMENT"] as const;
 
 function financePageParams(query: Record<string, unknown>) {
-  const page = typeof query.page === "string" && /^\\d+$/.test(query.page) ? Math.max(1, Number(query.page)) : 1;
-  const requestedLimit = typeof query.limit === "string" && /^\\d+$/.test(query.limit) ? Number(query.limit) : 25;
+  const page = typeof query.page === "string" && /^\d+$/.test(query.page) ? Math.max(1, Number(query.page)) : 1;
+  const requestedLimit = typeof query.limit === "string" && /^\d+$/.test(query.limit) ? Number(query.limit) : 25;
   const limit = Math.min(100, Math.max(1, requestedLimit));
   const from = typeof query.from === "string" ? new Date(query.from) : undefined;
   const to = typeof query.to === "string" ? new Date(query.to) : undefined;
