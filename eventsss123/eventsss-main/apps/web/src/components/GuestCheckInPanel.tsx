@@ -196,7 +196,7 @@ export default function GuestCheckInPanel({ events }: { events: EventOption[] })
   const exportGuests = () => {
     if (!guests.length) return;
     const csv = buildGuestCsv(guests, window.location.origin);
-    const url = URL.createObjectURL(new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+    const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url; link.download = "ephinta-guests.csv"; link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
