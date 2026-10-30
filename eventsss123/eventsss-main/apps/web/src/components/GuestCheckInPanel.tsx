@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../lib/api";
+import { buildGuestCsv, parseGuestCsv } from "../lib/guestCsv";
 import { useOnlineStatus } from "../lib/offline/network";
 
 type EventOption = { id: string; title: string; startsAt?: string | null };
@@ -79,6 +80,7 @@ export default function GuestCheckInPanel({ events }: { events: EventOption[] })
   const [busy, setBusy] = useState(false);
   const [nfcAvailable, setNfcAvailable] = useState(false);
   const [bluetoothAvailable, setBluetoothAvailable] = useState(false);
+  const [importingGuests, setImportingGuests] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -173,6 +175,43 @@ export default function GuestCheckInPanel({ events }: { events: EventOption[] })
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Bluetooth check-in failed."); }
   };
 
+  const importGuestFile = async (file?: File) => {
+    if (!file || !eventId || importingGuests) return;
+    setImportingGuests(true); setError(""); setNotice("");
+    try {
+      const rows = parseGuestCsv(await file.text());
+      const result = await api<{ count: number }>(`/events/${eventId}/guests/bulk`, {
+        method: "POST",
+        body: JSON.stringify({ guests: rows }),
+      });
+      setNotice(`${result.count} guest${result.count === 1 ? "" : "s"} imported. Invitation links are ready to copy or export.`);
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to import guest CSV.");
+    } finally {
+      setImportingGuests(false);
+    }
+  };
+
+  const exportGuests = () => {
+    if (!guests.length) return;
+    const csv = buildGuestCsv(guests, window.location.origin);
+    const url = URL.createObjectURL(new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url; link.download = "ephinta-guests.csv"; link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const copyInvite = async (guest: Guest) => {
+    if (!guest.token) { setError("This guest has no invitation token. Refresh the guest list and try again."); return; }
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/rsvp/${guest.token}`);
+      setNotice(`Invitation link copied for ${guest.name}.`);
+    } catch {
+      setError("Clipboard access is unavailable. Export the guest CSV to retrieve the invitation link.");
+    }
+  };
+
   const visibleGuests = guests.filter((guest) => `${guest.name} ${guest.email || ""} ${guest.phone || ""}`.toLowerCase().includes(search.toLowerCase()));
   const checkedCount = guests.filter((guest) => Boolean(guest.checkedInAt) || pending.includes(guest.id)).length;
 
@@ -209,7 +248,7 @@ export default function GuestCheckInPanel({ events }: { events: EventOption[] })
           return <article className="ess-card" key={guest.id}>
             <h3>{guest.name}</h3><p className="ess-muted">RSVP: {guest.rsvp}{guest.phone ? ` · ${guest.phone}` : ""}</p>
             <p>{guest.checkedInAt ? `Checked in ${new Date(guest.checkedInAt).toLocaleString()}` : pending.includes(guest.id) ? "Saved locally · awaiting server confirmation" : "Not checked in"}</p>
-            <button className={isChecked ? "ess-outline-button" : "ess-primary"} type="button" disabled={busy || isChecked} onClick={() => void checkIn({ guestId: guest.id, method: "MANUAL" })}>{isChecked ? "Checked in" : "Check in guest"}</button>
+            <div className="ess-filter-row"><button className={isChecked ? "ess-outline-button" : "ess-primary"} type="button" disabled={busy || isChecked} onClick={() => void checkIn({ guestId: guest.id, method: "MANUAL" })}>{isChecked ? "Checked in" : "Check in guest"}</button><button className="ess-outline-button" type="button" onClick={() => void copyInvite(guest)} disabled={!guest.token}>Copy RSVP link</button></div>
           </article>;
         })}
       </div>
