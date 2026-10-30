@@ -6,6 +6,7 @@ import { logger } from "../../lib/logger";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
+import { isPromotionPaymentValid, isPromotionTrackingAction } from "./promotionPolicy";
 
 export const billingRouter = Router();
 
@@ -387,12 +388,7 @@ billingRouter.patch(
       const payment = await prisma.ledgerEntry.findUnique({
         where: { idempotencyKey: `promotion_payment:${promotion.id}` },
       });
-      if (
-        !payment ||
-        payment.refType !== "PROMOTION_PAYMENT" ||
-        payment.refId !== promotion.id ||
-        payment.amountMinor !== promotion.budgetMinor
-      ) {
+      if (!isPromotionPaymentValid(payment, promotion.id, promotion.budgetMinor)) {
         throw new HttpError(409, "PROMOTION_UNPAID", "A matching verified wallet payment is required before approval");
       }
       if (promotion.endsAt <= new Date()) {
@@ -440,7 +436,7 @@ billingRouter.post(
   promotionTrackingLimit,
   asyncHandler(async (req, res) => {
     const action = String(req.body.action || "").toLowerCase();
-    if (action !== "impression" && action !== "click") {
+    if (!isPromotionTrackingAction(action)) {
       throw new HttpError(400, "INVALID_TRACKING_ACTION", "Action must be impression or click");
     }
     const now = new Date();
