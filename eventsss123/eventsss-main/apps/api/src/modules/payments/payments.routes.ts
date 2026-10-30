@@ -9,7 +9,7 @@ import {
   ListingStatus,
   PaymentStatus,
 } from "@prisma/client";
-import { randomUUID } from "crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 import { prisma } from "../../lib/prisma";
 import { logger } from "../../lib/logger";
 import { requireAuth, requireRole } from "../../middleware/auth";
@@ -195,9 +195,13 @@ function verifyWebhookSignature(provider: string, req: import("express").Request
     const payload = req.body?.payload;
     if (!payload || typeof payload !== "object") throw new HttpError(400, "INVALID_OPAY_CALLBACK", "OPay callback payload is missing");
     const received = String(req.body?.sha512 || "");
-    const canonical = JSON.stringify(Object.fromEntries(Object.entries(payload).sort(([a], [b]) => a.localeCompare(b))));
-    const expected = require("node:crypto").createHmac("sha3-512", secret).update(canonical).digest("hex");
-    if (!received || received.length !== expected.length || !require("node:crypto").timingSafeEqual(Buffer.from(received), Buffer.from(expected))) {
+    // OPay's documented transaction callback signature uses a fixed canonical
+    // field string; it is not a signature of JSON.stringify(payload).
+    const signText = `{Amount:"${String(payload.amount ?? "")}",Currency:"${String(payload.currency ?? "")}",Reference:"${String(payload.reference ?? "")}",Refunded:${payload.refunded === true ? "t" : "f"},Status:"${String(payload.status ?? "")}",Timestamp:"${String(payload.timestamp ?? "")}",Token:"${String(payload.token ?? "")}",TransactionID:"${String(payload.transactionId ?? "")}"}`;
+    const expected = createHmac("sha3-512", secret).update(signText).digest("hex");
+    const receivedBytes = Buffer.from(received.toLowerCase());
+    const expectedBytes = Buffer.from(expected);
+    if (!received || receivedBytes.length !== expectedBytes.length || !timingSafeEqual(receivedBytes, expectedBytes)) {
       throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid OPay callback signature");
     }
   } else if (provider === "paystack") {
