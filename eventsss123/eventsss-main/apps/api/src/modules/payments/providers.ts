@@ -95,7 +95,7 @@ export type InitResult = {
   providerRef: string;
   authorizationUrl?: string;
   accessCode?: string;
-  mode: "live" | "demo";
+  mode: "live" | "sandbox" | "demo";
 };
 
 /** Amount for Paystack is in major subunit already as kobo/pesewas (minor units). */
@@ -525,7 +525,7 @@ export async function initializeOpay(input: {
     throw new Error("OPay returned an invalid cashier URL");
   }
   if (data.reference !== input.reference) throw new Error("OPay returned a mismatched payment reference");
-  return { provider: "opay", providerRef: input.reference, authorizationUrl: cashierUrl, mode: "live" };
+  return { provider: "opay", providerRef: input.reference, authorizationUrl: cashierUrl, mode: "sandbox" };
 }
 
 export async function verifyOpay(reference: string): Promise<{
