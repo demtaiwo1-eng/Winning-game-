@@ -13,6 +13,7 @@ const schema = z.object({
   COMMISSION_BPS: z.coerce.number().int().min(0).max(5000).default(1000),
   DEFAULT_CURRENCY: z.string().length(3).default("NGN"),
   APP_BASE_URL: z.string().url().default("http://localhost:4173"),
+  API_BASE_URL: z.string().url().default("http://localhost:5000"),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),
