@@ -1159,6 +1159,79 @@ function ConsultantPortal() {
 }
 
 
+type FinancePaymentFeed = {
+  total: number;
+  summary: Array<{ provider: string; currency: string; status: string; count: number; amountMinor: string }>;
+  items: Array<{ id: string; provider: string; providerRef?: string | null; amountMinor: string; currency: string; status: string; createdAt: string; user: { name: string; email: string } }>;
+};
+type FinanceLedgerFeed = {
+  total: number;
+  items: Array<{ id: string; type: string; amountMinor: string; balanceAfterMinor: string; createdAt: string; wallet: { currency: string; user: { name: string; email: string } } }>;
+};
+function financeAmount(amountMinor: string, currency: string) {
+  const amount = Number(amountMinor) / 100;
+  return Number.isFinite(amount) ? `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `${currency} ${amountMinor} minor units`;
+}
+function FinanceOperationsPanel() {
+  const [payments, setPayments] = useState<FinancePaymentFeed | null>(null);
+  const [ledger, setLedger] = useState<FinanceLedgerFeed | null>(null);
+  const [provider, setProvider] = useState("");
+  const [status, setStatus] = useState("");
+  const [currency, setCurrency] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    const query = new URLSearchParams({ limit: "15", ...(provider ? { provider } : {}), ...(status ? { status } : {}), ...(currency ? { currency } : {}) });
+    const ledgerQuery = new URLSearchParams({ limit: "15", ...(currency ? { currency } : {}) });
+    Promise.all([
+      api<FinancePaymentFeed>(`/admin/finance/payment-intents?${query}`),
+      api<FinanceLedgerFeed>(`/admin/finance/ledger?${ledgerQuery}`),
+    ]).then(([paymentData, ledgerData]) => {
+      if (active) { setPayments(paymentData); setLedger(ledgerData); setError(""); }
+    }).catch((loadError: Error) => { if (active) setError(loadError.message); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [provider, status, currency, refreshKey]);
+  return (
+    <section className="ess-panel">
+      <SectionTitle eyebrow="Finance · read only" title="Payment and wallet operations" />
+      <p className="ess-muted">This view reads payment intents and append-only ledger entries. It cannot move funds, settle payments, or issue refunds.</p>
+      <div className="ess-form-grid">
+        <label>Provider<select value={provider} onChange={(event) => setProvider(event.target.value)}><option value="">All providers</option><option value="opay">OPay</option><option value="paystack">Paystack</option><option value="flutterwave">Flutterwave</option><option value="stripe">Stripe</option><option value="demo">Demo</option></select></label>
+        <label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option><option value="PENDING">Pending</option><option value="SUCCEEDED">Succeeded</option><option value="FAILED">Failed</option><option value="REFUNDED">Refunded</option></select></label>
+        <label>Currency<select value={currency} onChange={(event) => setCurrency(event.target.value)}><option value="">All currencies</option><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="USD">USD</option></select></label>
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", margin: "12px 0" }}>
+        <button className="ess-outline-button" type="button" disabled={loading} onClick={() => setRefreshKey((key) => key + 1)}>{loading ? "Refreshing…" : "Refresh finance data"}</button>
+      </div>
+      {error && <p className="ess-form-error" role="alert">{error}</p>}
+      {payments && <>
+        <h3>Payment intents · {payments.total.toLocaleString()} records</h3>
+        <div className="ess-metrics">
+          {payments.summary.map((row) => <Metric key={row.provider + row.currency + row.status} label={`${row.provider} · ${row.status}`} value={row.count.toLocaleString()} detail={financeAmount(row.amountMinor, row.currency)} />)}
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table><thead><tr><th>Created</th><th>Customer</th><th>Provider</th><th>Amount</th><th>Status</th><th>Reference</th></tr></thead>
+            <tbody>{payments.items.map((item) => <tr key={item.id}><td>{new Date(item.createdAt).toLocaleString()}</td><td>{item.user.name}</td><td>{item.provider}</td><td>{financeAmount(item.amountMinor, item.currency)}</td><td>{item.status}</td><td>{item.providerRef || item.id}</td></tr>)}</tbody>
+          </table>
+        </div>
+      </>}
+      {ledger && <>
+        <h3>Wallet ledger · {ledger.total.toLocaleString()} records</h3>
+        <div style={{ overflowX: "auto" }}>
+          <table><thead><tr><th>Created</th><th>Wallet owner</th><th>Type</th><th>Amount</th><th>Balance after</th></tr></thead>
+            <tbody>{ledger.items.map((item) => <tr key={item.id}><td>{new Date(item.createdAt).toLocaleString()}</td><td>{item.wallet.user.name}</td><td>{item.type}</td><td>{financeAmount(item.amountMinor, item.wallet.currency)}</td><td>{financeAmount(item.balanceAfterMinor, item.wallet.currency)}</td></tr>)}</tbody>
+          </table>
+        </div>
+      </>}
+      {loading && !payments && <p className="ess-muted">Loading finance records…</p>}
+    </section>
+  );
+}
+
 function AdminPortal() {
   const [overview, setOverview] = useState<{
     accounts: { total: number; active: number };
@@ -1248,6 +1321,7 @@ function AdminPortal() {
           </section>
         </>
       )}
+      <FinanceOperationsPanel />
       <PromotionsPanel mode="admin" />
     </>
   );
