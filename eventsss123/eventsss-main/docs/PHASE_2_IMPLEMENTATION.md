@@ -33,6 +33,7 @@
 - No demo payment success, fake payment, client-supplied status, or client-supplied amount is accepted as campaign settlement.
 - Campaign budget is a prepaid wallet debit in NGN. This slice does not yet implement per-impression/per-click billing, refund accounting, or spend drawdown.
 - No live provider account was activated and no real-money payment was initiated.
+- Campaign wallet payments and ADMIN activation require the explicit environment opt-in `PROMOTIONS_WALLET_PAYMENTS_ENABLED=true` (except in tests). It is not enabled by this patch, so the production feature remains closed until separate staging/owner sign-off.
 - No production database migration has been run. Migration is additive and will be applied only by the reviewed deploy process after merge.
 - No Render plan changes or production data reset.
 
@@ -42,7 +43,7 @@
 - Add authenticated DB integration tests for vendor isolation, concurrent wallet payment idempotency, insufficient funds, admin-only approval, and state transitions.
 - Add a tested refund/cancellation process before enabling paid campaign termination.
 - Add scheduled expiry/status reconciliation and robust deduplicated bot-resistant attribution.
-- Confirm all campaign payments originate from verified wallet funding and define the commercial pricing/measurement policy.
+- Confirm all campaign payments originate from verified wallet funding, review the opt-in setting, and define the commercial pricing/measurement policy.
 - Review the new vendor/admin screens on small Android viewports and complete authenticated staging journeys.
 - Run staging journeys using test accounts; no production paid campaign until owner sign-off.
 
