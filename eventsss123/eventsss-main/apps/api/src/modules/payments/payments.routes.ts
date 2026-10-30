@@ -18,6 +18,8 @@ import { HttpError } from "../../lib/errors";
 import { commissionMinor } from "../../lib/money";
 import { env } from "../../config/env";
 import {
+  initializeOpay,
+  verifyOpay,
   initializeFlutterwave,
   initializePaystack,
   initializeStripe,
@@ -74,7 +76,17 @@ paymentsRouter.post(
     ).toString();
 
     let init: { provider: string; providerRef: string; authorizationUrl?: string; mode: string };
-    if (provider === "paystack") {
+    if (provider === "opay") {
+      init = await initializeOpay({
+        email: user.email,
+        name: user.name,
+        amountMinor,
+        currency,
+        reference,
+        returnUrl: callbackUrl,
+        callbackUrl: new URL("/api/v1/payments/webhooks/opay", env.APP_BASE_URL).toString(),
+      });
+    } else if (provider === "paystack") {
       init = await initializePaystack({
         email: user.email,
         amountMinor,
@@ -176,9 +188,19 @@ paymentsRouter.post(
 function verifyWebhookSignature(provider: string, req: import("express").Request) {
   const rawBody = (req as import("express").Request & { rawBody?: Buffer }).rawBody;
   if (!rawBody) throw new HttpError(400, "RAW_BODY_MISSING", "Webhook raw body is unavailable");
-  const secret = provider === "paystack" ? env.PAYSTACK_SECRET_KEY : provider === "flutterwave" ? env.FLUTTERWAVE_SECRET_KEY : env.STRIPE_WEBHOOK_SECRET;
+  const secret = provider === "opay" ? env.OPAY_SECRET_KEY : provider === "paystack" ? env.PAYSTACK_SECRET_KEY : provider === "flutterwave" ? env.FLUTTERWAVE_SECRET_KEY : env.STRIPE_WEBHOOK_SECRET;
   if (!secret) throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "Webhook verification is not configured");
-  if (provider === "paystack") {
+  if (provider === "opay") {
+    // OPay callback payload is only a notification; settlement independently queries OPay status.
+    const payload = req.body?.payload;
+    if (!payload || typeof payload !== "object") throw new HttpError(400, "INVALID_OPAY_CALLBACK", "OPay callback payload is missing");
+    const received = String(req.body?.sha512 || "");
+    const canonical = JSON.stringify(Object.fromEntries(Object.entries(payload).sort(([a], [b]) => a.localeCompare(b))));
+    const expected = require("node:crypto").createHmac("sha3-512", secret).update(canonical).digest("hex");
+    if (!received || received.length !== expected.length || !require("node:crypto").timingSafeEqual(Buffer.from(received), Buffer.from(expected))) {
+      throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid OPay callback signature");
+    }
+  } else if (provider === "paystack") {
     const received = String(req.headers["x-paystack-signature"] || "");
     if (!verifyPaystackSignature(rawBody, received, secret)) throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid Paystack webhook signature");
   } else if (provider === "flutterwave") {
@@ -195,7 +217,7 @@ paymentsRouter.post(
   "/webhooks/:provider",
   asyncHandler(async (req, res) => {
     const provider = (req.params.provider as string).toLowerCase();
-    if (!["paystack", "flutterwave", "stripe"].includes(provider)) throw new HttpError(404, "UNKNOWN_PROVIDER", "Unsupported payment provider");
+    if (!["opay", "paystack", "flutterwave", "stripe"].includes(provider)) throw new HttpError(404, "UNKNOWN_PROVIDER", "Unsupported payment provider");
     verifyWebhookSignature(provider, req);
 
     // Ignore unrelated Stripe events; only completed Checkout Sessions
@@ -218,7 +240,7 @@ paymentsRouter.post(
           ? data?.object?.id || ""
           : data?.reference || ""
     );
-    const transactionId = String(provider === "flutterwave" ? data?.id || "" : providerRef);
+    const transactionId = String(provider === "opay" ? data?.transactionId || providerRef : provider === "flutterwave" ? data?.id || "" : providerRef);
     if (!providerRef || !transactionId) throw new HttpError(400, "INVALID", "A provider transaction reference is required");
     const eventId = String(req.body?.id || `${provider}:${transactionId}`);
 
@@ -344,7 +366,7 @@ export async function reconcilePendingPayments(ageMinutes = 10) {
       status: PaymentStatus.PENDING,
       createdAt: { lt: cutoff },
       providerRef: { not: null },
-      provider: { in: ["paystack", "flutterwave", "stripe"] },
+      provider: { in: ["opay", "paystack", "flutterwave", "stripe"] },
     },
     take: 50,
     orderBy: { createdAt: "asc" },
@@ -355,7 +377,7 @@ export async function reconcilePendingPayments(ageMinutes = 10) {
     const reference = intent.providerRef;
     if (!reference) continue;
     try {
-      if (intent.provider === "paystack") {
+      if (intent.provider === "opay") {\n        const verification = await verifyOpay(reference);\n        assertVerifiedPayment(verification, intent, reference);\n      } else if (intent.provider === "paystack") {
         const verification = await verifyPaystack(reference);
         assertVerifiedPayment(verification, intent, reference);
       } else if (intent.provider === "flutterwave") {
