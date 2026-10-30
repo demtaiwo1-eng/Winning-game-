@@ -5,6 +5,7 @@ type EventOption = { id: string; title: string; startsAt?: string | null; endsAt
 type Task = { id: string; title: string; tier: "ESSENTIAL" | "RECOMMENDED" | "OPTIONAL"; status: "TODO" | "DOING" | "DONE"; dueAt?: string | null };
 type Guest = { id: string; name: string; email?: string | null; phone?: string | null; rsvp: string; checkedInAt?: string | null; checkInMethod?: string | null; plusOnes: number };
 type BudgetItem = { id: string; label: string; category?: string | null; plannedMinor: string; actualMinor: string };
+type CheckIn = { id: string; method: string; checkedInAt: string; guest: { id: string; name: string } };
 type Booking = { id: string; status: string; currency: string; totalMinor: string; createdAt: string; event?: { id: string; title: string } | null; vendor?: { businessName: string }; items?: Array<{ listing?: { title: string } }> };
 const PLAN_FIELDS = [
   ["desiredOutcome", "Desired outcome"],
@@ -30,6 +31,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   const [event, setEvent] = useState<EventOption | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [guests, setGuests] = useState<Guest[]>([]);
+  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -57,10 +59,11 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
     if (!eventId) return;
     setLoading(true); setError(""); setNotice("");
     try {
-      const [detail, taskData, guestData, budgetData, bookingData, planData] = await Promise.all([
+      const [detail, taskData, guestData, checkInData, budgetData, bookingData, planData] = await Promise.all([
         api<{ event: EventOption }>(`/events/${eventId}`),
         api<{ tasks: Task[] }>(`/events/${eventId}/tasks`),
         api<{ items: Guest[]; total: number }>(`/events/${eventId}/guests?limit=200`),
+        api<{ items: CheckIn[] }>(`/events/${eventId}/guests/check-ins`),
         api<{ items: BudgetItem[] }>(`/events/${eventId}/budget`),
         api<{ items: Booking[] }>("/payments/bookings"),
         api<{ answers: Record<string, string> }>(`/events/${eventId}/plan-answers`),
@@ -69,7 +72,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
       setStartsAt(detail.event.startsAt ? new Date(detail.event.startsAt).toISOString().slice(0, 16) : "");
       setEndsAt(detail.event.endsAt ? new Date(detail.event.endsAt).toISOString().slice(0, 16) : "");
       setCity(detail.event.city || "");
-      setTasks(taskData.tasks || []); setGuests(guestData.items || []);
+      setTasks(taskData.tasks || []); setGuests(guestData.items || []); setCheckIns(checkInData.items || []);
       setBudgetItems(budgetData.items || []);
       setBookings((bookingData.items || []).filter((b) => b.event?.id === eventId));
       setAnswers(planData.answers || {});
@@ -79,7 +82,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   useEffect(() => { void refresh(); }, [eventId]);
 
   const totals = useMemo(() => budgetItems.reduce((sum, item) => ({ planned: sum.planned + Number(item.plannedMinor || 0), actual: sum.actual + Number(item.actualMinor || 0) }), { planned: 0, actual: 0 }), [budgetItems]);
-  const checkedIn = guests.filter((g) => Boolean(g.checkedInAt));
+  const checkedIn = checkIns;
   const doneTasks = tasks.filter((t) => t.status === "DONE").length;
   const overdue = tasks.filter((t) => t.status !== "DONE" && t.dueAt && Date.parse(t.dueAt) < Date.now()).length;
 
@@ -151,7 +154,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
       {loading ? <p className="ess-muted">Loading event workspace…</p> : event && <>
         <div className="ess-metrics">
           <article className="ess-metric"><span>Tasks complete</span><strong>{doneTasks}/{tasks.length}</strong><small>{overdue} overdue</small></article>
-          <article className="ess-metric"><span>Guests checked in</span><strong>{checkedIn.length}/{guests.length}</strong><small>Latest check-in records</small></article>
+          <article className="ess-metric"><span>Guests checked in</span><strong>{checkedIn.length}/{guests.length}</strong><small>Recorded check-in events</small></article>
           <article className="ess-metric"><span>Planned budget</span><strong>{money(String(totals.planned),currency)}</strong><small>All budget lines</small></article>
           <article className="ess-metric"><span>Actual spend</span><strong>{money(String(totals.actual),currency)}</strong><small>Variance {money(String(totals.planned-totals.actual),currency)}</small></article>
         </div>
@@ -207,10 +210,10 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
           <h3>Guest check-in history and privacy</h3>
           <label style={{ display: "inline-flex", gap: 8, alignItems: "center" }}><input type="checkbox" checked={showContacts} onChange={(e) => setShowContacts(e.target.checked)} /> Show guest contact details</label>
           <div style={{ overflowX: "auto", marginTop: 10 }}><table><thead><tr><th>Guest</th>{showContacts && <th>Contact</th>}<th>RSVP</th><th>Check-in time</th><th>Method</th></tr></thead><tbody>
-            {guests.filter((g) => g.checkedInAt).sort((a,b) => Date.parse(b.checkedInAt || "")-Date.parse(a.checkedInAt || "")).map((g) => <tr key={g.id}><td>{g.name}</td>{showContacts && <td>{g.email || g.phone || "—"}</td>}<td>{g.rsvp}</td><td>{g.checkedInAt ? new Date(g.checkedInAt).toLocaleString() : "—"}</td><td>{g.checkInMethod || "MANUAL"}</td></tr>)}
-            {!checkedIn.length && <tr><td colSpan={showContacts ? 5 : 4}>No guests checked in yet.</td></tr>}
+            {checkIns.map((entry) => <tr key={entry.id}><td>{entry.guest.name}</td>{showContacts && <td>{guests.find((g) => g.id === entry.guest.id)?.email || guests.find((g) => g.id === entry.guest.id)?.phone || "—"}</td>}<td>{guests.find((g) => g.id === entry.guest.id)?.rsvp || "—"}</td><td>{new Date(entry.checkedInAt).toLocaleString()}</td><td>{entry.method}</td></tr>)}
+            {!checkedIn.length && <tr><td colSpan={showContacts ? 5 : 4}>No check-in history recorded yet. Existing pre-history check-ins remain visible in the guest gate list.</td></tr>}
           </tbody></table></div>
-          <p className="ess-muted">This is the current check-in record per guest (first accepted check-in timestamp); it is not a multi-entry audit log.</p>
+          <p className="ess-muted">Each accepted check-in is appended with its method and server timestamp. Contact details remain hidden unless you opt to reveal them.</p>
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Vendor bookings linked to this event</h3>
