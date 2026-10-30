@@ -1,4 +1,5 @@
 // apps/web/src/App.tsx
+import DateWheelPicker from './components/DateWheelPicker';
 import React, { useState, useEffect, useRef } from 'react';
 import PublicLanding from './components/PublicLanding';
 import SplashLogo from './components/SplashLogo';
@@ -497,7 +498,7 @@ function Workspace({ payload, onLogout }: { payload: AuthPayload; onLogout: () =
               <select aria-label="Event type" value={eventType} onChange={(event) => setEventType(event.target.value)}>
                 <option value="PERSONAL">Personal</option><option value="CORPORATE">Corporate</option><option value="SOCIAL">Social</option><option value="SPORTS">Sports</option><option value="CULTURAL">Cultural</option><option value="RELIGIOUS">Religious</option><option value="ENTERTAINMENT">Entertainment</option><option value="EDUCATIONAL">Educational</option><option value="VIRTUAL">Virtual</option>
               </select>
-              <input aria-label="Event date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} />
+              <DateWheelPicker value={eventDate} onChange={setEventDate} label="Event date" />
               <input aria-label="City" value={eventCity} onChange={(event) => setEventCity(event.target.value)} placeholder="City" />
               <input aria-label="Country code" value={eventCountry} onChange={(event) => setEventCountry(event.target.value)} placeholder="Country (NG)" maxLength={2} />
               <input aria-label="Expected guests" value={expectedGuests} onChange={(event) => setExpectedGuests(event.target.value)} placeholder="Expected guests" inputMode="numeric" type="number" min="1" />
