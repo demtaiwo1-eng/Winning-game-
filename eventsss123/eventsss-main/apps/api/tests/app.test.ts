@@ -35,6 +35,15 @@ describe("api foundation (DB-free)", () => {
     expect(forbidden.status).toBe(403);
     expect(forbidden.body.error.code).toBe("FORBIDDEN");
   });
+  it("protects read-only finance feeds from non-admin access", async () => {
+    const missing = await request(app).get("/api/v1/admin/finance/payment-intents");
+    expect(missing.status).toBe(401);
+    const token = jwt.sign({ role: "VENDOR" }, env.JWT_SECRET, { subject: "vendor-user" });
+    const payments = await request(app).get("/api/v1/admin/finance/payment-intents").set("Authorization", `Bearer ${token}`);
+    const ledger = await request(app).get("/api/v1/admin/finance/ledger").set("Authorization", `Bearer ${token}`);
+    expect(payments.status).toBe(403);
+    expect(ledger.status).toBe(403);
+  });
   it("rejects previously issued Rider access tokens", async () => {
     const token = jwt.sign({ role: "RIDER" }, env.JWT_SECRET, { subject: "retired-rider" });
     const res = await request(app).get("/api/v1/auth/me").set("Authorization", `Bearer ${token}`);
