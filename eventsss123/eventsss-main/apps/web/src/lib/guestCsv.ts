@@ -32,7 +32,7 @@ function parseRows(source: string): string[][] {
 }
 
 export function parseGuestCsv(source: string): GuestImportRow[] {
-  const rows = parseRows(source.replace(/^\\uFEFF/, ""));
+  const rows = parseRows(source.replace(/^\uFEFF/, ""));
   if (rows.length < 2) throw new Error("CSV must include a header and at least one guest.");
   const headers = rows[0].map((value) => value.trim().toLowerCase().replace(/[ _-]+/g, ""));
   const nameIndex = headers.indexOf("name") >= 0 ? headers.indexOf("name") : headers.indexOf("fullname");
@@ -46,12 +46,12 @@ export function parseGuestCsv(source: string): GuestImportRow[] {
     const email = get(emailIndex);
     const phone = get(phoneIndex);
     const plusRaw = get(plusIndex);
-    if (!name || name.length > 120) throw new Error(`Row ${index + 2}: name is required and must be 120 characters or fewer.`);
-    if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) throw new Error(`Row ${index + 2}: email is invalid.`);
-    if (phone && (phone.length < 7 || phone.length > 20)) throw new Error(`Row ${index + 2}: phone must be 7–20 characters.`);
+    if (!name || name.length > 120) throw new Error(\`Row \${index + 2}: name is required and must be 120 characters or fewer.\`);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error(\`Row \${index + 2}: email is invalid.\`);
+    if (phone && (phone.length < 7 || phone.length > 20)) throw new Error(\`Row \${index + 2}: phone must be 7–20 characters.\`);
     const plusOnes = plusRaw ? Number(plusRaw) : undefined;
     if (plusRaw && (!Number.isInteger(plusOnes) || plusOnes! < 0 || plusOnes! > 10)) {
-      throw new Error(`Row ${index + 2}: plusOnes must be an integer from 0 to 10.`);
+      throw new Error(\`Row \${index + 2}: plusOnes must be an integer from 0 to 10.\`);
     }
     return { name, ...(email ? { email } : {}), ...(phone ? { phone } : {}), ...(plusOnes !== undefined ? { plusOnes } : {}) };
   });
@@ -61,8 +61,8 @@ export function parseGuestCsv(source: string): GuestImportRow[] {
 
 function safeCell(value: unknown): string {
   let text = String(value ?? "");
-  if (/^[\\s]*[=+@\\-\\t\\r]/.test(text)) text = "'" + text;
-  return `"${text.replace(/"/g, '""')}"`;
+  if (/^[\s]*[=+@\- \t\r]/.test(text)) text = "'" + text;
+  return \`"\${text.replace(/"/g, '""')}"\`;
 }
 
 export function buildGuestCsv(
@@ -77,7 +77,7 @@ export function buildGuestCsv(
       guest.phone ?? "",
       guest.rsvp,
       guest.plusOnes ?? 0,
-      guest.token ? `${origin.replace(/\\/$/, "")}/rsvp/${guest.token}` : "",
+      guest.token ? \`\${origin.replace(/\/$/, "")}/rsvp/\${guest.token}\` : "",
     ]),
   ];
   return rows.map((row) => row.map(safeCell).join(",")).join("\r\n");
