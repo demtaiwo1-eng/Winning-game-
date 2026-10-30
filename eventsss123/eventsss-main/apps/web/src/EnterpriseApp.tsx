@@ -345,9 +345,14 @@ function ClientPortal({
             Guests, budget, vendors and pre-event green lights — one workspace built for clarity.
           </p>
         </div>
-        <button className="ess-primary" type="button" onClick={() => setShowCreate((v) => !v)}>
-          <Icon>＋</Icon> New event
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="ess-primary" type="button" onClick={() => setShowCreate((v) => !v)}>
+            <Icon>＋</Icon> New event
+          </button>
+          <button className="ess-outline-button" type="button" onClick={() => setTab("wallet")}>
+            Payments
+          </button>
+        </div>
       </div>
 
       <div className="ess-filter-row" style={{ marginBottom: 8 }}>
@@ -635,9 +640,14 @@ function VendorPortal({
             view.
           </p>
         </div>
-        <button className="ess-primary" onClick={() => openForm()}>
-          <Icon>＋</Icon> Add package
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="ess-primary" onClick={() => openForm()}>
+            <Icon>＋</Icon> Add package
+          </button>
+          <button className="ess-outline-button" type="button" onClick={() => setVendorTab("wallet")}>
+            Payments
+          </button>
+        </div>
       </div>
       {notice && <div className="ess-toast">{notice}</div>}
       <div className="ess-filter-row" style={{ marginBottom: 12 }}>
