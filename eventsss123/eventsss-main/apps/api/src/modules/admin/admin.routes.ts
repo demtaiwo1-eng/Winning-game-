@@ -1,4 +1,5 @@
 import { Router, type Request } from "express";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../lib/async";
 import { requireAuth, requireRole } from "../../middleware/auth";
@@ -190,9 +191,9 @@ function csvCell(value: unknown): string {
 function financeCsv(headers: string[], rows: unknown[][]): string {
   return [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
-function exportFilters(query: Record<string, unknown>) {
+function exportFilters(query: Record<string, unknown>): { page: number; limit: number; from: Date | undefined; to: Date | undefined; status: typeof paymentStatuses[number] | undefined; type: typeof ledgerTypes[number] | undefined; provider: string | undefined; currency: string | undefined } | { error: string } {
   const params = financePageParams(query);
-  if ("error" in params) return params;
+  if ("error" in params) return { error: params.error };
   const status = typeof query.status === "string" ? query.status.toUpperCase() : undefined;
   const type = typeof query.type === "string" ? query.type.toUpperCase() : undefined;
   if (status && !paymentStatuses.includes(status as typeof paymentStatuses[number])) return { error: "Unsupported payment status" as const };
@@ -200,9 +201,9 @@ function exportFilters(query: Record<string, unknown>) {
   const provider = typeof query.provider === "string" ? query.provider.trim().toLowerCase() : undefined;
   const currency = typeof query.currency === "string" ? query.currency.trim().toUpperCase() : undefined;
   if ((provider && provider.length > 40) || (currency && !/^[A-Z]{3}$/.test(currency))) return { error: "Invalid provider or currency filter" as const };
-  return { ...params, status, type, provider, currency };
+  return { ...params, status: status as typeof paymentStatuses[number] | undefined, type: type as typeof ledgerTypes[number] | undefined, provider, currency };
 }
-function auditExport(req: Request, entity: string, rowCount: number, truncated: boolean, filters: Record<string, unknown>) {
+function auditExport(req: Request, entity: string, rowCount: number, truncated: boolean, filters: Prisma.InputJsonObject) {
   return prisma.auditLog.create({
     data: { actorId: req.user!.id, action: "FINANCE_EXPORT", entity, meta: { rowCount, truncated, filters }, ip: req.ip },
   });
