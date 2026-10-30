@@ -297,5 +297,5 @@ export async function downloadApiFile(path: string, filename: string): Promise<v
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(objectUrl);
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
