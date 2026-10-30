@@ -485,11 +485,12 @@ function ClientPortal({
           )}
           <MarketplaceBrowse
             locale={locale}
-            onBook={(listing) =>
+            onBook={(listing) => {
               setBookingNotice(
-                `${listing.title} is in your cart. Review checkout to continue with escrow-protected payment.`,
-              )
-            }
+                `${listing.title} is in your cart. Complete KYC before the secure checkout and escrow payment step.`,
+              );
+              setTab("kyc");
+            }}
             onOpenWallet={() => setTab("wallet")}
           />
         </>
