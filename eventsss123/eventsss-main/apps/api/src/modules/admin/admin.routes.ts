@@ -193,7 +193,7 @@ function financeCsv(headers: string[], rows: unknown[][]): string {
 }
 function exportFilters(query: Record<string, unknown>): { page: number; limit: number; from: Date | undefined; to: Date | undefined; status: typeof paymentStatuses[number] | undefined; type: typeof ledgerTypes[number] | undefined; provider: string | undefined; currency: string | undefined } | { error: string } {
   const params = financePageParams(query);
-  if ("error" in params) return { error: params.error };
+  if ("error" in params) return { error: String(params.error ?? "Invalid finance export filter") };
   const status = typeof query.status === "string" ? query.status.toUpperCase() : undefined;
   const type = typeof query.type === "string" ? query.type.toUpperCase() : undefined;
   if (status && !paymentStatuses.includes(status as typeof paymentStatuses[number])) return { error: "Unsupported payment status" as const };
