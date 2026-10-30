@@ -148,7 +148,49 @@ jobs:
           set -euo pipefail
           SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -1)"
           test -x "$SDKMANAGER"
-          yes | "$SDKMANAGER" --licenses >/dev/null
+          # Finite stdin avoids the yes(1) SIGPIPE failure with pipefail enabled.
+          "$SDKMANAGER" --licenses <<'ANDROID_SDK_LICENSES'
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          ANDROID_SDK_LICENSES
           "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Install dependencies
