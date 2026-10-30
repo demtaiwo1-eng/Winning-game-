@@ -84,6 +84,11 @@ describe("api foundation (DB-free)", () => {
     expect(eligible.status).toBe(401);
     expect(submit.status).toBe(401);
   });
+  it("exposes a public eligible promotions feed without authentication", async () => {
+    const res = await request(app).get("/api/v1/billing/public-promotions");
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.items)).toBe(true);
+  });
   it("404s unknown routes", async () => {
     const res = await request(app).get("/nope");
     expect(res.status).toBe(404);

@@ -101,7 +101,23 @@ const initialDraft: EventDraft = {
 
 };
 
+type PublicPromotion = {
+  id: string;
+  title: string;
+  vendorName: string;
+  listingTitle?: string | null;
+  description?: string | null;
+  city?: string | null;
+  country?: string | null;
+  startsAt: string;
+  endsAt: string;
+  currency: string;
+  budgetMinor: string;
+};
 
+function formatPromotionLocation(city?: string | null, country?: string | null) {
+  return [city, country].filter(Boolean).join(', ');
+}
 
 export default function PublicLanding({
 
@@ -193,6 +209,88 @@ export default function PublicLanding({
   const [error, setError] = useState('');
 
   const [notice, setNotice] = useState('');
+
+  const [promotions, setPromotions] = useState<PublicPromotion[]>([]);
+
+  const [activePromotionIndex, setActivePromotionIndex] = useState(0);
+
+  const [isPromotionHovered, setIsPromotionHovered] = useState(false);
+
+  const [isPromotionFocused, setIsPromotionFocused] = useState(false);
+
+
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/v1/billing/public-promotions')
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Unable to load featured promotions.');
+        const payload = await response.json();
+        if (!cancelled) setPromotions(Array.isArray(payload.items) ? payload.items : []);
+      })
+      .catch(() => {
+        if (!cancelled) setPromotions([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (promotions.length <= 1) return;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion || isPromotionHovered || isPromotionFocused || document.hidden) return;
+
+    const timer = window.setInterval(() => {
+      setActivePromotionIndex((current) => (current + 1) % promotions.length);
+    }, 8000);
+
+    return () => window.clearInterval(timer);
+  }, [promotions, isPromotionHovered, isPromotionFocused]);
+
+
+
+  useEffect(() => {
+    if (!promotions.length) return;
+    setActivePromotionIndex((current) => Math.min(current, promotions.length - 1));
+  }, [promotions.length]);
+
+
+
+  useEffect(() => {
+    if (!promotions.length) return;
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        setIsPromotionHovered(false);
+        setIsPromotionFocused(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [promotions.length]);
+
+
+
+  useEffect(() => {
+    if (!promotions.length) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+    const handleVisibility = () => {
+      if (document.hidden) setIsPromotionHovered(true);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [promotions.length]);
+
+
+
+  useEffect(() => {
+    try { localStorage.setItem('ess:eventDraft', JSON.stringify(draft)); } catch { /* storage may be disabled */ }
+
+  }, [draft]);
 
 
 
@@ -449,6 +547,8 @@ export default function PublicLanding({
         .eph-footer{background:#11152d;color:#fff;padding:34px clamp(20px,6vw,88px);display:flex;align-items:center;justify-content:space-between;gap:20px}.eph-footer small{color:#c6c4d8}.eph-footer-links{display:flex;gap:20px;flex-wrap:wrap}.eph-footer a{color:#e7e3f5;text-decoration:none;font-size:12px}
 
         .eph-modal-backdrop{position:fixed;inset:0;background:#0e1023b8;backdrop-filter:blur(7px);z-index:20;display:grid;place-items:center;padding:18px;overflow:auto}.eph-modal{background:#fff;width:min(100%,460px);border-radius:22px;padding:28px;box-shadow:0 30px 100px #0004;max-height:calc(100vh - 36px);overflow:auto}.eph-modal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:15px}.eph-modal h2{margin:0 0 8px;color:var(--navy);font-size:25px;letter-spacing:-.04em}.eph-modal p{margin:0 0 22px;color:var(--muted);font-size:13px;line-height:1.6}.eph-close{border:0;background:#f3f0fa;border-radius:10px;width:36px;height:36px;font-size:20px;color:var(--navy)}.eph-modal .eph-field{margin-bottom:14px}.eph-password-wrap{display:flex;gap:8px}.eph-password-wrap input{flex:1;min-width:0}.eph-text-btn{border:0;background:transparent;color:var(--purple);font-weight:800;font-size:12px}.eph-auth-error{background:#fff0f0;color:#a32232;padding:11px;border-radius:10px;font-size:12px;margin-bottom:13px}.eph-auth-notice{background:#effaf3;color:#1c7042;padding:11px;border-radius:10px;font-size:12px;margin-bottom:13px}.eph-auth-switch{text-align:center;margin-top:17px;color:var(--muted);font-size:12px}.eph-auth-switch button{border:0;background:transparent;color:var(--purple);font-weight:850}
+
+        .eph-promotions{margin:36px auto 0;max-width:1260px;padding:0 clamp(20px,6vw,88px)}.eph-promo-shell{border:1px solid var(--line);border-radius:26px;background:linear-gradient(135deg,#0f172a,#1f2a46);color:#fff;padding:26px 28px;box-shadow:0 18px 30px rgba(15,23,42,.15)}.eph-promo-shell h2{margin:0 0 8px;font-size:clamp(28px,4vw,42px);letter-spacing:-.06em}.eph-promo-shell p{margin:0;color:#dce5ff}.eph-promo-carousel{margin-top:20px;display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:12px}.eph-promo-arrow{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;width:42px;height:42px;font-size:24px;display:grid;place-items:center}.eph-promo-card{border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px 20px;background:rgba(255,255,255,.04);min-height:180px;display:flex;flex-direction:column;justify-content:space-between}.eph-promo-card small{color:#d8e5ff;letter-spacing:.12em;text-transform:uppercase}.eph-promo-card h3{margin:8px 0 6px;font-size:clamp(22px,2.5vw,32px);letter-spacing:-.05em}.eph-promo-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.eph-promo-meta span{border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 10px;font-size:11px;color:#eff6ff}.eph-promo-placeholder{padding:18px 0 6px;color:#dce5ff}
 
         .eph-landing :focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 
@@ -710,6 +810,33 @@ export default function PublicLanding({
       </header>
 
 
+
+      {promotions.length > 0 && (
+        <section className="eph-promotions" aria-label="Featured promotions">
+          <div className="eph-promo-shell" onMouseEnter={() => setIsPromotionHovered(true)} onMouseLeave={() => setIsPromotionHovered(false)} onFocus={() => setIsPromotionFocused(true)} onBlur={() => setIsPromotionFocused(false)}>
+            <h2>Featured promotion</h2>
+            <p>Curated, active offers from trusted local vendors and service providers.</p>
+            {promotions.length > 0 && (
+              <div className="eph-promo-carousel" aria-live="polite">
+                <button type="button" className="eph-promo-arrow" aria-label="Previous promotion" onClick={() => setActivePromotionIndex((current) => (current - 1 + promotions.length) % promotions.length)}>‹</button>
+                <article className="eph-promo-card" aria-roledescription="carousel" aria-label={`Featured promotion ${activePromotionIndex + 1} of ${promotions.length}`}>
+                  <div>
+                    <small>Active offer</small>
+                    <h3>{promotions[activePromotionIndex].title}</h3>
+                    <p>{promotions[activePromotionIndex].description || `${promotions[activePromotionIndex].vendorName} is currently offering a featured event service.`}</p>
+                  </div>
+                  <div className="eph-promo-meta">
+                    <span>{promotions[activePromotionIndex].vendorName}</span>
+                    {promotions[activePromotionIndex].listingTitle && <span>{promotions[activePromotionIndex].listingTitle}</span>}
+                    {formatPromotionLocation(promotions[activePromotionIndex].city, promotions[activePromotionIndex].country) && <span>{formatPromotionLocation(promotions[activePromotionIndex].city, promotions[activePromotionIndex].country)}</span>}
+                  </div>
+                </article>
+                <button type="button" className="eph-promo-arrow" aria-label="Next promotion" onClick={() => setActivePromotionIndex((current) => (current + 1) % promotions.length)}>›</button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <main id="home">
 

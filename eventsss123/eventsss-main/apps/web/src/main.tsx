@@ -30,7 +30,7 @@ if (!isNative) {
   registerSW({
     immediate: true,
     onRegisterError(error) {
-      console.error('Unable to register ESS service worker.', error);
+      console.error('Unable to register EPHINTA service worker.', error);
     },
   });
 }

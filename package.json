@@ -4,11 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "bash -lc 'lsof -ti :4173 2>/dev/null | xargs -r kill -9; cd eventsss123/eventsss-main/apps/web && npm run dev'",
-    "dev:quick": "bash -lc 'lsof -ti :4173 2>/dev/null | xargs -r kill -9; cd eventsss123/eventsss-main/apps/web && npm run dev'",
-    "dev:landing": "bash -lc 'lsof -ti :4173 2>/dev/null | xargs -r kill -9; cd eventsss123/eventsss-main/apps/web && npm run dev'",
-    "build": "cd eventsss123/eventsss-main/apps/web && npm run build",
-    "preview": "cd eventsss123/eventsss-main/apps/web && npm run preview -- --host 0.0.0.0 --port 4173"
+    "dev": "cd eventsss123/eventsss-main && npm run dev",
+    "dev:quick": "cd eventsss123/eventsss-main && npm run dev",
+    "dev:landing": "cd eventsss123/eventsss-main && npm run dev:web",
+    "build": "cd eventsss123/eventsss-main && npm run build:web",
+    "preview": "cd eventsss123/eventsss-main && npm run preview -w apps/web -- --host 0.0.0.0 --port 5173"
   },
   "dependencies": {
     "react": "^18.3.1",

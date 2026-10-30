@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 /**
- * Branded splash: shield logo + ESS GLOBAL wordmark.
+ * Branded splash: shield logo + EPHINTA wordmark.
  * Shows briefly then fades out and reveals children (the landing page).
  */
 export default function SplashLogo({ children }: { children: React.ReactNode }) {
@@ -33,7 +33,7 @@ export default function SplashLogo({ children }: { children: React.ReactNode }) 
 
       <div
         role="status"
-        aria-label="Loading ESS Global"
+        aria-label="Loading EPHINTA"
         style={{
           position: 'fixed',
           inset: 0,
@@ -74,7 +74,7 @@ export default function SplashLogo({ children }: { children: React.ReactNode }) 
               WebkitTextFillColor: 'transparent',
             }}
           >
-            ESS GLOBAL
+            EPHINTA
           </div>
           <div
             style={{

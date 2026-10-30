@@ -17,7 +17,7 @@ export default defineConfig({
       injectRegister: null,
       manifest: {
         name: "EPHINTA",
-        short_name: "ESS",
+        short_name: "EPHINTA",
         description: "Event planning, vendors, guests, tasks, budgets and event operations.",
         start_url: "/",
         scope: "/",

@@ -1,11 +1,54 @@
 import { Router } from "express";
 import { BillingInterval, PromotionStatus, SubscriptionStatus } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
+import { logger } from "../../lib/logger";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 
 export const billingRouter = Router();
+
+billingRouter.get(
+  "/public-promotions",
+  asyncHandler(async (_req, res) => {
+    const now = new Date();
+
+    try {
+      const items = await prisma.promotion.findMany({
+        where: {
+          status: PromotionStatus.ACTIVE,
+          startsAt: { lte: now },
+          endsAt: { gt: now },
+        },
+        orderBy: [{ startsAt: "desc" }, { endsAt: "asc" }],
+        take: 12,
+        include: {
+          listing: { select: { id: true, title: true, description: true } },
+          vendor: { select: { businessName: true, city: true, country: true } },
+        },
+      });
+
+      res.json({
+        items: items.map((promotion) => ({
+          id: promotion.id,
+          title: promotion.title,
+          vendorName: promotion.vendor.businessName,
+          listingTitle: promotion.listing?.title ?? null,
+          description: promotion.listing?.description ?? null,
+          city: promotion.vendor.city ?? null,
+          country: promotion.vendor.country ?? null,
+          startsAt: promotion.startsAt.toISOString(),
+          endsAt: promotion.endsAt.toISOString(),
+          currency: "NGN",
+          budgetMinor: promotion.budgetMinor.toString(),
+        })),
+      });
+    } catch (error) {
+      logger.warn({ error }, "Public promotions feed unavailable; returning empty list");
+      res.json({ items: [] });
+    }
+  }),
+);
 
 /** Public plan catalog (auth required to keep API consistent). */
 billingRouter.get(

@@ -114,19 +114,34 @@ export const walletApi = {
   }) => api("/wallet/escrow-hold", { method: "POST", body: JSON.stringify(body) }),
 };
 
+export type ApiPublicPromotion = {
+  id: string;
+  title: string;
+  vendorName: string;
+  listingTitle?: string | null;
+  description?: string | null;
+  city?: string | null;
+  country?: string | null;
+  startsAt: string;
+  endsAt: string;
+  currency: string;
+  budgetMinor: string;
+};
+
 export const billingApi = {
   plans: (audience?: string) =>
     api<{ items: ApiPlan[] }>(
       `/billing/plans${audience ? `?audience=${audience}` : ""}`,
     ),
-  mySubscriptions: () => api<{ items: unknown[] }>("/billing/subscriptions/me"),
+  mySubscriptions: () => api<{ items: unknown[] }>('/billing/subscriptions/me'),
   subscribe: (planId: string) =>
-    api("/billing/subscriptions", {
-      method: "POST",
+    api('/billing/subscriptions', {
+      method: 'POST',
       body: JSON.stringify({ planId }),
     }),
   cancel: (id: string) =>
-    api(`/billing/subscriptions/${id}/cancel`, { method: "POST", body: "{}" }),
+    api(`/billing/subscriptions/${id}/cancel`, { method: 'POST', body: '{}' }),
+  publicPromotions: () => api<{ items: ApiPublicPromotion[] }>('/billing/public-promotions'),
   promotions: () => api<{ items: unknown[] }>("/billing/promotions"),
   createPromotion: (body: Record<string, unknown>) =>
     api("/billing/promotions", { method: "POST", body: JSON.stringify(body) }),
