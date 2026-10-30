@@ -47,7 +47,7 @@ jobs:
       NODE_ENV: test
       JWT_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
       APP_BASE_URL: http://localhost:3000
-      VITE_API_URL: ${{ vars.VITE_API_URL }}
+      VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -107,7 +107,7 @@ jobs:
       - name: Build web app
         run: npm run build -w apps/web
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
 
       - name: Upload web build
         uses: actions/upload-artifact@v4
@@ -202,12 +202,12 @@ jobs:
       - name: Build web assets for the deployed API
         run: npm run build -w apps/web
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
 
       - name: Sync Capacitor Android project
         shell: bash
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
         run: |
           set -euo pipefail
           if npm run | grep -qE 'mobile:sync'; then
