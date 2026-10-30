@@ -277,3 +277,25 @@ export const kycCountriesApi = {
     ),
   profile: (code: string) => api<{ profile: Record<string, unknown> }>(`/kyc/countries/${code}`),
 };
+
+
+/** Download an authenticated CSV or other file response from the API. */
+export async function downloadApiFile(path: string, filename: string): Promise<void> {
+  const headers: Record<string, string> = {};
+  const accessToken = token();
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+  const response = await fetch(apiUrl(path), { method: "GET", headers, cache: "no-store" });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.error?.message || body?.message || `Request failed (${response.status})`);
+  }
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
