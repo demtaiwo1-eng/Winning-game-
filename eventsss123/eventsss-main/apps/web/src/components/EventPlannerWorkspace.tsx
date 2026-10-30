@@ -22,7 +22,7 @@ const money = (minor: string, currency: string) => {
 };
 const escapeCsv = (value: unknown) => {
   const s = String(value ?? "");
-  const safe = /^[=+@\\-\\t\\r]/.test(s) ? "'" + s : s;
+  const safe = /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
   return '"' + safe.replace(/"/g, '""') + '"';
 };
 
