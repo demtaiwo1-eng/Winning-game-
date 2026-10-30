@@ -6,7 +6,7 @@ import { logger } from "../../lib/logger";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
-import { isPromotionPaymentValid, isPromotionTrackingAction } from "./promotionPolicy";
+import { isPromotionPaymentValid, isPromotionTrackingAction, isPromotionWithinSchedule } from "./promotionPolicy";
 
 export const billingRouter = Router();
 
@@ -439,15 +439,15 @@ billingRouter.post(
     if (!isPromotionTrackingAction(action)) {
       throw new HttpError(400, "INVALID_TRACKING_ACTION", "Action must be impression or click");
     }
-    const now = new Date();
-    const where = {
-      id: req.params.id,
-      status: PromotionStatus.ACTIVE,
-      startsAt: { lte: now },
-      endsAt: { gt: now },
-    };
+    const promotion = await prisma.promotion.findFirst({
+      where: { id: req.params.id, status: PromotionStatus.ACTIVE },
+      select: { id: true, startsAt: true, endsAt: true },
+    });
+    if (!promotion || !isPromotionWithinSchedule(promotion.startsAt, promotion.endsAt)) {
+      throw new HttpError(404, "PROMOTION_NOT_FOUND", "Active promotion not found");
+    }
     const result = await prisma.promotion.updateMany({
-      where,
+      where: { id: promotion.id, status: PromotionStatus.ACTIVE },
       data: action === "impression" ? { impressions: { increment: 1 } } : { clicks: { increment: 1 } },
     });
     if (result.count !== 1) throw new HttpError(404, "PROMOTION_NOT_FOUND", "Active promotion not found");
