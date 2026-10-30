@@ -1873,6 +1873,7 @@ export default function EnterpriseApp() {
         )}
       </header>
       <Routes>
+        <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
         <Route element={<DashboardRouteGuard session={session} />}>
           <Route
             path={APP_ROUTE_PATHS.dashboard}
