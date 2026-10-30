@@ -39,8 +39,6 @@ import {
 
 export const paymentsRouter = Router();
 
-const COMMISSION_BPS = 500; // 5%
-
 
 /** Create payment intent to fund wallet */
 paymentsRouter.post(
@@ -312,27 +310,44 @@ async function applySuccessfulPayment(intentId: string, providerRef: string): Pr
         update: {},
       });
 
-      // Atomic increment avoids a read/overwrite lost-update race.
+      // Apply the configured platform fee to incoming wallet funding.
+      // The provider collects the gross amount; only the net amount is
+      // credited to the customer wallet. Both ledger rows commit atomically.
+      const feeMinor = commissionMinor(intent.amountMinor, env.COMMISSION_BPS);
+      const creditedMinor = intent.amountMinor - feeMinor;
+      if (creditedMinor <= 0n) {
+        throw new HttpError(400, "PAYMENT_TOO_SMALL", "Payment amount is too small after the platform fee");
+      }
+
       const updatedWallet = await tx.wallet.update({
         where: { id: wallet.id },
-        data: {
-          availableMinor: { increment: intent.amountMinor },
-        },
+        data: { availableMinor: { increment: creditedMinor } },
       });
 
-      // The payment claim, wallet increment, and ledger entry commit or
-      // roll back together. The unique key is a second line of defence.
       await tx.ledgerEntry.create({
         data: {
           walletId: wallet.id,
           type: LedgerType.DEPOSIT,
-          amountMinor: intent.amountMinor,
+          amountMinor: creditedMinor,
           balanceAfterMinor: updatedWallet.availableMinor,
           refType: "PAYMENT_INTENT",
           refId: intentId,
           idempotencyKey: `pay_deposit:${intentId}`,
         },
       });
+      if (feeMinor > 0n) {
+        await tx.ledgerEntry.create({
+          data: {
+            walletId: wallet.id,
+            type: LedgerType.COMMISSION,
+            amountMinor: feeMinor,
+            balanceAfterMinor: updatedWallet.availableMinor,
+            refType: "PAYMENT_INTENT",
+            refId: intentId,
+            idempotencyKey: `pay_deposit_fee:${intentId}`,
+          },
+        });
+      }
     }
     return true;
   });
@@ -416,7 +431,7 @@ paymentsRouter.post(
     if (!listing) throw new HttpError(404, "NOT_FOUND", "Listing not found or not active");
 
     const subtotal = listing.priceMinor * BigInt(quantity);
-    const commission = commissionMinor(subtotal, COMMISSION_BPS);
+    const commission = commissionMinor(subtotal, env.COMMISSION_BPS);
     const total = subtotal;
     const currency = listing.currency;
     const idempotencyKey =
