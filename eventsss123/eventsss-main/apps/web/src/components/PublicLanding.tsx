@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 
 
@@ -53,7 +53,81 @@ const vibes = ['Modern', 'Classic', 'Traditional', 'Garden', 'Luxury', 'Intimate
 
 const serviceOptions = ['Venue', 'Catering', 'Photography', 'Decor', 'Music', 'Cake', 'AV & staging', 'Security'];
 
+const googleAdMobEnabled = (() => {
+  const value = import.meta.env?.VITE_GOOGLE_ADMOB_ENABLED;
+  return value === true || value === 'true' || value === '1';
+})();
 
+const googleAdMobClient = (import.meta.env?.VITE_GOOGLE_ADMOB_CLIENT || '').trim();
+const googleAdMobSlot = (import.meta.env?.VITE_GOOGLE_ADMOB_SLOT || '').trim();
+
+const defaultAdCollections = [
+  {
+    title: 'Wedding & celebration picks',
+    subtitle: 'Explore what planners are booking this season',
+    items: [
+      { label: 'Garden weddings', value: 'Luxury floral setups', cta: 'See inspiration' },
+      { label: 'Intimate dining', value: 'Private dining & ambience', cta: 'View packages' },
+      { label: 'Photo stories', value: 'Candid coverage & albums', cta: 'Book a session' },
+      { label: 'Music nights', value: 'Live bands & DJ sets', cta: 'Explore acts' },
+    ],
+  },
+  {
+    title: 'Trusted event services',
+    subtitle: 'Popular vendor categories for your next plan',
+    items: [
+      { label: 'Venue teams', value: 'Hotels, halls & gardens', cta: 'Browse offers' },
+      { label: 'Catering', value: 'Private chefs & menus', cta: 'Compare menus' },
+      { label: 'Decor', value: 'Styled themes & setup', cta: 'Start styling' },
+      { label: 'Logistics', value: 'Transport & guest flow', cta: 'View options' },
+    ],
+  },
+  {
+    title: 'Planner essentials',
+    subtitle: 'Everything to keep the day moving smoothly',
+    items: [
+      { label: 'Timeline tools', value: 'Guest flow & decisions', cta: 'Build plan' },
+      { label: 'Checklists', value: 'Tasks, reminders & progress', cta: 'Open toolkit' },
+      { label: 'Wedding checklists', value: 'Vendor and guest prep', cta: 'Get started' },
+      { label: 'Budget guidance', value: 'Track spend in one place', cta: 'Review budget' },
+    ],
+  },
+];
+
+const adCollections = defaultAdCollections;
+
+function GoogleAdBanner() {
+  const enabled = googleAdMobEnabled && !!googleAdMobClient && !!googleAdMobSlot;
+
+  useEffect(() => {
+    if (!enabled) return;
+    const win = window as typeof window & { adsbygoogle?: unknown[] };
+    win.adsbygoogle = win.adsbygoogle || [];
+    win.adsbygoogle.push({});
+  }, [enabled]);
+
+  if (!enabled) return null;
+
+  return (
+    <section className="eph-section eph-admob-wrap" aria-label="Sponsored content">
+      <div className="eph-section-head">
+        <span className="eph-section-kicker">Sponsorship</span>
+        <h2>Marketplace opportunities</h2>
+        <p>Partner content and brand placements for planners, vendors and organizers.</p>
+      </div>
+      <div className="eph-admob-banner">
+        <ins
+          className="adsbygoogle"
+          style={{ display: 'block', width: '100%', minHeight: 90 }}
+          data-ad-client={googleAdMobClient}
+          data-ad-slot={googleAdMobSlot}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      </div>
+    </section>
+  );
+}
 
 async function sendAuth(path: string, body: Record<string, unknown>) {
 
@@ -217,6 +291,34 @@ export default function PublicLanding({
   const [isPromotionHovered, setIsPromotionHovered] = useState(false);
 
   const [isPromotionFocused, setIsPromotionFocused] = useState(false);
+
+  const marketplaceCollections = useMemo(() => {
+    if (!promotions.length) return adCollections;
+
+    const mappedItems = promotions.slice(0, 4).map((promotion) => ({
+      label: promotion.vendorName,
+      value: promotion.listingTitle || promotion.title,
+      cta: 'Explore offer',
+    }));
+
+    return [
+      {
+        title: 'Marketplace picks',
+        subtitle: 'Fresh, high-intent offers from trusted vendors and service partners.',
+        items: mappedItems,
+      },
+      {
+        title: 'Top services this week',
+        subtitle: 'Popular categories planners are comparing right now.',
+        items: [
+          { label: 'Venues', value: 'Private halls & gardens', cta: 'View venues' },
+          { label: 'Catering', value: 'Signature menus & hospitality', cta: 'Compare menus' },
+          { label: 'Decoration', value: 'Styled setups & floral stories', cta: 'Book styling' },
+          { label: 'Production', value: 'AV, lighting & guest flow', cta: 'Get quote' },
+        ],
+      },
+    ];
+  }, [promotions]);
 
 
 
@@ -486,6 +588,8 @@ export default function PublicLanding({
 
         .eph-landing[data-theme="dark"] .eph-section{background:#151629}
 
+        .eph-landing[data-theme="dark"] .eph-role-scroll-card{background:#202039;border-color:#3a3856;color:#f6f4ff}
+
         .eph-landing[data-theme="dark"] .eph-faq summary{color:#fff}
 
         .eph-landing[data-theme="light"]{background:#fff;color:#17172d}
@@ -669,7 +773,9 @@ export default function PublicLanding({
 
         .eph-landing[data-theme="light"] .eph-strip,
 
-        .eph-landing[data-theme="light"] .eph-modal{background:#fff!important;color:#111827!important;border-color:#cbd5e1!important}
+        .eph-landing[data-theme="light"] .eph-modal,
+
+        .eph-landing[data-theme="light"] .eph-role-scroll-card{background:#fff!important;color:#111827!important;border-color:#cbd5e1!important}
 
         .eph-landing[data-theme="light"] input,
 
@@ -707,7 +813,9 @@ export default function PublicLanding({
 
         .eph-landing[data-theme="colorful"] .eph-strip,
 
-        .eph-landing[data-theme="colorful"] .eph-modal{background:#fff!important;color:#21112b!important;border-color:#d8c5df!important}
+        .eph-landing[data-theme="colorful"] .eph-modal,
+
+        .eph-landing[data-theme="colorful"] .eph-role-scroll-card{background:#fff!important;color:#21112b!important;border-color:#d8c5df!important}
 
         .eph-landing[data-theme="colorful"] input,
 
@@ -723,7 +831,23 @@ export default function PublicLanding({
 
         .eph-landing button:disabled{opacity:.65;cursor:not-allowed}
 
+        .eph-ad-scroll{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);overflow-x:auto;scroll-snap-type:x proximity;gap:18px;padding:10px 0 8px;scrollbar-width:thin}
 
+        .eph-ad-card{border:1px solid var(--line);border-radius:22px;padding:20px;background:linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.06));box-shadow:0 14px 32px rgba(17,21,45,.08);scroll-snap-align:start;min-height:170px;display:flex;flex-direction:column;gap:10px}
+
+        .eph-ad-card small{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+        .eph-ad-card strong{font-size:1.1rem;line-height:1.3}
+
+        .eph-ad-card p{margin:0;line-height:1.45;color:var(--muted)}
+
+        .eph-ad-card button{margin-top:auto;align-self:flex-start;border:none;border-radius:999px;background:var(--purple);color:white;padding:9px 13px;font-weight:800}
+
+        .eph-admob-wrap{padding-top:10px}
+
+        .eph-admob-banner{display:flex;justify-content:center;align-items:center;min-height:120px;padding:18px 20px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(135deg, rgba(109,66,216,.12), rgba(255,189,67,.12));box-shadow:0 14px 32px rgba(17,21,45,.08)}
+
+        .eph-admob-banner .adsbygoogle{width:min(100%, 960px);border-radius:16px;overflow:hidden}
 
       `}</style>
 
@@ -791,7 +915,7 @@ export default function PublicLanding({
 
             <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'VENDOR'); }}>Vendor portal</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'ORGANIZATION'); }}>Organization portal</button>
+            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'ORGANIZATION'); }}>Organizer portal</button>
 
           </div>
 
@@ -944,7 +1068,29 @@ export default function PublicLanding({
 
 
 
-        <section className="eph-vendor-band" id="vendors">
+        {marketplaceCollections.map((collection) => (
+          <section key={collection.title} className="eph-section" aria-label={collection.title}>
+            <div className="eph-section-head">
+              <span className="eph-section-kicker">Featured</span>
+              <h2>{collection.title}</h2>
+              <p>{collection.subtitle}</p>
+            </div>
+            <div className="eph-ad-scroll">
+              {collection.items.map((item) => (
+                <article key={`${collection.title}-${item.label}`} className="eph-ad-card">
+                  <small>{item.label}</small>
+                  <strong>{item.value}</strong>
+                  <p>{item.label} designed for memorable occasions and stress-free planning.</p>
+                  <button type="button" onClick={() => openAuth('signup', 'CLIENT')}>{item.cta}</button>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <GoogleAdBanner />
+
+        <section className="eph-section" id="vendors" style={{ paddingTop: 0 }}>
 
           <div><h2>Make your talent part of the moment.</h2><p>Are you an event professional or an organization? Create the appropriate account to get started with EPHINTA.</p></div>
 

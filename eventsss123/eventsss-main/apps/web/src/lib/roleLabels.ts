@@ -1,12 +1,8 @@
-/** Single mapping for user-facing role labels. Internal API/DB values remain unchanged. */
+/** Single mapping for user-facing role labels. Keep the public-facing registration flow to three core lanes. */
 export const ROLE_LABELS: Record<string, string> = {
-  CLIENT: 'Executive Planner',
-  ORGANIZATION: 'Organization',
+  CLIENT: 'Event Planner',
+  ORGANIZATION: 'Organizer',
   VENDOR: 'Vendor',
-  AFFILIATE: 'Affiliate',
-  VERIFIER: 'Verifier',
-  CONSULTANT: 'Consultant',
-  ADMIN: 'Admin',
 };
 
 export function roleLabel(role: string | undefined | null): string {
@@ -14,13 +10,7 @@ export function roleLabel(role: string | undefined | null): string {
   return ROLE_LABELS[role] ?? role;
 }
 
-/** Roles offered by the shared role registration dialog. Executive Planner is entered through /plan. */
-export const SELF_REGISTER_ROLES = [
-  'ORGANIZATION',
-  'VENDOR',
-  'AFFILIATE',
-  'VERIFIER',
-  'CONSULTANT',
-] as const;
+/** Core public roles for the registration flow. */
+export const SELF_REGISTER_ROLES = ['CLIENT', 'ORGANIZATION', 'VENDOR'] as const;
 
 export type SelfRegisterRole = (typeof SELF_REGISTER_ROLES)[number];

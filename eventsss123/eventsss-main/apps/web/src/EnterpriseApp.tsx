@@ -89,16 +89,16 @@ const roleMeta: Record<
 > = {
   CLIENT: {
     label: "Event planner",
-    short: "Executive Planner",
+    short: "Event planner",
     description: "Plan, budget, invite guests and book verified services.",
   },
   ORGANIZATION: {
-    label: "Organization",
-    short: "Organization",
-    description: "Plan events or provide services through your organization.",
+    label: "Organizer",
+    short: "Organizer",
+    description: "Coordinate events or run a team that delivers them.",
   },
   VENDOR: {
-    label: "Service provider",
+    label: "Vendor",
     short: "Vendor",
     description: "List venues, goods or services and secure paid bookings.",
   },
@@ -1496,12 +1496,7 @@ export default function EnterpriseApp() {
         try {
           hasPendingEventBrief = Boolean(localStorage.getItem("ess_event_draft"));
         } catch { /* storage may be disabled */ }
-        navigate(
-          user.role === "CLIENT" && hasPendingEventBrief
-            ? "/dashboard/client?tab=marketplace"
-            : `/dashboard/${String(user.role).toLowerCase()}`,
-          { replace: true },
-        );
+        navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
         if (!hasCompletedOnboard()) setShowOnboard(true);
         try {
           const pending = localStorage.getItem("ess_resume_event");
@@ -2174,36 +2169,24 @@ function PublicHome({
       </section>
       <section className="ess-role-section">
         <SectionTitle
-          eyebrow="One platform, every role"
-          title="Choose your operating lane"
+          eyebrow="Three ways to start"
+          title="Choose your lane"
         />
         <div className="ess-role-grid">
-          {(["ORGANIZATION", "VENDOR", "AFFILIATE", "VERIFIER", "CONSULTANT", "ADMIN"] as Role[]).map(
-            (role) => (
-              <button
-                className="ess-role-card"
-                key={role}
-                onClick={() => onRole(role)}
-              >
-                <span className="ess-role-symbol">
-                  {role === "CLIENT"
-                    ? "◈"
-                    : role === "ORGANIZATION"
-                      ? "▧"
-                      : role === "VENDOR"
-                      ? "▦"
-                      : role === "CONSULTANT"
-                        ? "◎"
-                        : role === "VERIFIER"
-                        ? "✓"
-                        : "⌘"}
-                </span>
-                <strong>{roleMeta[role].short}</strong>
-                <span>{roleMeta[role].description}</span>
-                <b>Enter portal →</b>
-              </button>
-            ),
-          )}
+          {(["CLIENT", "ORGANIZATION", "VENDOR"] as Role[]).map((role) => (
+            <button
+              className="ess-role-card"
+              key={role}
+              onClick={() => onRole(role)}
+            >
+              <span className="ess-role-symbol">
+                {role === "CLIENT" ? "◈" : role === "ORGANIZATION" ? "▧" : "▦"}
+              </span>
+              <strong>{roleMeta[role].short}</strong>
+              <span>{roleMeta[role].description}</span>
+              <b>Enter portal →</b>
+            </button>
+          ))}
         </div>
       </section>
     </main>
@@ -2323,18 +2306,16 @@ function AuthModal({
         </p>
         {mode !== "forgot" && (
           <div className="ess-auth-roles">
-            {((mode === "signup" ? ["ORGANIZATION", "VENDOR", "AFFILIATE", "VERIFIER", "CONSULTANT"] : ["CLIENT", "ORGANIZATION", "VENDOR", "AFFILIATE", "VERIFIER", "CONSULTANT", "ADMIN"]) as Role[]).map(
-              (item) => (
-                <button
-                  className={role === item ? "active" : ""}
-                  key={item}
-                  type="button"
-                  onClick={() => onRole(item)}
-                >
-                  {roleMeta[item].short}
-                </button>
-              ),
-            )}
+            {(["CLIENT", "ORGANIZATION", "VENDOR"] as Role[]).map((item) => (
+              <button
+                className={role === item ? "active" : ""}
+                key={item}
+                type="button"
+                onClick={() => onRole(item)}
+              >
+                {roleMeta[item].short}
+              </button>
+            ))}
           </div>
         )}
         <form onSubmit={onSubmit}>

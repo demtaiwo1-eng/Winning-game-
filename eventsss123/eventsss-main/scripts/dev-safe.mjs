@@ -1,5 +1,20 @@
 import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
+import net from "node:net";
+
+async function findFreePort(startPort, maxAttempts = 25) {
+  for (let port = startPort; port < startPort + maxAttempts; port += 1) {
+    const isFree = await new Promise((resolve) => {
+      const server = net.createServer();
+      server.once("error", () => resolve(false));
+      server.listen(port, "127.0.0.1", () => {
+        server.close(() => resolve(true));
+      });
+    });
+    if (isFree) return port;
+  }
+  throw new Error(`No free port found starting at ${startPort}`);
+}
 
 const services = [
   {
@@ -98,8 +113,12 @@ for (const service of services) {
     continue;
   }
 
-  const port = service.name === "API" ? 5000 : 5173;
-  const net = await import("node:net");
+  const port = service.name === "API" ? 5000 : await findFreePort(5173);
+  if (service.name === "WEB") {
+    service.url = `http://127.0.0.1:${port}/`;
+    service.args = ["run", "dev", "-w", "apps/web", "--", "--host", "127.0.0.1", "--port", String(port), "--strictPort", "false"];
+  }
+
   const listening = await new Promise((resolve) => {
     const server = net.createServer();
     server.once("error", () => resolve(true));
@@ -119,7 +138,7 @@ for (const service of services) {
     stopChildren();
     process.exit(1);
   }
-  console.log(`[${service.name}] Healthy.`);
+  console.log(`[${service.name}] Healthy at ${service.url}`);
 }
 
 if (children.length === 0) {
@@ -127,8 +146,9 @@ if (children.length === 0) {
   process.exit(0);
 }
 
+const webUrl = services.find((service) => service.name === "WEB")?.url ?? "http://localhost:5173/";
 console.log("EPHINTA development services are running. Press Ctrl+C to stop only services started by this launcher.");
-console.log("Open the application: http://localhost:5173/");
+console.log(`Open the application: ${webUrl}`);
 console.log("API health: http://localhost:5000/health");
 console.log("Database readiness: http://localhost:5000/ready");
 await new Promise((resolve) => {
