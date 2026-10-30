@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { BillingInterval, PromotionStatus, SubscriptionStatus } from "@prisma/client";
+import rateLimit from "express-rate-limit";
+import { BillingInterval, LedgerType, PromotionStatus, SubscriptionStatus } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { logger } from "../../lib/logger";
 import { requireAuth, requireRole } from "../../middleware/auth";
@@ -7,6 +8,8 @@ import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 
 export const billingRouter = Router();
+
+const promotionTrackingLimit = rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: true, legacyHeaders: false });
 
 billingRouter.get(
   "/public-promotions",
@@ -244,3 +247,212 @@ billingRouter.post(
     });
   }),
 );
+
+/** Vendor pays for a campaign from their verified NGN wallet. */
+billingRouter.post(
+  "/promotions/:id/pay",
+  requireAuth,
+  requireRole("VENDOR"),
+  asyncHandler(async (req, res) => {
+    const profile = await prisma.vendorProfile.findUnique({ where: { userId: req.user!.id } });
+    if (!profile) throw new HttpError(404, "NOT_FOUND", "Vendor profile required");
+
+    const result = await prisma.$transaction(async (tx) => {
+      const promotion = await tx.promotion.findFirst({
+        where: { id: req.params.id, vendorId: profile.id },
+      });
+      if (!promotion) throw new HttpError(404, "NOT_FOUND", "Promotion not found");
+      if (promotion.status !== PromotionStatus.DRAFT) {
+        throw new HttpError(409, "INVALID_PROMOTION_STATE", "Only draft campaigns can be paid");
+      }
+
+      const idempotencyKey = `promotion_payment:${promotion.id}`;
+      const existing = await tx.ledgerEntry.findUnique({ where: { idempotencyKey } });
+      if (existing) {
+        if (existing.refType !== "PROMOTION_PAYMENT" || existing.refId !== promotion.id || existing.amountMinor !== promotion.budgetMinor) {
+          throw new HttpError(409, "PAYMENT_RECORD_CONFLICT", "The campaign payment record does not match this campaign");
+        }
+        return { promotion, entry: existing, replayed: true };
+      }
+
+      const wallet = await tx.wallet.findUnique({
+        where: { userId_currency: { userId: req.user!.id, currency: "NGN" } },
+      });
+      if (!wallet || wallet.availableMinor < promotion.budgetMinor) {
+        throw new HttpError(400, "INSUFFICIENT_FUNDS", "Add sufficient verified NGN wallet funds before paying for this campaign");
+      }
+
+      const newAvailable = wallet.availableMinor - promotion.budgetMinor;
+      const entry = await tx.ledgerEntry.create({
+        data: {
+          walletId: wallet.id,
+          type: LedgerType.WITHDRAWAL,
+          amountMinor: promotion.budgetMinor,
+          balanceAfterMinor: newAvailable,
+          refType: "PROMOTION_PAYMENT",
+          refId: promotion.id,
+          idempotencyKey,
+        },
+      });
+      await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { availableMinor: newAvailable },
+      });
+      const updatedPromotion = await tx.promotion.update({
+        where: { id: promotion.id },
+        data: { paidAt: new Date() },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorId: req.user!.id,
+          action: "PROMOTION_PAID_FROM_WALLET",
+          entity: "Promotion",
+          entityId: promotion.id,
+          meta: { amountMinor: promotion.budgetMinor.toString(), currency: "NGN", ledgerEntryId: entry.id },
+        },
+      });
+      return { promotion: updatedPromotion, entry, replayed: false };
+    });
+
+    res.status(result.replayed ? 200 : 201).json({
+      promotion: {
+        id: result.promotion.id,
+        status: result.promotion.status,
+        paidAt: result.promotion.paidAt,
+        approvedAt: result.promotion.approvedAt,
+      },
+      payment: {
+        ledgerEntryId: result.entry.id,
+        amountMinor: result.entry.amountMinor.toString(),
+        currency: "NGN",
+        replayed: result.replayed,
+      },
+      message: "Payment recorded. Campaign remains unpublished until an administrator approves it.",
+    });
+  }),
+);
+
+/** A vendor may pause only their own currently active campaign. */
+billingRouter.post(
+  "/promotions/:id/pause",
+  requireAuth,
+  requireRole("VENDOR"),
+  asyncHandler(async (req, res) => {
+    const profile = await prisma.vendorProfile.findUnique({ where: { userId: req.user!.id } });
+    if (!profile) throw new HttpError(404, "NOT_FOUND", "Vendor profile required");
+    const promotion = await prisma.promotion.findFirst({
+      where: { id: req.params.id, vendorId: profile.id },
+    });
+    if (!promotion) throw new HttpError(404, "NOT_FOUND", "Promotion not found");
+    if (promotion.status !== PromotionStatus.ACTIVE) {
+      throw new HttpError(409, "INVALID_PROMOTION_STATE", "Only active campaigns can be paused");
+    }
+    const updated = await prisma.$transaction(async (tx) => {
+      const item = await tx.promotion.update({
+        where: { id: promotion.id },
+        data: { status: PromotionStatus.PAUSED, pausedAt: new Date() },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorId: req.user!.id,
+          action: "PROMOTION_PAUSED",
+          entity: "Promotion",
+          entityId: promotion.id,
+          meta: { actorRole: "VENDOR" },
+        },
+      });
+      return item;
+    });
+    res.json({ promotion: { id: updated.id, status: updated.status, pausedAt: updated.pausedAt } });
+  }),
+);
+
+/** Admin approval/status control. Activation requires a matching wallet ledger payment. */
+billingRouter.patch(
+  "/promotions/:id/status",
+  requireAuth,
+  requireRole("ADMIN"),
+  asyncHandler(async (req, res) => {
+    const requested = String(req.body.status || "").toUpperCase();
+    if (![PromotionStatus.ACTIVE, PromotionStatus.PAUSED, PromotionStatus.ENDED].includes(requested as PromotionStatus)) {
+      throw new HttpError(400, "INVALID_STATUS", "Status must be ACTIVE, PAUSED, or ENDED");
+    }
+    const promotion = await prisma.promotion.findUnique({ where: { id: req.params.id } });
+    if (!promotion) throw new HttpError(404, "NOT_FOUND", "Promotion not found");
+
+    if (requested === PromotionStatus.ACTIVE) {
+      const payment = await prisma.ledgerEntry.findUnique({
+        where: { idempotencyKey: `promotion_payment:${promotion.id}` },
+      });
+      if (
+        !payment ||
+        payment.refType !== "PROMOTION_PAYMENT" ||
+        payment.refId !== promotion.id ||
+        payment.amountMinor !== promotion.budgetMinor
+      ) {
+        throw new HttpError(409, "PROMOTION_UNPAID", "A matching verified wallet payment is required before approval");
+      }
+      if (promotion.endsAt <= new Date()) {
+        throw new HttpError(409, "PROMOTION_EXPIRED", "An expired campaign cannot be activated");
+      }
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const item = await tx.promotion.update({
+        where: { id: promotion.id },
+        data: {
+          status: requested as PromotionStatus,
+          approvedAt: requested === PromotionStatus.ACTIVE ? promotion.approvedAt || new Date() : promotion.approvedAt,
+          approvedById: requested === PromotionStatus.ACTIVE ? req.user!.id : promotion.approvedById,
+          pausedAt: requested === PromotionStatus.PAUSED ? new Date() : requested === PromotionStatus.ACTIVE ? null : promotion.pausedAt,
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorId: req.user!.id,
+          action: requested === PromotionStatus.ACTIVE ? "PROMOTION_APPROVED" : requested === PromotionStatus.PAUSED ? "PROMOTION_PAUSED_BY_ADMIN" : "PROMOTION_ENDED",
+          entity: "Promotion",
+          entityId: promotion.id,
+          meta: { previousStatus: promotion.status, newStatus: requested },
+        },
+      });
+      return item;
+    });
+    res.json({
+      promotion: {
+        id: updated.id,
+        status: updated.status,
+        paidAt: updated.paidAt,
+        approvedAt: updated.approvedAt,
+        approvedById: updated.approvedById,
+        pausedAt: updated.pausedAt,
+      },
+    });
+  }),
+);
+
+/** Rate-limited public campaign measurement; never returns vendor financial data. */
+billingRouter.post(
+  "/public-promotions/:id/track",
+  promotionTrackingLimit,
+  asyncHandler(async (req, res) => {
+    const action = String(req.body.action || "").toLowerCase();
+    if (action !== "impression" && action !== "click") {
+      throw new HttpError(400, "INVALID_TRACKING_ACTION", "Action must be impression or click");
+    }
+    const now = new Date();
+    const where = {
+      id: req.params.id,
+      status: PromotionStatus.ACTIVE,
+      startsAt: { lte: now },
+      endsAt: { gt: now },
+    };
+    const result = await prisma.promotion.updateMany({
+      where,
+      data: action === "impression" ? { impressions: { increment: 1 } } : { clicks: { increment: 1 } },
+    });
+    if (result.count !== 1) throw new HttpError(404, "PROMOTION_NOT_FOUND", "Active promotion not found");
+    res.status(202).json({ ok: true });
+  }),
+);
+
