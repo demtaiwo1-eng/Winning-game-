@@ -3,10 +3,11 @@
  * When secret keys are set in env, real initialize/verify is used.
  * Otherwise demo mode returns local checkout URLs.
  */
+import { createHmac } from "node:crypto";
 import { env } from "../../config/env";
 import { majorAmountToMinor } from "./webhookVerification";
 
-export type ProviderName = "paystack" | "flutterwave" | "stripe" | "demo";
+export type ProviderName = "opay" | "paystack" | "flutterwave" | "stripe" | "demo";
 
 export function canUseDemoPayments(
   options: { nodeEnv?: string; paymentMode?: string } = {},
@@ -59,6 +60,8 @@ export function selectProvider(currency: string, country?: string): ProviderName
 
   const c = currency.toUpperCase();
 
+  if (c === "NGN" && env.OPAY_ENABLED === "true" && env.OPAY_MERCHANT_ID && env.OPAY_PUBLIC_KEY && env.OPAY_SECRET_KEY) return "opay";
+
   if (["NGN", "GHS"].includes(c)) {
     if (env.PAYSTACK_SECRET_KEY) return "paystack";
     if (env.FLUTTERWAVE_SECRET_KEY) return "flutterwave";
@@ -92,7 +95,7 @@ export type InitResult = {
   providerRef: string;
   authorizationUrl?: string;
   accessCode?: string;
-  mode: "live" | "demo";
+  mode: "live" | "sandbox" | "demo";
 };
 
 /** Amount for Paystack is in major subunit already as kobo/pesewas (minor units). */
@@ -420,6 +423,127 @@ export async function verifyFlutterwave(transactionId: string): Promise<{
     amountMinor: majorAmountToMinor(data.data.amount),
     currency: data.data.currency.toUpperCase(),
     txRef: data.data.tx_ref,
+    raw: data,
+  };
+}
+
+function opayBaseUrl() {
+  const url = new URL(env.OPAY_API_BASE_URL);
+  if (url.protocol !== "https:") throw new Error("OPay API base URL must use HTTPS");
+  if (env.OPAY_MODE === "sandbox" && !url.hostname.includes("sandbox")) {
+    throw new Error("OPay sandbox mode requires the OPay sandbox API host");
+  }
+  if (env.OPAY_MODE === "live" && url.hostname.includes("sandbox")) {
+    throw new Error("OPay live mode cannot use the sandbox API host");
+  }
+  return url.toString().replace(/\/$/, "");
+}
+
+function opayHeaders(payload: Record<string, unknown>, signed: boolean) {
+  if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
+    throw new Error("OPay merchant credentials are incomplete");
+  }
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    MerchantId: env.OPAY_MERCHANT_ID,
+  };
+  if (signed) {
+    const canonical = JSON.stringify(sortObjectKeys(payload));
+    const signature = createHmac("sha512", env.OPAY_SECRET_KEY).update(canonical).digest("hex");
+    headers.Authorization = `Bearer ${signature}`;
+  } else {
+    headers.Authorization = `Bearer ${env.OPAY_PUBLIC_KEY}`;
+  }
+  return headers;
+}
+
+function sortObjectKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortObjectKeys);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, child]) => [key, sortObjectKeys(child)]),
+    );
+  }
+  return value;
+}
+
+async function opayPost(path: string, payload: Record<string, unknown>, signed: boolean) {
+  const response = await fetch(`${opayBaseUrl()}${path}`, {
+    method: "POST",
+    headers: opayHeaders(payload, signed),
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(20_000),
+  });
+  const data = await response.json() as {
+    code?: string;
+    message?: string;
+    data?: Record<string, any>;
+  };
+  if (!response.ok || data.code !== "00000") {
+    throw new Error(data.message || `OPay request failed (${response.status})`);
+  }
+  return data.data ?? {};
+}
+
+export async function initializeOpay(input: {
+  email: string;
+  name: string;
+  amountMinor: bigint;
+  currency: string;
+  reference: string;
+  returnUrl: string;
+  callbackUrl: string;
+}): Promise<InitResult> {
+  if (input.currency !== "NGN") throw new Error("OPay sandbox adapter currently supports NGN only");
+  if (env.OPAY_ENABLED !== "true" || env.OPAY_MODE !== "sandbox") {
+    throw new Error("OPay is not enabled for sandbox testing");
+  }
+  const payload = {
+    country: "NG",
+    reference: input.reference,
+    amount: { total: Number(input.amountMinor), currency: input.currency },
+    returnUrl: input.returnUrl,
+    callbackUrl: input.callbackUrl,
+    cancelUrl: input.returnUrl,
+    expireAt: 30,
+    userInfo: { userEmail: input.email, userName: input.name },
+    productList: [{
+      productId: "ephinta-wallet-deposit",
+      name: "EPHINTA Wallet Deposit",
+      description: "EPHINTA wallet funding",
+      price: Number(input.amountMinor),
+      quantity: 1,
+    }],
+  };
+  const data = await opayPost("/api/v1/international/cashier/create", payload, false);
+  const cashierUrl = typeof data.cashierUrl === "string" ? data.cashierUrl : "";
+  const parsed = new URL(cashierUrl);
+  if (parsed.protocol !== "https:" || !parsed.hostname.endsWith("opaycheckout.com")) {
+    throw new Error("OPay returned an invalid cashier URL");
+  }
+  if (data.reference !== input.reference) throw new Error("OPay returned a mismatched payment reference");
+  return { provider: "opay", providerRef: input.reference, authorizationUrl: cashierUrl, mode: "sandbox" };
+}
+
+export async function verifyOpay(reference: string): Promise<{
+  success: boolean;
+  amountMinor: bigint;
+  currency: string;
+  reference?: string;
+  raw: unknown;
+}> {
+  const payload = { country: "NG", reference };
+  const data = await opayPost("/api/v1/international/cashier/status", payload, true);
+  const amount = data.amount?.total;
+  const currency = typeof data.amount?.currency === "string" ? data.amount.currency.toUpperCase() : "";
+  return {
+    success: data.status === "SUCCESS",
+    amountMinor: typeof amount === "number" || typeof amount === "string" ? BigInt(amount) : 0n,
+    currency,
+    reference: typeof data.reference === "string" ? data.reference : undefined,
     raw: data,
   };
 }

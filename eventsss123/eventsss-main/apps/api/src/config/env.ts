@@ -13,6 +13,7 @@ const schema = z.object({
   COMMISSION_BPS: z.coerce.number().int().min(0).max(5000).default(1000),
   DEFAULT_CURRENCY: z.string().length(3).default("NGN"),
   APP_BASE_URL: z.string().url().default("http://localhost:4173"),
+  API_BASE_URL: z.string().url().default("http://localhost:5000"),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),
@@ -23,6 +24,12 @@ const schema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   PAYMENT_MODE: z.enum(["test", "live"]).default("test"),
+  OPAY_ENABLED: z.enum(["true", "false"]).default("false"),
+  OPAY_MODE: z.enum(["sandbox", "live"]).default("sandbox"),
+  OPAY_MERCHANT_ID: z.string().optional(),
+  OPAY_PUBLIC_KEY: z.string().optional(),
+  OPAY_SECRET_KEY: z.string().optional(),
+  OPAY_API_BASE_URL: z.string().url().default("https://sandboxapi.opaycheckout.com"),
 });
 
 const rawEnv: NodeJS.ProcessEnv = {};
