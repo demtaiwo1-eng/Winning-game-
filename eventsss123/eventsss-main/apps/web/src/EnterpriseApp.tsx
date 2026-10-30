@@ -1179,6 +1179,8 @@ function FinanceOperationsPanel() {
   const [provider, setProvider] = useState("");
   const [status, setStatus] = useState("");
   const [currency, setCurrency] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -1187,8 +1189,8 @@ function FinanceOperationsPanel() {
     setExporting(kind);
     setError("");
     const params = kind === "payments"
-      ? new URLSearchParams({ ...(provider ? { provider } : {}), ...(status ? { status } : {}), ...(currency ? { currency } : {}) })
-      : new URLSearchParams({ ...(currency ? { currency } : {}) });
+      ? new URLSearchParams({ ...(provider ? { provider } : {}), ...(status ? { status } : {}), ...(currency ? { currency } : {}), ...(fromDate ? { from: `${fromDate}T00:00:00.000Z` } : {}), ...(toDate ? { to: `${toDate}T23:59:59.999Z` } : {}) })
+      : new URLSearchParams({ ...(currency ? { currency } : {}), ...(fromDate ? { from: `${fromDate}T00:00:00.000Z` } : {}), ...(toDate ? { to: `${toDate}T23:59:59.999Z` } : {}) });
     const path = kind === "payments" ? "payment-intents" : "ledger";
     const filename = kind === "payments" ? "ephinta-payment-intents.csv" : "ephinta-wallet-ledger.csv";
     try { await downloadApiFile(`/admin/finance/${path}/export.csv?${params.toString()}`, filename); }
@@ -1198,8 +1200,9 @@ function FinanceOperationsPanel() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    const query = new URLSearchParams({ limit: "15", ...(provider ? { provider } : {}), ...(status ? { status } : {}), ...(currency ? { currency } : {}) });
-    const ledgerQuery = new URLSearchParams({ limit: "15", ...(currency ? { currency } : {}) });
+    const dateFilters = { ...(fromDate ? { from: `${fromDate}T00:00:00.000Z` } : {}), ...(toDate ? { to: `${toDate}T23:59:59.999Z` } : {}) };
+    const query = new URLSearchParams({ limit: "15", ...(provider ? { provider } : {}), ...(status ? { status } : {}), ...(currency ? { currency } : {}), ...dateFilters });
+    const ledgerQuery = new URLSearchParams({ limit: "15", ...(currency ? { currency } : {}), ...dateFilters });
     Promise.all([
       api<FinancePaymentFeed>(`/admin/finance/payment-intents?${query}`),
       api<FinanceLedgerFeed>(`/admin/finance/ledger?${ledgerQuery}`),
@@ -1208,7 +1211,7 @@ function FinanceOperationsPanel() {
     }).catch((loadError: Error) => { if (active) setError(loadError.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [provider, status, currency, refreshKey]);
+  }, [provider, status, currency, fromDate, toDate, refreshKey]);
   return (
     <section className="ess-panel">
       <SectionTitle eyebrow="Finance · read only" title="Payment and wallet operations" />
@@ -1217,6 +1220,8 @@ function FinanceOperationsPanel() {
         <label>Provider<select value={provider} onChange={(event) => setProvider(event.target.value)}><option value="">All providers</option><option value="opay">OPay</option><option value="paystack">Paystack</option><option value="flutterwave">Flutterwave</option><option value="stripe">Stripe</option><option value="demo">Demo</option></select></label>
         <label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option><option value="PENDING">Pending</option><option value="SUCCEEDED">Succeeded</option><option value="FAILED">Failed</option><option value="REFUNDED">Refunded</option></select></label>
         <label>Currency<select value={currency} onChange={(event) => setCurrency(event.target.value)}><option value="">All currencies</option><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="USD">USD</option></select></label>
+        <DateWheelPicker value={fromDate} onChange={setFromDate} label="From date" />
+        <DateWheelPicker value={toDate} onChange={setToDate} label="To date" />
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: 8, margin: "12px 0" }}>
         <button className="ess-outline-button" type="button" disabled={loading || exporting !== null} onClick={() => setRefreshKey((key) => key + 1)}>{loading ? "Refreshing…" : "Refresh finance data"}</button>
