@@ -260,7 +260,10 @@ paymentsRouter.post(
     });
     if (!intent) throw new HttpError(404, "PAYMENT_INTENT_NOT_FOUND", "No payment matches this provider reference");
 
-    if (provider === "paystack") {
+    if (provider === "opay") {
+      const verification = await verifyOpay(providerRef);
+      assertVerifiedPayment(verification, intent, providerRef);
+    } else if (provider === "paystack") {
       const verification = await verifyPaystack(providerRef);
       assertVerifiedPayment(verification, intent, providerRef);
     } else if (provider === "flutterwave") {
@@ -381,7 +384,10 @@ export async function reconcilePendingPayments(ageMinutes = 10) {
     const reference = intent.providerRef;
     if (!reference) continue;
     try {
-      if (intent.provider === "opay") {\n        const verification = await verifyOpay(reference);\n        assertVerifiedPayment(verification, intent, reference);\n      } else if (intent.provider === "paystack") {
+      if (intent.provider === "opay") {
+        const verification = await verifyOpay(reference);
+        assertVerifiedPayment(verification, intent, reference);
+      } else if (intent.provider === "paystack") {
         const verification = await verifyPaystack(reference);
         assertVerifiedPayment(verification, intent, reference);
       } else if (intent.provider === "flutterwave") {
