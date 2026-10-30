@@ -207,7 +207,7 @@ function auditExport(req: Request, entity: string, rowCount: number, truncated: 
   const actorId = req.user?.id;
   if (!actorId) throw new Error("Authenticated admin context is missing for finance export audit");
   return prisma.auditLog.create({
-    data: { actorId, action: "FINANCE_EXPORT", entity, meta: { rowCount, truncated, filters }, ip: req.ip },
+    data: { actorId, action: "FINANCE_EXPORT", entity, meta: { rowCount, truncated, filters }, ip: req.ip ?? "unknown" },
   });
 }
 
