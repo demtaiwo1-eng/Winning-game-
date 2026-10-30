@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-
+import { applyEphintaTheme } from '../lib/ephintaTheme';
 
 
 type AuthPayload = {
@@ -403,11 +403,7 @@ export default function PublicLanding({
   }, [draft]);
 
   useEffect(() => {
-
-    try { localStorage.setItem('ephinta:theme', themeMode); } catch { /* storage may be disabled */ }
-
-    document.documentElement.dataset.ephintaTheme = themeMode;
-
+    applyEphintaTheme(themeMode);
   }, [themeMode]);
 
 
