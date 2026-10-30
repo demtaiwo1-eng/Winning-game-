@@ -182,6 +182,93 @@ adminRouter.get("/finance/ledger", asyncHandler(async (req, res) => {
 }));
 
 
+/**
+ * Read-only reconciliation exceptions for finance operators.
+ * Reports stale pending intents and successful deposits whose ledger rows
+ * are missing or do not add up to the gross payment amount.
+ */
+adminRouter.get("/finance/reconciliation", asyncHandler(async (req, res) => {
+  const rawAge = typeof req.query.olderThanMinutes === "string" ? req.query.olderThanMinutes : "10";
+  if (!/^\d+$/.test(rawAge)) {
+    return res.status(400).json({ error: { code: "INVALID_FILTER", message: "olderThanMinutes must be an integer from 5 to 1440" } });
+  }
+  const olderThanMinutes = Number(rawAge);
+  if (!Number.isSafeInteger(olderThanMinutes) || olderThanMinutes < 5 || olderThanMinutes > 1440) {
+    return res.status(400).json({ error: { code: "INVALID_FILTER", message: "olderThanMinutes must be an integer from 5 to 1440" } });
+  }
+
+  const cutoff = new Date(Date.now() - olderThanMinutes * 60_000);
+  const succeededWhere = { status: "SUCCEEDED" as const, purpose: "WALLET_DEPOSIT" };
+  const [stalePendingCount, stalePending, succeededCount, succeededIntents] = await Promise.all([
+    prisma.paymentIntent.count({ where: { status: "PENDING", createdAt: { lt: cutoff } } }),
+    prisma.paymentIntent.findMany({
+      where: { status: "PENDING", createdAt: { lt: cutoff } },
+      orderBy: { createdAt: "asc" },
+      take: 50,
+      select: { id: true, provider: true, amountMinor: true, currency: true, createdAt: true },
+    }),
+    prisma.paymentIntent.count({ where: succeededWhere }),
+    prisma.paymentIntent.findMany({
+      where: succeededWhere,
+      orderBy: { updatedAt: "desc" },
+      take: 500,
+      select: { id: true, provider: true, amountMinor: true, currency: true, createdAt: true },
+    }),
+  ]);
+
+  const intentIds = succeededIntents.map((intent) => intent.id);
+  const ledgerRows = intentIds.length === 0 ? [] : await prisma.ledgerEntry.findMany({
+    where: { refType: "PAYMENT_INTENT", refId: { in: intentIds }, type: { in: ["DEPOSIT", "COMMISSION"] } },
+    select: { refId: true, type: true, amountMinor: true },
+  });
+  const ledgerByIntent = new Map<string, { depositCount: number; totalMinor: bigint }>();
+  for (const entry of ledgerRows) {
+    if (!entry.refId) continue;
+    const current = ledgerByIntent.get(entry.refId) ?? { depositCount: 0, totalMinor: 0n };
+    if (entry.type === "DEPOSIT") current.depositCount += 1;
+    current.totalMinor += entry.amountMinor;
+    ledgerByIntent.set(entry.refId, current);
+  }
+  const ledgerExceptions = succeededIntents.flatMap((intent) => {
+    const ledger = ledgerByIntent.get(intent.id) ?? { depositCount: 0, totalMinor: 0n };
+    if (ledger.depositCount === 1 && ledger.totalMinor === intent.amountMinor) return [];
+    return [{
+      paymentIntentId: intent.id,
+      provider: intent.provider,
+      currency: intent.currency,
+      expectedGrossMinor: intent.amountMinor.toString(),
+      recordedLedgerMinor: ledger.totalMinor.toString(),
+      depositEntryCount: ledger.depositCount,
+    }];
+  });
+
+  res.setHeader("Cache-Control", "no-store");
+  return res.json({
+    generatedAt: new Date().toISOString(),
+    olderThanMinutes,
+    stalePending: {
+      total: stalePendingCount,
+      sampleLimit: 50,
+      items: stalePending.map((intent) => ({
+        paymentIntentId: intent.id,
+        provider: intent.provider,
+        amountMinor: intent.amountMinor.toString(),
+        currency: intent.currency,
+        createdAt: intent.createdAt,
+      })),
+    },
+    succeededDepositLedger: {
+      scanned: succeededIntents.length,
+      totalSucceeded: succeededCount,
+      scanTruncated: succeededCount > succeededIntents.length,
+      exceptionCountInScan: ledgerExceptions.length,
+      exceptions: ledgerExceptions,
+    },
+    readOnly: true,
+  });
+}));
+
+
 const financeExportLimit = 5000;
 function csvCell(value: unknown): string {
   let text = value === null || value === undefined ? "" : value instanceof Date ? value.toISOString() : String(value);

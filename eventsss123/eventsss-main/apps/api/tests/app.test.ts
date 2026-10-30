@@ -44,6 +44,24 @@ describe("api foundation (DB-free)", () => {
     expect(payments.status).toBe(403);
     expect(ledger.status).toBe(403);
   });
+  it("protects the finance reconciliation report from unauthenticated and non-admin access", async () => {
+    const path = "/api/v1/admin/finance/reconciliation";
+    const missing = await request(app).get(path);
+    expect(missing.status).toBe(401);
+    const vendorToken = jwt.sign({ role: "VENDOR" }, env.JWT_SECRET, { subject: "vendor-user" });
+    const forbidden = await request(app).get(path).set("Authorization", `Bearer ${vendorToken}`);
+    expect(forbidden.status).toBe(403);
+  });
+  it("validates reconciliation age filters before querying finance records", async () => {
+    const token = jwt.sign({ role: "ADMIN" }, env.JWT_SECRET, { subject: "admin-user" });
+    for (const value of ["abc", "4", "1441"]) {
+      const res = await request(app)
+        .get(`/api/v1/admin/finance/reconciliation?olderThanMinutes=${value}`)
+        .set("Authorization", `Bearer ${token}`);
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("INVALID_FILTER");
+    }
+  });
   it("validates finance feed filters before querying records", async () => {
     const token = jwt.sign({ role: "ADMIN" }, env.JWT_SECRET, { subject: "admin-user" });
     const invalidStatus = await request(app)

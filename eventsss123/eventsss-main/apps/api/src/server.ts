@@ -6,12 +6,26 @@ import { reconcilePendingPayments } from "./modules/payments/payments.routes";
 
 const server = createApp().listen(env.PORT, () => logger.info(`ESS API listening on :${env.PORT}`));
 
+let reconciliationInProgress = false;
 const reconciliationTimer = env.NODE_ENV === "test"
   ? undefined
   : setInterval(() => {
-      void reconcilePendingPayments().catch(() => {
-        logger.warn("Pending payment reconciliation failed");
-      });
+      if (reconciliationInProgress) {
+        logger.warn("Skipping payment reconciliation tick because the previous run is still active");
+        return;
+      }
+      reconciliationInProgress = true;
+      void reconcilePendingPayments()
+        .then((result) => logger.info(result, "Pending payment reconciliation completed"))
+        .catch((error: unknown) => {
+          logger.warn(
+            { errorType: error instanceof Error ? error.name : "UnknownError" },
+            "Pending payment reconciliation failed",
+          );
+        })
+        .finally(() => {
+          reconciliationInProgress = false;
+        });
     }, 10 * 60_000);
 reconciliationTimer?.unref();
 
