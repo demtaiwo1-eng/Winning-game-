@@ -5,7 +5,7 @@
 - Adds an active planner workspace to the authenticated client portal, using the existing owner-scoped event APIs.
 - Supports editing and saving event title, city, start and end times; the existing wizard's client-request ID continues to make draft handoff retries idempotent.
 - Exposes the seven persisted planning-answer fields in the active workspace.
-- Adds task creation with due dates, status updates, overdue counts, and due-date visibility.
+- Adds task creation with due dates, status updates, overdue counts, due-date visibility, and downloadable iCalendar reminders with a 24-hour alarm for import into the user's calendar.
 - Adds planned-versus-actual budget lines and actual-spend updates using integer minor units; summaries are calculated from the stored event budget.
 - Adds an event-linked booking view using the authenticated caller's existing booking feed.
 - Adds event readiness CSV export and browser print / Save as PDF.
@@ -19,7 +19,7 @@
 - Check-in history contains guest name, method, server timestamp and event association; contact fields are not copied into the history table.
 - The history endpoint is scoped through the authenticated event owner and returns a bounded latest-500 list.
 - Existing pre-migration check-ins are not reconstructed as audit entries because the historical operator cannot be reliably identified. Their existing Guest check-in fields remain untouched.
-- Task due dates and overdue indicators are surfaced in the workspace. This patch does not claim background push/email reminder delivery; no paid scheduler or messaging provider is added.
+- Task reminders are user-triggered `.ics` calendar downloads with a 24-hour VALARM. Delivery is handled by the user's calendar after import; no background push/email scheduler or paid messaging provider is added.
 - Vendor bookings are read from the caller-scoped booking feed and filtered by event ID; booking creation remains in the existing marketplace checkout flow where the planner selects an event.
 - No payment provider, payout, refund, wallet, OPay or Render plan changes.
 
