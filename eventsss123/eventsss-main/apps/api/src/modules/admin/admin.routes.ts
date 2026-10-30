@@ -1,4 +1,5 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../lib/async";
 import { requireAuth, requireRole } from "../../middleware/auth";
@@ -178,4 +179,89 @@ adminRouter.get("/finance/ledger", asyncHandler(async (req, res) => {
       balanceAfterMinor: item.balanceAfterMinor.toString(),
     })),
   });
+}));
+
+
+const financeExportLimit = 5000;
+function csvCell(value: unknown): string {
+  let text = value === null || value === undefined ? "" : value instanceof Date ? value.toISOString() : String(value);
+  if (/^[\s\u0000-\u001f]*[=+\-@]/.test(text)) text = "'" + text;
+  return '"' + text.replace(/"/g, '""') + '"';
+}
+function financeCsv(headers: string[], rows: unknown[][]): string {
+  return [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
+}
+function exportFilters(query: Record<string, unknown>): { page: number; limit: number; from: Date | undefined; to: Date | undefined; status: typeof paymentStatuses[number] | undefined; type: typeof ledgerTypes[number] | undefined; provider: string | undefined; currency: string | undefined } | { error: string } {
+  const params = financePageParams(query);
+  if ("error" in params) return { error: params.error };
+  const status = typeof query.status === "string" ? query.status.toUpperCase() : undefined;
+  const type = typeof query.type === "string" ? query.type.toUpperCase() : undefined;
+  if (status && !paymentStatuses.includes(status as typeof paymentStatuses[number])) return { error: "Unsupported payment status" as const };
+  if (type && !ledgerTypes.includes(type as typeof ledgerTypes[number])) return { error: "Unsupported ledger type" as const };
+  const provider = typeof query.provider === "string" ? query.provider.trim().toLowerCase() : undefined;
+  const currency = typeof query.currency === "string" ? query.currency.trim().toUpperCase() : undefined;
+  if ((provider && provider.length > 40) || (currency && !/^[A-Z]{3}$/.test(currency))) return { error: "Invalid provider or currency filter" as const };
+  return { ...params, status: status as typeof paymentStatuses[number] | undefined, type: type as typeof ledgerTypes[number] | undefined, provider, currency };
+}
+function auditExport(req: Request, entity: string, rowCount: number, truncated: boolean, filters: Prisma.InputJsonObject) {
+  const actorId: string = req.user?.id ?? "";
+  if (actorId.length === 0) throw new Error("Authenticated admin context is missing for finance export audit");
+  return prisma.auditLog.create({
+    data: { actorId, action: "FINANCE_EXPORT", entity, meta: { rowCount, truncated, filters }, ip: req.ip ?? "unknown" },
+  });
+}
+
+adminRouter.get("/finance/payment-intents/export.csv", asyncHandler(async (req, res) => {
+  const filters = exportFilters(req.query as Record<string, unknown>);
+  if ("error" in filters) return res.status(400).json({ error: { code: "INVALID_FILTER", message: filters.error } });
+  const where = {
+    ...(filters.status ? { status: filters.status as typeof paymentStatuses[number] } : {}),
+    ...(filters.provider ? { provider: filters.provider } : {}),
+    ...(filters.currency ? { currency: filters.currency } : {}),
+    ...(filters.from || filters.to ? { createdAt: { ...(filters.from ? { gte: filters.from } : {}), ...(filters.to ? { lte: filters.to } : {}) } } : {}),
+  };
+  const rows = await prisma.paymentIntent.findMany({
+    where, orderBy: { createdAt: "desc" }, take: financeExportLimit + 1,
+    select: { id: true, provider: true, providerRef: true, amountMinor: true, currency: true, status: true, purpose: true, createdAt: true },
+  });
+  const truncated = rows.length > financeExportLimit;
+  const selected = rows.slice(0, financeExportLimit);
+  await auditExport(req, "PaymentIntent", selected.length, truncated, {
+    status: filters.status ?? null, provider: filters.provider ?? null, currency: filters.currency ?? null,
+    from: filters.from?.toISOString() ?? null, to: filters.to?.toISOString() ?? null,
+  });
+  const csv = financeCsv(["id", "provider", "providerRef", "amountMinor", "currency", "status", "purpose", "createdAt"],
+    selected.map((row) => [row.id, row.provider, row.providerRef, row.amountMinor.toString(), row.currency, row.status, row.purpose, row.createdAt]));
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="ephinta-payment-intents.csv"');
+  res.setHeader("X-Export-Truncated", String(truncated));
+  return res.send(csv);
+}));
+
+adminRouter.get("/finance/ledger/export.csv", asyncHandler(async (req, res) => {
+  const filters = exportFilters(req.query as Record<string, unknown>);
+  if ("error" in filters) return res.status(400).json({ error: { code: "INVALID_FILTER", message: filters.error } });
+  const where = {
+    ...(filters.type ? { type: filters.type as typeof ledgerTypes[number] } : {}),
+    ...(filters.currency ? { wallet: { currency: filters.currency } } : {}),
+    ...(filters.from || filters.to ? { createdAt: { ...(filters.from ? { gte: filters.from } : {}), ...(filters.to ? { lte: filters.to } : {}) } } : {}),
+  };
+  const rows = await prisma.ledgerEntry.findMany({
+    where, orderBy: { createdAt: "desc" }, take: financeExportLimit + 1,
+    select: { id: true, type: true, amountMinor: true, balanceAfterMinor: true, refType: true, refId: true, createdAt: true, wallet: { select: { currency: true } } },
+  });
+  const truncated = rows.length > financeExportLimit;
+  const selected = rows.slice(0, financeExportLimit);
+  await auditExport(req, "LedgerEntry", selected.length, truncated, {
+    type: filters.type ?? null, currency: filters.currency ?? null,
+    from: filters.from?.toISOString() ?? null, to: filters.to?.toISOString() ?? null,
+  });
+  const csv = financeCsv(["id", "type", "amountMinor", "balanceAfterMinor", "currency", "refType", "refId", "createdAt"],
+    selected.map((row) => [row.id, row.type, row.amountMinor.toString(), row.balanceAfterMinor.toString(), row.wallet.currency, row.refType, row.refId, row.createdAt]));
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="ephinta-wallet-ledger.csv"');
+  res.setHeader("X-Export-Truncated", String(truncated));
+  return res.send(csv);
 }));
