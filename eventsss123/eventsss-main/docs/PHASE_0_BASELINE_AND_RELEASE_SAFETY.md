@@ -140,3 +140,40 @@ pg_restore --exit-on-error --no-owner --no-acl --dbname "$RESTORE_DATABASE_URL" 
 - [ ] Record the completed restore rehearsal and operator sign-off.
 
 **Exit decision:** Phase 0 is **not fully signed off** until the final four operational checks above are completed. Those checks require authorized access to the live Render/database environment; they cannot be truthfully completed from GitHub repository files or CI.
+
+
+## 9. Live Render verification update — 2026-10-30
+
+A read-only Render inspection was subsequently completed for the connected workspace.
+
+### Actual resources observed
+
+- Active web service: `ephinta_wss`, service ID `srv-dbgc7vvavr4c73dk5vo0`, URL `https://ephinta-wss.onrender.com`.
+- The active service is configured to deploy from **`main`**, not this improvement branch. The draft PR is therefore not live.
+- PostgreSQL: `ephinta_db`, PostgreSQL **16.15**, Free plan, Oregon, status available, database ID `dpg-dbgbaeqfngtc7397tdag-a`.
+- Render currently reports the database Free plan expiry as **2026-11-26**. This is a production continuity risk; the owner must select an appropriate paid plan or a verified migration/backup destination before that date. No paid upgrade was made.
+- The database IP allowlist observed during inspection includes `0.0.0.0/0`. Restrict this to the minimum required sources after confirming all legitimate application/staging connections; do not lock out the active API.
+- The active API's latest inspected deployment failed at startup because `JWT_SECRET` is missing. The API exits before opening its HTTP port. No secret value was read or recorded.
+
+### Live read-only database checks
+
+- Connection succeeded and reported PostgreSQL 16.15.
+- Database size: approximately 9.5 MB.
+- Public schema: 37 base tables and 344 columns.
+- Prisma migration metadata: 14 successful migrations; zero unfinished migrations.
+- Row counts returned zero for each of these checked business tables: `User`, `VendorProfile`, `Event`, `Booking`, `PaymentIntent`, `Wallet`, `LedgerEntry`, `Promotion`, `WebhookEvent`, and `AuditLog`.
+
+These counts do not prove that no data exists in every table or in another/legacy database. They do show that the currently inspected Render database does not yet contain records in the sampled core business tables. Identify the previous production/legacy data source and reconcile it before declaring data migration complete.
+
+### Operational decision
+
+- Production DB is **reachable and schema-initialized**, but **not certified production-ready**.
+- No production backup was created by this inspection; the available Render integration exposes read-only SQL and database metadata, not a backup/restore operation. Use Render's dashboard backup facility where available or run the documented `pg_dump` procedure from a trusted terminal with the external database URL entered securely.
+- No restore rehearsal was performed.
+- Do not run destructive SQL, reset the database, or assume this empty database is the correct source of historical user data.
+- The missing `JWT_SECRET` must be added securely in the Render dashboard to restore API startup. The attempted programmatic environment update was blocked and did not change the service.
+- The live service currently deploys `main`; Phase 1 changes remain isolated in the draft PR until separately reviewed and approved for deployment.
+
+## 10. Phase 0 current exit decision
+
+Phase 0 remains **BLOCKED / NOT SIGNED OFF** pending: (1) identification and reconciliation of the actual legacy data source, (2) a verified production backup, (3) a restore rehearsal to a separate non-production database, (4) resolution of the Free-plan expiry/continuity risk, (5) appropriate database network allowlisting, and (6) successful live API startup and health check after the missing secret is configured.
