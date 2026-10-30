@@ -751,11 +751,8 @@ export default function PublicLanding({
 
         .eph-ad-card button{margin-top:auto;align-self:flex-start;border:none;border-radius:999px;background:var(--purple);color:white;padding:9px 13px;font-weight:800}
 
-        .eph-admob-wrap{padding-top:10px}
 
-        .eph-admob-banner{display:flex;justify-content:center;align-items:center;min-height:120px;padding:18px 20px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(135deg, rgba(109,66,216,.12), rgba(255,189,67,.12));box-shadow:0 14px 32px rgba(17,21,45,.08)}
 
-        .eph-admob-banner .adsbygoogle{width:min(100%, 960px);border-radius:16px;overflow:hidden}
 
       `}</style>
 
