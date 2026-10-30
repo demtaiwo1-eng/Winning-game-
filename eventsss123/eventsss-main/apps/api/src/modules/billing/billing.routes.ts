@@ -296,7 +296,7 @@ billingRouter.post(
         throw new HttpError(400, "INSUFFICIENT_FUNDS", "Add sufficient verified NGN wallet funds before paying for this campaign");
       }
 
-      let updatedWallet;
+      let updatedWallet: { availableMinor: bigint };
       try {
         updatedWallet = await tx.wallet.update({
           where: { id: wallet.id, availableMinor: { gte: promotion.budgetMinor } },
