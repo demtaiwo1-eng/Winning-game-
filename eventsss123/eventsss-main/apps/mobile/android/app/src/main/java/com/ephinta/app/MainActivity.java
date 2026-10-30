@@ -1,4 +1,4 @@
-package com.eventselfsolutions.app;
+package com.ephinta.app;
 
 import com.getcapacitor.BridgeActivity;
 
