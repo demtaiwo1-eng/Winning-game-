@@ -20,8 +20,8 @@ const money = (minor: string, currency: string) => {
   const n = Number(minor);
   return Number.isFinite(n) ? new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 2 }).format(n / 100) : currency + " " + minor;
 };
-const icsEscape = (value: string) => value.replace(/\\\\/g, "\\\\\\\\").replace(/;/g, "\\\\;").replace(/,/g, "\\\\,").replace(/\\r?\\n/g, "\\\\n");
-const icsDate = (value: string) => new Date(value).toISOString().replace(/[-:]/g, "").replace(/\\.\\d{3}Z$/, "Z");
+const icsEscape = (value: string) => value.split("\\").join("\\\\").split(";").join("\\;").split(",").join("\\,").replace(/\r?\n/g, "\\n");
+const icsDate = (value: string) => new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 const escapeCsv = (value: unknown) => {
   const s = String(value ?? "");
   const safe = /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
@@ -140,8 +140,6 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   const downloadCalendarReminder = (task: Task) => {
     if (!task.dueAt) return;
     const start = icsDate(task.dueAt);
-    const alarm = new Date(Date.parse(task.dueAt) - 24 * 60 * 60 * 1000);
-    const alarmAt = icsDate(alarm.toISOString());
     const ics = [
       "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//EPHINTA//Event Planner//EN","CALSCALE:GREGORIAN",
       "BEGIN:VEVENT",`UID:${task.id}@ephinta`,`DTSTAMP:${icsDate(new Date().toISOString())}`,
@@ -149,7 +147,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
       `DESCRIPTION:${icsEscape(event?.title || "Event task")}`,
       "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Task due in 24 hours","TRIGGER:-PT24H","END:VALARM",
       "END:VEVENT","END:VCALENDAR",
-    ].join("\\r\\n");
+    ].join("\r\n");
     const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = `ephinta-reminder-${task.id}.ics`; a.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
