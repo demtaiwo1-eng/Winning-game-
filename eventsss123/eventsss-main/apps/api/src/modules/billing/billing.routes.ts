@@ -190,24 +190,48 @@ billingRouter.post(
     const title = String(req.body.title || "").trim();
     if (title.length < 2) throw new HttpError(400, "INVALID", "Title required");
 
-    const budgetMinor = BigInt(String(req.body.budgetMinor || "0"));
+    const rawBudget = String(req.body.budgetMinor ?? "");
+    if (!/^\d+$/.test(rawBudget)) {
+      throw new HttpError(400, "INVALID_AMOUNT", "budgetMinor must be a positive integer in minor currency units");
+    }
+    const budgetMinor = BigInt(rawBudget);
     if (budgetMinor <= 0n) throw new HttpError(400, "INVALID_AMOUNT", "budgetMinor must be > 0");
 
     const startsAt = req.body.startsAt ? new Date(req.body.startsAt) : new Date();
     const endsAt = req.body.endsAt
       ? new Date(req.body.endsAt)
       : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    if (!Number.isFinite(startsAt.getTime()) || !Number.isFinite(endsAt.getTime()) || endsAt <= startsAt) {
+      throw new HttpError(400, "INVALID_DATES", "Promotion end date must be later than its valid start date");
+    }
+    if (endsAt <= new Date()) {
+      throw new HttpError(400, "INVALID_DATES", "Promotion end date must be in the future");
+    }
 
+    const listingId = typeof req.body.listingId === "string" && req.body.listingId.trim()
+      ? req.body.listingId.trim()
+      : null;
+    if (listingId) {
+      const ownedListing = await prisma.listing.findFirst({
+        where: { id: listingId, vendorId: profile.id },
+        select: { id: true },
+      });
+      if (!ownedListing) {
+        throw new HttpError(404, "LISTING_NOT_FOUND", "The selected listing was not found in your vendor account");
+      }
+    }
+
+    // Vendor requests must never self-publish a paid placement. Activation is
+    // withheld until verified billing and an authorized approval flow exist.
     const promo = await prisma.promotion.create({
       data: {
         vendorId: profile.id,
-        listingId: typeof req.body.listingId === "string" ? req.body.listingId : null,
+        listingId,
         title,
         budgetMinor,
         startsAt,
         endsAt,
-        status:
-          req.body.status === "ACTIVE" ? PromotionStatus.ACTIVE : PromotionStatus.DRAFT,
+        status: PromotionStatus.DRAFT,
       },
     });
 
