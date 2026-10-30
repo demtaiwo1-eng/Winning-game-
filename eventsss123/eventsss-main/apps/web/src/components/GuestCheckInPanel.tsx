@@ -229,6 +229,11 @@ export default function GuestCheckInPanel({ events }: { events: EventOption[] })
         {pending.length > 0 && <span className="ess-chip">{pending.length} pending sync</span>}
       </div>
       <div className="ess-filter-row" style={{ marginTop: 12 }}>
+        <label className="ess-outline-button" style={{ cursor: importingGuests ? "wait" : "pointer" }}>
+          {importingGuests ? "Importing…" : "Import guest CSV"}
+          <input type="file" accept=".csv,text/csv" disabled={importingGuests || busy} onChange={(event) => { void importGuestFile(event.target.files?.[0]); event.currentTarget.value = ""; }} style={{ display: "none" }} />
+        </label>
+        <button className="ess-outline-button" type="button" onClick={exportGuests} disabled={!guests.length}>Export guests CSV</button>
         <button className="ess-primary" type="button" onClick={() => void startNfc()} disabled={!nfcAvailable || busy}>Scan NFC</button>
         <button className="ess-outline-button" type="button" onClick={() => void startBluetooth()} disabled={!bluetoothAvailable || busy}>Connect Bluetooth scanner</button>
         <button className="ess-outline-button" type="button" onClick={() => void refresh()} disabled={busy}>Refresh guests</button>
