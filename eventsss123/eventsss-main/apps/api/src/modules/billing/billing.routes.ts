@@ -276,6 +276,19 @@ billingRouter.post(
         return { promotion, entry: existing, replayed: true };
       }
 
+      const paidAt = new Date();
+      const paymentClaim = await tx.promotion.updateMany({
+        where: { id: promotion.id, status: PromotionStatus.DRAFT, paidAt: null },
+        data: { paidAt },
+      });
+      if (paymentClaim.count !== 1) {
+        const claimedPayment = await tx.ledgerEntry.findUnique({ where: { idempotencyKey } });
+        if (isPromotionPaymentValid(claimedPayment, promotion.id, promotion.budgetMinor)) {
+          return { promotion: { ...promotion, paidAt: promotion.paidAt || paidAt }, entry: claimedPayment!, replayed: true };
+        }
+        throw new HttpError(409, "PROMOTION_PAYMENT_IN_PROGRESS", "Campaign payment is already being processed or the campaign is no longer payable");
+      }
+
       const wallet = await tx.wallet.findUnique({
         where: { userId_currency: { userId: req.user!.id, currency: "NGN" } },
       });
@@ -302,10 +315,7 @@ billingRouter.post(
           idempotencyKey,
         },
       });
-      const updatedPromotion = await tx.promotion.update({
-        where: { id: promotion.id },
-        data: { paidAt: new Date() },
-      });
+      const updatedPromotion = { ...promotion, paidAt };
       await tx.auditLog.create({
         data: {
           actorId: req.user!.id,
