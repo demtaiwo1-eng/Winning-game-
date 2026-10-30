@@ -63,7 +63,13 @@ jobs:
         run: npm ci
 
       - name: Restore Rollup Linux optional dependency
-        run: npm install --no-save --package-lock=false @rollup/rollup-linux-x64-gnu@4.63.5
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_TGZ="$(npm pack --silent @rollup/rollup-linux-x64-gnu@4.63.5)"
+          mkdir -p node_modules/@rollup/rollup-linux-x64-gnu
+          tar -xzf "$PACKAGE_TGZ" --strip-components=1 -C node_modules/@rollup/rollup-linux-x64-gnu
+          rm -f "$PACKAGE_TGZ"
 
       - name: Check whether a shared online API is configured
         shell: bash
@@ -197,7 +203,13 @@ jobs:
         run: npm ci
 
       - name: Restore Rollup Linux optional dependency
-        run: npm install --no-save --package-lock=false @rollup/rollup-linux-x64-gnu@4.63.5
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_TGZ="$(npm pack --silent @rollup/rollup-linux-x64-gnu@4.63.5)"
+          mkdir -p node_modules/@rollup/rollup-linux-x64-gnu
+          tar -xzf "$PACKAGE_TGZ" --strip-components=1 -C node_modules/@rollup/rollup-linux-x64-gnu
+          rm -f "$PACKAGE_TGZ"
 
       - name: Build web assets for the deployed API
         run: npm run build -w apps/web
