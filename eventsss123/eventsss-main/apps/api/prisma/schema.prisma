@@ -639,7 +639,7 @@ model Promotion {
   listing     Listing?        @relation(fields: [listingId], references: [id], onDelete: SetNull)
 
   @@index([status, startsAt, endsAt])
-  @@index([vendorId, createdAt])
+  @@index([vendorId])
 }
 
 model Review {
