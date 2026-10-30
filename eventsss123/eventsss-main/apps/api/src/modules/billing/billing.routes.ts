@@ -1,6 +1,6 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { BillingInterval, LedgerType, PromotionStatus, SubscriptionStatus } from "@prisma/client";
+import { BillingInterval, LedgerType, Prisma, PromotionStatus, SubscriptionStatus } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { logger } from "../../lib/logger";
 import { requireAuth, requireRole } from "../../middleware/auth";
@@ -296,14 +296,18 @@ billingRouter.post(
         throw new HttpError(400, "INSUFFICIENT_FUNDS", "Add sufficient verified NGN wallet funds before paying for this campaign");
       }
 
-      const debit = await tx.wallet.updateMany({
-        where: { id: wallet.id, availableMinor: { gte: promotion.budgetMinor } },
-        data: { availableMinor: { decrement: promotion.budgetMinor } },
-      });
-      if (debit.count !== 1) {
-        throw new HttpError(400, "INSUFFICIENT_FUNDS", "Wallet balance changed; refresh and try again");
+      let updatedWallet;
+      try {
+        updatedWallet = await tx.wallet.update({
+          where: { id: wallet.id, availableMinor: { gte: promotion.budgetMinor } },
+          data: { availableMinor: { decrement: promotion.budgetMinor } },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+          throw new HttpError(400, "INSUFFICIENT_FUNDS", "Wallet balance changed; refresh and try again");
+        }
+        throw error;
       }
-      const updatedWallet = await tx.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
       const entry = await tx.ledgerEntry.create({
         data: {
           walletId: wallet.id,
