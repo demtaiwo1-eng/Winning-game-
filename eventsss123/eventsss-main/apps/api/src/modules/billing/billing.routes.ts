@@ -282,21 +282,24 @@ billingRouter.post(
         throw new HttpError(400, "INSUFFICIENT_FUNDS", "Add sufficient verified NGN wallet funds before paying for this campaign");
       }
 
-      const newAvailable = wallet.availableMinor - promotion.budgetMinor;
+      const debit = await tx.wallet.updateMany({
+        where: { id: wallet.id, availableMinor: { gte: promotion.budgetMinor } },
+        data: { availableMinor: { decrement: promotion.budgetMinor } },
+      });
+      if (debit.count !== 1) {
+        throw new HttpError(400, "INSUFFICIENT_FUNDS", "Wallet balance changed; refresh and try again");
+      }
+      const updatedWallet = await tx.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
       const entry = await tx.ledgerEntry.create({
         data: {
           walletId: wallet.id,
           type: LedgerType.WITHDRAWAL,
           amountMinor: promotion.budgetMinor,
-          balanceAfterMinor: newAvailable,
+          balanceAfterMinor: updatedWallet.availableMinor,
           refType: "PROMOTION_PAYMENT",
           refId: promotion.id,
           idempotencyKey,
         },
-      });
-      await tx.wallet.update({
-        where: { id: wallet.id },
-        data: { availableMinor: newAvailable },
       });
       const updatedPromotion = await tx.promotion.update({
         where: { id: promotion.id },
