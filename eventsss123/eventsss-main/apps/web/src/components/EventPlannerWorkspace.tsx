@@ -20,6 +20,8 @@ const money = (minor: string, currency: string) => {
   const n = Number(minor);
   return Number.isFinite(n) ? new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 2 }).format(n / 100) : currency + " " + minor;
 };
+const icsEscape = (value: string) => value.replace(/\\\\/g, "\\\\\\\\").replace(/;/g, "\\\\;").replace(/,/g, "\\\\,").replace(/\\r?\\n/g, "\\\\n");
+const icsDate = (value: string) => new Date(value).toISOString().replace(/[-:]/g, "").replace(/\\.\\d{3}Z$/, "Z");
 const escapeCsv = (value: unknown) => {
   const s = String(value ?? "");
   const safe = /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
@@ -135,6 +137,24 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save planning answers."); }
     finally { setBusy(false); }
   };
+  const downloadCalendarReminder = (task: Task) => {
+    if (!task.dueAt) return;
+    const start = icsDate(task.dueAt);
+    const alarm = new Date(Date.parse(task.dueAt) - 24 * 60 * 60 * 1000);
+    const alarmAt = icsDate(alarm.toISOString());
+    const ics = [
+      "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//EPHINTA//Event Planner//EN","CALSCALE:GREGORIAN",
+      "BEGIN:VEVENT",`UID:${task.id}@ephinta`,`DTSTAMP:${icsDate(new Date().toISOString())}`,
+      `DTSTART:${start}`,`SUMMARY:${icsEscape(task.title)}`,
+      `DESCRIPTION:${icsEscape(event?.title || "Event task")}`,
+      "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Task due in 24 hours","TRIGGER:-PT24H","END:VALARM",
+      "END:VEVENT","END:VCALENDAR",
+    ].join("\\r\\n");
+    const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = `ephinta-reminder-${task.id}.ics`; a.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setNotice("Calendar reminder downloaded. Import it into your calendar to receive the 24-hour alert.");
+  };
   const exportSummary = () => {
     if (!event) return;
     const rows = [["Section","Item","Status / Detail"], ["Event",event.title,event.startsAt || ""], ...tasks.map((t) => ["Task",t.title,t.status + (t.dueAt ? " · " + t.dueAt : "")]), ...guests.map((g) => ["Guest",g.name,g.rsvp + (g.checkedInAt ? " · Checked in " + g.checkedInAt : "")]), ...budgetItems.map((i) => ["Budget",i.label,"Planned " + i.plannedMinor + " · Actual " + i.actualMinor]), ...bookings.map((b) => ["Booking",b.items?.map((i) => i.listing?.title).filter(Boolean).join(", ") || b.id,b.status])];
@@ -186,12 +206,12 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
             <button className="ess-primary" type="submit" disabled={busy || !taskTitle.trim()}>Add task</button>
           </form>
           <div style={{ display: "grid", gap: 8, marginTop: 12 }}>{tasks.map((task) => <article className="ess-card" key={task.id}>
-            <strong>{task.title}</strong><div className="ess-form-grid">
+            <strong>{task.title}</strong><div className="ess-filter-row"><button className="ess-outline-button" type="button" disabled={!task.dueAt} onClick={() => downloadCalendarReminder(task)}>Add 24h calendar reminder</button></div><div className="ess-form-grid">
               <label>Status<select value={task.status} disabled={busy} onChange={(e) => void updateTask(task,{ status:e.target.value as Task["status"] })}><option value="TODO">To do</option><option value="DOING">In progress</option><option value="DONE">Done</option></select></label>
               <label>Due date<input type="datetime-local" value={task.dueAt ? new Date(task.dueAt).toISOString().slice(0,16) : ""} disabled={busy} onChange={(e) => void updateTask(task,{ dueAt:e.target.value ? new Date(e.target.value).toISOString() : null })} /></label>
             </div>
           </article>)}</div>
-          <p className="ess-muted">Due dates and overdue indicators are visible here. Notifications/reminders are not sent automatically by this screen.</p>
+          <p className="ess-muted">Due dates and overdue indicators are tracked here. Download a 24-hour calendar reminder for any dated task and import it into your calendar; automatic push/email delivery is not enabled.</p>
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Budget · planned vs actual</h3>
