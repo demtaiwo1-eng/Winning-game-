@@ -327,7 +327,7 @@ approval before any deletion patch.
 | `apps/web/src/components/LandingPage.tsx` | Imported only by unmounted `App.tsx`. |
 | `apps/web/src/components/SplashLogo.tsx` | Imported only by unmounted `App.tsx`. |
 | `apps/web/src/PublicLanding.tsx` | No current source import found. |
-| `apps/web/src/components/PublicLanding.tsx` | No current source import found. |
+| `apps/web/src/components/PublicLanding.tsx` | Active landing component: imported by the active `EnterpriseApp.tsx` entry shell (verify current imports before cleanup). Not a deletion candidate. |
 | `apps/web/src/components/LandingPageFunctional.tsx` | **Not a deletion candidate:** imported by active `EnterpriseApp.tsx`. |
 | `apps/web/src/**/*.bak*`, `*.rej` | Backup/reject artifacts found by file inventory; preserve until content/intent is reviewed. |
 | Rider schema/history/fee code | Owner decision retires active Rider product routes; schema and historical records are deliberately retained. |
