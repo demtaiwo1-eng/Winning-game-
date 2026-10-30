@@ -189,7 +189,7 @@ adminRouter.get("/finance/ledger", asyncHandler(async (req, res) => {
  */
 adminRouter.get("/finance/reconciliation", asyncHandler(async (req, res) => {
   const rawAge = typeof req.query.olderThanMinutes === "string" ? req.query.olderThanMinutes : "10";
-  if (!/^\\d+$/.test(rawAge)) {
+  if (!/^\d+$/.test(rawAge)) {
     return res.status(400).json({ error: { code: "INVALID_FILTER", message: "olderThanMinutes must be an integer from 5 to 1440" } });
   }
   const olderThanMinutes = Number(rawAge);
