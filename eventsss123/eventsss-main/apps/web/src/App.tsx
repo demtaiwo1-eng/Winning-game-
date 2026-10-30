@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PublicLanding from './components/PublicLanding';
 import SplashLogo from './components/SplashLogo';
+import AudioExperience from './components/AudioExperience';
 
 import { initializeEphintaTheme } from "./lib/ephintaTheme";
 import { formatMoneyInput, formatMinorCurrency, majorToMinorUnits } from './lib/currency';
@@ -595,7 +596,7 @@ export default function App() {
 
   if (isRestoringSession) return <main className="session-loading">Restoring your secure session...</main>;
 
-  return auth ? (
+  const appContent = auth ? (
     auth.user.role === 'VENDOR' ? (
       <VendorPortal payload={auth} onLogout={handleLogout} />
     ) : (
@@ -603,5 +604,12 @@ export default function App() {
     )
   ) : (
     <SplashLogo><PublicLanding onLoginSuccess={handleLoginSuccess} /></SplashLogo>
+  );
+
+  return (
+    <>
+      {appContent}
+      <AudioExperience showPrompt={false} />
+    </>
   );
 }
