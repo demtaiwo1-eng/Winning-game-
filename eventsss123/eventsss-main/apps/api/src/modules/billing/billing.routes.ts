@@ -388,7 +388,11 @@ billingRouter.patch(
   requireRole("ADMIN"),
   asyncHandler(async (req, res) => {
     const requested = String(req.body.status || "").toUpperCase();
-    if (![PromotionStatus.ACTIVE, PromotionStatus.PAUSED, PromotionStatus.ENDED].includes(requested as PromotionStatus)) {
+    if (
+      requested !== PromotionStatus.ACTIVE &&
+      requested !== PromotionStatus.PAUSED &&
+      requested !== PromotionStatus.ENDED
+    ) {
       throw new HttpError(400, "INVALID_STATUS", "Status must be ACTIVE, PAUSED, or ENDED");
     }
     const promotion = await prisma.promotion.findUnique({ where: { id: req.params.id } });
