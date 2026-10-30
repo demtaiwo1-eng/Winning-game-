@@ -7,6 +7,7 @@ type Guest = { id: string; name: string; email?: string | null; phone?: string |
 type BudgetItem = { id: string; label: string; category?: string | null; plannedMinor: string; actualMinor: string };
 type CheckIn = { id: string; method: string; checkedInAt: string; guest: { id: string; name: string } };
 type Booking = { id: string; status: string; currency: string; totalMinor: string; createdAt: string; event?: { id: string; title: string } | null; vendor?: { businessName: string }; items?: Array<{ listing?: { title: string } }> };
+type ReadinessData = { readiness: { status: string; totalChecks: number; greenCount: number; amberCount: number; redCount: number; pendingCount: number }; checks: Array<{ id: string; label: string; status: string; zone?: string | null; checkedAt?: string | null }> };
 const PLAN_FIELDS = [
   ["desiredOutcome", "Desired outcome"],
   ["audienceNeeds", "Audience needs"],
@@ -36,6 +37,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [readiness, setReadiness] = useState<ReadinessData | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [title, setTitle] = useState("");
   const [startsAt, setStartsAt] = useState("");
@@ -61,7 +63,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
     if (!eventId) return;
     setLoading(true); setError(""); setNotice("");
     try {
-      const [detail, taskData, guestData, checkInData, budgetData, bookingData, planData] = await Promise.all([
+      const [detail, taskData, guestData, checkInData, budgetData, bookingData, planData, readinessData] = await Promise.all([
         api<{ event: EventOption }>(`/events/${eventId}`),
         api<{ tasks: Task[] }>(`/events/${eventId}/tasks`),
         api<{ items: Guest[]; total: number }>(`/events/${eventId}/guests?limit=200`),
@@ -69,6 +71,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
         api<{ items: BudgetItem[] }>(`/events/${eventId}/budget`),
         api<{ items: Booking[] }>("/payments/bookings"),
         api<{ answers: Record<string, string> }>(`/events/${eventId}/plan-answers`),
+        api<ReadinessData>(`/readiness/events/${eventId}`),
       ]);
       setEvent(detail.event); setTitle(detail.event.title);
       setStartsAt(detail.event.startsAt ? new Date(detail.event.startsAt).toISOString().slice(0, 16) : "");
@@ -77,6 +80,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
       setTasks(taskData.tasks || []); setGuests(guestData.items || []); setCheckIns(checkInData.items || []);
       setBudgetItems(budgetData.items || []);
       setBookings((bookingData.items || []).filter((b) => b.event?.id === eventId));
+      setReadiness(readinessData);
       setAnswers(planData.answers || {});
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load this event workspace."); }
     finally { setLoading(false); }
@@ -155,7 +159,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   };
   const exportSummary = () => {
     if (!event) return;
-    const rows = [["Section","Item","Status / Detail"], ["Event",event.title,event.startsAt || ""], ...tasks.map((t) => ["Task",t.title,t.status + (t.dueAt ? " · " + t.dueAt : "")]), ...guests.map((g) => ["Guest",g.name,g.rsvp + (g.checkedInAt ? " · Checked in " + g.checkedInAt : "")]), ...budgetItems.map((i) => ["Budget",i.label,"Planned " + i.plannedMinor + " · Actual " + i.actualMinor]), ...bookings.map((b) => ["Booking",b.items?.map((i) => i.listing?.title).filter(Boolean).join(", ") || b.id,b.status])];
+    const rows = [["Section","Item","Status / Detail"], ["Event",event.title,event.startsAt || ""], ...tasks.map((t) => ["Task",t.title,t.status + (t.dueAt ? " · " + t.dueAt : "")]), ...guests.map((g) => ["Guest",g.name,g.rsvp + (g.checkedInAt ? " · Checked in " + g.checkedInAt : "")]), ...budgetItems.map((i) => ["Budget",i.label,"Planned " + i.plannedMinor + " · Actual " + i.actualMinor]), ...bookings.map((b) => ["Booking",b.items?.map((i) => i.listing?.title).filter(Boolean).join(", ") || b.id,b.status]), ...(readiness?.checks || []).map((check) => ["Readiness",check.label,check.status + (check.zone ? " · " + check.zone : "")])];
     const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob(["\\uFEFF",csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = "ephinta-event-readiness.csv"; a.click(); URL.revokeObjectURL(url);
@@ -232,6 +236,10 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
             {!checkedIn.length && <tr><td colSpan={showContacts ? 5 : 4}>No new check-in history recorded yet. Pre-migration check-ins are not reconstructed; existing guest check-in fields remain unchanged.</td></tr>}
           </tbody></table></div>
           <p className="ess-muted">Each accepted check-in is appended with its method and server timestamp. Contact details remain hidden unless you opt to reveal them.</p>
+        </section>
+        <section style={{ marginTop: 22 }}>
+          <h3>Event readiness checklist</h3>
+          {readiness ? <><p className="ess-muted">{readiness.readiness.status} · {readiness.readiness.greenCount}/{readiness.readiness.totalChecks} green · {readiness.readiness.amberCount} amber · {readiness.readiness.redCount} red · {readiness.readiness.pendingCount} pending</p><div style={{ display: "grid", gap: 6 }}>{readiness.checks.map((check) => <article className="ess-card" key={check.id}><strong>{check.label}</strong><p className="ess-muted">{check.status}{check.zone ? " · " + check.zone : ""}{check.checkedAt ? " · " + new Date(check.checkedAt).toLocaleString() : ""}</p></article>)}</div></> : <p className="ess-muted">Readiness data is not available yet. Seed or sync the readiness board after booking services.</p>}
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Vendor bookings linked to this event</h3>
