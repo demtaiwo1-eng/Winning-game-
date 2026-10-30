@@ -208,6 +208,7 @@ model User {
   verifierAssignments EventVerifierAssignment[] @relation("VerifierAssignments")
   verifierReviewsReceived VerifierReview[] @relation("VerifierReviews")
   verifierReviewsAuthored VerifierReview[] @relation("VerifierReviewAuthor")
+  guestCheckIns EventGuestCheckIn[] @relation("GuestCheckInActor")
 }
 
 model RefreshToken {
@@ -352,6 +353,7 @@ model Event {
   parent      Event?       @relation("EventSeries", fields: [parentEventId], references: [id], onDelete: SetNull)
   children    Event[]      @relation("EventSeries")
   guests      Guest[]
+  guestCheckIns EventGuestCheckIn[]
   tasks       EventTask[]
   planAnswers EventPlanAnswer[]
   budgetItems BudgetItem[]
@@ -395,8 +397,24 @@ model Guest {
   checkedInAt DateTime?
   checkInMethod GuestCheckInMethod?
   event       Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  checkInHistory EventGuestCheckIn[]
 
   @@index([eventId])
+}
+
+model EventGuestCheckIn {
+  id            String             @id @default(uuid())
+  eventId       String
+  guestId       String
+  checkedInById String
+  method        GuestCheckInMethod
+  checkedInAt   DateTime           @default(now())
+  event         Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest         Guest              @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  checkedInBy   User               @relation("GuestCheckInActor", fields: [checkedInById], references: [id], onDelete: Restrict)
+
+  @@index([eventId, checkedInAt])
+  @@index([guestId, checkedInAt])
 }
 
 model EventTask {
