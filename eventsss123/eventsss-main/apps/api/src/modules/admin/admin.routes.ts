@@ -204,8 +204,10 @@ function exportFilters(query: Record<string, unknown>): { page: number; limit: n
   return { ...params, status: status as typeof paymentStatuses[number] | undefined, type: type as typeof ledgerTypes[number] | undefined, provider, currency };
 }
 function auditExport(req: Request, entity: string, rowCount: number, truncated: boolean, filters: Prisma.InputJsonObject) {
+  const actorId = req.user?.id;
+  if (!actorId) throw new Error("Authenticated admin context is missing for finance export audit");
   return prisma.auditLog.create({
-    data: { actorId: req.user!.id, action: "FINANCE_EXPORT", entity, meta: { rowCount, truncated, filters }, ip: req.ip },
+    data: { actorId, action: "FINANCE_EXPORT", entity, meta: { rowCount, truncated, filters }, ip: req.ip },
   });
 }
 
