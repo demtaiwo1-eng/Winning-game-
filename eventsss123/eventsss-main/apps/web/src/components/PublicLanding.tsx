@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { apiUrl } from '../lib/api';
 import { applyEphintaTheme } from '../lib/ephintaTheme';
 
 
@@ -53,85 +54,9 @@ const vibes = ['Modern', 'Classic', 'Traditional', 'Garden', 'Luxury', 'Intimate
 
 const serviceOptions = ['Venue', 'Catering', 'Photography', 'Decor', 'Music', 'Cake', 'AV & staging', 'Security'];
 
-const googleAdMobEnabled = (() => {
-  const value = import.meta.env?.VITE_GOOGLE_ADMOB_ENABLED;
-  return value === true || value === 'true' || value === '1';
-})();
-
-const googleAdMobClient = (import.meta.env?.VITE_GOOGLE_ADMOB_CLIENT || '').trim();
-const googleAdMobSlot = (import.meta.env?.VITE_GOOGLE_ADMOB_SLOT || '').trim();
-
-const defaultAdCollections = [
-  {
-    title: 'Wedding & celebration picks',
-    subtitle: 'Explore what planners are booking this season',
-    items: [
-      { label: 'Garden weddings', value: 'Luxury floral setups', cta: 'See inspiration' },
-      { label: 'Intimate dining', value: 'Private dining & ambience', cta: 'View packages' },
-      { label: 'Photo stories', value: 'Candid coverage & albums', cta: 'Book a session' },
-      { label: 'Music nights', value: 'Live bands & DJ sets', cta: 'Explore acts' },
-    ],
-  },
-  {
-    title: 'Trusted event services',
-    subtitle: 'Popular vendor categories for your next plan',
-    items: [
-      { label: 'Venue teams', value: 'Hotels, halls & gardens', cta: 'Browse offers' },
-      { label: 'Catering', value: 'Private chefs & menus', cta: 'Compare menus' },
-      { label: 'Decor', value: 'Styled themes & setup', cta: 'Start styling' },
-      { label: 'Logistics', value: 'Transport & guest flow', cta: 'View options' },
-    ],
-  },
-  {
-    title: 'Planner essentials',
-    subtitle: 'Everything to keep the day moving smoothly',
-    items: [
-      { label: 'Timeline tools', value: 'Guest flow & decisions', cta: 'Build plan' },
-      { label: 'Checklists', value: 'Tasks, reminders & progress', cta: 'Open toolkit' },
-      { label: 'Wedding checklists', value: 'Vendor and guest prep', cta: 'Get started' },
-      { label: 'Budget guidance', value: 'Track spend in one place', cta: 'Review budget' },
-    ],
-  },
-];
-
-const adCollections = defaultAdCollections;
-
-function GoogleAdBanner() {
-  const enabled = googleAdMobEnabled && !!googleAdMobClient && !!googleAdMobSlot;
-
-  useEffect(() => {
-    if (!enabled) return;
-    const win = window as typeof window & { adsbygoogle?: unknown[] };
-    win.adsbygoogle = win.adsbygoogle || [];
-    win.adsbygoogle.push({});
-  }, [enabled]);
-
-  if (!enabled) return null;
-
-  return (
-    <section className="eph-section eph-admob-wrap" aria-label="Sponsored content">
-      <div className="eph-section-head">
-        <span className="eph-section-kicker">Sponsorship</span>
-        <h2>Marketplace opportunities</h2>
-        <p>Partner content and brand placements for planners, vendors and organizers.</p>
-      </div>
-      <div className="eph-admob-banner">
-        <ins
-          className="adsbygoogle"
-          style={{ display: 'block', width: '100%', minHeight: 90 }}
-          data-ad-client={googleAdMobClient}
-          data-ad-slot={googleAdMobSlot}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
-      </div>
-    </section>
-  );
-}
-
 async function sendAuth(path: string, body: Record<string, unknown>) {
 
-  const response = await fetch(`/api/v1/auth/${path}`, {
+  const response = await fetch(apiUrl(`/auth/${path}`), {
 
     method: 'POST',
 
@@ -292,40 +217,14 @@ export default function PublicLanding({
 
   const [isPromotionFocused, setIsPromotionFocused] = useState(false);
 
-  const marketplaceCollections = useMemo(() => {
-    if (!promotions.length) return adCollections;
 
-    const mappedItems = promotions.slice(0, 4).map((promotion) => ({
-      label: promotion.vendorName,
-      value: promotion.listingTitle || promotion.title,
-      cta: 'Explore offer',
-    }));
-
-    return [
-      {
-        title: 'Marketplace picks',
-        subtitle: 'Fresh, high-intent offers from trusted vendors and service partners.',
-        items: mappedItems,
-      },
-      {
-        title: 'Top services this week',
-        subtitle: 'Popular categories planners are comparing right now.',
-        items: [
-          { label: 'Venues', value: 'Private halls & gardens', cta: 'View venues' },
-          { label: 'Catering', value: 'Signature menus & hospitality', cta: 'Compare menus' },
-          { label: 'Decoration', value: 'Styled setups & floral stories', cta: 'Book styling' },
-          { label: 'Production', value: 'AV, lighting & guest flow', cta: 'Get quote' },
-        ],
-      },
-    ];
-  }, [promotions]);
 
 
 
   useEffect(() => {
     let cancelled = false;
 
-    fetch('/api/v1/billing/public-promotions')
+    fetch(apiUrl('/billing/public-promotions'))
       .then(async (response) => {
         if (!response.ok) throw new Error('Unable to load featured promotions.');
         const payload = await response.json();
@@ -1077,27 +976,7 @@ export default function PublicLanding({
 
 
 
-        {marketplaceCollections.map((collection) => (
-          <section key={collection.title} className="eph-section" aria-label={collection.title}>
-            <div className="eph-section-head">
-              <span className="eph-section-kicker">Featured</span>
-              <h2>{collection.title}</h2>
-              <p>{collection.subtitle}</p>
-            </div>
-            <div className="eph-ad-scroll">
-              {collection.items.map((item) => (
-                <article key={`${collection.title}-${item.label}`} className="eph-ad-card">
-                  <small>{item.label}</small>
-                  <strong>{item.value}</strong>
-                  <p>{item.label} designed for memorable occasions and stress-free planning.</p>
-                  <button type="button" onClick={() => openAuth('signup', 'CLIENT')}>{item.cta}</button>
-                </article>
-              ))}
-            </div>
-          </section>
-        ))}
 
-        <GoogleAdBanner />
 
         <section className="eph-section" id="vendors" style={{ paddingTop: 0 }}>
 
