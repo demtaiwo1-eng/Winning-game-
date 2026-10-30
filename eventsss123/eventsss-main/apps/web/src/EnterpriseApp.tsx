@@ -5,6 +5,7 @@ import { APP_ROUTE_PATHS, dashboardRouteRedirect, legacyDashboardPath } from "./
 const EventReadinessBoard = lazy(() => import("./components/EventReadinessBoard"));
 const EventCreatePanel = lazy(() => import("./components/EventCreatePanel"));
 const EventChecklistPanel = lazy(() => import("./components/EventChecklistPanel"));
+const EventPlannerWorkspace = lazy(() => import("./components/EventPlannerWorkspace"));
 const EventMessagesPanel = lazy(() => import("./components/EventMessagesPanel"));
 const GuestCheckInPanel = lazy(() => import("./components/GuestCheckInPanel"));
 const PublicRsvpPage = lazy(() => import("./components/PublicRsvpPage"));
@@ -363,6 +364,7 @@ function ClientPortal({
           [
             ["overview", "Overview"],
             ["checklist", "Checklist"],
+            ["planner", "Event workspace"],
             ["checkin", "Guest check-in"],
             ["marketplace", "Marketplace"],
             ["verifiers", "Verifiers"],
@@ -545,6 +547,7 @@ function ClientPortal({
       {tab === "checklist" && (
         <EventChecklistPanel events={ownedEvents} initialEventId={checklistEventId || undefined} />
       )}
+      {tab === "planner" && <EventPlannerWorkspace events={ownedEvents} initialEventId={checklistEventId || undefined} />}
       {tab === "checkin" && <GuestCheckInPanel events={ownedEvents} />}
       {tab === "messages" && <EventMessagesPanel events={ownedEvents} />}
       {tab === "wallet" && <WalletPanel locale={locale} role="CLIENT" />}
