@@ -211,7 +211,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
           <label style={{ display: "inline-flex", gap: 8, alignItems: "center" }}><input type="checkbox" checked={showContacts} onChange={(e) => setShowContacts(e.target.checked)} /> Show guest contact details</label>
           <div style={{ overflowX: "auto", marginTop: 10 }}><table><thead><tr><th>Guest</th>{showContacts && <th>Contact</th>}<th>RSVP</th><th>Check-in time</th><th>Method</th></tr></thead><tbody>
             {checkIns.map((entry) => <tr key={entry.id}><td>{entry.guest.name}</td>{showContacts && <td>{guests.find((g) => g.id === entry.guest.id)?.email || guests.find((g) => g.id === entry.guest.id)?.phone || "—"}</td>}<td>{guests.find((g) => g.id === entry.guest.id)?.rsvp || "—"}</td><td>{new Date(entry.checkedInAt).toLocaleString()}</td><td>{entry.method}</td></tr>)}
-            {!checkedIn.length && <tr><td colSpan={showContacts ? 5 : 4}>No check-in history recorded yet. Existing pre-history check-ins remain visible in the guest gate list.</td></tr>}
+            {!checkedIn.length && <tr><td colSpan={showContacts ? 5 : 4}>No new check-in history recorded yet. Pre-migration check-ins are not reconstructed; existing guest check-in fields remain unchanged.</td></tr>}
           </tbody></table></div>
           <p className="ess-muted">Each accepted check-in is appended with its method and server timestamp. Contact details remain hidden unless you opt to reveal them.</p>
         </section>
