@@ -237,7 +237,7 @@ function ClientPortal({
 }) {
   const [tab, setTab] = useDashboardTab(
     ["overview", "checklist", "checkin", "marketplace", "wallet", "readiness", "messages", "verifiers", "plans", "kyc", "feedback"] as const,
-    "overview",
+    "marketplace",
   );
   const [bookingNotice, setBookingNotice] = useState("");
   const [readinessEvents, setReadinessEvents] = useState<Array<{ id: string; title: string; startsAt?: string | null }>>([]);
