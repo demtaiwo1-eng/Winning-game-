@@ -394,7 +394,13 @@ billingRouter.patch(
     const promotion = await prisma.promotion.findUnique({ where: { id: req.params.id } });
     if (!promotion) throw new HttpError(404, "NOT_FOUND", "Promotion not found");
 
+    if (promotion.status === PromotionStatus.ENDED && requested !== PromotionStatus.ENDED) {
+      throw new HttpError(409, "INVALID_PROMOTION_STATE", "Ended campaigns cannot be reopened");
+    }
     if (requested === PromotionStatus.ACTIVE) {
+      if (promotion.status !== PromotionStatus.DRAFT && promotion.status !== PromotionStatus.PAUSED) {
+        throw new HttpError(409, "INVALID_PROMOTION_STATE", "Only draft or paused campaigns can be activated");
+      }
       const payment = await prisma.ledgerEntry.findUnique({
         where: { idempotencyKey: `promotion_payment:${promotion.id}` },
       });
@@ -403,6 +409,17 @@ billingRouter.patch(
       }
       if (promotion.endsAt <= new Date()) {
         throw new HttpError(409, "PROMOTION_EXPIRED", "An expired campaign cannot be activated");
+      }
+    }
+    if (requested === PromotionStatus.PAUSED && promotion.status !== PromotionStatus.ACTIVE) {
+      throw new HttpError(409, "INVALID_PROMOTION_STATE", "Only active campaigns can be paused");
+    }
+    if (requested === PromotionStatus.ENDED) {
+      const payment = await prisma.ledgerEntry.findUnique({
+        where: { idempotencyKey: `promotion_payment:${promotion.id}` },
+      });
+      if (isPromotionPaymentValid(payment, promotion.id, promotion.budgetMinor)) {
+        throw new HttpError(409, "PROMOTION_REFUND_NOT_CONFIGURED", "Pause the campaign instead; refunds are not enabled yet");
       }
     }
 
