@@ -232,7 +232,7 @@ paymentsRouter.post(
       return res.json({ ok: true, ignored: true });
     }
 
-    const data = req.body?.data;
+    const data = provider === "opay" ? req.body?.payload : req.body?.data;
     const providerRef = String(
       provider === "flutterwave"
         ? data?.tx_ref || ""
