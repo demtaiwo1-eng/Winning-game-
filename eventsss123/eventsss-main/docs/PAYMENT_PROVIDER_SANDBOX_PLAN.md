@@ -29,8 +29,8 @@ All provider calls must originate from the API server, use HTTPS and server-side
 ## OPay
 
 Initial target: OPay Checkout / international payment API sandbox.
-- Sandbox payment API documented at https://testapi.opaycheckout.com/api/v1/international/payment/create.
-- OPay documents HMAC-SHA512 request signatures using the merchant secret key and a MerchantId header.
+- Sandbox payment API documented at https://sandboxapi.opaycheckout.com/api/v1/international/cashier/create.
+- OPay Cashier creation uses the merchant Public Key with MerchantId; status/refund APIs use HMAC-SHA512 signatures with the merchant Secret Key and MerchantId. Callback notifications have their own HMAC-SHA3-512 signature.
 - Payment status and refund operations have separate signed API requests.
 - Refunds should be supported only after the original payment is verified and provider confirms eligibility.
 - Payout and FX are not assumed available under the same Checkout credentials; require OPay product/API approval and endpoint documentation before enabling either.
