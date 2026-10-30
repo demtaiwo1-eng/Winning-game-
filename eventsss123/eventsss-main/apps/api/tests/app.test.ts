@@ -57,6 +57,12 @@ describe("api foundation (DB-free)", () => {
     expect(invalidDate.status).toBe(400);
     expect(invalidDate.body.error.code).toBe("INVALID_FILTER");
   });
+  it("protects finance CSV exports from unauthenticated access", async () => {
+    const payments = await request(app).get("/api/v1/admin/finance/payment-intents/export.csv");
+    const ledger = await request(app).get("/api/v1/admin/finance/ledger/export.csv");
+    expect(payments.status).toBe(401);
+    expect(ledger.status).toBe(401);
+  });
   it("rejects previously issued Rider access tokens", async () => {
     const token = jwt.sign({ role: "RIDER" }, env.JWT_SECRET, { subject: "retired-rider" });
     const res = await request(app).get("/api/v1/auth/me").set("Authorization", `Bearer ${token}`);
