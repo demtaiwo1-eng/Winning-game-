@@ -7,6 +7,38 @@ import { requireAuth, requireRole } from "../../middleware/auth";
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireRole("ADMIN"));
 
+adminRouter.patch("/listings/:listingId/moderation", asyncHandler(async (req, res) => {
+  const status = req.body.status;
+  const reason = typeof req.body.reason === "string" ? req.body.reason.trim() : "";
+  if (!["ACTIVE", "PAUSED", "ARCHIVED", "DRAFT"].includes(status)) {
+    res.status(400).json({ error: { code: "INVALID_LISTING_STATUS", message: "Unsupported moderation status" } });
+    return;
+  }
+  const listing = await prisma.listing.findUnique({
+    where: { id: req.params.listingId },
+    include: { vendor: { select: { userId: true, verification: true } } },
+  });
+  if (!listing) {
+    res.status(404).json({ error: { code: "LISTING_NOT_FOUND", message: "Listing not found" } });
+    return;
+  }
+  if (status === "ACTIVE" && listing.vendor.verification !== "VERIFIED") {
+    res.status(409).json({ error: { code: "VENDOR_NOT_VERIFIED", message: "Only verified vendors can have active listings" } });
+    return;
+  }
+  const updated = await prisma.listing.update({ where: { id: listing.id }, data: { status } });
+  await prisma.auditLog.create({
+    data: {
+      actorId: req.user!.id,
+      action: "LISTING_MODERATION",
+      entity: "Listing",
+      entityId: listing.id,
+      metadata: { from: listing.status, to: status, reason: reason.slice(0, 500) },
+    },
+  });
+  res.json({ listing: updated });
+}));
+
 adminRouter.get("/overview", asyncHandler(async (_req, res) => {
   const settledStatuses = ["PAID", "CONFIRMED", "FULFILLED"] as const;
   const [
