@@ -17,7 +17,7 @@ test("public landing page explains the event-planning service and its menu", asy
   await expect(menu.locator(".eph-menu-brand img")).toHaveCSS("width", "20px");
   await expect(menu.locator(".eph-menu-primary img")).toHaveCSS("width", "16px");
   await expect(menu.getByRole("button", { name: /Plan your next event here/ })).toBeVisible();
-  await page.getByRole("heading", { name: /Plan the event you imagine/i }).click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
 });
 test("event builder saves a brief and opens registration", async ({ page }) => {
