@@ -11,6 +11,7 @@ import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { createNotification, pushToUser } from "../notifications/notifications.service";
 import { assertEventFinalizationAllowed } from "../payments/escrowPolicy";
+import { canAssignReadinessVerifier, canManageReadinessZones, canReadReadinessEvent } from "./accessPolicy";
 
 export const readinessRouter = Router();
 
@@ -23,6 +24,28 @@ const GREEN_DEADLINE_HOURS = 2;
 function requiredParam(value: string | undefined, name: string): string {
   if (!value) throw new HttpError(400, "VALIDATION_ERROR", `${name} is required`);
   return value;
+}
+
+
+/** Event data is visible to its owner, operational admins/consultants, and assigned verifiers only. */
+async function assertEventReadAccess(eventId: string, userId: string, role: string) {
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  if (!event) throw new HttpError(404, "NOT_FOUND", "Event not found");
+  const assignment = role === "VERIFIER"
+    ? await prisma.eventVerifierAssignment.findFirst({
+        where: { eventId, verifierId: userId },
+        select: { id: true },
+      })
+    : null;
+  if (!canReadReadinessEvent({
+    ownerId: event.ownerId,
+    userId,
+    role,
+    assignedVerifier: Boolean(assignment),
+  })) {
+    throw new HttpError(403, "FORBIDDEN", "Not allowed");
+  }
+  return event;
 }
 
 function computeWindows(startsAt: Date | null | undefined) {
@@ -102,33 +125,7 @@ readinessRouter.post(
   requireAuth,
   asyncHandler(async (req, res) => {
     const eventId = requiredParam(req.params.eventId, "eventId");
-    const event = await prisma.event.findFirst({
-      where: {
-        id: eventId,
-        OR: [
-          { ownerId: req.user!.id },
-          ...(req.user!.role === "ADMIN" || req.user!.role === "VERIFIER" || req.user!.role === "CONSULTANT"
-            ? [{}]
-            : []),
-        ],
-      },
-    });
-    // Simpler access: owner, verifier, admin, consultant
-    const canAccess =
-      event &&
-      (event.ownerId === req.user!.id ||
-        ["ADMIN", "VERIFIER", "CONSULTANT"].includes(req.user!.role));
-    if (!event || !canAccess) {
-      // try fetch without owner filter for verifier
-      const ev = await prisma.event.findUnique({ where: { id: eventId } });
-      if (!ev) throw new HttpError(404, "NOT_FOUND", "Event not found");
-      if (
-        ev.ownerId !== req.user!.id &&
-        !["ADMIN", "VERIFIER", "CONSULTANT"].includes(req.user!.role)
-      ) {
-        throw new HttpError(403, "FORBIDDEN", "Not allowed");
-      }
-    }
+    const event = await assertEventReadAccess(eventId, req.user!.id, req.user!.role);
     if (event?.status === "COMPLETED") {
       throw new HttpError(409, "EVENT_COMPLETED", "Readiness cannot change after event completion");
     }
@@ -239,12 +236,7 @@ readinessRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const eventId = requiredParam(req.params.eventId, "eventId");
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
-    if (!event) throw new HttpError(404, "NOT_FOUND", "Event not found");
-    const allowed =
-      event.ownerId === req.user!.id ||
-      ["ADMIN", "VERIFIER", "CONSULTANT"].includes(req.user!.role);
-    if (!allowed) throw new HttpError(403, "FORBIDDEN", "Not allowed");
+    const event = await assertEventReadAccess(eventId, req.user!.id, req.user!.role);
 
     let readiness = await prisma.eventReadiness.findUnique({ where: { eventId: event.id } });
     if (!readiness) {
@@ -633,6 +625,19 @@ readinessRouter.post(
     }
     const verifierId =
       typeof req.body.verifierId === "string" ? req.body.verifierId : req.user!.id;
+    const targetVerifier = await prisma.user.findFirst({
+      where: { id: verifierId, role: "VERIFIER" },
+      select: { id: true },
+    });
+    if (!targetVerifier) throw new HttpError(404, "VERIFIER_NOT_FOUND", "Selected user is not an active verifier");
+    if (!canAssignReadinessVerifier({
+      ownerId: event.ownerId,
+      userId: req.user!.id,
+      targetVerifierId: verifierId,
+      role: req.user!.role,
+    })) {
+      throw new HttpError(403, "FORBIDDEN", "Only a verifier may self-assign; assigning another verifier requires event-owner, admin, or consultant access");
+    }
     const zone = String(req.body.zone || "GENERAL").toUpperCase();
     const isLead = Boolean(req.body.isLead);
     if (isLead && event.ownerId !== req.user!.id && req.user!.role !== "ADMIN") {
@@ -655,6 +660,7 @@ readinessRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const eventId = requiredParam(req.params.eventId, "eventId");
+    await assertEventReadAccess(eventId, req.user!.id, req.user!.role);
     const items = await prisma.eventVerifierAssignment.findMany({
       where: { eventId },
       include: { verifier: { select: { id: true, name: true, email: true } } },
@@ -669,6 +675,7 @@ readinessRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const eventId = requiredParam(req.params.eventId, "eventId");
+    await assertEventReadAccess(eventId, req.user!.id, req.user!.role);
     const result = await refreshReadiness(eventId);
     const board = serializeReadiness(result.readiness);
     const snapshot = {
@@ -715,9 +722,12 @@ readinessRouter.patch(
     const zone = String(req.body.zone || "GENERAL").toUpperCase();
     const existing = await prisma.eventServiceCheck.findUnique({ where: { id: checkId } });
     if (!existing) throw new HttpError(404, "NOT_FOUND", "Check not found");
-    const event = await prisma.event.findUnique({ where: { id: existing.eventId }, select: { status: true } });
-    if (event?.status === "COMPLETED") {
+    const event = await assertEventReadAccess(existing.eventId, req.user!.id, req.user!.role);
+    if (event.status === "COMPLETED") {
       throw new HttpError(409, "EVENT_COMPLETED", "Readiness checks cannot change after event completion");
+    }
+    if (!canManageReadinessZones({ ownerId: event.ownerId, userId: req.user!.id, role: req.user!.role })) {
+      throw new HttpError(403, "FORBIDDEN", "Only the event owner, admin, or consultant may change check zones");
     }
     const check = await prisma.eventServiceCheck.update({
       where: { id: checkId },
@@ -980,33 +990,63 @@ readinessRouter.put(
 readinessRouter.post(
   "/verifiers/:userId/reviews",
   requireAuth,
+  requireRole("CLIENT"),
   asyncHandler(async (req, res) => {
     const userId = requiredParam(req.params.userId, "userId");
+    const eventId = requiredParam(typeof req.body.eventId === "string" ? req.body.eventId : undefined, "eventId");
     const rating = Number(req.body.rating);
     if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
       throw new HttpError(400, "VALIDATION_ERROR", "rating must be 1–5");
     }
-    const review = await prisma.verifierReview.create({
-      data: {
-        verifierId: userId,
-        authorId: req.user!.id,
-        eventId: typeof req.body.eventId === "string" ? req.body.eventId : null,
-        rating: Math.round(rating),
-        comment: req.body.comment ? String(req.body.comment).slice(0, 1000) : null,
-      },
+
+    const event = await prisma.event.findFirst({
+      where: { id: eventId, ownerId: req.user!.id },
+      select: { id: true, status: true },
     });
-    const agg = await prisma.verifierReview.aggregate({
-      where: { verifierId: userId },
-      _avg: { rating: true },
-      _count: true,
+    if (!event) throw new HttpError(404, "NOT_FOUND", "Completed event not found for this account");
+    if (event.status !== "COMPLETED") {
+      throw new HttpError(409, "EVENT_NOT_COMPLETED", "Verifier reviews are available after event completion");
+    }
+    const verifier = await prisma.user.findFirst({
+      where: { id: userId, role: "VERIFIER" },
+      select: { id: true },
     });
-    await prisma.verifierProfile.updateMany({
-      where: { userId },
-      data: {
-        ratingAvg: agg._avg.rating || 0,
-        ratingCount: agg._count,
-        jobsCompleted: { increment: 1 },
-      },
+    if (!verifier) throw new HttpError(404, "VERIFIER_NOT_FOUND", "Verifier not found");
+    const assignment = await prisma.eventVerifierAssignment.findFirst({
+      where: { eventId, verifierId: userId },
+      select: { id: true },
+    });
+    if (!assignment) throw new HttpError(403, "NOT_ASSIGNED", "You can only review a verifier assigned to your completed event");
+    const duplicate = await prisma.verifierReview.findFirst({
+      where: { authorId: req.user!.id, verifierId: userId, eventId },
+      select: { id: true },
+    });
+    if (duplicate) throw new HttpError(409, "REVIEW_ALREADY_SUBMITTED", "You have already reviewed this verifier for this event");
+
+    const review = await prisma.$transaction(async (tx) => {
+      const created = await tx.verifierReview.create({
+        data: {
+          verifierId: userId,
+          authorId: req.user!.id,
+          eventId,
+          rating: Math.round(rating),
+          comment: req.body.comment ? String(req.body.comment).slice(0, 1000) : null,
+        },
+      });
+      const agg = await tx.verifierReview.aggregate({
+        where: { verifierId: userId },
+        _avg: { rating: true },
+        _count: true,
+      });
+      await tx.verifierProfile.updateMany({
+        where: { userId },
+        data: {
+          ratingAvg: agg._avg.rating || 0,
+          ratingCount: agg._count,
+          jobsCompleted: { increment: 1 },
+        },
+      });
+      return created;
     });
     res.status(201).json({ review });
   }),
