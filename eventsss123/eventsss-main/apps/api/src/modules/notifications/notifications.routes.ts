@@ -90,7 +90,7 @@ notificationsRouter.patch(
   "/preferences",
   asyncHandler(async (req, res) => {
     const allowed = ["inAppEnabled", "pushEnabled", "messages", "bookings", "payments", "marketing"] as const;
-    const data: Record<string, boolean> = {};
+    const data: { inAppEnabled?: boolean; pushEnabled?: boolean; messages?: boolean; bookings?: boolean; payments?: boolean; marketing?: boolean } = {};
     for (const key of allowed) {
       if (req.body?.[key] !== undefined) {
         if (typeof req.body[key] !== "boolean") {
