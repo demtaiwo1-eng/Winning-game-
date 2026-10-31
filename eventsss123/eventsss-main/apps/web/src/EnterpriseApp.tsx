@@ -619,6 +619,42 @@ function VendorAvailabilityManager({ listingId }: { listingId: string }) {
   );
 }
 
+function VendorEnquiriesPanel() {
+  const [items, setItems] = useState<Array<{ id: string; message: string; response?: string | null; status: string; createdAt: string; listing: { title: string }; buyer: { name: string } }>>([]);
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const load = async () => { const result = await api<{ items: typeof items }>("/vendor/enquiries"); setItems(result.items || []); };
+  useEffect(() => { let active = true; api<{ items: typeof items }>("/vendor/enquiries").then(result => { if (active) setItems(result.items || []); }).catch((error: Error) => { if (active) setNotice(error.message); }); return () => { active = false; }; }, []);
+  const reply = async (id: string, status: "RESPONDED" | "CLOSED" = "RESPONDED") => {
+    setBusy(true); setNotice("");
+    try { await api(`/vendor/enquiries/${id}`, { method: "PATCH", body: JSON.stringify({ response: responses[id] || "Thank you for your enquiry. We will follow up shortly.", status }) }); await load(); setNotice("Enquiry updated."); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "Unable to update enquiry."); }
+    finally { setBusy(false); }
+  };
+  return <section className="ess-panel"><SectionTitle eyebrow="Customer demand" title="Listing enquiries" action={<button className="ess-quiet-button" onClick={() => load()}>Refresh</button>} />
+    {notice && <p className="ess-muted" role="status">{notice}</p>}
+    {items.length === 0 ? <p className="ess-muted">No customer enquiries yet.</p> : items.map(item => <article className="ess-enquiry-card" key={item.id}>
+      <div><strong>{item.listing.title}</strong><span className="ess-card-category"> · {item.status}</span></div>
+      <small>{item.buyer.name} · {new Date(item.createdAt).toLocaleString()}</small><p>{item.message}</p>
+      {item.response && <blockquote>{item.response}</blockquote>}
+      {item.status !== "CLOSED" && <><textarea rows={2} value={responses[item.id] || ""} onChange={event => setResponses(current => ({ ...current, [item.id]: event.target.value }))} placeholder="Write a reply to the customer" /><div className="ess-filter-row"><button className="ess-outline-button" disabled={busy || !(responses[item.id] || "").trim()} onClick={() => reply(item.id)}>Send reply</button><button className="ess-quiet-button" disabled={busy} onClick={() => reply(item.id, "CLOSED")}>Close enquiry</button></div></>}
+    </article>)}
+  </section>;
+}
+
+function VendorPerformancePanel() {
+  const [data, setData] = useState<{ listings: Record<string, number>; bookings: Record<string, { count: number; totalMinor: string }>; enquiries: Record<string, number>; reviews: { averageRating: number | null; count: number } } | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => { let active = true; api<typeof data>("/vendor/metrics").then(result => { if (active) setData(result); }).catch((e: Error) => { if (active) setError(e.message); }); return () => { active = false; }; }, []);
+  if (error) return <p className="ess-muted">{error}</p>;
+  if (!data) return <p className="ess-muted">Loading vendor performance…</p>;
+  const bookingCount = Object.values(data.bookings).reduce((sum, value) => sum + value.count, 0);
+  const enquiryCount = Object.values(data.enquiries).reduce((sum, value) => sum + value, 0);
+  const review = data.reviews.averageRating == null ? "No ratings" : `${data.reviews.averageRating.toFixed(1)} / 5`;
+  return <section className="ess-panel"><SectionTitle eyebrow="Verified data" title="Vendor performance" /><div className="ess-metrics"><Metric label="Bookings" value={String(bookingCount)} detail="All booking statuses" /><Metric label="Enquiries" value={String(enquiryCount)} detail="Customer enquiries received" /><Metric label="Average rating" value={review} detail={`${data.reviews.count} customer reviews`} /><Metric label="Live listings" value={String(data.listings.ACTIVE || 0)} detail={`${data.listings.DRAFT || 0} drafts · ${data.listings.PAUSED || 0} paused`} /></div></section>;
+}
+
 function VendorPortal({
   listings,
   setListings,
@@ -815,10 +851,10 @@ function VendorPortal({
       ) : vendorTab === "kyc" ? (
         <KycUpload defaultKind="BUSINESS" />
       ) : vendorTab === "messages" ? (
-        <VendorEventMessagesPanel />
+        <VendorEnquiriesPanel />
       ) : (
       <>
-      <div className="ess-metrics">
+      <VendorPerformancePanel />\n      <div className="ess-metrics">
         <Metric
           label="Available balance"
           value="—"
