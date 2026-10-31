@@ -83,4 +83,9 @@ The separate Phase 4 operations plan in `PHASE_4_OPERATIONS_FOUNDATION.md` has n
 
 These are implementation/CI completion claims, not production activation claims. Still open before a production release: staging sign-off, authenticated browser journeys, physical Android accessibility/viewport review, provider sandbox evidence, backup restore rehearsal, Render database continuity, and dependency/security remediation. Live payouts, refunds, FX, and campaign billing remain disabled/deferred.
 
+| 2026-10-31 | Added shared database-backed per-provider reconciliation throttling (250 ms minimum spacing, 15-second bounded slot wait) to close the remaining Phase 4.3 acceptance gap. | PR #39; commit `a305ee54c95188892b20a5c448040bb76e3f3c0c`; CI run #41192052203 success. |
+| 2026-10-31 | Completed Phase 4.5 admin approval/reconciliation UI and authorization regression coverage. | PR #36 commit `2e9036e03904a468cb07758ade6d917f6f284dce`; PR #37 commit `9dba60df064592ff24c5ccc9cbe4a5ab5a6025af`; CI runs #41191143640 and #41191519256 success. |
+| 2026-10-31 | Updated the operations completion tracker with PR/CI evidence and explicit remaining release gates. | PR #38; commit `ddea6435d4227caf6bd90d3629a41778aad61840`; CI run #41191858110 success. |
+| 2026-10-31 | Verified automatic Render deployment of Phase 4.3 provider throttle commit. API and static site deploys are live; API runtime returned HTTP 200 for /health and /ready. Production DB migration `20261031123000_provider_reconciliation_rate_limits` is finished with no rollback, and the new `PaymentProviderThrottle` table exists. | Render API deploy `dep-dbis1h3bc2fs73cppurg` and web deploy `dep-dbis1h3bc2fs73cppv10`; PostgreSQL read-only verification. No manual deploy or destructive DB operation was performed. |
+
 
