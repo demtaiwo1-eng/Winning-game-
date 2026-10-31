@@ -695,7 +695,7 @@ function VendorPortal({
           method: "POST",
           body: JSON.stringify({
             title: form.name.trim(), description: form.includes.trim(), priceMinor,
-            categoryId: category!.id, type: form.category.toLowerCase() === "venues" ? "VENUE" : "SERVICE",
+            categoryId: category!.id, type: form.category.toLowerCase().includes("venue") ? "VENUE" : "SERVICE",
             status: "DRAFT", currency: form.currency, city: form.city.trim(),
             capacity: form.capacity ? Number(form.capacity) : null,
           }),
@@ -955,11 +955,9 @@ function VendorPortal({
                     setForm({ ...form, category: event.target.value })
                   }
                 >
-                  <option>Catering</option>
-                  <option>Decor</option>
-                  <option>Photography & Video</option>
-                  <option>Entertainment</option>
-                  <option>Venues</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.name}>{category.name}</option>
+                  ))}
                 </select>
               </label>
               <label>
