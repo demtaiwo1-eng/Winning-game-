@@ -106,7 +106,10 @@ billingRouter.post(
 
     // A subscription must belong to the caller's own audience. Never grant
     // paid entitlements until a provider payment has been verified.
-    if (!hasRole(req.user, plan.audience)) {
+    if (
+      plan.audience === "RIDER" ||
+      !hasRole(req.user, plan.audience as Exclude<typeof plan.audience, "RIDER">)
+    ) {
       throw new HttpError(403, "PLAN_AUDIENCE_MISMATCH", "This plan is not available for your account type");
     }
     if (plan.priceMinor > 0n) {
