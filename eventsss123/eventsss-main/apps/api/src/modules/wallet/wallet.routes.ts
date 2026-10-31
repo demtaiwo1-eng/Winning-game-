@@ -5,6 +5,7 @@ import { requireAuth } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { randomUUID } from "crypto";
+import { isCompatibleWalletReplay } from "./currencyPolicy";
 
 export const walletRouter = Router();
 
@@ -81,25 +82,33 @@ walletRouter.post(
     next();
   },
   asyncHandler(async (req, res) => {
-    const currency = String(req.body.currency || "NGN").toUpperCase();
-    const amountMinor = BigInt(String(req.body.amountMinor || "0"));
-    if (amountMinor <= 0n) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be > 0");
-
-    const idempotencyKey =
-      typeof req.body.idempotencyKey === "string" && req.body.idempotencyKey.length > 8
-        ? req.body.idempotencyKey
-        : `deposit:${req.user!.id}:${currency}:${randomUUID()}`;
+    const currency = String(req.body.currency || "NGN").trim().toUpperCase();
+    const amountRaw = String(req.body.amountMinor ?? "");
+    if (!/^[A-Z]{3}$/.test(currency)) throw new HttpError(400, "INVALID_CURRENCY", "currency must be a three-letter ISO code");
+    if (!/^[1-9]\\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive integer");
+    const amountMinor = BigInt(amountRaw);
+    const refId = typeof req.body.refId === "string" && req.body.refId.trim() ? req.body.refId.trim() : null;
+    const suppliedKey = req.body.idempotencyKey;
+    if (suppliedKey !== undefined && suppliedKey !== null && (typeof suppliedKey !== "string" || !/^[A-Za-z0-9._:-]{8,120}$/.test(suppliedKey))) {
+      throw new HttpError(400, "INVALID_IDEMPOTENCY_KEY", "idempotencyKey must be 8–120 safe characters");
+    }
+    const idempotencyKey = typeof suppliedKey === "string"
+      ? suppliedKey
+      : `deposit:${req.user!.id}:${currency}:${randomUUID()}`;
 
     const result = await prisma.$transaction(async (tx) => {
       const existing = await tx.ledgerEntry.findUnique({ where: { idempotencyKey } });
       if (existing) {
         const w = await tx.wallet.findUniqueOrThrow({ where: { id: existing.walletId } });
-        if (w.userId !== req.user!.id) {
-          throw new HttpError(
-            409,
-            "IDEMPOTENCY_KEY_CONFLICT",
-            "This idempotency key belongs to another wallet",
-          );
+        if (!isCompatibleWalletReplay(w, existing, {
+          userId: req.user!.id,
+          currency,
+          amountMinor,
+          type: LedgerType.DEPOSIT,
+          refType: "PAYMENT_INTENT",
+          refId,
+        })) {
+          throw new HttpError(409, "IDEMPOTENCY_KEY_CONFLICT", "This idempotency key was already used for a different wallet, currency, amount, or reference");
         }
         return { wallet: w, entry: existing, replayed: true };
       }
@@ -121,7 +130,7 @@ walletRouter.post(
           amountMinor,
           balanceAfterMinor: newAvailable,
           refType: "PAYMENT_INTENT",
-          refId: typeof req.body.refId === "string" ? req.body.refId : null,
+          refId,
           idempotencyKey,
         },
       });
@@ -156,26 +165,33 @@ walletRouter.post(
 walletRouter.post(
   "/escrow-hold",
   asyncHandler(async (req, res) => {
-    const currency = String(req.body.currency || "NGN").toUpperCase();
-    const amountMinor = BigInt(String(req.body.amountMinor || "0"));
-    const refId = typeof req.body.refId === "string" ? req.body.refId : null;
-    if (amountMinor <= 0n) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be > 0");
-
-    const idempotencyKey =
-      typeof req.body.idempotencyKey === "string"
-        ? req.body.idempotencyKey
-        : `escrow_hold:${req.user!.id}:${refId || randomUUID()}`;
+    const currency = String(req.body.currency || "NGN").trim().toUpperCase();
+    const amountRaw = String(req.body.amountMinor ?? "");
+    const refId = typeof req.body.refId === "string" && req.body.refId.trim() ? req.body.refId.trim() : null;
+    if (!/^[A-Z]{3}$/.test(currency)) throw new HttpError(400, "INVALID_CURRENCY", "currency must be a three-letter ISO code");
+    if (!/^[1-9]\\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive integer");
+    const amountMinor = BigInt(amountRaw);
+    const suppliedKey = req.body.idempotencyKey;
+    if (suppliedKey !== undefined && suppliedKey !== null && (typeof suppliedKey !== "string" || !/^[A-Za-z0-9._:-]{8,120}$/.test(suppliedKey))) {
+      throw new HttpError(400, "INVALID_IDEMPOTENCY_KEY", "idempotencyKey must be 8–120 safe characters");
+    }
+    const idempotencyKey = typeof suppliedKey === "string"
+      ? suppliedKey
+      : `escrow_hold:${req.user!.id}:${currency}:${refId || randomUUID()}`;
 
     const result = await prisma.$transaction(async (tx) => {
       const existing = await tx.ledgerEntry.findUnique({ where: { idempotencyKey } });
       if (existing) {
         const w = await tx.wallet.findUniqueOrThrow({ where: { id: existing.walletId } });
-        if (w.userId !== req.user!.id) {
-          throw new HttpError(
-            409,
-            "IDEMPOTENCY_KEY_CONFLICT",
-            "This idempotency key belongs to another wallet",
-          );
+        if (!isCompatibleWalletReplay(w, existing, {
+          userId: req.user!.id,
+          currency,
+          amountMinor,
+          type: LedgerType.ESCROW_HOLD,
+          refType: "BOOKING",
+          refId,
+        })) {
+          throw new HttpError(409, "IDEMPOTENCY_KEY_CONFLICT", "This idempotency key was already used for a different wallet, currency, amount, or reference");
         }
         return { wallet: w, entry: existing, replayed: true };
       }
