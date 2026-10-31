@@ -1,6 +1,6 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { asyncHandler } from "../../lib/async";
 import { validateBody } from "../../middleware/validate";
 import { rsvpRespondSchema } from "../events/events.schemas";
