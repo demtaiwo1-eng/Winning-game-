@@ -1,4 +1,4 @@
-import { lazy, useEffect, useState } from "react";
+import { lazy, useEffect, useState, type FormEvent } from "react";
 import DateWheelPicker from './components/DateWheelPicker';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { APP_ROUTE_PATHS, dashboardRouteRedirect, legacyDashboardPath } from "./lib/appRoutes";
@@ -1394,7 +1394,7 @@ function AdminControlsPanel() {
     return () => { active = false; };
   }, [olderThanMinutes, refreshKey]);
 
-  const createApproval = async (event: React.FormEvent<HTMLFormElement>) => {
+  const createApproval = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setWorking("create");
     setError("");
@@ -1601,6 +1601,7 @@ function AdminPortal() {
         </>
       )}
       <FinanceOperationsPanel />
+      <AdminControlsPanel />
       <PromotionsPanel mode="admin" />
     </>
   );
