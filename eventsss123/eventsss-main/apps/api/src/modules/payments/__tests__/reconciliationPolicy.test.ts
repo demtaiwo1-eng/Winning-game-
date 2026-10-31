@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   reconciliationBackoffMs,
   reconciliationErrorCode,
+  reconciliationProviderNextAllowedAt,
+  RECONCILIATION_PROVIDER_MIN_INTERVAL_MS,
   RECONCILIATION_MAX_ATTEMPTS,
 } from "../reconciliationPolicy";
 
@@ -13,6 +15,11 @@ describe("durable reconciliation retry policy", () => {
     expect(reconciliationBackoffMs(8)).toBe(128 * 60_000);
     expect(reconciliationBackoffMs(10)).toBe(6 * 60 * 60_000); // capped at six hours
     expect(reconciliationBackoffMs(99)).toBe(6 * 60 * 60_000);
+  });
+
+  it("spaces provider verification reservations by the configured interval", () => {
+    expect(RECONCILIATION_PROVIDER_MIN_INTERVAL_MS).toBe(250);
+    expect(reconciliationProviderNextAllowedAt(1_000).getTime()).toBe(1_250);
   });
 
   it("uses a finite positive attempt ceiling", () => {
