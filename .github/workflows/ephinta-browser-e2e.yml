@@ -90,7 +90,7 @@ jobs:
         with:
           name: phase12-playwright-results
           path: |
-            apps/web/test-results/
-            apps/web/playwright-report/
+            eventsss123/eventsss-main/apps/web/test-results/
+            eventsss123/eventsss-main/apps/web/playwright-report/
           if-no-files-found: ignore
           retention-days: 7
