@@ -55,6 +55,45 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
 }
 
+/**
+ * Use the existing EPHINTA brand icon files for Android launcher and splash assets.
+ * These are copied from apps/web/public so the native APK always matches the web brand.
+ */
+def ephintaBrandIconDir = file("../../../web/public/brand/optimized/mark")
+def ephintaAndroidIconSizes = [mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192]
+
+tasks.register("syncEphintaAndroidBranding") {
+    doLast {
+        if (!ephintaBrandIconDir.isDirectory()) {
+            throw new GradleException("Missing EPHINTA icon assets: ${ephintaBrandIconDir}")
+        }
+
+        ephintaAndroidIconSizes.each { density, pixels ->
+            def sourceIcon = new File(ephintaBrandIconDir, "app-icon-${pixels}.png")
+            if (!sourceIcon.isFile()) {
+                throw new GradleException("Missing EPHINTA launcher icon: ${sourceIcon}")
+            }
+            def targetDir = file("src/main/res/mipmap-${density}")
+            targetDir.mkdirs()
+            copy { from sourceIcon; into targetDir; rename { "ic_launcher.png" } }
+            copy { from sourceIcon; into targetDir; rename { "ic_launcher_round.png" } }
+            copy { from sourceIcon; into targetDir; rename { "ic_launcher_foreground.png" } }
+        }
+
+        def splashSource = new File(ephintaBrandIconDir, "app-icon-512.png")
+        if (!splashSource.isFile()) {
+            throw new GradleException("Missing EPHINTA splash artwork: ${splashSource}")
+        }
+        def splashDir = file("src/main/res/drawable-nodpi")
+        splashDir.mkdirs()
+        copy { from splashSource; into splashDir; rename { "ephinta_splash_logo.png" } }
+    }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn("syncEphintaAndroidBranding")
+}
+
 apply from: 'capacitor.build.gradle'
 
 try {
