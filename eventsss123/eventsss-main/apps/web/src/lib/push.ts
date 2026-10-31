@@ -1,3 +1,5 @@
+import { apiUrl } from "./api";
+
 /**
  * Capacitor push registration — no-op on pure web.
  * When the app runs inside the Capacitor shell with @capacitor/push-notifications
@@ -25,7 +27,7 @@ export async function registerPushIfNative(): Promise<void> {
     PushNotifications.addListener("registration", async (token: { value: string }) => {
       try {
         const t = localStorage.getItem("ess_access_token");
-        await fetch("/api/v1/notifications/push-token", {
+        await fetch(apiUrl("/notifications/push-token"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
