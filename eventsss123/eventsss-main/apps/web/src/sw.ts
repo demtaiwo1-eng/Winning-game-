@@ -125,10 +125,10 @@ function isSafeOfflineMutation(method: string, rawUrl: string) {
     return false;
   }
 
-  if (!/^\\/api\\/v1\\//i.test(pathname)) return false;
-  if (/^\\/api\\/v1\\/(auth|login|register|refresh|logout|payments?|wallet|escrow)(?:\\/|$)/i.test(pathname)) return false;
-  if (/^\\/api\\/v1\\/checkout(?:\\/|$)/i.test(pathname) &&
-      !/^\\/api\\/v1\\/checkout\\/cart(?:\\/|$)/i.test(pathname)) return false;
+  if (!/^\/api\/v1\//i.test(pathname)) return false;
+  if (/^\/api\/v1\/(auth|login|register|refresh|logout|payments?|wallet|escrow)(?:\/|$)/i.test(pathname)) return false;
+  if (/^\/api\/v1\/checkout(?:\/|$)/i.test(pathname) &&
+      !/^\/api\/v1\/checkout\/cart(?:\/|$)/i.test(pathname)) return false;
   return true;
 }
 
