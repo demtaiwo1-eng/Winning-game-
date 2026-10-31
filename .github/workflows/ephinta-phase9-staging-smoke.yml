@@ -2,6 +2,15 @@ name: EPHINTA Phase 9 Staging Smoke Test
 
 on:
   workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "HTTPS staging API base URL (optional; overrides ESS_STAGING_API_URL)"
+        required: false
+        type: string
+      web_base_url:
+        description: "HTTPS staging web base URL (optional; overrides ESS_STAGING_WEB_URL)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -11,19 +20,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      API_BASE_URL: ${{ vars.ESS_STAGING_API_URL }}
-      WEB_BASE_URL: ${{ vars.ESS_STAGING_WEB_URL }}
+      API_BASE_URL: ${{ inputs.api_base_url || vars.ESS_STAGING_API_URL }}
+      WEB_BASE_URL: ${{ inputs.web_base_url || vars.ESS_STAGING_WEB_URL }}
       SMOKE_TIMEOUT_SECONDS: "20"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Verify staging variables are present and HTTPS
+      - name: Verify staging targets are present and HTTPS
         shell: bash
         run: |
-          [[ -n "$API_BASE_URL" ]] || { echo "Missing ESS_STAGING_API_URL repository variable" >&2; exit 1; }
-          [[ -n "$WEB_BASE_URL" ]] || { echo "Missing ESS_STAGING_WEB_URL repository variable" >&2; exit 1; }
+          set -euo pipefail
+          [[ -n "$API_BASE_URL" ]] || { echo "Supply api_base_url or set ESS_STAGING_API_URL" >&2; exit 1; }
+          [[ -n "$WEB_BASE_URL" ]] || { echo "Supply web_base_url or set ESS_STAGING_WEB_URL" >&2; exit 1; }
           [[ "$API_BASE_URL" == https://* && "$WEB_BASE_URL" == https://* ]] || {
             echo "Staging URLs must use HTTPS" >&2
+            exit 1
+          }
+          API_NORMALIZED="${API_BASE_URL%/}"
+          WEB_NORMALIZED="${WEB_BASE_URL%/}"
+          [[ "$API_NORMALIZED" != "https://ephinta-wss.onrender.com" ]] || {
+            echo "Production API URL is blocked; provide a real staging API URL" >&2
+            exit 1
+          }
+          [[ "$WEB_NORMALIZED" != "https://ephinta-web.onrender.com" ]] || {
+            echo "Production web URL is blocked; provide a real staging web URL" >&2
             exit 1
           }
       - name: Check API liveness, readiness and web root
