@@ -85,7 +85,7 @@ walletRouter.post(
     const currency = String(req.body.currency || "NGN").trim().toUpperCase();
     const amountRaw = String(req.body.amountMinor ?? "");
     if (!/^[A-Z]{3}$/.test(currency)) throw new HttpError(400, "INVALID_CURRENCY", "currency must be a three-letter ISO code");
-    if (!/^[1-9]\\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive integer");
+    if (!/^[1-9]\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive integer");
     const amountMinor = BigInt(amountRaw);
     const refId = typeof req.body.refId === "string" && req.body.refId.trim() ? req.body.refId.trim() : null;
     const suppliedKey = req.body.idempotencyKey;
@@ -169,7 +169,7 @@ walletRouter.post(
     const amountRaw = String(req.body.amountMinor ?? "");
     const refId = typeof req.body.refId === "string" && req.body.refId.trim() ? req.body.refId.trim() : null;
     if (!/^[A-Z]{3}$/.test(currency)) throw new HttpError(400, "INVALID_CURRENCY", "currency must be a three-letter ISO code");
-    if (!/^[1-9]\\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive integer");
+    if (!/^[1-9]\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive integer");
     const amountMinor = BigInt(amountRaw);
     const suppliedKey = req.body.idempotencyKey;
     if (suppliedKey !== undefined && suppliedKey !== null && (typeof suppliedKey !== "string" || !/^[A-Za-z0-9._:-]{8,120}$/.test(suppliedKey))) {
