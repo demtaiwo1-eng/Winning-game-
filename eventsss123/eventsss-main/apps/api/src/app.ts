@@ -140,7 +140,7 @@ export function createApp() {
       if (title.length < 2 || title.length > 160) {
         return res.status(400).json({ error: { code: "INVALID_TITLE", message: "Listing title must be 2–160 characters" } });
       }
-      if (!/^[1-9]\\d*$/.test(rawPrice)) {
+      if (!/^[1-9][0-9]*$/.test(rawPrice)) {
         return res.status(400).json({ error: { code: "INVALID_PRICE", message: "priceMinor must be a positive integer" } });
       }
       if (!["VENUE", "GOOD", "SERVICE"].includes(type)) {
@@ -152,7 +152,7 @@ export function createApp() {
       if (capacity !== null && (!Number.isSafeInteger(capacity) || capacity < 1)) {
         return res.status(400).json({ error: { code: "INVALID_CAPACITY", message: "Capacity must be a positive whole number" } });
       }
-      if (mediaUrls.length > 8 || mediaUrls.some((value: unknown) => typeof value !== "string" || value.length > 2048 || !/^https:\\/\\//i.test(value))) {
+      if (mediaUrls.length > 8 || mediaUrls.some((value: unknown) => typeof value !== "string" || value.length > 2048 || !value.startsWith("https://"))) {
         return res.status(400).json({ error: { code: "INVALID_MEDIA", message: "Use up to 8 HTTPS media URLs" } });
       }
       const category = await prisma.category.findUnique({ where: { id: String(req.body.categoryId || "") }, select: { id: true } });
