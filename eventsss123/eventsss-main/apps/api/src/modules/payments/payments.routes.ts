@@ -352,50 +352,136 @@ async function applySuccessfulPayment(intentId: string, providerRef: string): Pr
     return true;
   });
 }
-export async function reconcilePendingPayments(ageMinutes = 10) {
-  const cutoff = new Date(Date.now() - ageMinutes * 60_000);
-  const intents = await prisma.paymentIntent.findMany({
-    where: {
-      status: PaymentStatus.PENDING,
-      createdAt: { lt: cutoff },
-      providerRef: { not: null },
-      provider: { in: ["paystack", "flutterwave", "stripe"] },
-    },
-    take: 50,
-    orderBy: { createdAt: "asc" },
+const RECONCILIATION_MAX_ATTEMPTS = 8;
+const RECONCILIATION_LOCK_MS = 2 * 60_000;
+const RECONCILIATION_BASE_BACKOFF_MS = 60_000;
+const RECONCILIATION_MAX_BACKOFF_MS = 6 * 60 * 60_000;
+
+function reconciliationBackoffMs(attempt: number): number {
+  return Math.min(
+    RECONCILIATION_BASE_BACKOFF_MS * 2 ** Math.max(0, attempt - 1),
+    RECONCILIATION_MAX_BACKOFF_MS,
+  );
+}
+
+function reconciliationErrorCode(error: unknown): string {
+  // Persist only a stable, non-sensitive error category; never provider payloads,
+  // credentials, request URLs, or raw error messages.
+  return error instanceof Error ? error.name.slice(0, 80) : "UnknownError";
+}
+
+export async function reconcilePendingPayments(batchSize = 50) {
+  const now = new Date();
+  const eligibleWhere = {
+    status: PaymentStatus.PENDING,
+    providerRef: { not: null },
+    provider: { in: ["paystack", "flutterwave", "stripe"] },
+    reconciliationDeadLetteredAt: null,
+    AND: [
+      { OR: [{ reconciliationNextAttemptAt: null }, { reconciliationNextAttemptAt: { lte: now } }] },
+      { OR: [{ reconciliationLockedUntil: null }, { reconciliationLockedUntil: { lt: now } }] },
+    ],
+  } as const;
+  const candidates = await prisma.paymentIntent.findMany({
+    where: eligibleWhere,
+    take: Math.max(1, Math.min(batchSize, 100)),
+    orderBy: [{ reconciliationNextAttemptAt: "asc" }, { createdAt: "asc" }],
+    select: { id: true },
   });
 
   let reconciled = 0;
-  for (const intent of intents) {
-    const reference = intent.providerRef;
-    if (!reference) continue;
+  let retried = 0;
+  let deadLettered = 0;
+  let skipped = 0;
+
+  for (const candidate of candidates) {
+    const lockToken = randomUUID();
+    const lockedUntil = new Date(Date.now() + RECONCILIATION_LOCK_MS);
+    const claim = await prisma.paymentIntent.updateMany({
+      where: {
+        id: candidate.id,
+        status: PaymentStatus.PENDING,
+        providerRef: { not: null },
+        reconciliationDeadLetteredAt: null,
+        AND: [
+          { OR: [{ reconciliationNextAttemptAt: null }, { reconciliationNextAttemptAt: { lte: new Date() } }] },
+          { OR: [{ reconciliationLockedUntil: null }, { reconciliationLockedUntil: { lt: new Date() } }] },
+        ],
+      },
+      data: { reconciliationLockToken: lockToken, reconciliationLockedUntil: lockedUntil },
+    });
+    if (claim.count !== 1) {
+      skipped += 1;
+      continue;
+    }
+
+    const intent = await prisma.paymentIntent.findFirst({
+      where: { id: candidate.id, reconciliationLockToken: lockToken },
+    });
+    if (!intent || !intent.providerRef) {
+      skipped += 1;
+      continue;
+    }
+
     try {
+      const reference = intent.providerRef;
       if (intent.provider === "paystack") {
         const verification = await verifyPaystack(reference);
         assertVerifiedPayment(verification, intent, reference);
       } else if (intent.provider === "flutterwave") {
         const transactionId = intent.providerTransactionId;
         if (!transactionId) {
-          logger.warn(
-            { paymentIntentId: intent.id },
-            "Flutterwave reconciliation requires a verified transaction ID from its webhook",
-          );
-          continue;
+          throw new Error("FlutterwaveTransactionIdUnavailable");
         }
         const verification = await verifyFlutterwave(transactionId);
         assertVerifiedPayment({ ...verification, reference: verification.txRef }, intent, reference);
-      } else {
+      } else if (intent.provider === "stripe") {
         const verification = await verifyStripe(reference);
         assertVerifiedPayment({ ...verification, reference: verification.sessionId }, intent, reference);
+      } else {
+        throw new Error("UnsupportedReconciliationProvider");
       }
+
       const settled = await applySuccessfulPayment(intent.id, reference);
       if (settled) reconciled += 1;
+      await prisma.paymentIntent.updateMany({
+        where: { id: intent.id, reconciliationLockToken: lockToken },
+        data: {
+          reconciliationLockToken: null,
+          reconciliationLockedUntil: null,
+          reconciliationLastError: null,
+          reconciliationNextAttemptAt: null,
+        },
+      });
     } catch (error) {
-      // A pending, unavailable or mismatched provider result must never credit the wallet.
-      logger.warn({ paymentIntentId: intent.id, provider: intent.provider }, "Pending payment reconciliation did not verify");
+      const attempts = intent.reconciliationAttempts + 1;
+      const isDeadLetter = attempts >= RECONCILIATION_MAX_ATTEMPTS;
+      const retryAt = isDeadLetter
+        ? null
+        : new Date(Date.now() + reconciliationBackoffMs(attempts));
+      const update = await prisma.paymentIntent.updateMany({
+        where: { id: intent.id, reconciliationLockToken: lockToken, status: PaymentStatus.PENDING },
+        data: {
+          reconciliationAttempts: attempts,
+          reconciliationNextAttemptAt: retryAt,
+          reconciliationLastError: reconciliationErrorCode(error),
+          reconciliationDeadLetteredAt: isDeadLetter ? new Date() : null,
+          reconciliationLockToken: null,
+          reconciliationLockedUntil: null,
+        },
+      });
+      if (update.count === 1) {
+        if (isDeadLetter) deadLettered += 1;
+        else retried += 1;
+      }
+      logger.warn(
+        { paymentIntentId: intent.id, provider: intent.provider, attempt: attempts, deadLettered: isDeadLetter },
+        "Pending payment reconciliation verification did not complete",
+      );
     }
   }
-  return { scanned: intents.length, reconciled };
+
+  return { scanned: candidates.length, reconciled, retried, deadLettered, skipped };
 }
 
 /**
