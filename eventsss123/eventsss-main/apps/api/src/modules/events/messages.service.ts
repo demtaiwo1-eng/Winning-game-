@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../lib/errors";
+import { createNotification } from "../notifications/notifications.service";
 import type { EventMessagesQuery, SendEventMessageInput } from "./messages.schemas";
 
 async function getEventParticipants(eventId: string) {
@@ -93,6 +94,17 @@ export async function sendEventMessage(userId: string, eventId: string, input: S
       }),
     ),
   );
+  const senderName = participants.find((participant) => participant.id === userId)?.name ?? "An event participant";
+  // Message persistence is the primary operation. Notification failures must
+  // never roll back or hide a successfully sent message.
+  await Promise.allSettled(recipients.map((recipientId) => createNotification({
+    userId: recipientId,
+    type: "MESSAGE",
+    category: "MESSAGE",
+    title: "New event message",
+    body: `${senderName}: ${input.body.slice(0, 220)}`,
+    data: { eventId, senderId: userId },
+  })));
   return { items };
 }
 
