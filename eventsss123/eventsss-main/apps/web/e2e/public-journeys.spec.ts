@@ -223,7 +223,7 @@ test("authenticated planner can create an event and add a checklist task", async
   await page.getByLabel("Expected guests").fill("80");
   await page.getByRole("button", { name: /Create production event/ }).click();
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
-  await expect(page.getByText(event.title)).toBeVisible();
+  await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
   await page.getByLabel("Task").fill("Confirm event venue");
   await page.getByRole("button", { name: "Add task" }).click();
   await expect(page.getByText("Confirm event venue")).toBeVisible();
