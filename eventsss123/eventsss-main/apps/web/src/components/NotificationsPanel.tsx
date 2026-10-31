@@ -132,7 +132,7 @@ export default function NotificationsPanel() {
               <span className="ess-muted">{new Date(item.createdAt).toLocaleString()}</span>
             </div>
             <p>{item.body}</p>
-            <div className="ess-muted">Push status: {item.deliveryStatus.replaceAll("_", " ").toLowerCase()}</div>
+            <div className="ess-muted">Push status: {item.deliveryStatus.replace(/_/g, " ").toLowerCase()}</div>
             {!item.readAt && <button type="button" className="ess-quiet-button" onClick={() => void markRead(item.id)}>Mark read</button>}
           </article>
         ))}
