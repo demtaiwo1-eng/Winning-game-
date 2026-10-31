@@ -66,6 +66,9 @@ export default function MarketplaceBrowse({
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [events, setEvents] = useState<Array<{ id: string; title: string; startsAt?: string | null }>>([]);
   const [eventId, setEventId] = useState("");
+  const [enquiryListing, setEnquiryListing] = useState<MarketListing | null>(null);
+  const [enquiryMessage, setEnquiryMessage] = useState("");
+  const [enquiryNotice, setEnquiryNotice] = useState("");
 
   useEffect(() => {
     api<{ items?: Array<{ id: string; title: string; startsAt?: string | null }> }>("/events")
@@ -147,6 +150,20 @@ export default function MarketplaceBrowse({
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Unable to book";
       setBookingMsg(msg);
+    }
+  };
+
+  const submitEnquiry = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!enquiryListing) return;
+    setEnquiryNotice("");
+    try {
+      await api(`/listings/${enquiryListing.id}/enquiries`, { method: "POST", body: JSON.stringify({ message: enquiryMessage }) });
+      setEnquiryNotice("Your enquiry has been sent to the vendor.");
+      setEnquiryMessage("");
+      setEnquiryListing(null);
+    } catch (error) {
+      setEnquiryNotice(error instanceof Error ? error.message : "Unable to send enquiry.");
     }
   };
 
@@ -486,15 +503,23 @@ export default function MarketplaceBrowse({
                   <div>
                     <strong>{formatMoney(l.priceMinor, l.currency, locale)}</strong>
                   </div>
-                  <button className="ess-primary" type="button" onClick={() => handleBook(l)}>
-                    Add to cart
-                  </button>
+                  <div className="ess-listing-actions">
+                    <button className="ess-primary" type="button" onClick={() => handleBook(l)}>Add to cart</button>
+                    <button className="ess-outline-button" type="button" onClick={() => { setEnquiryListing(l); setEnquiryNotice(""); }}>Enquire</button>
+                  </div>
                 </div>
               </div>
             </article>
           ))}
         </div>
       )}
+      {enquiryListing && <div className="ess-modal-backdrop"><form className="ess-modal" onSubmit={submitEnquiry}>
+        <div className="ess-modal-header"><div><p className="ess-eyebrow">Contact vendor</p><h2>{enquiryListing.title}</h2></div><button type="button" className="ess-close" onClick={() => setEnquiryListing(null)}>×</button></div>
+        <label>Your message<textarea required minLength={10} maxLength={4000} rows={5} value={enquiryMessage} onChange={event => setEnquiryMessage(event.target.value)} placeholder="Ask about availability, custom packages, or service details…" /></label>
+        {enquiryNotice && <p className="ess-muted" role="status">{enquiryNotice}</p>}
+        <button className="ess-primary" type="submit" disabled={enquiryMessage.trim().length < 10}>Send enquiry</button>
+      </form></div>}
+      {enquiryNotice && !enquiryListing && <p className="ess-muted" role="status">{enquiryNotice}</p>}
     </section>
   );
 }
