@@ -9,7 +9,7 @@ let currentPushToken: string | null = null;
  * installed, registers the device token with POST /api/v1/notifications/push-token.
  */
 export async function registerPushIfNative(): Promise<void> {
-  if ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_ENABLE_PUSH !== "true" || registrationListenerAdded) return;
+  if ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_ENABLE_PUSH !== "true") return;
   try {
     // Dynamic import so web builds without native deps still work
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,10 +25,9 @@ export async function registerPushIfNative(): Promise<void> {
     const perm = await PushNotifications.requestPermissions();
     if (perm.receive !== "granted") return;
 
-    await PushNotifications.register();
-
-    registrationListenerAdded = true;
-    PushNotifications.addListener("registration", async (token: { value: string }) => {
+    if (!registrationListenerAdded) {
+      registrationListenerAdded = true;
+      PushNotifications.addListener("registration", async (token: { value: string }) => {
       currentPushToken = token.value;
       try {
         const t = localStorage.getItem("ess_access_token");
@@ -43,7 +42,12 @@ export async function registerPushIfNative(): Promise<void> {
       } catch {
         /* offline */
       }
-    });
+      });
+    }
+
+    // Register after the listener is attached. Calling this again after a
+    // later login re-registers the device even when the listener already exists.
+    await PushNotifications.register();
   } catch {
     /* web or missing plugin */
   }
