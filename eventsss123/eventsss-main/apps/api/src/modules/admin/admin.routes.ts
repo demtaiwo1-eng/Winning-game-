@@ -426,3 +426,129 @@ adminRouter.get("/finance/ledger/export.csv", asyncHandler(async (req, res) => {
   res.setHeader("X-Export-Truncated", String(truncated));
   return res.send(csv);
 }));
+
+// Phase 4.2: maker-checker approval records. These endpoints only record
+// decisions; they deliberately do not execute payouts, refunds, or transfers.
+const approvalActions = ["PAYOUT", "REFUND", "LEDGER_ADJUSTMENT"] as const;
+const approvalMaxMinor = (() => {
+  const configured = process.env.ADMIN_APPROVAL_MAX_MINOR;
+  if (!configured) return 100_000_000n;
+  if (!/^[1-9]\d*$/.test(configured)) throw new Error("ADMIN_APPROVAL_MAX_MINOR must be a positive integer");
+  return BigInt(configured);
+})();
+
+adminRouter.get("/approvals", asyncHandler(async (req, res) => {
+  const status = typeof req.query.status === "string" ? req.query.status.toUpperCase() : undefined;
+  if (status && !["PENDING", "APPROVED", "REJECTED", "EXPIRED"].includes(status)) {
+    return res.status(400).json({ error: { code: "INVALID_APPROVAL_STATUS", message: "Unsupported approval status" } });
+  }
+  const items = await prisma.adminApproval.findMany({
+    where: status ? { status: status as "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" } : {},
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
+  res.setHeader("Cache-Control", "no-store");
+  return res.json({ items: items.map((item) => ({ ...item, amountMinor: item.amountMinor?.toString() ?? null })) });
+}));
+
+adminRouter.post("/approvals", asyncHandler(async (req, res) => {
+  const action = typeof req.body.action === "string" ? req.body.action.toUpperCase() : "";
+  const entity = typeof req.body.entity === "string" ? req.body.entity.trim() : "";
+  const entityId = typeof req.body.entityId === "string" ? req.body.entityId.trim() : "";
+  const reason = typeof req.body.reason === "string" ? req.body.reason.trim() : "";
+  const idempotencyKey = typeof req.body.idempotencyKey === "string" ? req.body.idempotencyKey.trim() : "";
+  const currency = typeof req.body.currency === "string" ? req.body.currency.trim().toUpperCase() : null;
+  const rawAmount = req.body.amountMinor === undefined || req.body.amountMinor === null ? null : String(req.body.amountMinor);
+
+  if (!approvalActions.includes(action as typeof approvalActions[number]) ||
+      !entity || entity.length > 80 || !entityId || entityId.length > 120 ||
+      reason.length < 8 || reason.length > 1000 ||
+      !/^[A-Za-z0-9._:-]{8,120}$/.test(idempotencyKey) ||
+      (currency !== null && !/^[A-Z]{3}$/.test(currency)) ||
+      (rawAmount !== null && !/^[1-9]\d*$/.test(rawAmount))) {
+    return res.status(400).json({ error: { code: "INVALID_APPROVAL_REQUEST", message: "Provide a valid action, entity, entityId, reason, idempotencyKey, and optional positive amount/currency" } });
+  }
+  const amountMinor = rawAmount === null ? null : BigInt(rawAmount);
+  if (amountMinor !== null && amountMinor > approvalMaxMinor) {
+    return res.status(400).json({ error: { code: "APPROVAL_LIMIT_EXCEEDED", message: "Requested amount exceeds the configured approval limit" } });
+  }
+  if (amountMinor !== null && !currency) {
+    return res.status(400).json({ error: { code: "CURRENCY_REQUIRED", message: "Currency is required when an amount is supplied" } });
+  }
+
+  const existing = await prisma.adminApproval.findUnique({ where: { idempotencyKey } });
+  if (existing) {
+    if (existing.requestedById !== req.user!.id || existing.action !== action ||
+        existing.entity !== entity || existing.entityId !== entityId ||
+        existing.amountMinor !== amountMinor || existing.currency !== currency) {
+      return res.status(409).json({ error: { code: "IDEMPOTENCY_CONFLICT", message: "This idempotency key was already used for a different approval request" } });
+    }
+    return res.status(200).json({ approval: { ...existing, amountMinor: existing.amountMinor?.toString() ?? null }, replayed: true });
+  }
+
+  const approval = await prisma.$transaction(async (tx) => {
+    const created = await tx.adminApproval.create({
+      data: {
+        action, entity, entityId, reason, idempotencyKey, amountMinor, currency,
+        requestedById: req.user!.id,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+    await tx.auditLog.create({
+      data: {
+        actorId: req.user!.id,
+        action: "ADMIN_APPROVAL_REQUESTED",
+        entity: "AdminApproval",
+        entityId: created.id,
+        ip: req.ip ?? "unknown",
+        meta: { action, entity, entityId, amountMinor: amountMinor?.toString() ?? null, currency },
+      },
+    });
+    return created;
+  });
+  return res.status(201).json({ approval: { ...approval, amountMinor: approval.amountMinor?.toString() ?? null } });
+}));
+
+adminRouter.post("/approvals/:id/decision", asyncHandler(async (req, res) => {
+  const decision = typeof req.body.decision === "string" ? req.body.decision.toUpperCase() : "";
+  const note = typeof req.body.note === "string" ? req.body.note.trim() : "";
+  if (!["APPROVE", "REJECT"].includes(decision) || note.length < 3 || note.length > 1000) {
+    return res.status(400).json({ error: { code: "INVALID_APPROVAL_DECISION", message: "Decision must be APPROVE or REJECT with a short note" } });
+  }
+
+  const now = new Date();
+  const result = await prisma.$transaction(async (tx) => {
+    const current = await tx.adminApproval.findUnique({ where: { id: req.params.id } });
+    if (!current) return { error: "NOT_FOUND" as const };
+    if (current.requestedById === req.user!.id) return { error: "MAKER_CANNOT_APPROVE" as const };
+    if (current.status !== "PENDING") return { error: "ALREADY_DECIDED" as const };
+    if (current.expiresAt <= now) {
+      await tx.adminApproval.updateMany({ where: { id: current.id, status: "PENDING" }, data: { status: "EXPIRED" } });
+      return { error: "EXPIRED" as const };
+    }
+    const updated = await tx.adminApproval.updateMany({
+      where: { id: current.id, status: "PENDING", expiresAt: { gt: now }, requestedById: { not: req.user!.id } },
+      data: { status: decision === "APPROVE" ? "APPROVED" : "REJECTED", decidedById: req.user!.id, decisionNote: note },
+    });
+    if (updated.count !== 1) return { error: "ALREADY_DECIDED" as const };
+    const approval = await tx.adminApproval.findUniqueOrThrow({ where: { id: current.id } });
+    await tx.auditLog.create({
+      data: {
+        actorId: req.user!.id,
+        action: decision === "APPROVE" ? "ADMIN_APPROVAL_APPROVED" : "ADMIN_APPROVAL_REJECTED",
+        entity: "AdminApproval",
+        entityId: approval.id,
+        ip: req.ip ?? "unknown",
+        meta: { requestedById: approval.requestedById, action: approval.action, entity: approval.entity, entityId: approval.entityId },
+      },
+    });
+    return { approval };
+  });
+
+  if ("error" in result) {
+    const statusCode = result.error === "NOT_FOUND" ? 404 : result.error === "MAKER_CANNOT_APPROVE" ? 403 : 409;
+    return res.status(statusCode).json({ error: { code: result.error, message: result.error === "MAKER_CANNOT_APPROVE" ? "The requester cannot approve their own request" : result.error === "EXPIRED" ? "Approval request has expired" : result.error === "NOT_FOUND" ? "Approval request not found" : "Approval request has already been decided" } });
+  }
+  return res.json({ approval: { ...result.approval, amountMinor: result.approval.amountMinor?.toString() ?? null } });
+}));
+
