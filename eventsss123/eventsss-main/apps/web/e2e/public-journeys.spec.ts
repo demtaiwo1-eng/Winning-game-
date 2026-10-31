@@ -257,33 +257,3 @@ test("authenticated planner shows an access error when an event is not owned", a
   await expect(page.getByText("Unable to load event details.")).toBeVisible();
   await expect(page.getByText("Event summary")).toHaveCount(0);
 });
-
-  const auth = {
-    accessToken: "e2e-access-token",
-    refreshToken: "e2e-refresh-token",
-    user: { id: "planner-other", email: "other@example.test", name: "Other Planner", role: "CLIENT" },
-  };
-  await page.addInitScript(() => {
-    localStorage.setItem("ess_user", JSON.stringify({
-      id: "planner-other", email: "other@example.test", name: "Other Planner", role: "CLIENT",
-    }));
-    localStorage.setItem("ess_access_token", "e2e-access-token");
-    localStorage.setItem("ess_refresh_token", "e2e-refresh-token");
-  });
-  await page.route("**/api/v1/auth/refresh", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(auth) }));
-  await page.route("**/api/v1/events", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({ items: [{ id: "foreign-event-001", title: "Another Owner's Private Event", status: "DRAFT" }] }),
-  }));
-  await page.route("**/api/v1/events/foreign-event-001**", (route) => route.fulfill({
-    status: 404,
-    contentType: "application/json",
-    body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Event not found" } }),
-  }));
-
-  await page.goto("/");
-  await page.getByRole("button", { name: /Another Owner's Private Event/ }).click();
-  await expect(page.getByText("Unable to load event details.")).toBeVisible();
-  await expect(page.getByText("Event summary")).toHaveCount(0);
-});
