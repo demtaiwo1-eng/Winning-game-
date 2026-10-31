@@ -1,0 +1,68 @@
+name: Dependency security audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - security/dependency-audit-report
+  schedule:
+    - cron: "23 8 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Report npm dependency advisories
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+
+      - name: Install locked dependencies
+        working-directory: eventsss123/eventsss-main
+        run: npm ci --include=dev
+
+      - name: Capture full and production dependency reports
+        working-directory: eventsss123/eventsss-main
+        run: |
+          mkdir -p "$RUNNER_TEMP/npm-audit"
+          npm audit --json > "$RUNNER_TEMP/npm-audit/full.json" || true
+          npm audit --omit=dev --json > "$RUNNER_TEMP/npm-audit/production.json" || true
+          node - "$RUNNER_TEMP/npm-audit" <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const dir = process.argv[2];
+          for (const [label, file] of [
+            ["All dependencies", "full.json"],
+            ["Production dependencies", "production.json"],
+          ]) {
+            let report = {};
+            try { report = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")); }
+            catch (error) {
+              console.log(`${label}: audit report could not be parsed: ${error.message}`);
+              continue;
+            }
+            const v = report.metadata?.vulnerabilities || {};
+            const total = v.total ?? "unknown";
+            console.log(`${label}: ${total} total; critical=${v.critical ?? 0}, high=${v.high ?? 0}, moderate=${v.moderate ?? 0}, low=${v.low ?? 0}`);
+            const summary = `- **${label}:** ${total} total; critical ${v.critical ?? 0}, high ${v.high ?? 0}, moderate ${v.moderate ?? 0}, low ${v.low ?? 0}\n`;
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+          }
+          NODE
+
+      - name: Upload dependency audit reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-dependency-audit
+          path: ${{ runner.temp }}/npm-audit/
+          if-no-files-found: error
+          retention-days: 14
