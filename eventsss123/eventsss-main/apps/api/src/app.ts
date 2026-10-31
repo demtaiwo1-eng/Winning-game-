@@ -274,6 +274,16 @@ export function createApp() {
       res.status(201).json({ enquiry });
     } catch (error) { next(error); }
   });
+  app.get("/api/v1/enquiries/mine", requireAuth, async (req, res, next) => {
+    try {
+      const items = await prisma.vendorEnquiry.findMany({
+        where: { buyerId: req.user!.id },
+        orderBy: { createdAt: "desc" }, take: 100,
+        include: { listing: { select: { id: true, title: true } }, vendor: { select: { businessName: true } } },
+      });
+      res.json({ items });
+    } catch (error) { next(error); }
+  });
   app.get("/api/v1/vendor/enquiries", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
     try {
       const vendor = await prisma.vendorProfile.findUnique({ where: { userId: req.user!.id }, select: { id: true } });
