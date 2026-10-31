@@ -289,6 +289,33 @@ checkoutRouter.post("/checkout-sessions/:id/pay-with-wallet", requireAuth, async
         throw new HttpError(409, "PRICE_CHANGED", `${item.title} changed price or currency; rebuild checkout`);
       }
 
+      // A vendor-managed calendar becomes authoritative once slots exist for a listing.
+      const configuredSlots = await tx.listingAvailability.count({ where: { listingId: listing.id } });
+      if (configuredSlots > 0) {
+        if (!event.startsAt || !event.endsAt || event.endsAt <= event.startsAt) {
+          throw new HttpError(409, "EVENT_DATES_REQUIRED", `${item.title} requires an event with valid start and end dates`);
+        }
+        const slot = await tx.listingAvailability.findFirst({
+          where: { listingId: listing.id, startsAt: { lte: event.startsAt }, endsAt: { gte: event.endsAt } },
+          orderBy: { startsAt: "asc" },
+        });
+        if (!slot) throw new HttpError(409, "LISTING_NOT_AVAILABLE", `${item.title} has no availability covering this event`);
+        const reserved = await tx.bookingItem.aggregate({
+          where: {
+            listingId: listing.id,
+            booking: {
+              status: { in: [BookingStatus.PAID, BookingStatus.CONFIRMED, BookingStatus.FULFILLED, BookingStatus.DISPUTED] },
+              event: { startsAt: { lt: event.endsAt }, endsAt: { gt: event.startsAt } },
+            },
+          },
+          _sum: { quantity: true },
+        });
+        const alreadyReserved = reserved._sum.quantity || 0;
+        if (alreadyReserved + item.quantity > slot.capacity) {
+          throw new HttpError(409, "LISTING_CAPACITY_EXCEEDED", `${item.title} has insufficient remaining capacity for these dates`);
+        }
+      }
+
       const subtotal = item.unitPriceMinor * BigInt(item.quantity);
       const commission = commissionMinor(subtotal, env.COMMISSION_BPS);
       const booking = await tx.booking.create({
@@ -339,7 +366,7 @@ checkoutRouter.post("/checkout-sessions/:id/pay-with-wallet", requireAuth, async
     });
     if (session.cartId) await tx.cart.update({ where: { id: session.cartId }, data: { status: CartStatus.CHECKED_OUT } });
     return { session: updated, bookings };
-  });
+  }, { isolationLevel: "Serializable" });
 
   res.json({
     status: "paid",

@@ -209,6 +209,8 @@ model User {
   verifierReviewsReceived VerifierReview[] @relation("VerifierReviews")
   verifierReviewsAuthored VerifierReview[] @relation("VerifierReviewAuthor")
   guestCheckIns EventGuestCheckIn[] @relation("GuestCheckInActor")
+  vendorEnquiries VendorEnquiry[] @relation("EnquiryBuyer")
+  vendorReplies VendorEnquiry[] @relation("EnquiryResponder")
 }
 
 model RefreshToken {
@@ -252,6 +254,7 @@ model VendorProfile {
 
   shops      Shop[]
   listings   Listing[]
+  enquiries  VendorEnquiry[]
   bookings   Booking[]   @relation("VendorBookings")
   promotions Promotion[]
   reviews    Review[]
@@ -308,11 +311,26 @@ model Listing {
   cartItems    CartItem[]
   checkoutItems CheckoutItem[]
   events       Event[]       @relation("EventVenue")
+  availability ListingAvailability[]
+  enquiries    VendorEnquiry[]
 
   @@index([type, status])
   @@index([country, city])
   @@index([categoryId])
   @@index([vendorId])
+}
+
+model ListingAvailability {
+  id        String   @id @default(uuid())
+  listingId String
+  startsAt  DateTime
+  endsAt    DateTime
+  capacity  Int      @default(1)
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, startsAt, endsAt])
+  @@index([listingId, startsAt, endsAt])
 }
 
 model Event {
@@ -897,4 +915,32 @@ model AdminApproval {
   @@index([status, createdAt])
   @@index([entity, entityId])
   @@index([requestedById, createdAt])
+}
+
+
+enum VendorEnquiryStatus {
+  OPEN
+  RESPONDED
+  CLOSED
+}
+
+model VendorEnquiry {
+  id          String @id @default(uuid())
+  listingId   String
+  buyerId     String
+  vendorId    String
+  message     String
+  response    String?
+  status      VendorEnquiryStatus @default(OPEN)
+  respondedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  listing     Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer       User @relation("EnquiryBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  responder   User? @relation("EnquiryResponder", fields: [responderId], references: [id], onDelete: SetNull)
+  responderId String?
+  @@index([vendorId, status, createdAt])
+  @@index([buyerId, createdAt])
+  @@index([listingId, createdAt])
 }

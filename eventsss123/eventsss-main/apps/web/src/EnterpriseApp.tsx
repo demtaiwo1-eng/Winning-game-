@@ -561,6 +561,100 @@ function ClientPortal({
   );
 }
 
+function VendorAvailabilityManager({ listingId }: { listingId: string }) {
+  const [slots, setSlots] = useState<Array<{ id: string; startsAt: string; endsAt: string; capacity: number }>>([]);
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [capacity, setCapacity] = useState("1");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const refresh = async () => {
+    const result = await api<{ items: typeof slots }>(`/vendor/listings/${listingId}/availability`);
+    setSlots(result.items || []);
+  };
+  useEffect(() => {
+    let active = true;
+    api<{ items: typeof slots }>(`/vendor/listings/${listingId}/availability`)
+      .then((result) => { if (active) setSlots(result.items || []); })
+      .catch((error: Error) => { if (active) setMessage(error.message); });
+    return () => { active = false; };
+  }, [listingId]);
+  const addSlot = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setBusy(true); setMessage("");
+    try {
+      await api(`/vendor/listings/${listingId}/availability`, {
+        method: "POST",
+        body: JSON.stringify({ startsAt: new Date(startsAt).toISOString(), endsAt: new Date(endsAt).toISOString(), capacity: Number(capacity) }),
+      });
+      setStartsAt(""); setEndsAt(""); await refresh(); setMessage("Availability saved.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save availability."); }
+    finally { setBusy(false); }
+  };
+  const removeSlot = async (id: string) => {
+    setBusy(true); setMessage("");
+    try {
+      await api(`/vendor/listings/${listingId}/availability/${id}`, { method: "DELETE" });
+      await refresh(); setMessage("Availability removed.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not remove availability."); }
+    finally { setBusy(false); }
+  };
+  return (
+    <div className="ess-availability-manager">
+      <strong>Availability calendar</strong>
+      <form onSubmit={addSlot} className="ess-form-grid">
+        <label>Starts <input type="datetime-local" required value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label>
+        <label>Ends <input type="datetime-local" required value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /></label>
+        <label>Capacity <input type="number" min="1" max="100000" required value={capacity} onChange={(event) => setCapacity(event.target.value)} /></label>
+        <button className="ess-outline-button" type="submit" disabled={busy || !startsAt || !endsAt}>Add time slot</button>
+      </form>
+      {message && <p className="ess-muted" role="status">{message}</p>}
+      {slots.length ? slots.map((slot) => (
+        <div className="ess-availability-slot" key={slot.id}>
+          <span>{new Date(slot.startsAt).toLocaleString()} – {new Date(slot.endsAt).toLocaleString()} · capacity {slot.capacity}</span>
+          <button className="ess-row-action" type="button" disabled={busy} onClick={() => removeSlot(slot.id)}>Remove</button>
+        </div>
+      )) : <p className="ess-muted">No availability windows added yet.</p>}
+    </div>
+  );
+}
+
+function VendorEnquiriesPanel() {
+  const [items, setItems] = useState<Array<{ id: string; message: string; response?: string | null; status: string; createdAt: string; listing: { title: string }; buyer: { name: string } }>>([]);
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const load = async () => { const result = await api<{ items: typeof items }>("/vendor/enquiries"); setItems(result.items || []); };
+  useEffect(() => { let active = true; api<{ items: typeof items }>("/vendor/enquiries").then(result => { if (active) setItems(result.items || []); }).catch((error: Error) => { if (active) setNotice(error.message); }); return () => { active = false; }; }, []);
+  const reply = async (id: string, status: "RESPONDED" | "CLOSED" = "RESPONDED") => {
+    setBusy(true); setNotice("");
+    try { await api(`/vendor/enquiries/${id}`, { method: "PATCH", body: JSON.stringify({ response: responses[id] || "Thank you for your enquiry. We will follow up shortly.", status }) }); await load(); setNotice("Enquiry updated."); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "Unable to update enquiry."); }
+    finally { setBusy(false); }
+  };
+  return <section className="ess-panel"><SectionTitle eyebrow="Customer demand" title="Listing enquiries" action={<button className="ess-quiet-button" onClick={() => load()}>Refresh</button>} />
+    {notice && <p className="ess-muted" role="status">{notice}</p>}
+    {items.length === 0 ? <p className="ess-muted">No customer enquiries yet.</p> : items.map(item => <article className="ess-enquiry-card" key={item.id}>
+      <div><strong>{item.listing.title}</strong><span className="ess-card-category"> · {item.status}</span></div>
+      <small>{item.buyer.name} · {new Date(item.createdAt).toLocaleString()}</small><p>{item.message}</p>
+      {item.response && <blockquote>{item.response}</blockquote>}
+      {item.status !== "CLOSED" && <><textarea rows={2} value={responses[item.id] || ""} onChange={event => setResponses(current => ({ ...current, [item.id]: event.target.value }))} placeholder="Write a reply to the customer" /><div className="ess-filter-row"><button className="ess-outline-button" disabled={busy || !(responses[item.id] || "").trim()} onClick={() => reply(item.id)}>Send reply</button><button className="ess-quiet-button" disabled={busy} onClick={() => reply(item.id, "CLOSED")}>Close enquiry</button></div></>}
+    </article>)}
+  </section>;
+}
+
+function VendorPerformancePanel() {
+  const [data, setData] = useState<{ listings: Record<string, number>; bookings: Record<string, { count: number; totalMinor: string }>; enquiries: Record<string, number>; reviews: { averageRating: number | null; count: number } } | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => { let active = true; api<typeof data>("/vendor/metrics").then(result => { if (active) setData(result); }).catch((e: Error) => { if (active) setError(e.message); }); return () => { active = false; }; }, []);
+  if (error) return <p className="ess-muted">{error}</p>;
+  if (!data) return <p className="ess-muted">Loading vendor performance…</p>;
+  const bookingCount = Object.values(data.bookings).reduce((sum, value) => sum + value.count, 0);
+  const enquiryCount = Object.values(data.enquiries).reduce((sum, value) => sum + value, 0);
+  const review = data.reviews.averageRating == null ? "No ratings" : `${data.reviews.averageRating.toFixed(1)} / 5`;
+  return <section className="ess-panel"><SectionTitle eyebrow="Verified data" title="Vendor performance" /><div className="ess-metrics"><Metric label="Bookings" value={String(bookingCount)} detail="All booking statuses" /><Metric label="Enquiries" value={String(enquiryCount)} detail="Customer enquiries received" /><Metric label="Average rating" value={review} detail={`${data.reviews.count} customer reviews`} /><Metric label="Live listings" value={String(data.listings.ACTIVE || 0)} detail={`${data.listings.DRAFT || 0} drafts · ${data.listings.PAUSED || 0} paused`} /></div></section>;
+}
+
 function VendorPortal({
   listings,
   setListings,
@@ -745,7 +839,7 @@ function VendorPortal({
         <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
         <button type="button" className={vendorTab === "plans" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("plans")}>Plans & promos</button>
         <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
-        <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Messages</button>
+        <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
         <button type="button" className={vendorTab === "promotions" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("promotions")}>Promotions</button>
       </div>
       {vendorTab === "promotions" ? (
@@ -757,9 +851,10 @@ function VendorPortal({
       ) : vendorTab === "kyc" ? (
         <KycUpload defaultKind="BUSINESS" />
       ) : vendorTab === "messages" ? (
-        <VendorEventMessagesPanel />
+        <><VendorEnquiriesPanel /><VendorEventMessagesPanel /></>
       ) : (
       <>
+      <VendorPerformancePanel />
       <div className="ess-metrics">
         <Metric
           label="Available balance"
@@ -901,6 +996,7 @@ function VendorPortal({
                   >
                     Edit package
                   </button>
+                  {typeof listing.id === "string" && <VendorAvailabilityManager listingId={listing.id} />}
                 </div>
               </article>
             ))
