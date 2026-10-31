@@ -255,6 +255,72 @@ export function createApp() {
       res.status(204).end();
     } catch (error) { next(error); }
   });
+  app.post("/api/v1/listings/:listingId/enquiries", requireAuth, async (req, res, next) => {
+    try {
+      const message = typeof req.body.message === "string" ? req.body.message.trim() : "";
+      if (message.length < 10 || message.length > 4000) {
+        return res.status(400).json({ error: { code: "INVALID_ENQUIRY", message: "Message must be between 10 and 4000 characters" } });
+      }
+      const listing = await prisma.listing.findFirst({
+        where: { id: req.params.listingId, status: ListingStatus.ACTIVE },
+        select: { id: true, vendorId: true, vendor: { select: { userId: true } } },
+      });
+      if (!listing) return res.status(404).json({ error: { code: "LISTING_NOT_FOUND", message: "Active listing not found" } });
+      if (listing.vendor.userId === req.user!.id) return res.status(409).json({ error: { code: "OWN_LISTING", message: "You cannot enquire about your own listing" } });
+      const enquiry = await prisma.vendorEnquiry.create({
+        data: { listingId: listing.id, vendorId: listing.vendorId, buyerId: req.user!.id, message },
+        select: { id: true, listingId: true, message: true, status: true, createdAt: true },
+      });
+      res.status(201).json({ enquiry });
+    } catch (error) { next(error); }
+  });
+  app.get("/api/v1/vendor/enquiries", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
+    try {
+      const vendor = await prisma.vendorProfile.findUnique({ where: { userId: req.user!.id }, select: { id: true } });
+      if (!vendor) return res.status(404).json({ error: { code: "VENDOR_NOT_FOUND", message: "Vendor profile not found" } });
+      const items = await prisma.vendorEnquiry.findMany({
+        where: { vendorId: vendor.id },
+        orderBy: { createdAt: "desc" }, take: 100,
+        include: { listing: { select: { id: true, title: true } }, buyer: { select: { id: true, name: true } } },
+      });
+      res.json({ items });
+    } catch (error) { next(error); }
+  });
+  app.patch("/api/v1/vendor/enquiries/:enquiryId", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
+    try {
+      const response = typeof req.body.response === "string" ? req.body.response.trim() : "";
+      const status = req.body.status === "CLOSED" ? "CLOSED" : "RESPONDED";
+      if (response.length < 2 || response.length > 4000) return res.status(400).json({ error: { code: "INVALID_RESPONSE", message: "Response must be between 2 and 4000 characters" } });
+      const enquiry = await prisma.vendorEnquiry.findFirst({
+        where: { id: req.params.enquiryId, vendor: { userId: req.user!.id } },
+        select: { id: true },
+      });
+      if (!enquiry) return res.status(404).json({ error: { code: "ENQUIRY_NOT_FOUND", message: "Enquiry not found" } });
+      const updated = await prisma.vendorEnquiry.update({
+        where: { id: enquiry.id },
+        data: { response, status, responderId: req.user!.id, respondedAt: new Date() },
+      });
+      res.json({ enquiry: updated });
+    } catch (error) { next(error); }
+  });
+  app.get("/api/v1/vendor/metrics", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
+    try {
+      const vendor = await prisma.vendorProfile.findUnique({ where: { userId: req.user!.id }, select: { id: true } });
+      if (!vendor) return res.status(404).json({ error: { code: "VENDOR_NOT_FOUND", message: "Vendor profile not found" } });
+      const [listings, bookings, enquiries, reviews] = await Promise.all([
+        prisma.listing.groupBy({ by: ["status"], where: { vendorId: vendor.id }, _count: { _all: true } }),
+        prisma.booking.groupBy({ by: ["status"], where: { vendorId: vendor.id }, _count: { _all: true }, _sum: { totalMinor: true } }),
+        prisma.vendorEnquiry.groupBy({ by: ["status"], where: { vendorId: vendor.id }, _count: { _all: true } }),
+        prisma.review.aggregate({ where: { vendorId: vendor.id }, _avg: { rating: true }, _count: { _all: true } }),
+      ]);
+      res.json({
+        listings: Object.fromEntries(listings.map(x => [x.status, x._count._all])),
+        bookings: Object.fromEntries(bookings.map(x => [x.status, { count: x._count._all, totalMinor: (x._sum.totalMinor ?? 0n).toString() }])),
+        enquiries: Object.fromEntries(enquiries.map(x => [x.status, x._count._all])),
+        reviews: { averageRating: reviews._avg.rating, count: reviews._count._all },
+      });
+    } catch (error) { next(error); }
+  });
   const riderRetired = (_req: express.Request, res: express.Response) =>
     res.status(410).json({
       error: { code: "ROLE_RETIRED", message: "Rider logistics is no longer supported" },
