@@ -240,7 +240,7 @@ function ClientPortal({
   currency: CurrencyCode;
 }) {
   const [tab, setTab] = useDashboardTab(
-    ["overview", "checklist", "checkin", "marketplace", "wallet", "readiness", "messages", "verifiers", "plans", "kyc", "feedback"] as const,
+    ["overview", "checklist", "planner", "checkin", "marketplace", "wallet", "readiness", "messages", "verifiers", "plans", "kyc", "feedback"] as const,
     "marketplace",
   );
   const [bookingNotice, setBookingNotice] = useState("");
@@ -392,7 +392,7 @@ function ClientPortal({
           onCreated={(id) => {
             setReadinessEventId(id);
             setChecklistEventId(id);
-            setTab("checklist");
+            setTab("planner");
             setShowCreate(false);
             api<{ items: Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }> }>("/events")
               .then((result) => {
