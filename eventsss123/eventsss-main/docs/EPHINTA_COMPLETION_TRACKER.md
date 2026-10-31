@@ -48,7 +48,9 @@ This ledger tracks the phased delivery programme. A phase is not complete merely
 | 2026-10-30 | Created Render Free static site; configured Vite API base and SPA rewrite. | https://ephinta-web.onrender.com |
 | 2026-10-30 | Added frontend origin to API CORS allowlist; API redeploy completed live. | Render service ephinta_wss |
 | 2026-10-30 | Verified PR #1 CI run #25 passed, including isolated DB tests and Android debug APK build. | https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41088469325 |
-| 2026-10-30 | Added phase statuses and evidence gaps in this tracker on main. | Commit 7082c26b045ba290cfa01c0db3f89e26d1b7f2c4 |\n| 2026-10-30 | Squash-merged the CI-passing Phase 1 patch to main after owner authorization. Frontend deployment completed live; API deployment is still processing. | Commit 5807b7da69f2ce19bfe01c0db3f89e26d1b0c003; PR #1 |\n| 2026-10-30 | Added a default public API URL to GitHub Actions so online readiness is checked even if the repository variable is unset. | Commit 9f1a2210196d7257c5966ed6c62c93e6ae86e406; run #27 pending |
+| 2026-10-30 | Added phase statuses and evidence gaps in this tracker on main. | Commit 7082c26b045ba290cfa01c0db3f89e26d1b7f2c4 |
+| 2026-10-30 | Squash-merged the CI-passing Phase 1 patch to main after owner authorization. Frontend deployment completed live; API deployment is still processing. | Commit 5807b7da69f2ce19bfe01c0db3f89e26d1b0c003; PR #1 |
+| 2026-10-30 | Added a default public API URL to GitHub Actions so online readiness is checked even if the repository variable is unset. | Commit 9f1a2210196d7257c5966ed6c62c93e6ae86e406; run #27 pending |
 
 ## Latest work log (2026-10-31)
 | Date UTC | Change | Evidence |
@@ -58,6 +60,9 @@ This ledger tracks the phased delivery programme. A phase is not complete merely
 | 2026-10-31 | Merged organization-mode subscription eligibility using the shared role policy; paid-plan gating unchanged. | PR #26; commit 04c4b9b99ced9ee82cc1fdad3e094bcfbd26b38a; CI run #120 success. |
 | 2026-10-31 | Recorded live PostgreSQL preservation baseline and backup checksum; restore rehearsal remains blocked by Free-tier database quota and must not target production. | `PHASE_0_RESTORE_REHEARSAL.md`; no production rows modified. |
 
-## Follow-up risk observed during deployment\n- Render dependency installation reported 19 npm audit findings (2 low, 11 moderate, 3 high, 3 critical). No force-upgrade was run during deployment; dependency-level triage and compatible remediation remain open under Phase 9.\n\n## Definition of done
+## Follow-up risk observed during deployment
+- Render dependency installation reported 19 npm audit findings (2 low, 11 moderate, 3 high, 3 critical). No force-upgrade was run during deployment; dependency-level triage and compatible remediation remain open under Phase 9.
+
+## Definition of done
 A phase is complete only when code review, CI, relevant environment tests, and security/data invariants pass. External dependencies must be recorded as verified or blocked. Overall completion requires evidence for all required phases and owner acceptance of the release checklist.
 | 2026-10-31 | Merged PR #16 after final-head CI run #88 passed; Render web and API deployments for commit 90a2f939 are live. Additive guest check-in history migration applied; /health and /ready returned 200. | PR #16; commit 90a2f93900073d74d69f8aa09371392a18ca94c0; Render deploys dep-dbij1tbm8hqs73etkmj0 and dep-dbij1tbm8hqs73etkmdg |
