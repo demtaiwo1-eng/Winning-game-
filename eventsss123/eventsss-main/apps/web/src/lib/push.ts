@@ -1,12 +1,14 @@
 import { apiUrl } from "./api";
 
+let registrationListenerAdded = false;
+
 /**
  * Capacitor push registration — no-op on pure web.
  * When the app runs inside the Capacitor shell with @capacitor/push-notifications
  * installed, registers the device token with POST /api/v1/notifications/push-token.
  */
 export async function registerPushIfNative(): Promise<void> {
-  if ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_ENABLE_PUSH !== "true") return;
+  if ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_ENABLE_PUSH !== "true" || registrationListenerAdded) return;
   try {
     // Dynamic import so web builds without native deps still work
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +26,7 @@ export async function registerPushIfNative(): Promise<void> {
 
     await PushNotifications.register();
 
+    registrationListenerAdded = true;
     PushNotifications.addListener("registration", async (token: { value: string }) => {
       try {
         const t = localStorage.getItem("ess_access_token");
