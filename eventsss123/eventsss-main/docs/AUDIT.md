@@ -1,9 +1,7 @@
 # ESS Phase 0 Source Audit
 
 Audit date: 2026-10-31  
-Source of truth: repository `main` at the current production-readiness review; this document is a static inventory, not a claim that every browser/device/provider flow has passed. This is a static
-inventory of the checked-out source; route-level integration and device behavior
-are not implied by source presence.
+Source of truth: repository `main` at the current production-readiness review. This is a static source inventory; route-level integration, browser/device behavior, and provider operation are not implied by source presence.
 
 ## Phase count and scope
 
@@ -248,21 +246,22 @@ Evidence: [`notifications.routes.ts`](../apps/api/src/modules/notifications/noti
 
 All routes require Auth; route-specific roles, event ownership and verifier
 assignment checks vary. `EventReadinessBoard.tsx`, `VerifierPicker.tsx`, and
-`EnterpriseApp.tsx` call readiness APIs. Body validation is generally inline;
-the static audit flags endpoints where an explicit ownership/assignment check
-was not evident for targeted Phase 8 authorization review.
+`EnterpriseApp.tsx` call readiness APIs. Body validation is generally inline.
+Event-scoped board, sync, snapshot and verifier-list routes now require the
+event owner, an admin/consultant, or an assigned verifier. Zone changes are
+restricted to the event owner, admin or consultant.
 
 | Method + path | Additional role / scope | Static status |
 |---|---|---|
-| `POST /readiness/events/:eventId/sync` | Owner or `ADMIN`/`VERIFIER`/`CONSULTANT`; completed events blocked | Implemented. |
-| `GET /readiness/events/:eventId` | Owner or privileged roles | Implemented. |
+| `POST /readiness/events/:eventId/sync` | Event owner, admin/consultant, or assigned verifier; completed events blocked | Implemented. |
+| `GET /readiness/events/:eventId` | Event owner, admin/consultant, or assigned verifier | Implemented. |
 | `GET /readiness/queue` | `VERIFIER`/`CONSULTANT`/`ADMIN` | Implemented. |
 | `POST /readiness/events/:eventId/claim` | `VERIFIER`/`CONSULTANT`/`ADMIN`; assignment checks | Implemented. |
 | `PATCH /readiness/checks/:checkId` | `VERIFIER`/`CONSULTANT`/`ADMIN`; assigned verifier and status checks | Implemented. |
 | `POST /readiness/events/:eventId/finalize` | `VERIFIER`; assignment/event policy | Implemented. |
 | `GET /readiness/mine` | Caller events | Implemented; active dashboard caller. |
 | `POST /readiness/events/:eventId/seed-zones` | Owner or privileged roles; completed events blocked | Implemented. |
-| `POST /readiness/events/:eventId/verifiers` | `VERIFIER`/`CONSULTANT`/`ADMIN`/`CLIENT`; owner/privileged checks | Implemented. |
+| `POST /readiness/events/:eventId/verifiers` | Verifier may self-assign; event owner/admin/consultant may assign another verifier; target must have VERIFIER role | Implemented and covered by readiness access-policy tests. |
 | `GET /readiness/events/:eventId/verifiers` | Event owner, admin/consultant, or verifier assigned to the event | Implemented and covered by readiness access-policy tests. |
 | `GET /readiness/events/:eventId/snapshot` | Event owner, admin/consultant, or verifier assigned to the event | Implemented and covered by readiness access-policy tests. |
 | `PATCH /readiness/checks/:checkId/zone` | Event owner, admin, or consultant | Implemented and covered by readiness access-policy tests. |
