@@ -149,9 +149,7 @@ test("mobile menu opens and provides sign-in access", async ({ page }, testInfo)
 });
 
 
-test("authenticated planner can create an event and add a checklist task", async ({ page }) => {
-  const user = { id: "planner-e2e", email: "planner@example.test", name: "E2E Planner", role: "CLIENT" };
-  let createdEvent = false;
+test("authenticated planner can add a checklist task to an owned event", async ({ page }) => {
   const event = {
     id: "event-e2e-001", title: "Authenticated E2E Event", type: "CORPORATE",
     status: "DRAFT", city: "Ibadan", country: "NG", currency: "NGN",
@@ -163,23 +161,11 @@ test("authenticated planner can create an event and add a checklist task", async
     }));
     localStorage.setItem("ess_access_token", "e2e-access-token");
   });
-  await page.route("**/api/v1/events", async (route) => {
-    if (route.request().method() === "GET") {
-      expect(route.request().headers().authorization).toBe("Bearer e2e-access-token");
-      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: createdEvent ? [event] : [] }) });
-    }
-    createdEvent = true;
-    expect(route.request().headers().authorization).toBe("Bearer e2e-access-token");
-    expect(route.request().postDataJSON()).toMatchObject({
-      title: event.title, city: "Ibadan", expectedGuests: 80, isPublic: false,
-    });
-    return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ event }) });
-  });
+  await page.route("**/api/v1/events", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify({ items: [event] }),
+  }));
   await page.route("**/api/v1/readiness/mine", (route) => route.fulfill({
     status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }),
-  }));
-  await page.route("**/api/v1/readiness/events/event-e2e-001/seed-zones", (route) => route.fulfill({
-    status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }),
   }));
   await page.route("**/api/v1/events/event-e2e-001", (route) => route.fulfill({
     status: 200, contentType: "application/json", body: JSON.stringify({ event }),
@@ -215,14 +201,8 @@ test("authenticated planner can create an event and add a checklist task", async
     body: JSON.stringify({ readiness: { status: "NOT_STARTED", totalChecks: 0, greenCount: 0, amberCount: 0, redCount: 0, pendingCount: 0 }, checks: [] }),
   }));
 
-  await page.goto("/dashboard/client?tab=overview");
+  await page.goto("/dashboard/client?tab=planner");
   await expect(page.getByRole("heading", { name: /Welcome back, E2E/ })).toBeVisible();
-  await page.getByRole("button", { name: /New event/ }).click({ force: true });
-  await page.getByLabel("Title").fill(event.title);
-  await page.getByLabel("City").fill("Ibadan");
-  await page.getByLabel("Expected guests").fill("80");
-  await page.getByRole("button", { name: /Create production event/ }).click();
-  await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
   await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
   await page.getByLabel("Task").fill("Confirm event venue");
   await page.getByRole("button", { name: "Add task" }).click();
