@@ -16,7 +16,7 @@ eventMessagesRouter.use(requireAuth);
 const sendMessageLimiter = rateLimit({
   windowMs: 60_000,
   limit: 20,
-  keyGenerator: (req) => req.user?.id ?? req.ip ?? "anonymous",
+  keyGenerator: (req) => req.user!.id,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { code: "MESSAGE_RATE_LIMIT", message: "Too many messages. Please wait before sending again." } },
