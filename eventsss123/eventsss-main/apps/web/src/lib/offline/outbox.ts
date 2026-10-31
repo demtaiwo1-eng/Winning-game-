@@ -26,6 +26,9 @@ export function isSafeOfflineMutation(method: string, url: string) {
   // Only versioned ESS API mutations may enter the outbox.
   if (!/^\/api\/v1\//i.test(pathname)) return false;
 
+  // Privileged admin actions must never be queued for delayed background replay.
+  if (/^\/api\/v1\/admin(?:\/|$)/i.test(pathname)) return false;
+
   // Authentication and all financial state changes must remain online-only.
   if (/^\/api\/v1\/(auth|login|register|refresh|logout|payments?|wallet|escrow)(?:\/|$)/i.test(pathname)) {
     return false;
