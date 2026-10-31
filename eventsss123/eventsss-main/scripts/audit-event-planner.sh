@@ -3,8 +3,9 @@
 # Run from any directory; requires Node.js/npm and installed dependencies.
 set -euo pipefail
 
-ROOT="$(git rev-parse --show-toplevel)"
-APP="$ROOT/eventsss123/eventsss-main/apps/web"
+# Resolve paths from this script, not the caller's current directory or Git root.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+APP="$(cd -- "$SCRIPT_DIR/../apps/web" && pwd)"
 PLANNER="$APP/src/components/EventPlannerWorkspace.tsx"
 THEME="$APP/src/lib/ephintaTheme.ts"
 
