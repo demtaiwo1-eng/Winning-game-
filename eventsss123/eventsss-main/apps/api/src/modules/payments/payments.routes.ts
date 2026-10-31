@@ -364,7 +364,7 @@ export async function reconcilePendingPayments(batchSize = 50) {
       { OR: [{ reconciliationNextAttemptAt: null }, { reconciliationNextAttemptAt: { lte: now } }] },
       { OR: [{ reconciliationLockedUntil: null }, { reconciliationLockedUntil: { lt: now } }] },
     ],
-  } as const;
+  };
   const candidates = await prisma.paymentIntent.findMany({
     where: eligibleWhere,
     take: Math.max(1, Math.min(batchSize, 100)),
