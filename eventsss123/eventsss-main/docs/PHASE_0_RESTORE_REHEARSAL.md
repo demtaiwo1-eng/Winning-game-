@@ -17,7 +17,7 @@ From the application root (`eventsss123/eventsss-main`) on a trusted machine wit
 ```bash
 export BACKUP="$HOME/path/to/the-existing-backup.dump"
 read -rsp "Disposable PostgreSQL URL (input hidden): " RESTORE_DATABASE_URL
-printf '\\n'
+printf '\n'
 export RESTORE_DATABASE_URL
 export RESTORE_TARGET_CONFIRMATION=DISPOSABLE_NON_PRODUCTION
 bash scripts/verify-backup-restore.sh
