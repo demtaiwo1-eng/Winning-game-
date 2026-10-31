@@ -13,6 +13,7 @@ const VendorEventMessagesPanel = lazy(() => import("./components/EventMessagesPa
 const VerifierPicker = lazy(() => import("./components/VerifierPicker"));
 import { OnboardingOverlay, hasCompletedOnboard, ResumeStrip } from "./components/JourneyMoments";
 import { api, downloadApiFile } from "./lib/api";
+import { registerPushIfNative } from "./lib/push";
 import {
   eventBuilderProgressFromLandingDraft,
   eventDraftToCreateInput,
@@ -1748,6 +1749,7 @@ export default function EnterpriseApp() {
           setAccountNotice("Rider access is no longer available. Existing account and dispatch records have been preserved.");
         }
       }
+      if (token) void registerPushIfNative();
       const pending = localStorage.getItem("ess_resume_event");
       if (pending) setResumeLabel(pending);
     } catch { /* */ }
@@ -1892,6 +1894,7 @@ export default function EnterpriseApp() {
       localStorage.setItem("ess_access_token", result.accessToken);
       localStorage.setItem("ess_refresh_token", result.refreshToken);
       localStorage.setItem("ess_user", JSON.stringify(user));
+      void registerPushIfNative();
       setSession({ name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
       setActiveRole(user.role);
       navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
@@ -1957,6 +1960,7 @@ export default function EnterpriseApp() {
         localStorage.setItem("ess_access_token", payload.accessToken);
         localStorage.setItem("ess_refresh_token", payload.refreshToken);
         localStorage.setItem("ess_user", JSON.stringify(user));
+        void registerPushIfNative();
         setSession({
           name: user.name,
           email: user.email,
