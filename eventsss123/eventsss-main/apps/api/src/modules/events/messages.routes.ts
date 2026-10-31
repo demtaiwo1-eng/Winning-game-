@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { z } from "zod/v3";
 import { asyncHandler } from "../../lib/async";
 import { requireAuth } from "../../middleware/auth";
@@ -11,6 +12,15 @@ const eventId = (value: string) => uuid.parse(value);
 
 export const eventMessagesRouter = Router();
 eventMessagesRouter.use(requireAuth);
+
+const sendMessageLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 20,
+  keyGenerator: (req) => req.user?.id ?? req.ip ?? "anonymous",
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { code: "MESSAGE_RATE_LIMIT", message: "Too many messages. Please wait before sending again." } },
+});
 
 eventMessagesRouter.get(
   "/:eventId/messages",
@@ -27,6 +37,7 @@ eventMessagesRouter.get(
 
 eventMessagesRouter.post(
   "/:eventId/messages",
+  sendMessageLimiter,
   validateBody(sendEventMessageSchema),
   asyncHandler(async (req, res) => {
     res.status(201).json(
