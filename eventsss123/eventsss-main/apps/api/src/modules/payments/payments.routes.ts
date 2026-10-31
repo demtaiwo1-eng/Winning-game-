@@ -29,6 +29,7 @@ import {
   verifyStripe,
 } from "./providers";
 import { releaseBookingEscrow } from "./escrow.service";
+import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_MS, RECONCILIATION_MAX_ATTEMPTS } from "./reconciliationPolicy";
 import {
   assertVerifiedPayment,
   verifyPaystackSignature,
@@ -352,24 +353,6 @@ async function applySuccessfulPayment(intentId: string, providerRef: string): Pr
     return true;
   });
 }
-const RECONCILIATION_MAX_ATTEMPTS = 8;
-const RECONCILIATION_LOCK_MS = 2 * 60_000;
-const RECONCILIATION_BASE_BACKOFF_MS = 60_000;
-const RECONCILIATION_MAX_BACKOFF_MS = 6 * 60 * 60_000;
-
-function reconciliationBackoffMs(attempt: number): number {
-  return Math.min(
-    RECONCILIATION_BASE_BACKOFF_MS * 2 ** Math.max(0, attempt - 1),
-    RECONCILIATION_MAX_BACKOFF_MS,
-  );
-}
-
-function reconciliationErrorCode(error: unknown): string {
-  // Persist only a stable, non-sensitive error category; never provider payloads,
-  // credentials, request URLs, or raw error messages.
-  return error instanceof Error ? error.name.slice(0, 80) : "UnknownError";
-}
-
 export async function reconcilePendingPayments(batchSize = 50) {
   const now = new Date();
   const eligibleWhere = {
