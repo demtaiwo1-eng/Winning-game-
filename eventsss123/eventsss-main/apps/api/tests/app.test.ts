@@ -100,6 +100,36 @@ describe("api foundation (DB-free)", () => {
     expect(invalidCurrency.status).toBe(400);
     expect(invalidCurrency.body.error.code).toBe("INVALID_FILTER");
   });
+
+  it("protects approval queue and decision routes from non-admin access", async () => {
+    const vendorToken = jwt.sign({ role: "VENDOR" }, env.JWT_SECRET, { subject: "vendor-user" });
+    const paths = [
+      { method: "get", path: "/api/v1/admin/approvals" },
+      { method: "post", path: "/api/v1/admin/approvals" },
+      { method: "post", path: "/api/v1/admin/approvals/approval-1/decision" },
+    ] as const;
+    for (const route of paths) {
+      const missing = await request(app)[route.method](route.path);
+      expect(missing.status).toBe(401);
+      const forbidden = await request(app)[route.method](route.path)
+        .set("Authorization", `Bearer ${vendorToken}`)
+        .send({});
+      expect(forbidden.status).toBe(403);
+      expect(forbidden.body.error.code).toBe("FORBIDDEN");
+    }
+  });
+  it("protects dead-letter reconciliation replay from non-admin access", async () => {
+    const path = "/api/v1/admin/finance/reconciliation/payment-intent-1/replay";
+    const missing = await request(app).post(path).send({});
+    expect(missing.status).toBe(401);
+    const vendorToken = jwt.sign({ role: "VENDOR" }, env.JWT_SECRET, { subject: "vendor-user" });
+    const forbidden = await request(app).post(path)
+      .set("Authorization", `Bearer ${vendorToken}`)
+      .send({});
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.body.error.code).toBe("FORBIDDEN");
+  });
+
   it("rejects previously issued Rider access tokens", async () => {
     const token = jwt.sign({ role: "RIDER" }, env.JWT_SECRET, { subject: "retired-rider" });
     const res = await request(app).get("/api/v1/auth/me").set("Authorization", `Bearer ${token}`);
