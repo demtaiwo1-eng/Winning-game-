@@ -1,0 +1,30 @@
+name: EPHINTA Phase 9 Staging Smoke Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      API_BASE_URL: ${{ vars.ESS_STAGING_API_URL }}
+      WEB_BASE_URL: ${{ vars.ESS_STAGING_WEB_URL }}
+      SMOKE_TIMEOUT_SECONDS: "20"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify staging variables are present and HTTPS
+        shell: bash
+        run: |
+          [[ -n "$API_BASE_URL" ]] || { echo "Missing ESS_STAGING_API_URL repository variable" >&2; exit 1; }
+          [[ -n "$WEB_BASE_URL" ]] || { echo "Missing ESS_STAGING_WEB_URL repository variable" >&2; exit 1; }
+          [[ "$API_BASE_URL" == https://* && "$WEB_BASE_URL" == https://* ]] || {
+            echo "Staging URLs must use HTTPS" >&2
+            exit 1
+          }
+      - name: Check API liveness, readiness and web root
+        run: bash eventsss123/eventsss-main/scripts/phase9-production-smoke-test.sh
