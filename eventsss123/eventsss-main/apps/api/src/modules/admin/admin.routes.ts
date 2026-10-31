@@ -33,7 +33,7 @@ adminRouter.patch("/listings/:listingId/moderation", asyncHandler(async (req, re
       action: "LISTING_MODERATION",
       entity: "Listing",
       entityId: listing.id,
-      metadata: { from: listing.status, to: status, reason: reason.slice(0, 500) },
+      meta: { from: listing.status, to: status, reason: reason.slice(0, 500) },
     },
   });
   res.json({ listing: updated });
