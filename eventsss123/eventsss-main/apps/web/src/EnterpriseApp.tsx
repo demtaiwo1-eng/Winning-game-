@@ -2103,13 +2103,13 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const questions = [
-    ["desiredOutcome", "What would make this event a success for you?"],
-    ["audienceNeeds", "Who is attending, and what should their experience include?"],
-    ["accessibility", "What accessibility, language, or mobility needs should we plan for?"],
-    ["dietaryNeeds", "Are there dietary, cultural, or other guest requirements?"],
-    ["programDetails", "What key moments, speakers, or activities belong in the programme?"],
-    ["safetyAndPermits", "Are there safety, security, venue, or permit constraints?"],
-    ["successMeasures", "How will you measure the outcome after the event?"],
+    ["desiredOutcome", "What would you most like this event to achieve?"],
+    ["audienceNeeds", "Who do you expect to attend, and what would help them feel welcome?"],
+    ["accessibility", "Are there any access, language, or mobility considerations we should keep in mind?"],
+    ["dietaryNeeds", "Are there any food, cultural, or guest preferences we should take into account?"],
+    ["programDetails", "Are there any moments, speakers, or activities you’d like to include?"],
+    ["safetyAndPermits", "Are there any venue, safety, security, or permit details we should be aware of?"],
+    ["successMeasures", "What would tell you the event went well?"],
   ] as const;
 
   useEffect(() => {
@@ -2139,7 +2139,7 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
         body: JSON.stringify({ answers }),
       });
       if (result.complete) onComplete();
-      else setNotice("Your answers are saved. Complete every prompt when you are ready to finish.");
+      else setNotice("Your progress is saved. You can finish the remaining prompts whenever you’re ready.");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Unable to save your answers.");
     } finally {
@@ -2153,7 +2153,7 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
     <section className="ess-panel" aria-labelledby="planning-questions-title">
       <p className="ess-eyebrow">Continue your event brief</p>
       <h2 id="planning-questions-title">Plan the details for {eventTitle}</h2>
-      <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits.</p>
+      <p className="ess-muted">Your notes are saved with this event, and you can return to them whenever it suits you.</p>
       {questions.map(([key, label]) => (
         <label key={key} style={{ display: "block", marginTop: 12 }}>
           {label}
