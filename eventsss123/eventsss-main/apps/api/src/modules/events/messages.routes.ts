@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { asyncHandler } from "../../lib/async";
 import { requireAuth } from "../../middleware/auth";
 import { validateBody } from "../../middleware/validate";
