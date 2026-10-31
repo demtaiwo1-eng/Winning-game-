@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - main
       - security/dependency-audit-report
   schedule:
     - cron: "23 8 * * 1"
