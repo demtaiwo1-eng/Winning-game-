@@ -13,7 +13,7 @@ const VendorEventMessagesPanel = lazy(() => import("./components/EventMessagesPa
 const VerifierPicker = lazy(() => import("./components/VerifierPicker"));
 import { OnboardingOverlay, hasCompletedOnboard, ResumeStrip } from "./components/JourneyMoments";
 import { api, downloadApiFile } from "./lib/api";
-import { registerPushIfNative } from "./lib/push";
+import { registerPushIfNative, unregisterPushDevice } from "./lib/push";
 import {
   eventBuilderProgressFromLandingDraft,
   eventDraftToCreateInput,
@@ -1918,6 +1918,7 @@ export default function EnterpriseApp() {
     }
   };
   const signOut = () => {
+    void unregisterPushDevice();
     setSession(null);
     localStorage.removeItem("ess_access_token");
     localStorage.removeItem("ess_refresh_token");
