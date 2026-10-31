@@ -518,6 +518,12 @@ model PaymentIntent {
   currency    String
   status      PaymentStatus @default(PENDING)
   purpose     String        @default("WALLET_DEPOSIT")
+  reconciliationAttempts       Int       @default(0)
+  reconciliationNextAttemptAt  DateTime?
+  reconciliationLastError      String?
+  reconciliationDeadLetteredAt  DateTime?
+  reconciliationLockToken       String?
+  reconciliationLockedUntil     DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   user        User          @relation(fields: [userId], references: [id])
@@ -525,6 +531,8 @@ model PaymentIntent {
   checkoutSessionId String?
 
   @@index([userId])
+  @@index([status, reconciliationNextAttemptAt])
+  @@index([reconciliationDeadLetteredAt])
   @@index([checkoutSessionId])
 }
 
