@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { prisma } from "../../lib/prisma";
-import { requireAuth } from "../../middleware/auth";
 import rateLimit from "express-rate-limit";
 import { asyncHandler } from "../../lib/async";
 import { requireAuth } from "../../middleware/auth";
