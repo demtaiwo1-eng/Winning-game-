@@ -24,6 +24,12 @@ describe('Phase 5 offline policy', () => {
     }
   });
 
+  it('keeps privileged admin mutations online-only', () => {
+    expect(isSafeOfflineMutation('POST', '/api/v1/admin/approvals')).toBe(false);
+    expect(isSafeOfflineMutation('POST', '/api/v1/admin/approvals/1/decision')).toBe(false);
+    expect(isSafeOfflineMutation('PATCH', '/api/v1/admin/users/1')).toBe(false);
+  });
+
   it('keeps ordinary event and messaging mutations queueable', () => {
     expect(isSafeOfflineMutation('POST', '/api/v1/events')).toBe(true);
     expect(isSafeOfflineMutation('PATCH', '/api/v1/events/1/tasks/2')).toBe(true);

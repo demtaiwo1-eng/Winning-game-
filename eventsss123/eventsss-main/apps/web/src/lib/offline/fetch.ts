@@ -11,6 +11,8 @@ function isNetworkOnly(url: string) {
     pathname = url.split(/[?#]/, 1)[0] || '';
   }
 
+  if (/^\/api\/v1\/admin(?:\/|$)/i.test(pathname)) return true;
+
   if (/^\/api\/v1\/(auth|login|register|refresh|logout|payments?|wallet|escrow)(?:\/|$)/i.test(pathname)) {
     return true;
   }
