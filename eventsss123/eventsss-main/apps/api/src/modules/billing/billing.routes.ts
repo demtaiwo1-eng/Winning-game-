@@ -3,7 +3,7 @@ import rateLimit from "express-rate-limit";
 import { BillingInterval, LedgerType, Prisma, PromotionStatus, SubscriptionStatus } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { logger } from "../../lib/logger";
-import { requireAuth, requireRole } from "../../middleware/auth";
+import { hasRole, requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { isPromotionPaymentValid, isPromotionTrackingAction, isPromotionWithinSchedule } from "./promotionPolicy";
@@ -106,7 +106,7 @@ billingRouter.post(
 
     // A subscription must belong to the caller's own audience. Never grant
     // paid entitlements until a provider payment has been verified.
-    if (plan.audience !== req.user!.role) {
+    if (!hasRole(req.user, plan.audience)) {
       throw new HttpError(403, "PLAN_AUDIENCE_MISMATCH", "This plan is not available for your account type");
     }
     if (plan.priceMinor > 0n) {
