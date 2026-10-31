@@ -73,9 +73,20 @@ export default function SubscriptionsPanel({ audience = "CLIENT" }: { audience?:
                     <strong>
                       {formatMoney(p.priceMinor, (p.currency as CurrencyCode) || "NGN")}
                     </strong>
-                    <button className="ess-primary" type="button" onClick={() => subscribe(p.id)}>
-                      Subscribe
-                    </button>
+                    {p.priceMinor === "0" ? (
+                      <button className="ess-primary" type="button" onClick={() => subscribe(p.id)}>
+                        Activate free plan
+                      </button>
+                    ) : (
+                      <div>
+                        <button className="ess-outline-button" type="button" disabled aria-disabled="true">
+                          Coming soon
+                        </button>
+                        <p className="ess-muted" style={{ fontSize: 12, marginTop: 6 }}>
+                          Paid checkout is not enabled yet.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </article>

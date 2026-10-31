@@ -104,6 +104,15 @@ billingRouter.post(
     const plan = await prisma.plan.findFirst({ where: { id: planId, active: true } });
     if (!plan) throw new HttpError(404, "NOT_FOUND", "Plan not found");
 
+    // A subscription must belong to the caller's own audience. Never grant
+    // paid entitlements until a provider payment has been verified.
+    if (plan.audience !== req.user!.role) {
+      throw new HttpError(403, "PLAN_AUDIENCE_MISMATCH", "This plan is not available for your account type");
+    }
+    if (plan.priceMinor > 0n) {
+      throw new HttpError(503, "PAID_SUBSCRIPTIONS_UNAVAILABLE", "Paid subscriptions are temporarily unavailable until verified payment processing is enabled");
+    }
+
     const periodMs =
       plan.interval === BillingInterval.YEARLY
         ? 365 * 24 * 60 * 60 * 1000
@@ -115,7 +124,7 @@ billingRouter.post(
         planId: plan.id,
         status: SubscriptionStatus.ACTIVE,
         currentPeriodEnd: new Date(Date.now() + periodMs),
-        autoRenew: true,
+        autoRenew: false,
       },
       include: { plan: true },
     });
