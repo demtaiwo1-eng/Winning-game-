@@ -181,6 +181,26 @@ describe("api foundation (DB-free)", () => {
     expect(forbidden.status).toBe(403);
     expect(forbidden.body.error.code).toBe("FORBIDDEN");
   });
+  it("protects vendor enquiry inbox and metrics endpoints", async () => {
+    const missing = await request(app).get("/api/v1/vendor/enquiries");
+    expect(missing.status).toBe(401);
+    const clientToken = jwt.sign({ role: "CLIENT" }, env.JWT_SECRET, { subject: "client-user" });
+    const inbox = await request(app).get("/api/v1/vendor/enquiries").set("Authorization", `Bearer ${clientToken}`);
+    const metrics = await request(app).get("/api/v1/vendor/metrics").set("Authorization", `Bearer ${clientToken}`);
+    expect(inbox.status).toBe(403);
+    expect(metrics.status).toBe(403);
+  });
+  it("requires authentication to send listing enquiries", async () => {
+    const res = await request(app).post("/api/v1/listings/listing-id/enquiries").send({ message: "Please share availability details." });
+    expect(res.status).toBe(401);
+  });
+  it("protects listing moderation with administrator authorization", async () => {
+    const missing = await request(app).patch("/api/v1/admin/listings/listing-id/moderation").send({ status: "ACTIVE" });
+    const vendorToken = jwt.sign({ role: "VENDOR" }, env.JWT_SECRET, { subject: "vendor-user" });
+    const forbidden = await request(app).patch("/api/v1/admin/listings/listing-id/moderation").set("Authorization", `Bearer ${vendorToken}`).send({ status: "ACTIVE" });
+    expect(missing.status).toBe(401);
+    expect(forbidden.status).toBe(403);
+  });
   it("returns 410 for retired Rider job endpoints", async () => {
     const get = await request(app).get("/api/v1/rider/jobs");
     const update = await request(app).patch("/api/v1/rider/jobs/old-job");
