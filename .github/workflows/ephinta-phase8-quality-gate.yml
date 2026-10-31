@@ -1,0 +1,64 @@
+name: EPHINTA Phase 8 Quality Gate
+
+on:
+  pull_request:
+    paths:
+      - "eventsss123/eventsss-main/**"
+      - ".github/workflows/ephinta-phase8-quality-gate.yml"
+  push:
+    branches: [main]
+    paths:
+      - "eventsss123/eventsss-main/**"
+      - ".github/workflows/ephinta-phase8-quality-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ephinta-phase8-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ephinta_test
+          POSTGRES_USER: ephinta_test
+          POSTGRES_PASSWORD: ephinta_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ephinta_test -d ephinta_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL_LOCAL: postgresql://ephinta_test:ephinta_test@127.0.0.1:5432/ephinta_test?schema=public
+      JWT_SECRET: ephinta-ci-only-secret-not-for-production-000000000000
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173
+      APP_BASE_URL: http://localhost:4173
+      RUN_DB_TESTS: "1"
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Run full safe release gate against disposable PostgreSQL
+        run: bash scripts/verify-release-gates.sh
