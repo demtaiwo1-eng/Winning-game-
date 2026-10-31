@@ -29,7 +29,7 @@ import {
   verifyStripe,
 } from "./providers";
 import { releaseBookingEscrow } from "./escrow.service";
-import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_MS, RECONCILIATION_MAX_ATTEMPTS } from "./reconciliationPolicy";
+import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_MS, RECONCILIATION_MAX_ATTEMPTS, RECONCILIATION_PROVIDER_MAX_WAIT_MS, RECONCILIATION_PROVIDER_MIN_INTERVAL_MS, reconciliationProviderNextAllowedAt } from "./reconciliationPolicy";
 import {
   assertVerifiedPayment,
   verifyPaystackSignature,
@@ -353,6 +353,35 @@ async function applySuccessfulPayment(intentId: string, providerRef: string): Pr
     return true;
   });
 }
+async function reserveReconciliationProviderSlot(provider: string): Promise<boolean> {
+  await prisma.paymentProviderThrottle.upsert({
+    where: { provider },
+    update: {},
+    create: { provider, nextAllowedAt: new Date(0) },
+  });
+
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < RECONCILIATION_PROVIDER_MAX_WAIT_MS) {
+    const now = new Date();
+    const reserved = await prisma.paymentProviderThrottle.updateMany({
+      where: { provider, nextAllowedAt: { lte: now } },
+      data: { nextAllowedAt: reconciliationProviderNextAllowedAt(now.getTime()) },
+    });
+    if (reserved.count === 1) return true;
+
+    const throttle = await prisma.paymentProviderThrottle.findUnique({
+      where: { provider },
+      select: { nextAllowedAt: true },
+    });
+    const remaining = RECONCILIATION_PROVIDER_MAX_WAIT_MS - (Date.now() - startedAt);
+    const waitMs = Math.max(1, Math.min(remaining, throttle
+      ? throttle.nextAllowedAt.getTime() - Date.now()
+      : RECONCILIATION_PROVIDER_MIN_INTERVAL_MS));
+    await new Promise<void>((resolve) => setTimeout(resolve, waitMs));
+  }
+  return false;
+}
+
 export async function reconcilePendingPayments(batchSize = 50) {
   const now = new Date();
   const eligibleWhere = {
@@ -369,7 +398,7 @@ export async function reconcilePendingPayments(batchSize = 50) {
     where: eligibleWhere,
     take: Math.max(1, Math.min(batchSize, 100)),
     orderBy: [{ reconciliationNextAttemptAt: "asc" }, { createdAt: "asc" }],
-    select: { id: true },
+    select: { id: true, provider: true },
   });
 
   let reconciled = 0;
@@ -378,6 +407,11 @@ export async function reconcilePendingPayments(batchSize = 50) {
   let skipped = 0;
 
   for (const candidate of candidates) {
+    const providerSlotReserved = await reserveReconciliationProviderSlot(candidate.provider);
+    if (!providerSlotReserved) {
+      skipped += 1;
+      continue;
+    }
     const lockToken = randomUUID();
     const lockedUntil = new Date(Date.now() + RECONCILIATION_LOCK_MS);
     const claim = await prisma.paymentIntent.updateMany({

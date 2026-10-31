@@ -59,3 +59,8 @@ Admins can inspect a bounded dead-letter sample in the finance reconciliation re
 - CI must validate the new migration against disposable PostgreSQL and build API/web/Android before merge.
 - The in-process timer remains a scheduler trigger, but the durable database lease and retry state survive restarts and coordinate concurrent instances. For a future larger deployment, move the trigger to a single cron/worker service.
 
+## Shared provider rate limiting
+
+Each reconciliation provider now has a database-backed next-allowed timestamp. Worker instances reserve slots with a conditional update, enforcing a minimum 250 ms interval per provider across instances. A worker waits up to 15 seconds for a slot before skipping that candidate; a rate-limit skip does not increment the payment retry attempt count. The throttle state survives process restarts and requires no Redis or paid service.
+
+

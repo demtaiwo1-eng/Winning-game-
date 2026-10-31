@@ -1,5 +1,11 @@
 export const RECONCILIATION_MAX_ATTEMPTS = 8;
 export const RECONCILIATION_LOCK_MS = 2 * 60_000;
+export const RECONCILIATION_PROVIDER_MIN_INTERVAL_MS = 250;
+export const RECONCILIATION_PROVIDER_MAX_WAIT_MS = 15_000;
+
+export function reconciliationProviderNextAllowedAt(nowMs = Date.now()): Date {
+  return new Date(nowMs + RECONCILIATION_PROVIDER_MIN_INTERVAL_MS);
+}
 const BASE_BACKOFF_MS = 60_000;
 const MAX_BACKOFF_MS = 6 * 60 * 60_000;
 
