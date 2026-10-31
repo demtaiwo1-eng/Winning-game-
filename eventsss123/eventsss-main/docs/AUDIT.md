@@ -1,7 +1,7 @@
 # ESS Phase 0 Source Audit
 
-Audit date: 2026-10-10  
-Source of truth: this repository on `add-event-planning-api`. This is a static
+Audit date: 2026-10-31  
+Source of truth: repository `main` at the current production-readiness review; this document is a static inventory, not a claim that every browser/device/provider flow has passed. This is a static
 inventory of the checked-out source; route-level integration and device behavior
 are not implied by source presence.
 
@@ -162,7 +162,7 @@ flows are not verified as complete.
 |---|---|---|
 | `GET /billing/plans` | Optional audience filter | Implemented; active plans caller. |
 | `GET /billing/subscriptions/me` | Caller subscriptions | Implemented; active subscriptions caller. |
-| `POST /billing/subscriptions` | Creates for caller; plan ID from body | Implemented; active subscriptions caller. |
+| `POST /billing/subscriptions` | Caller role must match plan audience (including organization mode); zero-cost plans only | Implemented; paid plans fail closed until verified checkout is enabled. |
 | `POST /billing/subscriptions/:id/cancel` | Subscription must belong to caller | Implemented. |
 | `GET /billing/promotions` | `VENDOR`/`ADMIN`; vendor scoped to own | Implemented; end-to-end UI unverified. |
 | `POST /billing/promotions` | `VENDOR`; vendor profile and inline input checks | Implemented; end-to-end UI unverified. |
@@ -263,14 +263,14 @@ was not evident for targeted Phase 8 authorization review.
 | `GET /readiness/mine` | Caller events | Implemented; active dashboard caller. |
 | `POST /readiness/events/:eventId/seed-zones` | Owner or privileged roles; completed events blocked | Implemented. |
 | `POST /readiness/events/:eventId/verifiers` | `VERIFIER`/`CONSULTANT`/`ADMIN`/`CLIENT`; owner/privileged checks | Implemented. |
-| `GET /readiness/events/:eventId/verifiers` | Auth; no explicit owner check found in handler | Authorization review candidate. |
-| `GET /readiness/events/:eventId/snapshot` | Auth; no explicit owner check found in handler | Authorization review candidate. |
-| `PATCH /readiness/checks/:checkId/zone` | `VERIFIER`/`CONSULTANT`/`ADMIN`/`CLIENT`; assignment/ownership check not evident | Authorization review candidate. |
+| `GET /readiness/events/:eventId/verifiers` | Event owner, admin/consultant, or verifier assigned to the event | Implemented and covered by readiness access-policy tests. |
+| `GET /readiness/events/:eventId/snapshot` | Event owner, admin/consultant, or verifier assigned to the event | Implemented and covered by readiness access-policy tests. |
+| `PATCH /readiness/checks/:checkId/zone` | Event owner, admin, or consultant | Implemented and covered by readiness access-policy tests. |
 | `GET /readiness/verifiers/directory` | Auth; optional event/location filters | Implemented. |
 | `GET /readiness/verifiers/:userId/profile` | Auth | Implemented. |
 | `POST /readiness/events/:eventId/select-verifiers` | Owner or `ADMIN` | Implemented. |
 | `PUT /readiness/verifiers/me/profile` | `VERIFIER`/`ADMIN`; caller's profile | Implemented. |
-| `POST /readiness/verifiers/:userId/reviews` | Auth; rating 1–5; reviewer eligibility check not evident | Authorization/business-rule review candidate. |
+| `POST /readiness/verifiers/:userId/reviews` | Client owner of a completed event; target verifier must be assigned; one review per event | Implemented; no full browser review journey confirmed. |
 
 Evidence: [`readiness.routes.ts`](../apps/api/src/modules/readiness/readiness.routes.ts).
 
@@ -342,7 +342,8 @@ fully dropped. Cleanup still requires approval.
   eleven. An authoritative definition for two additional phases is absent.
 - Phase 1–8 completion remains partial; the current status and remaining tasks
   are summarized in [`REPORT-031-COMPLETENESS-AUDIT.md`](./REPORT-031-COMPLETENESS-AUDIT.md).
-- No role-by-role browser/device test, provider sandbox run, dedicated DB
-  integration run, or Android build has been completed in this environment.
-- API endpoint presence and caller mapping are static findings; do not treat
-  the whole route set as end-to-end verified.
+- PR #24, #25 and #26 final-head CI runs passed API/web checks, PostgreSQL 16 migrations and database integration tests, web builds, and Android debug APK builds. This is CI evidence, not physical-device or full browser E2E sign-off.
+- Render API `/health` and `/ready` returned 200 in the GitHub Actions online-readiness check. Render API and web deployments for the readiness authorization fix are live.
+- The owner-supplied PostgreSQL backup has not completed `pg_restore --list` or a disposable restore rehearsal; the live database contains records and must be preserved.
+- Provider sandbox journeys, real-payment activation, restore rehearsal, physical-device behavior, and complete role-by-role browser E2E remain unverified.
+- API endpoint presence and caller mapping are static findings; do not treat the whole route set as end-to-end verified.
