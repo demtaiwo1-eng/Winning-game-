@@ -126,6 +126,7 @@ function isSafeOfflineMutation(method: string, rawUrl: string) {
   }
 
   if (!/^\/api\/v1\//i.test(pathname)) return false;
+  if (/^\/api\/v1\/admin(?:\/|$)/i.test(pathname)) return false;
   if (/^\/api\/v1\/(auth|login|register|refresh|logout|payments?|wallet|escrow)(?:\/|$)/i.test(pathname)) return false;
   if (/^\/api\/v1\/checkout(?:\/|$)/i.test(pathname) &&
       !/^\/api\/v1\/checkout\/cart(?:\/|$)/i.test(pathname)) return false;
@@ -213,7 +214,7 @@ function isApiRead(request: Request, url: URL) {
 }
 
 function isNetworkOnly(url: URL) {
-  return /^\/api\/v1\/(auth|payments|wallet|escrow|checkout)(\/|$)/.test(url.pathname);
+  return /^\/api\/v1\/(admin|auth|payments|wallet|escrow|checkout)(\/|$)/.test(url.pathname);
 }
 
 function isStatic(request: Request) {
