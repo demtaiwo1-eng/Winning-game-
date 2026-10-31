@@ -1369,6 +1369,8 @@ function AdminControlsPanel() {
   const [entity, setEntity] = useState("PaymentIntent");
   const [entityId, setEntityId] = useState("");
   const [reason, setReason] = useState("");
+  const [amountMinor, setAmountMinor] = useState("");
+  const [currency, setCurrency] = useState("NGN");
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
   const [olderThanMinutes, setOlderThanMinutes] = useState("10");
   const [loading, setLoading] = useState(false);
@@ -1404,11 +1406,13 @@ function AdminControlsPanel() {
         method: "POST",
         body: JSON.stringify({
           action, entity, entityId: entityId.trim(), reason: reason.trim(),
+          ...(amountMinor.trim() ? { amountMinor: amountMinor.trim(), currency } : {}),
           idempotencyKey: `admin-approval:${crypto.randomUUID()}`,
         }),
       });
       setEntityId("");
       setReason("");
+      setAmountMinor("");
       setNotice("Approval request recorded. A different administrator must decide it.");
       setRefreshKey((key) => key + 1);
     } catch (requestError) {
@@ -1462,6 +1466,8 @@ function AdminControlsPanel() {
         <label>Entity<input value={entity} onChange={(event) => setEntity(event.target.value)} maxLength={80} required /></label>
         <label>Entity ID<input value={entityId} onChange={(event) => setEntityId(event.target.value)} maxLength={120} required /></label>
         <label>Reason<input value={reason} onChange={(event) => setReason(event.target.value)} minLength={8} maxLength={1000} required /></label>
+        <label>Amount in minor units (optional)<input value={amountMinor} onChange={(event) => setAmountMinor(event.target.value)} inputMode="numeric" pattern="[1-9][0-9]*" placeholder="e.g. 250000" /></label>
+        <label>Currency<select value={currency} onChange={(event) => setCurrency(event.target.value)}><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="USD">USD</option></select></label>
         <div><button className="ess-primary-button" type="submit" disabled={working !== "" || entityId.trim().length === 0 || reason.trim().length < 8}>{working === "create" ? "Submitting…" : "Submit approval request"}</button></div>
       </form>
       <h3>Approval queue · {approvals.length} recent</h3>
