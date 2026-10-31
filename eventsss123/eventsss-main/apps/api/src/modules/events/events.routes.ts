@@ -54,6 +54,9 @@ eventsRouter.post("/:eventId/guests/bulk", validateBody(guestBulkSchema), asyncH
 eventsRouter.get("/:eventId/guests", asyncHandler(async (req, res) => {
   res.json(await guests.listGuests(uid(req), param(req, "eventId"), listGuestsQuery.parse(req.query)));
 }));
+eventsRouter.get("/:eventId/guests/check-ins", asyncHandler(async (req, res) => {
+  res.json({ items: await guests.listGuestCheckIns(uid(req), param(req, "eventId")) });
+}));
 eventsRouter.post("/:eventId/guests/check-in", validateBody(guestCheckInSchema), asyncHandler(async (req, res) => {
   const result = await guests.checkInGuest(uid(req), param(req, "eventId"), req.body);
   res.status(result.alreadyCheckedIn ? 200 : 201).json(result);

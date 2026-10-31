@@ -71,12 +71,35 @@ export async function checkInGuest(
   if (!guest) throw new HttpError(404, "NOT_FOUND", "Guest not found for this event");
   if (guest.checkedInAt) return { guest, alreadyCheckedIn: true };
 
-  const result = await prisma.guest.updateMany({
-    where: { id: guest.id, checkedInAt: null },
-    data: { checkedInAt: new Date(), checkInMethod: input.method },
+  return prisma.$transaction(async (tx) => {
+    const checkedInAt = new Date();
+    const result = await tx.guest.updateMany({
+      where: { id: guest.id, checkedInAt: null },
+      data: { checkedInAt, checkInMethod: input.method },
+    });
+    if (result.count === 1) {
+      await tx.eventGuestCheckIn.create({
+        data: { eventId, guestId: guest.id, checkedInById: ownerId, method: input.method, checkedInAt },
+      });
+    }
+    const updated = await tx.guest.findUniqueOrThrow({ where: { id: guest.id } });
+    return { guest: updated, alreadyCheckedIn: result.count === 0 };
   });
-  const updated = await prisma.guest.findUniqueOrThrow({ where: { id: guest.id } });
-  return { guest: updated, alreadyCheckedIn: result.count === 0 };
+}
+
+export async function listGuestCheckIns(ownerId: string, eventId: string) {
+  await getOwnedEvent(ownerId, eventId);
+  return prisma.eventGuestCheckIn.findMany({
+    where: { eventId },
+    orderBy: { checkedInAt: "desc" },
+    take: 500,
+    select: {
+      id: true,
+      method: true,
+      checkedInAt: true,
+      guest: { select: { id: true, name: true } },
+    },
+  });
 }
 
 // ---- public RSVP (guest holds a secret token)

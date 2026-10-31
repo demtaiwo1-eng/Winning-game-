@@ -5,6 +5,7 @@ import { APP_ROUTE_PATHS, dashboardRouteRedirect, legacyDashboardPath } from "./
 const EventReadinessBoard = lazy(() => import("./components/EventReadinessBoard"));
 const EventCreatePanel = lazy(() => import("./components/EventCreatePanel"));
 const EventChecklistPanel = lazy(() => import("./components/EventChecklistPanel"));
+const EventPlannerWorkspace = lazy(() => import("./components/EventPlannerWorkspace"));
 const EventMessagesPanel = lazy(() => import("./components/EventMessagesPanel"));
 const GuestCheckInPanel = lazy(() => import("./components/GuestCheckInPanel"));
 const PublicRsvpPage = lazy(() => import("./components/PublicRsvpPage"));
@@ -239,7 +240,7 @@ function ClientPortal({
   currency: CurrencyCode;
 }) {
   const [tab, setTab] = useDashboardTab(
-    ["overview", "checklist", "checkin", "marketplace", "wallet", "readiness", "messages", "verifiers", "plans", "kyc", "feedback"] as const,
+    ["overview", "checklist", "planner", "checkin", "marketplace", "wallet", "readiness", "messages", "verifiers", "plans", "kyc", "feedback"] as const,
     "marketplace",
   );
   const [bookingNotice, setBookingNotice] = useState("");
@@ -363,6 +364,7 @@ function ClientPortal({
           [
             ["overview", "Overview"],
             ["checklist", "Checklist"],
+            ["planner", "Event workspace"],
             ["checkin", "Guest check-in"],
             ["marketplace", "Marketplace"],
             ["verifiers", "Verifiers"],
@@ -390,7 +392,7 @@ function ClientPortal({
           onCreated={(id) => {
             setReadinessEventId(id);
             setChecklistEventId(id);
-            setTab("checklist");
+            setTab("planner");
             setShowCreate(false);
             api<{ items: Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }> }>("/events")
               .then((result) => {
@@ -545,6 +547,7 @@ function ClientPortal({
       {tab === "checklist" && (
         <EventChecklistPanel events={ownedEvents} initialEventId={checklistEventId || undefined} />
       )}
+      {tab === "planner" && <EventPlannerWorkspace events={ownedEvents} initialEventId={checklistEventId || undefined} />}
       {tab === "checkin" && <GuestCheckInPanel events={ownedEvents} />}
       {tab === "messages" && <EventMessagesPanel events={ownedEvents} />}
       {tab === "wallet" && <WalletPanel locale={locale} role="CLIENT" />}
