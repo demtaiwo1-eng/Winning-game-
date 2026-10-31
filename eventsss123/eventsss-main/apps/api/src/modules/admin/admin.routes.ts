@@ -199,7 +199,7 @@ adminRouter.get("/finance/reconciliation", asyncHandler(async (req, res) => {
 
   const cutoff = new Date(Date.now() - olderThanMinutes * 60_000);
   const succeededWhere = { status: "SUCCEEDED" as const, purpose: "WALLET_DEPOSIT" };
-  const [stalePendingCount, stalePending, succeededCount, succeededIntents, deadLetteredCount, deadLetteredIntents] = await Promise.all([
+  const [stalePendingCount, stalePending, succeededCount, deadLetteredCount, deadLetteredIntents, succeededIntents] = await Promise.all([
     prisma.paymentIntent.count({ where: { status: "PENDING", createdAt: { lt: cutoff } } }),
     prisma.paymentIntent.findMany({
       where: { status: "PENDING", createdAt: { lt: cutoff } },
