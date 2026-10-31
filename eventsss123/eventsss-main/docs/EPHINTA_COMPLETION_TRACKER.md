@@ -66,3 +66,21 @@ This ledger tracks the phased delivery programme. A phase is not complete merely
 ## Definition of done
 A phase is complete only when code review, CI, relevant environment tests, and security/data invariants pass. External dependencies must be recorded as verified or blocked. Overall completion requires evidence for all required phases and owner acceptance of the release checklist.
 | 2026-10-31 | Merged PR #16 after final-head CI run #88 passed; Render web and API deployments for commit 90a2f939 are live. Additive guest check-in history migration applied; /health and /ready returned 200. | PR #16; commit 90a2f93900073d74d69f8aa09371392a18ca94c0; Render deploys dep-dbij1tbm8hqs73etkmj0 and dep-dbij1tbm8hqs73etkmdg |
+
+## Phase 4 operations delivery (2026-10-31)
+
+The separate Phase 4 operations plan in `PHASE_4_OPERATIONS_FOUNDATION.md` has now had its implementation sequence delivered and merged:
+
+| Workstream | Merged PR | Main commit | CI evidence |
+|---|---:|---|---|
+| Finance CSV numeric integrity | #31 | `e96da05893d1ff8d3f86125036fbe689d431a541` | Run [41188847594](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41188847594) passed |
+| Maker-checker approval records | #32 | `477da113bb2df03ee24cab2bfcca7ae17a8e9773` | Run [41189056341](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41189056341) passed |
+| Prevent offline replay of privileged admin mutations | #33 | `3664219cbfb2de727e76cd043eeabb2590d0b7b6` | Run [41189114897](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41189114897) passed |
+| Durable payment reconciliation and dead-letter replay | #34 | `6908e49370b883c395181a8bed060edc18b4a10f` | Run [41189609281](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41189609281) passed |
+| Currency-aware wallet idempotency | #35 | `2a0aac9df99a0307be5775896ed22c4f4caf1da1` | Run [41190026407](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41190026407) passed |
+| Admin approval/reconciliation console | #36 | `2e9036e03904a468cb07758ade6d917f6f284dce` | Run [41191143640](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41191143640) passed |
+| Admin authorization regression tests and Phase 4.5 runbook | #37 | `9dba60df064592ff24c5ccc9cbe4a5ab5a6025af` | Run [41191519256](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41191519256) passed |
+
+These are implementation/CI completion claims, not production activation claims. Still open before a production release: staging sign-off, authenticated browser journeys, physical Android accessibility/viewport review, provider sandbox evidence, backup restore rehearsal, Render database continuity, and dependency/security remediation. Live payouts, refunds, FX, and campaign billing remain disabled/deferred.
+
+
