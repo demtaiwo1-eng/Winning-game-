@@ -17,7 +17,7 @@ test("public landing page explains the event-planning service and its menu", asy
   await expect(menu.locator(".eph-menu-brand img")).toHaveCSS("width", "20px");
   await expect(menu.locator(".eph-menu-primary img")).toHaveCSS("width", "16px");
   await expect(menu.getByRole("button", { name: /Plan your next event here/ })).toBeVisible();
-  await page.getByRole("heading", { name: /Plan the event you imagine/i }).click();
+  await page.getByRole("button", { name: "Close menu" }).click();
   await expect(page.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
 });
 test("event builder saves a brief and opens registration", async ({ page }) => {
@@ -166,14 +166,9 @@ test("authenticated planner can create an event and add a checklist task", async
     expectedGuests: 80,
   };
 
-  await page.addInitScript(() => {
-    localStorage.setItem("ess_user", JSON.stringify({
-      id: "planner-e2e", email: "planner@example.test", name: "E2E Planner", role: "CLIENT", currency: "NGN",
-    }));
-    localStorage.setItem("ess_access_token", "e2e-access-token");
-    localStorage.setItem("ess_refresh_token", "e2e-refresh-token");
-  });
-  await page.route("**/api/v1/auth/refresh", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(auth) }));
+  await page.route("**/api/v1/auth/login", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify(auth),
+  }));
   await page.route("**/api/v1/events", async (route) => {
     if (route.request().method() === "GET") {
       expect(route.request().headers().authorization).toBe("Bearer e2e-access-token");
@@ -181,12 +176,11 @@ test("authenticated planner can create an event and add a checklist task", async
     }
     expect(route.request().method()).toBe("POST");
     expect(route.request().headers().authorization).toBe("Bearer e2e-access-token");
-    expect(route.request().postDataJSON()).toMatchObject({ title: "Authenticated E2E Event", city: "Ibadan", expectedGuests: 80, isPublic: false });
+    expect(route.request().postDataJSON()).toMatchObject({ title: event.title, city: "Ibadan", expectedGuests: 80, isPublic: false });
     return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ event }) });
   });
   await page.route("**/api/v1/events/event-e2e-001", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
+    status: 200, contentType: "application/json",
     body: JSON.stringify({
       event,
       summary: { guests: { byRsvp: {}, expectedHeadcount: 0 }, tasks: {}, budget: { currency: "NGN", plannedMinor: "0", actualMinor: "0" } },
@@ -199,18 +193,23 @@ test("authenticated planner can create an event and add a checklist task", async
     expect(route.request().headers().authorization).toBe("Bearer e2e-access-token");
     expect(route.request().postDataJSON()).toEqual({ title: "Confirm event venue" });
     return route.fulfill({
-      status: 201,
-      contentType: "application/json",
+      status: 201, contentType: "application/json",
       body: JSON.stringify({ task: { id: "task-e2e-001", title: "Confirm event venue", status: "TODO" } }),
     });
   });
   await page.route("**/api/v1/events/event-e2e-001/guests", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({ items: [] }),
+    status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }),
   }));
 
   await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: "Sign in to your account" }).click();
+  const dialog = page.getByRole("dialog", { name: "Welcome back" });
+  await dialog.getByLabel("Email address").fill("planner@example.test");
+  await dialog.getByLabel("Password").fill("e2e-password");
+  await dialog.getByRole("button", { name: "Sign in", exact: true }).click();
+
   await expect(page.getByRole("heading", { name: "Welcome, E2E Planner" })).toBeVisible();
   await page.getByLabel("Event name").fill(event.title);
   await page.getByLabel("City").fill("Ibadan");
@@ -227,6 +226,38 @@ test("authenticated planner can create an event and add a checklist task", async
 });
 
 test("authenticated planner shows an access error when an event is not owned", async ({ page }) => {
+  const auth = {
+    accessToken: "e2e-access-token",
+    refreshToken: "e2e-refresh-token",
+    user: { id: "planner-other", email: "other@example.test", name: "Other Planner", role: "CLIENT" },
+  };
+  await page.route("**/api/v1/auth/login", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify(auth),
+  }));
+  await page.route("**/api/v1/events", (route) => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ items: [{ id: "foreign-event-001", title: "Another Owner's Private Event", status: "DRAFT" }] }),
+  }));
+  await page.route("**/api/v1/events/foreign-event-001**", (route) => route.fulfill({
+    status: 404, contentType: "application/json",
+    body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Event not found" } }),
+  }));
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: "Sign in to your account" }).click();
+  const dialog = page.getByRole("dialog", { name: "Welcome back" });
+  await dialog.getByLabel("Email address").fill("other@example.test");
+  await dialog.getByLabel("Password").fill("e2e-password");
+  await dialog.getByRole("button", { name: "Sign in", exact: true }).click();
+
+  await expect(page.getByRole("heading", { name: "Welcome, Other Planner" })).toBeVisible();
+  await page.getByRole("button", { name: /Another Owner's Private Event/ }).click();
+  await expect(page.getByText("Unable to load event details.")).toBeVisible();
+  await expect(page.getByText("Event summary")).toHaveCount(0);
+});
+
   const auth = {
     accessToken: "e2e-access-token",
     refreshToken: "e2e-refresh-token",
