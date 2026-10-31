@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
-import { ZodError } from "zod";
+import { ZodError } from "zod/v3";
 import { HttpError } from "../lib/errors";
 import { logger } from "../lib/logger";
 
