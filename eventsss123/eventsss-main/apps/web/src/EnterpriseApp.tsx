@@ -1338,6 +1338,179 @@ function FinanceOperationsPanel() {
   );
 }
 
+
+type AdminApprovalItem = {
+  id: string;
+  action: string;
+  entity: string;
+  entityId: string;
+  amountMinor: string | null;
+  currency: string | null;
+  reason: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
+  requestedById: string;
+  decidedById?: string | null;
+  decisionNote?: string | null;
+  expiresAt: string;
+  createdAt: string;
+};
+type AdminReconciliationReport = {
+  generatedAt: string;
+  olderThanMinutes: number;
+  stalePending: { total: number; items: Array<{ paymentIntentId: string; provider: string; amountMinor: string; currency: string; createdAt: string }> };
+  reconciliationDeadLetters: { total: number; items: Array<{ paymentIntentId: string; provider: string; amountMinor: string; currency: string; attempts: number; lastError: string | null; deadLetteredAt: string }> };
+  succeededDepositLedger: { scanned: number; totalSucceeded: number; scanTruncated: boolean; exceptionCountInScan: number; exceptions: Array<{ paymentIntentId: string; provider: string; currency: string; expectedGrossMinor: string; recordedLedgerMinor: string; depositEntryCount: number }> };
+  readOnly: true;
+};
+function AdminControlsPanel() {
+  const [approvals, setApprovals] = useState<AdminApprovalItem[]>([]);
+  const [report, setReport] = useState<AdminReconciliationReport | null>(null);
+  const [action, setAction] = useState("REFUND");
+  const [entity, setEntity] = useState("PaymentIntent");
+  const [entityId, setEntityId] = useState("");
+  const [reason, setReason] = useState("");
+  const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
+  const [olderThanMinutes, setOlderThanMinutes] = useState("10");
+  const [loading, setLoading] = useState(false);
+  const [working, setWorking] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    Promise.all([
+      api<{ items: AdminApprovalItem[] }>("/admin/approvals"),
+      api<AdminReconciliationReport>(`/admin/finance/reconciliation?olderThanMinutes=${encodeURIComponent(olderThanMinutes)}`),
+    ]).then(([approvalData, reconciliationData]) => {
+      if (active) {
+        setApprovals(approvalData.items);
+        setReport(reconciliationData);
+        setError("");
+      }
+    }).catch((loadError: Error) => { if (active) setError(loadError.message); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [olderThanMinutes, refreshKey]);
+
+  const createApproval = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setWorking("create");
+    setError("");
+    setNotice("");
+    try {
+      await api("/admin/approvals", {
+        method: "POST",
+        body: JSON.stringify({
+          action, entity, entityId: entityId.trim(), reason: reason.trim(),
+          idempotencyKey: `admin-approval:${crypto.randomUUID()}`,
+        }),
+      });
+      setEntityId("");
+      setReason("");
+      setNotice("Approval request recorded. A different administrator must decide it.");
+      setRefreshKey((key) => key + 1);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Could not create approval request");
+    } finally { setWorking(""); }
+  };
+
+  const decideApproval = async (id: string, decision: "APPROVE" | "REJECT") => {
+    const note = (decisionNotes[id] || "").trim();
+    if (note.length < 3) {
+      setError("Enter a decision note of at least three characters before deciding.");
+      return;
+    }
+    setWorking(id);
+    setError("");
+    setNotice("");
+    try {
+      await api(`/admin/approvals/${encodeURIComponent(id)}/decision`, {
+        method: "POST", body: JSON.stringify({ decision, note }),
+      });
+      setNotice(`Approval request ${decision === "APPROVE" ? "approved" : "rejected"}. No payment or refund was executed.`);
+      setDecisionNotes((current) => ({ ...current, [id]: "" }));
+      setRefreshKey((key) => key + 1);
+    } catch (decisionError) {
+      setError(decisionError instanceof Error ? decisionError.message : "Could not record decision");
+    } finally { setWorking(""); }
+  };
+
+  const replayDeadLetter = async (id: string) => {
+    if (!window.confirm("Requeue this payment intent for provider verification? This does not credit funds.")) return;
+    setWorking(id);
+    setError("");
+    setNotice("");
+    try {
+      await api(`/admin/finance/reconciliation/${encodeURIComponent(id)}/replay`, { method: "POST", body: JSON.stringify({}) });
+      setNotice("Payment intent requeued. Provider verification must still succeed before any settlement.");
+      setRefreshKey((key) => key + 1);
+    } catch (replayError) {
+      setError(replayError instanceof Error ? replayError.message : "Could not replay reconciliation");
+    } finally { setWorking(""); }
+  };
+
+  return (
+    <section className="ess-panel">
+      <SectionTitle eyebrow="Governance · controlled actions" title="Approvals and reconciliation" />
+      <p className="ess-muted">Approval records enforce maker-checker separation. Approving a request records authorization only; it does not execute a payout, refund, or ledger adjustment.</p>
+      {error && <p className="ess-form-error" role="alert">{error}</p>}
+      {notice && <p className="ess-muted" role="status">{notice}</p>}
+      <form onSubmit={(event) => void createApproval(event)} className="ess-form-grid">
+        <label>Action<select value={action} onChange={(event) => setAction(event.target.value)}><option value="REFUND">Refund request</option><option value="PAYOUT">Payout request</option><option value="LEDGER_ADJUSTMENT">Ledger adjustment</option></select></label>
+        <label>Entity<input value={entity} onChange={(event) => setEntity(event.target.value)} maxLength={80} required /></label>
+        <label>Entity ID<input value={entityId} onChange={(event) => setEntityId(event.target.value)} maxLength={120} required /></label>
+        <label>Reason<input value={reason} onChange={(event) => setReason(event.target.value)} minLength={8} maxLength={1000} required /></label>
+        <div><button className="ess-primary-button" type="submit" disabled={working !== "" || entityId.trim().length === 0 || reason.trim().length < 8}>{working === "create" ? "Submitting…" : "Submit approval request"}</button></div>
+      </form>
+      <h3>Approval queue · {approvals.length} recent</h3>
+      {approvals.length ? <div style={{ display: "grid", gap: 10 }}>
+        {approvals.map((item) => <article className="ess-card" key={item.id}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+            <strong>{item.action.replace(/_/g, " ")} · {item.status}</strong>
+            <small>{new Date(item.createdAt).toLocaleString()}</small>
+          </div>
+          <p className="ess-muted">{item.entity} · {item.entityId} · Requested by {item.requestedById}</p>
+          <p>{item.reason}</p>
+          {item.decisionNote && <p className="ess-muted">Decision: {item.decisionNote}</p>}
+          {item.status === "PENDING" && <div className="ess-form-grid">
+            <label>Decision note<input value={decisionNotes[item.id] || ""} onChange={(event) => setDecisionNotes((current) => ({ ...current, [item.id]: event.target.value }))} minLength={3} maxLength={1000} placeholder="Explain the decision" /></label>
+            <div style={{ display: "flex", gap: 8, alignItems: "end", flexWrap: "wrap" }}>
+              <button className="ess-primary-button" type="button" disabled={working !== "" || decisionNotes[item.id]?.trim().length < 3} onClick={() => void decideApproval(item.id, "APPROVE")}>{working === item.id ? "Saving…" : "Approve"}</button>
+              <button className="ess-outline-button" type="button" disabled={working !== "" || decisionNotes[item.id]?.trim().length < 3} onClick={() => void decideApproval(item.id, "REJECT")}>Reject</button>
+            </div>
+          </div>}
+          <small className="ess-muted">Expires {new Date(item.expiresAt).toLocaleString()}</small>
+        </article>)}
+      </div> : <p className="ess-muted">No approval requests found.</p>}
+      <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
+        <div><h3>Payment reconciliation</h3><p className="ess-muted">Read-only exception report. Dead-letter replay only requeues provider verification.</p></div>
+        <label>Pending age threshold<select value={olderThanMinutes} onChange={(event) => setOlderThanMinutes(event.target.value)}><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option><option value="240">4 hours</option><option value="1440">24 hours</option></select></label>
+      </div>
+      {report && <>
+        <div className="ess-metrics">
+          <Metric label="Stale pending" value={report.stalePending.total.toLocaleString()} detail="Intents older than threshold" />
+          <Metric label="Dead-lettered" value={report.reconciliationDeadLetters.total.toLocaleString()} detail="Awaiting operator replay" />
+          <Metric label="Ledger exceptions" value={report.succeededDepositLedger.exceptionCountInScan.toLocaleString()} detail={`${report.succeededDepositLedger.scanned} of ${report.succeededDepositLedger.totalSucceeded} successful deposits scanned`} />
+        </div>
+        {report.succeededDepositLedger.scanTruncated && <p className="ess-muted">The successful-deposit scan is capped at 500 records; this report is truncated.</p>}
+        <h4>Dead-letter queue</h4>
+        {report.reconciliationDeadLetters.items.length ? <div style={{ overflowX: "auto" }}><table><thead><tr><th>Intent</th><th>Provider</th><th>Amount</th><th>Attempts</th><th>Last error category</th><th>Action</th></tr></thead><tbody>
+          {report.reconciliationDeadLetters.items.map((item) => <tr key={item.paymentIntentId}><td>{item.paymentIntentId}</td><td>{item.provider}</td><td>{financeAmount(item.amountMinor, item.currency)}</td><td>{item.attempts}</td><td>{item.lastError || "Unknown"}</td><td><button className="ess-outline-button" type="button" disabled={working !== ""} onClick={() => void replayDeadLetter(item.paymentIntentId)}>{working === item.paymentIntentId ? "Requeueing…" : "Requeue"}</button></td></tr>)}
+        </tbody></table></div> : <p className="ess-muted">No dead-lettered payment intents.</p>}
+        <h4>Successful deposits with ledger exceptions</h4>
+        {report.succeededDepositLedger.exceptions.length ? <div style={{ overflowX: "auto" }}><table><thead><tr><th>Intent</th><th>Provider</th><th>Expected gross</th><th>Ledger total</th><th>Deposit entries</th></tr></thead><tbody>
+          {report.succeededDepositLedger.exceptions.map((item) => <tr key={item.paymentIntentId}><td>{item.paymentIntentId}</td><td>{item.provider}</td><td>{financeAmount(item.expectedGrossMinor, item.currency)}</td><td>{financeAmount(item.recordedLedgerMinor, item.currency)}</td><td>{item.depositEntryCount}</td></tr>)}
+        </tbody></table></div> : <p className="ess-muted">No ledger exceptions in the scanned window.</p>}
+        <small className="ess-muted">Report generated {new Date(report.generatedAt).toLocaleString()}. Read-only except for audited dead-letter requeue.</small>
+      </>}
+      {loading && <p className="ess-muted">Refreshing operations data…</p>}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}><button className="ess-outline-button" type="button" disabled={loading || working !== ""} onClick={() => setRefreshKey((key) => key + 1)}>Refresh controls</button></div>
+    </section>
+  );
+}
+
 function AdminPortal() {
   const [overview, setOverview] = useState<{
     accounts: { total: number; active: number };
