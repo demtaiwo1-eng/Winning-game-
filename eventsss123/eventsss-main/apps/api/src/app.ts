@@ -112,6 +112,23 @@ export function createApp() {
       res.status(201).json({ request });
     } catch (error) { next(error); }
   });
+  app.get("/api/v1/vendor/listings", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
+    try {
+      const items = await prisma.listing.findMany({
+        where: { vendor: { userId: req.user!.id } },
+        orderBy: { updatedAt: "desc" },
+        include: { category: { select: { id: true, name: true } } },
+      });
+      res.json({
+        items: items.map((listing) => ({
+          ...listing,
+          priceMinor: listing.priceMinor.toString(),
+        })),
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
   app.post("/api/v1/vendor/listings", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
     try {
       const profile = await prisma.vendorProfile.findUniqueOrThrow({ where: { userId: req.user!.id } });
