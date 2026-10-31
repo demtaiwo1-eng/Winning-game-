@@ -199,6 +199,62 @@ export function createApp() {
       res.status(204).end();
     } catch (error) { next(error); }
   });
+  app.get("/api/v1/vendor/listings/:listingId/availability", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
+    try {
+      const listing = await prisma.listing.findFirst({
+        where: { id: req.params.listingId, vendor: { userId: req.user!.id } },
+        select: { id: true },
+      });
+      if (!listing) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Listing not found" } });
+      const items = await prisma.listingAvailability.findMany({
+        where: { listingId: listing.id },
+        orderBy: { startsAt: "asc" },
+      });
+      res.json({ items });
+    } catch (error) { next(error); }
+  });
+  app.post("/api/v1/vendor/listings/:listingId/availability", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
+    try {
+      const listing = await prisma.listing.findFirst({
+        where: { id: req.params.listingId, vendor: { userId: req.user!.id } },
+        select: { id: true },
+      });
+      if (!listing) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Listing not found" } });
+      const startsAt = new Date(String(req.body.startsAt || ""));
+      const endsAt = new Date(String(req.body.endsAt || ""));
+      const capacity = req.body.capacity === undefined ? 1 : Number(req.body.capacity);
+      if (!Number.isFinite(startsAt.getTime()) || !Number.isFinite(endsAt.getTime()) || endsAt <= startsAt) {
+        return res.status(400).json({ error: { code: "INVALID_AVAILABILITY_WINDOW", message: "Provide a valid start and end time; end must be after start" } });
+      }
+      if (!Number.isSafeInteger(capacity) || capacity < 1 || capacity > 100000) {
+        return res.status(400).json({ error: { code: "INVALID_AVAILABILITY_CAPACITY", message: "Capacity must be a positive whole number" } });
+      }
+      const conflict = await prisma.listingAvailability.findFirst({
+        where: { listingId: listing.id, startsAt: { lt: endsAt }, endsAt: { gt: startsAt } },
+        select: { id: true },
+      });
+      if (conflict) return res.status(409).json({ error: { code: "AVAILABILITY_OVERLAP", message: "This availability window overlaps an existing window" } });
+      const item = await prisma.listingAvailability.create({
+        data: { listingId: listing.id, startsAt, endsAt, capacity },
+      });
+      res.status(201).json({ item });
+    } catch (error) { next(error); }
+  });
+  app.delete("/api/v1/vendor/listings/:listingId/availability/:availabilityId", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
+    try {
+      const item = await prisma.listingAvailability.findFirst({
+        where: {
+          id: req.params.availabilityId,
+          listingId: req.params.listingId,
+          listing: { vendor: { userId: req.user!.id } },
+        },
+        select: { id: true },
+      });
+      if (!item) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Availability window not found" } });
+      await prisma.listingAvailability.delete({ where: { id: item.id } });
+      res.status(204).end();
+    } catch (error) { next(error); }
+  });
   const riderRetired = (_req: express.Request, res: express.Response) =>
     res.status(410).json({
       error: { code: "ROLE_RETIRED", message: "Rider logistics is no longer supported" },
