@@ -40,3 +40,22 @@ A ledger exception is a succeeded wallet-deposit payment intent that does not ha
 ## Operational limits
 
 The background reconciliation loop is process-local and intentionally does not claim distributed locking across multiple API instances. The atomic payment-intent claim and unique ledger idempotency keys remain the settlement safety boundary. If the service is later scaled horizontally, move scheduling to a single Render cron/worker or add a database-backed lease before relying on a single global scheduler.
+
+## Durable retry queue update
+
+The payment-intent row now carries durable reconciliation scheduling state:
+- attempt count and next-attempt timestamp;
+- expiring worker lease token to prevent concurrent processing across API instances;
+- sanitized last-error category;
+- dead-letter timestamp after eight failed attempts.
+
+The worker uses bounded exponential backoff (one minute base, six-hour cap) and provider verification requests time out after 15 seconds. It never stores provider response bodies or raw error messages in the retry metadata. Existing atomic PENDING-to-SUCCEEDED settlement and unique ledger idempotency keys remain the wallet-credit safety boundary.
+
+Admins can inspect a bounded dead-letter sample in the finance reconciliation report and request an audited replay. Replay only requeues the pending payment intent; it does not itself settle or credit funds. Provider verification must still succeed before settlement.
+
+## Additional validation
+
+- Retry schedule and sanitized error persistence have unit tests.
+- CI must validate the new migration against disposable PostgreSQL and build API/web/Android before merge.
+- The in-process timer remains a scheduler trigger, but the durable database lease and retry state survive restarts and coordinate concurrent instances. For a future larger deployment, move the trigger to a single cron/worker service.
+
