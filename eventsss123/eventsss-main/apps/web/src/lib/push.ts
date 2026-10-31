@@ -1,6 +1,7 @@
 import { apiUrl } from "./api";
 
 let registrationListenerAdded = false;
+let currentPushToken: string | null = null;
 
 /**
  * Capacitor push registration — no-op on pure web.
@@ -28,6 +29,7 @@ export async function registerPushIfNative(): Promise<void> {
 
     registrationListenerAdded = true;
     PushNotifications.addListener("registration", async (token: { value: string }) => {
+      currentPushToken = token.value;
       try {
         const t = localStorage.getItem("ess_access_token");
         await fetch(apiUrl("/notifications/push-token"), {
@@ -44,5 +46,26 @@ export async function registerPushIfNative(): Promise<void> {
     });
   } catch {
     /* web or missing plugin */
+  }
+}
+
+/** Revoke the current device token before clearing the authenticated session. */
+export async function unregisterPushDevice(): Promise<void> {
+  if (!currentPushToken) return;
+  try {
+    const accessToken = localStorage.getItem("ess_access_token");
+    if (!accessToken) return;
+    await fetch(apiUrl("/notifications/push-token"), {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ token: currentPushToken }),
+    });
+  } catch {
+    /* best effort; server-side token remains revoked only after a successful request */
+  } finally {
+    currentPushToken = null;
   }
 }
