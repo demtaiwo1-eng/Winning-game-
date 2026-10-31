@@ -56,7 +56,7 @@ type OrganizationMode = "EVENT_PLANNING" | "SERVICE_PROVIDER";
 type Status = "Pending" | "Confirmed" | "Completed" | "Revision";
 
 type Listing = {
-  id: number;
+  id: string | number;
   name: string;
   category: string;
   price: string;
@@ -587,6 +587,37 @@ function VendorPortal({
     leadTime: "",
     includes: "",
   });
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      api<{ items: Array<{
+        id: string; title: string; description?: string | null; priceMinor: string;
+        currency: string; city?: string | null; capacity?: number | null;
+        status: string; type: string; category?: { name: string } | null;
+      }> }>("/vendor/listings"),
+      api<{ items: Array<{ id: string; name: string }> }>("/vendor/categories"),
+    ]).then(([listingResult, categoryResult]) => {
+      if (cancelled) return;
+      setCategories(categoryResult.items || []);
+      setListings((listingResult.items || []).map((item) => ({
+        id: item.id,
+        name: item.title,
+        category: item.category?.name || item.type,
+        price: String(Number(item.priceMinor) / 100),
+        currency: item.currency,
+        status: item.status === "ACTIVE" ? "Live" : "Draft",
+        image: "✦",
+        city: item.city || "",
+        capacity: item.capacity == null ? "" : String(item.capacity),
+        leadTime: "",
+        includes: item.description || "",
+      })));
+    }).catch((error: Error) => {
+      if (!cancelled) setNotice(error.message || "Unable to load your saved listings.");
+    });
+    return () => { cancelled = true; };
+  }, [setListings]);
   const openForm = (listing?: Listing) => {
     setEditing(listing ?? null);
     setForm(
@@ -618,18 +649,71 @@ function VendorPortal({
     );
     setShowForm(true);
   };
-  const saveListing = (event: React.FormEvent) => {
+  const saveListing = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form.name || !form.price) return;
-    if (editing)
-      setListings((current) =>
-        current.map((item) =>
-          item.id === editing.id ? { ...editing, ...form } : item,
-        ),
-      );
-    else setListings((current) => [{ ...form, id: Date.now() }, ...current]);
-    setNotice("Catalog saved and ready for planner discovery.");
-    setShowForm(false);
+    if (!form.name.trim() || !form.price.trim()) return;
+    const category = categories.find((item) => item.name.toLowerCase() === form.category.toLowerCase());
+    if (!editing && !category) {
+      setNotice("Listing categories are unavailable. Refresh the page and try again.");
+      return;
+    }
+    const priceMinor = String(Math.round(Number(form.price) * 100));
+    if (!/^\\d+$/.test(priceMinor) || BigInt(priceMinor) <= 0n) {
+      setNotice("Enter a valid price greater than zero.");
+      return;
+    }
+    try {
+      if (editing) {
+        const result = await api<{ listing: {
+          id: string; title: string; description?: string | null; priceMinor: string;
+          currency: string; city?: string | null; capacity?: number | null;
+          status: string; type: string; category?: { name: string } | null;
+        } }>(`/vendor/listings/${editing.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            title: form.name.trim(),
+            description: form.includes.trim(),
+            priceMinor,
+            city: form.city.trim(),
+            capacity: form.capacity ? Number(form.capacity) : null,
+          }),
+        });
+        const item = result.listing;
+        setListings((current) => current.map((existing) => existing.id === editing.id ? {
+          ...existing, id: item.id, name: item.title, category: item.category?.name || existing.category,
+          price: String(Number(item.priceMinor) / 100), currency: item.currency,
+          status: item.status === "ACTIVE" ? "Live" : "Draft", city: item.city || "",
+          capacity: item.capacity == null ? "" : String(item.capacity), includes: item.description || "",
+        } : existing));
+        setNotice("Package updated.");
+      } else {
+        const result = await api<{ listing: {
+          id: string; title: string; description?: string | null; priceMinor: string;
+          currency: string; city?: string | null; capacity?: number | null;
+          status: string; type: string; category?: { name: string } | null;
+        } }>("/vendor/listings", {
+          method: "POST",
+          body: JSON.stringify({
+            title: form.name.trim(), description: form.includes.trim(), priceMinor,
+            categoryId: category!.id, type: form.category.toLowerCase() === "venues" ? "VENUE" : "SERVICE",
+            status: "DRAFT", currency: form.currency, city: form.city.trim(),
+            capacity: form.capacity ? Number(form.capacity) : null,
+          }),
+        });
+        const item = result.listing;
+        setListings((current) => [{
+          id: item.id, name: item.title, category: item.category?.name || form.category,
+          price: String(Number(item.priceMinor) / 100), currency: item.currency,
+          status: "Draft", image: "✦", city: item.city || "",
+          capacity: item.capacity == null ? "" : String(item.capacity),
+          leadTime: form.leadTime, includes: item.description || "",
+        }, ...current]);
+        setNotice("Package saved as a draft. It will not appear in the public marketplace until approved.");
+      }
+      setShowForm(false);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to save package.");
+    }
   };
   const [vendorTab, setVendorTab] = useDashboardTab(
     ["catalog", "wallet", "plans", "kyc", "messages", "promotions"] as const,
@@ -948,7 +1032,6 @@ function VendorPortal({
                   }
                 >
                   <option>Draft</option>
-                  <option>Live</option>
                 </select>
               </label>
               <label>
