@@ -164,6 +164,7 @@ export async function verifyPaystack(reference: string): Promise<{
     `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
     {
       headers: { Authorization: `Bearer ${env.PAYSTACK_SECRET_KEY}` },
+      signal: AbortSignal.timeout(15_000),
     },
   );
 
@@ -266,6 +267,7 @@ export async function verifyStripe(sessionId: string): Promise<{
       headers: {
         Authorization: `Basic ${Buffer.from(`${env.STRIPE_SECRET_KEY}:`).toString("base64")}`,
       },
+      signal: AbortSignal.timeout(15_000),
     },
   );
 
@@ -370,6 +372,7 @@ export async function verifyFlutterwave(transactionId: string): Promise<{
       headers: {
         Authorization: `Bearer ${env.FLUTTERWAVE_SECRET_KEY}`,
       },
+      signal: AbortSignal.timeout(15_000),
     },
   );
 
