@@ -618,6 +618,18 @@ readinessRouter.post(
     }
     const verifierId =
       typeof req.body.verifierId === "string" ? req.body.verifierId : req.user!.id;
+    const targetVerifier = await prisma.user.findFirst({
+      where: { id: verifierId, role: "VERIFIER" },
+      select: { id: true },
+    });
+    if (!targetVerifier) throw new HttpError(404, "VERIFIER_NOT_FOUND", "Selected user is not an active verifier");
+    if (
+      verifierId !== req.user!.id &&
+      event.ownerId !== req.user!.id &&
+      !["ADMIN", "CONSULTANT"].includes(req.user!.role)
+    ) {
+      throw new HttpError(403, "FORBIDDEN", "Only the event owner, admin, or consultant may assign another verifier");
+    }
     const zone = String(req.body.zone || "GENERAL").toUpperCase();
     const isLead = Boolean(req.body.isLead);
     if (isLead && event.ownerId !== req.user!.id && req.user!.role !== "ADMIN") {
