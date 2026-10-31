@@ -308,11 +308,25 @@ model Listing {
   cartItems    CartItem[]
   checkoutItems CheckoutItem[]
   events       Event[]       @relation("EventVenue")
+  availability ListingAvailability[]
 
   @@index([type, status])
   @@index([country, city])
   @@index([categoryId])
   @@index([vendorId])
+}
+
+model ListingAvailability {
+  id        String   @id @default(uuid())
+  listingId String
+  startsAt  DateTime
+  endsAt    DateTime
+  capacity  Int      @default(1)
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, startsAt, endsAt])
+  @@index([listingId, startsAt, endsAt])
 }
 
 model Event {
