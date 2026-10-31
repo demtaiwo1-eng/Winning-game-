@@ -199,7 +199,7 @@ adminRouter.get("/finance/reconciliation", asyncHandler(async (req, res) => {
 
   const cutoff = new Date(Date.now() - olderThanMinutes * 60_000);
   const succeededWhere = { status: "SUCCEEDED" as const, purpose: "WALLET_DEPOSIT" };
-  const [stalePendingCount, stalePending, succeededCount, succeededIntents] = await Promise.all([
+  const [stalePendingCount, stalePending, succeededCount, deadLetteredCount, deadLetteredIntents, succeededIntents] = await Promise.all([
     prisma.paymentIntent.count({ where: { status: "PENDING", createdAt: { lt: cutoff } } }),
     prisma.paymentIntent.findMany({
       where: { status: "PENDING", createdAt: { lt: cutoff } },
@@ -208,6 +208,13 @@ adminRouter.get("/finance/reconciliation", asyncHandler(async (req, res) => {
       select: { id: true, provider: true, amountMinor: true, currency: true, createdAt: true },
     }),
     prisma.paymentIntent.count({ where: succeededWhere }),
+    prisma.paymentIntent.count({ where: { status: "PENDING", reconciliationDeadLetteredAt: { not: null } } }),
+    prisma.paymentIntent.findMany({
+      where: { status: "PENDING", reconciliationDeadLetteredAt: { not: null } },
+      orderBy: { reconciliationDeadLetteredAt: "desc" },
+      take: 50,
+      select: { id: true, provider: true, amountMinor: true, currency: true, reconciliationAttempts: true, reconciliationLastError: true, reconciliationDeadLetteredAt: true },
+    }),
     prisma.paymentIntent.findMany({
       where: succeededWhere,
       orderBy: { updatedAt: "desc" },
@@ -257,6 +264,19 @@ adminRouter.get("/finance/reconciliation", asyncHandler(async (req, res) => {
         createdAt: intent.createdAt,
       })),
     },
+    reconciliationDeadLetters: {
+      total: deadLetteredCount,
+      sampleLimit: 50,
+      items: deadLetteredIntents.map((intent) => ({
+        paymentIntentId: intent.id,
+        provider: intent.provider,
+        amountMinor: intent.amountMinor.toString(),
+        currency: intent.currency,
+        attempts: intent.reconciliationAttempts,
+        lastError: intent.reconciliationLastError,
+        deadLetteredAt: intent.reconciliationDeadLetteredAt,
+      })),
+    },
     succeededDepositLedger: {
       scanned: succeededIntents.length,
       totalSucceeded: succeededCount,
@@ -267,6 +287,57 @@ adminRouter.get("/finance/reconciliation", asyncHandler(async (req, res) => {
     readOnly: true,
   });
 }));
+
+/** Operator replay for a dead-lettered pending payment; never credits funds itself. */
+adminRouter.post("/finance/reconciliation/:paymentIntentId/replay", asyncHandler(async (req, res) => {
+  const paymentIntentId = typeof req.params.paymentIntentId === "string" ? req.params.paymentIntentId : "";
+  if (!paymentIntentId || paymentIntentId.length > 120) {
+    return res.status(400).json({ error: { code: "INVALID_PAYMENT_INTENT", message: "A valid payment intent ID is required" } });
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const intent = await tx.paymentIntent.findUnique({ where: { id: paymentIntentId } });
+    if (!intent) return { error: "NOT_FOUND" as const };
+    if (intent.status !== "PENDING" || !intent.reconciliationDeadLetteredAt) {
+      return { error: "NOT_DEAD_LETTERED" as const };
+    }
+    const reset = await tx.paymentIntent.updateMany({
+      where: {
+        id: intent.id,
+        status: "PENDING",
+        reconciliationDeadLetteredAt: { not: null },
+        reconciliationLockToken: null,
+      },
+      data: {
+        reconciliationAttempts: 0,
+        reconciliationNextAttemptAt: new Date(),
+        reconciliationLastError: null,
+        reconciliationDeadLetteredAt: null,
+        reconciliationLockedUntil: null,
+        reconciliationLockToken: null,
+      },
+    });
+    if (reset.count !== 1) return { error: "REPLAY_CONFLICT" as const };
+    await tx.auditLog.create({
+      data: {
+        actorId: req.user!.id,
+        action: "PAYMENT_RECONCILIATION_REPLAYED",
+        entity: "PaymentIntent",
+        entityId: intent.id,
+        ip: req.ip ?? "unknown",
+        meta: { provider: intent.provider, previousAttempts: intent.reconciliationAttempts },
+      },
+    });
+    return { paymentIntentId: intent.id };
+  });
+
+  if ("error" in result) {
+    const status = result.error === "NOT_FOUND" ? 404 : result.error === "NOT_DEAD_LETTERED" ? 409 : 409;
+    return res.status(status).json({ error: { code: result.error, message: result.error === "NOT_FOUND" ? "Payment intent not found" : "Payment intent is not eligible for replay" } });
+  }
+  return res.status(202).json({ ...result, queued: true, readOnlySettlement: false, message: "Reconciliation replay queued; provider verification is required before any wallet credit." });
+}));
+
 
 
 const financeExportLimit = 5000;

@@ -26,7 +26,7 @@ const reconciliationTimer = env.NODE_ENV === "test"
         .finally(() => {
           reconciliationInProgress = false;
         });
-    }, 10 * 60_000);
+    }, 60_000);
 reconciliationTimer?.unref();
 
 const shutdown = async () => {
