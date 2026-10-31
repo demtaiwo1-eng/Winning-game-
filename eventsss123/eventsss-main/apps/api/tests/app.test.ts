@@ -172,6 +172,15 @@ describe("api foundation (DB-free)", () => {
     expect(res.body.error.code).toBe("PAYOUT_NOT_CONFIGURED");
     expect(res.body.error.message).toContain("no wallet funds were moved");
   });
+  it("protects vendor listing availability from unauthenticated and non-vendor access", async () => {
+    const path = "/api/v1/vendor/listings/listing-id/availability";
+    const missing = await request(app).get(path);
+    expect(missing.status).toBe(401);
+    const clientToken = jwt.sign({ role: "CLIENT" }, env.JWT_SECRET, { subject: "client-user" });
+    const forbidden = await request(app).get(path).set("Authorization", `Bearer ${clientToken}`);
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.body.error.code).toBe("FORBIDDEN");
+  });
   it("returns 410 for retired Rider job endpoints", async () => {
     const get = await request(app).get("/api/v1/rider/jobs");
     const update = await request(app).patch("/api/v1/rider/jobs/old-job");
