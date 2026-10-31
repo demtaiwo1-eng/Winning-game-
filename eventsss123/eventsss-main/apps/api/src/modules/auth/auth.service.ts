@@ -9,6 +9,17 @@ import { sendPasswordResetEmail } from "../../lib/mail";
 import type { LoginInput, RegisterInput } from "./auth.schemas";
 
 const sha256 = (v: string) => createHash("sha256").update(v).digest("hex");
+
+async function recordSecurityEvent(userId: string, action: string, userAgent?: string) {
+  await prisma.auditLog.create({
+    data: {
+      actorId: userId,
+      action,
+      entity: "AccountSecurity",
+      meta: userAgent ? { userAgent: userAgent.slice(0, 200) } : {},
+    },
+  });
+}
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 12);
 
 export const publicUserSelect = {
@@ -68,7 +79,9 @@ export async function register(input: RegisterInput, userAgent?: string) {
       }
       return u;
     });
-    return { user, ...(await issueTokens(user, userAgent)) };
+    const tokens = await issueTokens(user, userAgent);
+    await recordSecurityEvent(user.id, "ACCOUNT_REGISTERED", userAgent);
+    return { user, ...tokens };
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       throw new HttpError(409, "ALREADY_EXISTS", "Email or phone already registered");
@@ -86,7 +99,9 @@ export async function login(input: LoginInput, userAgent?: string) {
   }
   if (found.status !== "ACTIVE") throw new HttpError(403, "ACCOUNT_DISABLED", "Account is not active");
   const user = await prisma.user.findUniqueOrThrow({ where: { id: found.id }, select: publicUserSelect });
-  return { user, ...(await issueTokens(user, userAgent)) };
+  const tokens = await issueTokens(user, userAgent);
+  await recordSecurityEvent(user.id, "LOGIN_SUCCESS", userAgent);
+  return { user, ...tokens };
 }
 
 export async function refresh(token: string, userAgent?: string) {
@@ -95,6 +110,7 @@ export async function refresh(token: string, userAgent?: string) {
   if (rec.revokedAt) {
     // reuse of a rotated token => treat as theft, revoke the whole family
     await prisma.refreshToken.updateMany({ where: { userId: rec.userId, revokedAt: null }, data: { revokedAt: new Date() } });
+    await recordSecurityEvent(rec.userId, "REFRESH_TOKEN_REUSE", userAgent);
     throw new HttpError(401, "TOKEN_REUSE", "Refresh token already used");
   }
   if (rec.expiresAt < new Date()) throw new HttpError(401, "INVALID_TOKEN", "Refresh token expired");
@@ -104,11 +120,15 @@ export async function refresh(token: string, userAgent?: string) {
   if (user.role === "RIDER") {
     throw new HttpError(403, "ACCOUNT_DISABLED", "Rider accounts are no longer supported");
   }
-  return { user, ...(await issueTokens(user, userAgent)) };
+  const tokens = await issueTokens(user, userAgent);
+  await recordSecurityEvent(user.id, "SESSION_REFRESHED", userAgent);
+  return { user, ...tokens };
 }
 
 export async function logout(token: string) {
-  await prisma.refreshToken.updateMany({ where: { tokenHash: sha256(token), revokedAt: null }, data: { revokedAt: new Date() } });
+  const record = await prisma.refreshToken.findUnique({ where: { tokenHash: sha256(token) }, select: { userId: true, revokedAt: true } });
+  const result = await prisma.refreshToken.updateMany({ where: { tokenHash: sha256(token), revokedAt: null }, data: { revokedAt: new Date() } });
+  if (record && !record.revokedAt && result.count > 0) await recordSecurityEvent(record.userId, "LOGOUT");
 }
 
 export async function me(userId: string) {
@@ -134,5 +154,6 @@ export async function resetPassword(token: string, password: string) {
     prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
     prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
     prisma.refreshToken.updateMany({ where: { userId: record.userId, revokedAt: null }, data: { revokedAt: new Date() } }),
+    prisma.auditLog.create({ data: { actorId: record.userId, action: "PASSWORD_RESET", entity: "AccountSecurity", meta: {} } }),
   ]);
 }
