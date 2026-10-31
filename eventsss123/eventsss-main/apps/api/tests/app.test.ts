@@ -223,6 +223,38 @@ describe("api foundation (DB-free)", () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.items)).toBe(true);
   });
+
+  it("protects account security history from unauthenticated access", async () => {
+    const res = await request(app).get("/api/v1/auth/security-history");
+    expect(res.status).toBe(401);
+  });
+  it("protects notification inbox, preferences, and device registration", async () => {
+    const routes = [
+      { method: "get", path: "/api/v1/notifications" },
+      { method: "get", path: "/api/v1/notifications/preferences" },
+      { method: "patch", path: "/api/v1/notifications/preferences" },
+      { method: "post", path: "/api/v1/notifications/push-token" },
+      { method: "delete", path: "/api/v1/notifications/push-token" },
+      { method: "patch", path: "/api/v1/notifications/00000000-0000-4000-8000-000000000001/read" },
+    ] as const;
+    for (const route of routes) {
+      const res = await request(app)[route.method](route.path).send({});
+      expect(res.status).toBe(401);
+    }
+  });
+  it("protects event message threads and sending", async () => {
+    const eventId = "00000000-0000-4000-8000-000000000001";
+    const get = await request(app).get(`/api/v1/events/${eventId}/messages`);
+    const send = await request(app).post(`/api/v1/events/${eventId}/messages`).send({
+      body: "Please share the latest event update.",
+      recipientIds: ["00000000-0000-4000-8000-000000000002"],
+    });
+    const read = await request(app).patch(`/api/v1/events/${eventId}/messages/read`);
+    expect(get.status).toBe(401);
+    expect(send.status).toBe(401);
+    expect(read.status).toBe(401);
+  });
+
   it("404s unknown routes", async () => {
     const res = await request(app).get("/nope");
     expect(res.status).toBe(404);

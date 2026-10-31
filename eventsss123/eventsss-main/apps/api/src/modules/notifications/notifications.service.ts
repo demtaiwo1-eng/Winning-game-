@@ -1,41 +1,52 @@
 import { prisma } from "../../lib/prisma";
 
+export type NotificationCategory = "MESSAGE" | "BOOKING" | "PAYMENT" | "MARKETING" | "SYSTEM";
+
 export async function createNotification(input: {
   userId: string;
   type: string;
   title: string;
   body: string;
+  data?: Record<string, string>;
+  category?: NotificationCategory;
 }) {
+  const preference = await prisma.pushPreference.findUnique({ where: { userId: input.userId } });
+  if (preference?.inAppEnabled === false) return null;
+
+  const category = input.category ?? "SYSTEM";
+  const categoryEnabled =
+    category === "MESSAGE" ? preference?.messages !== false :
+    category === "BOOKING" ? preference?.bookings !== false :
+    category === "PAYMENT" ? preference?.payments !== false :
+    category === "MARKETING" ? preference?.marketing === true : true;
+  if (!categoryEnabled) return null;
+
+  // Push is intentionally not sent until an FCM/APNs provider is configured.
+  // Record this honestly so the in-app notification remains usable without
+  // claiming that a device notification was delivered.
+  const deliveryStatus = preference?.pushEnabled ? "NOT_CONFIGURED" : "NOT_REQUESTED";
   return prisma.notification.create({
     data: {
       userId: input.userId,
       type: input.type,
       title: input.title,
       body: input.body,
+      data: input.data,
+      deliveryStatus,
     },
   });
 }
 
-/** Fan-out to registered device tokens (FCM/APNs via Capacitor push). */
-export async function pushToUser(userId: string, title: string, body: string, data?: Record<string, string>) {
-  const tokens = await prisma.auditLog.findMany({
-    where: { actorId: userId, action: "PUSH_TOKEN_REGISTER" },
-    orderBy: { createdAt: "desc" },
-    take: 5,
+/**
+ * Provider adapter boundary. Until FCM/APNs credentials and a sender are
+ * configured, report that delivery is unavailable instead of recording a
+ * misleading send attempt. Core in-app notifications remain persisted.
+ */
+export async function pushToUser(userId: string, _title: string, _body: string, _data?: Record<string, string>) {
+  const preference = await prisma.pushPreference.findUnique({ where: { userId } });
+  if (!preference?.pushEnabled) return { attempted: 0, status: "NOT_REQUESTED" as const };
+  const registeredDevices = await prisma.pushDevice.count({
+    where: { userId, revokedAt: null },
   });
-  // Production: send via FCM HTTP v1 / APNs using token in meta.token
-  // Here we record a push attempt for observability
-  for (const row of tokens) {
-    const meta = (row.meta || {}) as { token?: string; platform?: string };
-    if (!meta.token) continue;
-    await prisma.auditLog.create({
-      data: {
-        actorId: userId,
-        action: "PUSH_SEND_ATTEMPT",
-        entity: "Notification",
-        meta: { token: meta.token.slice(0, 12) + "…", platform: meta.platform, title, body, data },
-      },
-    });
-  }
-  return { attempted: tokens.length };
+  return { attempted: 0, registeredDevices, status: "NOT_CONFIGURED" as const };
 }

@@ -13,6 +13,7 @@ const VendorEventMessagesPanel = lazy(() => import("./components/EventMessagesPa
 const VerifierPicker = lazy(() => import("./components/VerifierPicker"));
 import { OnboardingOverlay, hasCompletedOnboard, ResumeStrip } from "./components/JourneyMoments";
 import { api, downloadApiFile } from "./lib/api";
+import { registerPushIfNative, unregisterPushDevice } from "./lib/push";
 import {
   eventBuilderProgressFromLandingDraft,
   eventDraftToCreateInput,
@@ -21,6 +22,7 @@ import {
   type EventBuilderProgress,
 } from "./lib/eventDraft";
 import { registrationFieldError, type RegistrationField } from "./lib/registrationValidation";
+import NotificationsPanel from "./components/NotificationsPanel";
 import "./enterprise.css";
 import "./styles/event-planner-registration.css";
 import "./portal-menu.css";
@@ -240,7 +242,7 @@ function ClientPortal({
   currency: CurrencyCode;
 }) {
   const [tab, setTab] = useDashboardTab(
-    ["overview", "checklist", "planner", "checkin", "marketplace", "wallet", "readiness", "messages", "verifiers", "plans", "kyc", "feedback"] as const,
+    ["overview", "checklist", "planner", "checkin", "marketplace", "wallet", "readiness", "messages", "notifications", "verifiers", "plans", "kyc", "feedback"] as const,
     "marketplace",
   );
   const [bookingNotice, setBookingNotice] = useState("");
@@ -371,6 +373,7 @@ function ClientPortal({
             ["wallet", "Wallet & escrow"],
             ["readiness", "Go-live readiness"],
             ["messages", "Messages"],
+            ["notifications", "Notifications"],
             ["feedback", "Feedback"],
             ["plans", "Plans"],
             ["kyc", "KYC"],
@@ -550,6 +553,7 @@ function ClientPortal({
       {tab === "planner" && <EventPlannerWorkspace events={ownedEvents} initialEventId={checklistEventId || undefined} />}
       {tab === "checkin" && <GuestCheckInPanel events={ownedEvents} />}
       {tab === "messages" && <EventMessagesPanel events={ownedEvents} />}
+      {tab === "notifications" && <NotificationsPanel />}
       {tab === "wallet" && <WalletPanel locale={locale} role="CLIENT" />}
       {tab === "feedback" && <FeedbackPanel locale={locale} />}
       {tab === "plans" && <SubscriptionsPanel audience="CLIENT" />}
@@ -810,7 +814,7 @@ function VendorPortal({
     }
   };
   const [vendorTab, setVendorTab] = useDashboardTab(
-    ["catalog", "wallet", "plans", "kyc", "messages", "promotions"] as const,
+    ["catalog", "wallet", "plans", "kyc", "messages", "notifications", "promotions"] as const,
     "catalog",
   );
   return (
@@ -840,6 +844,7 @@ function VendorPortal({
         <button type="button" className={vendorTab === "plans" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("plans")}>Plans & promos</button>
         <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
         <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
+        <button type="button" className={vendorTab === "notifications" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("notifications")}>Notifications</button>
         <button type="button" className={vendorTab === "promotions" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("promotions")}>Promotions</button>
       </div>
       {vendorTab === "promotions" ? (
@@ -852,6 +857,8 @@ function VendorPortal({
         <KycUpload defaultKind="BUSINESS" />
       ) : vendorTab === "messages" ? (
         <><VendorEnquiriesPanel /><VendorEventMessagesPanel /></>
+      ) : vendorTab === "notifications" ? (
+        <NotificationsPanel />
       ) : (
       <>
       <VendorPerformancePanel />
@@ -1748,6 +1755,7 @@ export default function EnterpriseApp() {
           setAccountNotice("Rider access is no longer available. Existing account and dispatch records have been preserved.");
         }
       }
+      if (token) void registerPushIfNative();
       const pending = localStorage.getItem("ess_resume_event");
       if (pending) setResumeLabel(pending);
     } catch { /* */ }
@@ -1892,6 +1900,7 @@ export default function EnterpriseApp() {
       localStorage.setItem("ess_access_token", result.accessToken);
       localStorage.setItem("ess_refresh_token", result.refreshToken);
       localStorage.setItem("ess_user", JSON.stringify(user));
+      void registerPushIfNative();
       setSession({ name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
       setActiveRole(user.role);
       navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
@@ -1909,6 +1918,7 @@ export default function EnterpriseApp() {
     }
   };
   const signOut = () => {
+    void unregisterPushDevice();
     setSession(null);
     localStorage.removeItem("ess_access_token");
     localStorage.removeItem("ess_refresh_token");
@@ -1957,6 +1967,7 @@ export default function EnterpriseApp() {
         localStorage.setItem("ess_access_token", payload.accessToken);
         localStorage.setItem("ess_refresh_token", payload.refreshToken);
         localStorage.setItem("ess_user", JSON.stringify(user));
+        void registerPushIfNative();
         setSession({
           name: user.name,
           email: user.email,

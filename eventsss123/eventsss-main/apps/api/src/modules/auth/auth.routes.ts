@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { prisma } from "../../lib/prisma";
 import rateLimit from "express-rate-limit";
 import { asyncHandler } from "../../lib/async";
 import { requireAuth } from "../../middleware/auth";
@@ -33,4 +34,14 @@ authRouter.post("/logout", validateBody(refreshSchema), asyncHandler(async (req,
 }));
 authRouter.get("/me", requireAuth, asyncHandler(async (req, res) => {
   res.json({ user: await auth.me(req.user!.id) });
+}));
+
+authRouter.get("/security-history", requireAuth, asyncHandler(async (req, res) => {
+  const items = await prisma.auditLog.findMany({
+    where: { actorId: req.user!.id, entity: "AccountSecurity" },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    select: { id: true, action: true, meta: true, createdAt: true },
+  });
+  res.json({ items });
 }));

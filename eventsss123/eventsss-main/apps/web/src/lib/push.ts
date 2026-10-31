@@ -1,3 +1,8 @@
+import { apiUrl } from "./api";
+
+let registrationListenerAdded = false;
+let currentPushToken: string | null = null;
+
 /**
  * Capacitor push registration — no-op on pure web.
  * When the app runs inside the Capacitor shell with @capacitor/push-notifications
@@ -20,12 +25,13 @@ export async function registerPushIfNative(): Promise<void> {
     const perm = await PushNotifications.requestPermissions();
     if (perm.receive !== "granted") return;
 
-    await PushNotifications.register();
-
-    PushNotifications.addListener("registration", async (token: { value: string }) => {
+    if (!registrationListenerAdded) {
+      registrationListenerAdded = true;
+      PushNotifications.addListener("registration", async (token: { value: string }) => {
+      currentPushToken = token.value;
       try {
         const t = localStorage.getItem("ess_access_token");
-        await fetch("/api/v1/notifications/push-token", {
+        await fetch(apiUrl("/notifications/push-token"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -36,8 +42,34 @@ export async function registerPushIfNative(): Promise<void> {
       } catch {
         /* offline */
       }
-    });
+      });
+    }
+
+    // Register after the listener is attached. Calling this again after a
+    // later login re-registers the device even when the listener already exists.
+    await PushNotifications.register();
   } catch {
     /* web or missing plugin */
+  }
+}
+
+/** Revoke the current device token before clearing the authenticated session. */
+export async function unregisterPushDevice(): Promise<void> {
+  if (!currentPushToken) return;
+  try {
+    const accessToken = localStorage.getItem("ess_access_token");
+    if (!accessToken) return;
+    await fetch(apiUrl("/notifications/push-token"), {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ token: currentPushToken }),
+    });
+  } catch {
+    /* best effort; server-side token remains revoked only after a successful request */
+  } finally {
+    currentPushToken = null;
   }
 }
