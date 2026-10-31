@@ -1,37 +1,31 @@
-# ESS Phase 8 — Production Readiness Gate
-
-## Goal
-
-Add a repeatable release gate for the existing ESS API, web client, Prisma migrations, and Workbox service worker without rewriting application features from earlier phases.
+# EPHINTA Phase 8 — Quality Gate
 
 ## Delivered
 
-- `scripts/phase8-release-gate.sh`: local checks for Node.js 20+, repository prerequisites, Prisma migration file structure, API checks, web tests, production build, and generated service-worker integrity.
-- `.github/workflows/ess-phase8-quality-gate.yml`: CI quality gate on pull requests and pushes to `main`.
-- Test-only environment defaults are provided only for the current process; `.env` files are not edited and secrets are not printed.
-
-## Safety boundaries
-
-- The gate does not deploy database migrations.
-- The gate does not run destructive database commands.
-- Two database-dependent API tests may remain skipped unless a real test database and the project's DB-test configuration are supplied.
-- Passing CI does not replace staging verification of authentication, payment providers/webhooks, database migrations, NFC/Bluetooth hardware, or offline synchronization across multiple devices.
-- Review Prisma migration SQL and confirm a database backup before deploying migrations in a shared or production environment.
+- Canonical executable workflow: repository-root `.github/workflows/ephinta-phase8-quality-gate.yml`.
+- Local full release gate: `scripts/verify-release-gates.sh`.
+- CI runs in the actual application root, `eventsss123/eventsss-main`, and provisions an isolated PostgreSQL 16 service container.
+- The gate validates Prisma, applies migrations only to the disposable CI database, runs API/web tests, database integration tests, Playwright browser journeys, and production builds.
 
 ## Run locally
 
+Use a disposable PostgreSQL database only. Never point `DATABASE_URL_LOCAL` at Render production.
+
 ```bash
-bash scripts/phase8-release-gate.sh
+export DATABASE_URL_LOCAL='postgresql://USER:PASSWORD@localhost:5432/ephinta_test?schema=public'
+bash scripts/verify-release-gates.sh
+unset DATABASE_URL_LOCAL
 ```
 
-## Acceptance criteria
+The script requires Node.js 20+, npm dependencies, PostgreSQL client access through the app's Prisma tooling, and Playwright Chromium. It exits on the first failed gate and does not deploy or merge.
 
-1. API schema validation, TypeScript checks, and API tests pass.
-2. Web tests pass.
-3. Production web build succeeds.
-4. `apps/web/dist/sw.js` exists, is non-empty and larger than 1,000 bytes, and does not retain the Workbox injection placeholder.
-5. Every Prisma migration directory contains a non-empty `migration.sql` file.
+## Workflow placement
 
-## Status
+GitHub Actions discovers workflows only from the repository-root `.github/workflows` directory. The earlier application-nested workflow copy is not an active GitHub workflow. The canonical root workflow now invokes the real project script from the nested application directory and uses a disposable PostgreSQL 16 service.
 
-This patch adds a release-quality gate and CI workflow. Its checks must be run in the target Codespace and CI before Phase 8 is marked validated. It does not assert that migrations are deployed or that hardware integration has been physically tested.
+## Safety and acceptance
+
+- No production database URL is used by CI.
+- No production migration, deployment, or destructive operation is performed by the quality gate.
+- A passing CI run proves the automated checks for that commit only. It does not prove physical NFC/Bluetooth operation, live payment settlement, a production backup restore, or owner acceptance.
+- Phase 8 CI sign-off requires a successful run on the latest main commit.
