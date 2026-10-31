@@ -1,0 +1,96 @@
+name: EPHINTA Browser E2E and Regression
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: eventsss123/eventsss-main
+
+concurrency:
+  group: ess-phase12-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-journeys:
+    name: Browser journeys and regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NODE_ENV: test
+      DATABASE_MODE: local
+      DATABASE_URL_LOCAL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
+      DATABASE_URL: postgresql://ess:ess_test_password@localhost:5432/ess_test?schema=public
+      JWT_SECRET: ci-only-secret-change-me-0123456789abcdef0123456789abcdef
+      APP_BASE_URL: http://localhost:3000
+      CI: "true"
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ess
+          POSTGRES_PASSWORD: ess_test_password
+          POSTGRES_DB: ess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ess -d ess_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate and generate Prisma client
+        run: |
+          npx prisma validate --schema apps/api/prisma/schema.prisma
+          npm run prisma:generate
+
+      - name: Apply database migrations
+        run: npm run db:deploy -w apps/api
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser journey tests
+        run: npm run test:e2e -w apps/web
+
+      - name: Run API database integration tests
+        run: npm run test:db -w apps/api
+        env:
+          RUN_DB_TESTS: "1"
+
+      - name: Run web regression tests and production build
+        run: |
+          npm run test -w apps/web
+          npm run build:web
+          npm run build -w apps/api
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase12-playwright-results
+          path: |
+            eventsss123/eventsss-main/apps/web/test-results/
+            eventsss123/eventsss-main/apps/web/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
