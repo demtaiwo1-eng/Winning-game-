@@ -11,6 +11,7 @@ import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { createNotification, pushToUser } from "../notifications/notifications.service";
 import { assertEventFinalizationAllowed } from "../payments/escrowPolicy";
+import { canAssignReadinessVerifier, canManageReadinessZones, canReadReadinessEvent } from "./accessPolicy";
 
 export const readinessRouter = Router();
 
@@ -30,15 +31,21 @@ function requiredParam(value: string | undefined, name: string): string {
 async function assertEventReadAccess(eventId: string, userId: string, role: string) {
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) throw new HttpError(404, "NOT_FOUND", "Event not found");
-  if (event.ownerId === userId || role === "ADMIN" || role === "CONSULTANT") return event;
-  if (role === "VERIFIER") {
-    const assignment = await prisma.eventVerifierAssignment.findFirst({
-      where: { eventId, verifierId: userId },
-      select: { id: true },
-    });
-    if (assignment) return event;
+  const assignment = role === "VERIFIER"
+    ? await prisma.eventVerifierAssignment.findFirst({
+        where: { eventId, verifierId: userId },
+        select: { id: true },
+      })
+    : null;
+  if (!canReadReadinessEvent({
+    ownerId: event.ownerId,
+    userId,
+    role,
+    assignedVerifier: Boolean(assignment),
+  })) {
+    throw new HttpError(403, "FORBIDDEN", "Not allowed");
   }
-  throw new HttpError(403, "FORBIDDEN", "Not allowed");
+  return event;
 }
 
 function computeWindows(startsAt: Date | null | undefined) {
@@ -623,12 +630,13 @@ readinessRouter.post(
       select: { id: true },
     });
     if (!targetVerifier) throw new HttpError(404, "VERIFIER_NOT_FOUND", "Selected user is not an active verifier");
-    if (
-      verifierId !== req.user!.id &&
-      event.ownerId !== req.user!.id &&
-      !["ADMIN", "CONSULTANT"].includes(req.user!.role)
-    ) {
-      throw new HttpError(403, "FORBIDDEN", "Only the event owner, admin, or consultant may assign another verifier");
+    if (!canAssignReadinessVerifier({
+      ownerId: event.ownerId,
+      userId: req.user!.id,
+      targetVerifierId: verifierId,
+      role: req.user!.role,
+    })) {
+      throw new HttpError(403, "FORBIDDEN", "Only a verifier may self-assign; assigning another verifier requires event-owner, admin, or consultant access");
     }
     const zone = String(req.body.zone || "GENERAL").toUpperCase();
     const isLead = Boolean(req.body.isLead);
@@ -718,7 +726,7 @@ readinessRouter.patch(
     if (event.status === "COMPLETED") {
       throw new HttpError(409, "EVENT_COMPLETED", "Readiness checks cannot change after event completion");
     }
-    if (event.ownerId !== req.user!.id && !["ADMIN", "CONSULTANT"].includes(req.user!.role)) {
+    if (!canManageReadinessZones({ ownerId: event.ownerId, userId: req.user!.id, role: req.user!.role })) {
       throw new HttpError(403, "FORBIDDEN", "Only the event owner, admin, or consultant may change check zones");
     }
     const check = await prisma.eventServiceCheck.update({
