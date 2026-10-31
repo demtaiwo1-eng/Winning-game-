@@ -112,6 +112,16 @@ describe("api foundation (DB-free)", () => {
     expect(res.status).toBe(401);
     expect(res.body.error.code).toBe("INVALID_TOKEN");
   });
+  it("requires vendor authorization to read the private vendor listing inventory", async () => {
+    const missing = await request(app).get("/api/v1/vendor/listings");
+    expect(missing.status).toBe(401);
+    const clientToken = jwt.sign({ role: "CLIENT" }, env.JWT_SECRET, { subject: "client-user" });
+    const forbidden = await request(app)
+      .get("/api/v1/vendor/listings")
+      .set("Authorization", `Bearer ${clientToken}`);
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.body.error.code).toBe("FORBIDDEN");
+  });
   it("does not let event-planning organizations access vendor operations", async () => {
     const token = jwt.sign(
       { role: "ORGANIZATION", organizationMode: "EVENT_PLANNING" },

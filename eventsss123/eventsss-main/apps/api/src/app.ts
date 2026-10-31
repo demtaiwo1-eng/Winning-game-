@@ -112,22 +112,65 @@ export function createApp() {
       res.status(201).json({ request });
     } catch (error) { next(error); }
   });
+  app.get("/api/v1/vendor/listings", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
+    try {
+      const items = await prisma.listing.findMany({
+        where: { vendor: { userId: req.user!.id } },
+        orderBy: { updatedAt: "desc" },
+        include: { category: { select: { id: true, name: true } } },
+      });
+      res.json({
+        items: items.map((listing) => ({
+          ...listing,
+          priceMinor: listing.priceMinor.toString(),
+        })),
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
   app.post("/api/v1/vendor/listings", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
     try {
+      const title = typeof req.body.title === "string" ? req.body.title.trim() : "";
+      const rawPrice = String(req.body.priceMinor ?? "");
+      const type = String(req.body.type ?? "").toUpperCase();
+      const currency = String(req.body.currency || "NGN").toUpperCase();
+      const capacity = req.body.capacity == null || req.body.capacity === "" ? null : Number(req.body.capacity);
+      const mediaUrls = Array.isArray(req.body.mediaUrls) ? req.body.mediaUrls : [];
+      if (title.length < 2 || title.length > 160) {
+        return res.status(400).json({ error: { code: "INVALID_TITLE", message: "Listing title must be 2–160 characters" } });
+      }
+      if (!/^[1-9][0-9]*$/.test(rawPrice)) {
+        return res.status(400).json({ error: { code: "INVALID_PRICE", message: "priceMinor must be a positive integer" } });
+      }
+      if (!["VENUE", "GOOD", "SERVICE"].includes(type)) {
+        return res.status(400).json({ error: { code: "INVALID_TYPE", message: "Listing type is invalid" } });
+      }
+      if (!/^[A-Z]{3}$/.test(currency)) {
+        return res.status(400).json({ error: { code: "INVALID_CURRENCY", message: "Currency must be a three-letter code" } });
+      }
+      if (capacity !== null && (!Number.isSafeInteger(capacity) || capacity < 1)) {
+        return res.status(400).json({ error: { code: "INVALID_CAPACITY", message: "Capacity must be a positive whole number" } });
+      }
+      if (mediaUrls.length > 8 || mediaUrls.some((value: unknown) => typeof value !== "string" || value.length > 2048 || !value.startsWith("https://"))) {
+        return res.status(400).json({ error: { code: "INVALID_MEDIA", message: "Use up to 8 HTTPS media URLs" } });
+      }
+      const category = await prisma.category.findUnique({ where: { id: String(req.body.categoryId || "") }, select: { id: true } });
+      if (!category) return res.status(400).json({ error: { code: "INVALID_CATEGORY", message: "Choose an available listing category" } });
       const profile = await prisma.vendorProfile.findUniqueOrThrow({ where: { userId: req.user!.id } });
       const listing = await prisma.listing.create({ data: {
         vendorId: profile.id,
-        categoryId: req.body.categoryId,
-        type: req.body.type as ListingType,
-        title: String(req.body.title).trim(),
-        description: req.body.description ? String(req.body.description).trim() : null,
-        priceMinor: BigInt(String(req.body.priceMinor)),
-        currency: String(req.body.currency || "NGN").toUpperCase(),
+        categoryId: category.id,
+        type: type as ListingType,
+        title,
+        description: typeof req.body.description === "string" ? req.body.description.trim().slice(0, 4000) : null,
+        priceMinor: BigInt(rawPrice),
+        currency,
         country: req.body.country ? String(req.body.country).toUpperCase() : profile.country,
-        city: req.body.city ? String(req.body.city).trim() : profile.city,
-        capacity: req.body.capacity ? Number(req.body.capacity) : null,
-        mediaUrls: Array.isArray(req.body.mediaUrls) ? req.body.mediaUrls.map(String) : [],
-        status: req.body.status === "ACTIVE" ? ListingStatus.ACTIVE : ListingStatus.DRAFT,
+        city: req.body.city ? String(req.body.city).trim().slice(0, 120) : profile.city,
+        capacity,
+        mediaUrls: mediaUrls as string[],
+        status: ListingStatus.DRAFT,
       }, include: { category: { select: { name: true } } } });
       res.status(201).json({ listing });
     } catch (error) { next(error); }
@@ -143,7 +186,7 @@ export function createApp() {
         city: typeof req.body.city === "string" ? req.body.city.trim() : undefined,
         country: typeof req.body.country === "string" ? req.body.country.toUpperCase() : undefined,
         capacity: req.body.capacity !== undefined ? Number(req.body.capacity) : undefined,
-        status: req.body.status === "ACTIVE" ? ListingStatus.ACTIVE : req.body.status === "DRAFT" ? ListingStatus.DRAFT : undefined,
+        status: req.body.status === "DRAFT" ? ListingStatus.DRAFT : undefined,
       } });
       res.json({ listing });
     } catch (error) { next(error); }
