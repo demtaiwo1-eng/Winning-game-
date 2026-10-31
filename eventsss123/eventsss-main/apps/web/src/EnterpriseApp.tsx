@@ -658,7 +658,7 @@ function VendorPortal({
       return;
     }
     const priceMinor = String(Math.round(Number(form.price) * 100));
-    if (!/^\\d+$/.test(priceMinor) || BigInt(priceMinor) <= 0n) {
+    if (!/^[0-9]+$/.test(priceMinor) || BigInt(priceMinor) <= 0n) {
       setNotice("Enter a valid price greater than zero.");
       return;
     }
@@ -675,7 +675,7 @@ function VendorPortal({
             description: form.includes.trim(),
             priceMinor,
             city: form.city.trim(),
-            capacity: form.capacity ? Number(form.capacity) : null,
+            capacity: form.capacity ? Number(form.capacity) : undefined,
           }),
         });
         const item = result.listing;
