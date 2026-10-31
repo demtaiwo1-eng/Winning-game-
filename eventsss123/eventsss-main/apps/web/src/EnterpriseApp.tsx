@@ -854,7 +854,8 @@ function VendorPortal({
         <VendorEnquiriesPanel />
       ) : (
       <>
-      <VendorPerformancePanel />\n      <div className="ess-metrics">
+      <VendorPerformancePanel />
+      <div className="ess-metrics">
         <Metric
           label="Available balance"
           value="—"
