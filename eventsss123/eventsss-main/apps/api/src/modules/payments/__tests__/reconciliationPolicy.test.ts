@@ -10,7 +10,8 @@ describe("durable reconciliation retry policy", () => {
     expect(reconciliationBackoffMs(1)).toBe(60_000);
     expect(reconciliationBackoffMs(2)).toBe(120_000);
     expect(reconciliationBackoffMs(3)).toBe(240_000);
-    expect(reconciliationBackoffMs(8)).toBe(60 * 60_000 + 60 * 60_000); // capped at six hours
+    expect(reconciliationBackoffMs(8)).toBe(128 * 60_000);
+    expect(reconciliationBackoffMs(10)).toBe(6 * 60 * 60_000); // capped at six hours
     expect(reconciliationBackoffMs(99)).toBe(6 * 60 * 60_000);
   });
 
