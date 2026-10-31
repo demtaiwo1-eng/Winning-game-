@@ -271,8 +271,11 @@ adminRouter.get("/finance/reconciliation", asyncHandler(async (req, res) => {
 
 const financeExportLimit = 5000;
 function csvCell(value: unknown): string {
+  const isTextInput = typeof value === "string";
   let text = value === null || value === undefined ? "" : value instanceof Date ? value.toISOString() : String(value);
-  if (/^[\s\u0000-\u001f]*[=+\-@]/.test(text)) text = "'" + text;
+  // Spreadsheet formula injection applies to untrusted text, not typed numeric
+  // values. Preserve legitimate negative ledger amounts as numeric CSV cells.
+  if (isTextInput && /^[\s\u0000-\u001f]*[=+\-@]/.test(text)) text = "'" + text;
   return '"' + text.replace(/"/g, '""') + '"';
 }
 function financeCsv(headers: string[], rows: unknown[][]): string {
