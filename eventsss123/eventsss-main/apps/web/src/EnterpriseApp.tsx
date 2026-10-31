@@ -561,6 +561,64 @@ function ClientPortal({
   );
 }
 
+function VendorAvailabilityManager({ listingId }: { listingId: string }) {
+  const [slots, setSlots] = useState<Array<{ id: string; startsAt: string; endsAt: string; capacity: number }>>([]);
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [capacity, setCapacity] = useState("1");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const refresh = async () => {
+    const result = await api<{ items: typeof slots }>(`/vendor/listings/${listingId}/availability`);
+    setSlots(result.items || []);
+  };
+  useEffect(() => {
+    let active = true;
+    api<{ items: typeof slots }>(`/vendor/listings/${listingId}/availability`)
+      .then((result) => { if (active) setSlots(result.items || []); })
+      .catch((error: Error) => { if (active) setMessage(error.message); });
+    return () => { active = false; };
+  }, [listingId]);
+  const addSlot = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setBusy(true); setMessage("");
+    try {
+      await api(`/vendor/listings/${listingId}/availability`, {
+        method: "POST",
+        body: JSON.stringify({ startsAt: new Date(startsAt).toISOString(), endsAt: new Date(endsAt).toISOString(), capacity: Number(capacity) }),
+      });
+      setStartsAt(""); setEndsAt(""); await refresh(); setMessage("Availability saved.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save availability."); }
+    finally { setBusy(false); }
+  };
+  const removeSlot = async (id: string) => {
+    setBusy(true); setMessage("");
+    try {
+      await api(`/vendor/listings/${listingId}/availability/${id}`, { method: "DELETE" });
+      await refresh(); setMessage("Availability removed.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not remove availability."); }
+    finally { setBusy(false); }
+  };
+  return (
+    <div className="ess-availability-manager">
+      <strong>Availability calendar</strong>
+      <form onSubmit={addSlot} className="ess-form-grid">
+        <label>Starts <input type="datetime-local" required value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label>
+        <label>Ends <input type="datetime-local" required value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /></label>
+        <label>Capacity <input type="number" min="1" max="100000" required value={capacity} onChange={(event) => setCapacity(event.target.value)} /></label>
+        <button className="ess-outline-button" type="submit" disabled={busy || !startsAt || !endsAt}>Add time slot</button>
+      </form>
+      {message && <p className="ess-muted" role="status">{message}</p>}
+      {slots.length ? slots.map((slot) => (
+        <div className="ess-availability-slot" key={slot.id}>
+          <span>{new Date(slot.startsAt).toLocaleString()} – {new Date(slot.endsAt).toLocaleString()} · capacity {slot.capacity}</span>
+          <button className="ess-row-action" type="button" disabled={busy} onClick={() => removeSlot(slot.id)}>Remove</button>
+        </div>
+      )) : <p className="ess-muted">No availability windows added yet.</p>}
+    </div>
+  );
+}
+
 function VendorPortal({
   listings,
   setListings,
@@ -901,6 +959,7 @@ function VendorPortal({
                   >
                     Edit package
                   </button>
+                  {typeof listing.id === "string" && <VendorAvailabilityManager listingId={listing.id} />}
                 </div>
               </article>
             ))
