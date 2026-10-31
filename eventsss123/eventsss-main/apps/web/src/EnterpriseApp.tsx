@@ -839,7 +839,7 @@ function VendorPortal({
         <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
         <button type="button" className={vendorTab === "plans" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("plans")}>Plans & promos</button>
         <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
-        <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Messages</button>
+        <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
         <button type="button" className={vendorTab === "promotions" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("promotions")}>Promotions</button>
       </div>
       {vendorTab === "promotions" ? (
@@ -851,7 +851,7 @@ function VendorPortal({
       ) : vendorTab === "kyc" ? (
         <KycUpload defaultKind="BUSINESS" />
       ) : vendorTab === "messages" ? (
-        <VendorEnquiriesPanel />
+        <><VendorEnquiriesPanel /><VendorEventMessagesPanel /></>
       ) : (
       <>
       <VendorPerformancePanel />
