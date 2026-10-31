@@ -38,6 +38,11 @@ describe.skipIf(!run)("event messages (DB)", () => {
       expect(thread.status).toBe(200);
       expect(thread.body.participants.map((entry: { id: string }) => entry.id)).toContain(verifier.id);
 
+      const verifierPrefs = await request(app).get("/api/v1/notifications/preferences").set(auth(verifier.token));
+      expect(verifierPrefs.status).toBe(200);
+      await request(app).patch("/api/v1/notifications/preferences").set(auth(verifier.token))
+        .send({ pushEnabled: true });
+
       const personal = await request(app).post(`/api/v1/events/${eventId}/messages`).set(auth(owner.token))
         .send({ recipientIds: [verifier.id], body: "Please confirm your zone." });
       expect(personal.status).toBe(201);
@@ -45,13 +50,36 @@ describe.skipIf(!run)("event messages (DB)", () => {
 
       const received = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(verifier.token));
       expect(received.body.items[0].body).toBe("Please confirm your zone.");
+      const verifierNotifications = await request(app).get("/api/v1/notifications").set(auth(verifier.token));
+      expect(verifierNotifications.body.items).toHaveLength(1);
+      expect(verifierNotifications.body.items[0].type).toBe("MESSAGE");
+      expect(verifierNotifications.body.items[0].deliveryStatus).toBe("NOT_CONFIGURED");
+      const outsiderNotifications = await request(app).get("/api/v1/notifications").set(auth(outsider.token));
+      expect(outsiderNotifications.body.items).toHaveLength(0);
+
+      const pushToken = "fcm-device-token-for-phase6-test-0001";
+      const device = await request(app).post("/api/v1/notifications/push-token").set(auth(verifier.token))
+        .send({ token: pushToken, platform: "android" });
+      expect(device.status).toBe(201);
+      const storedDevice = await prisma.pushDevice.findFirst({ where: { userId: verifier.id } });
+      expect(storedDevice?.tokenHash).toHaveLength(64);
+      expect(storedDevice?.tokenHash).not.toBe(pushToken);
+      expect(await prisma.auditLog.count({ where: { actorId: verifier.id, action: "PUSH_TOKEN_REGISTER" } })).toBe(0);
+
+      const securityHistory = await request(app).get("/api/v1/auth/security-history").set(auth(owner.token));
+      expect(securityHistory.body.items.some((entry: { action: string }) => entry.action === "ACCOUNT_REGISTERED")).toBe(true);
+
       const read = await request(app).patch(`/api/v1/events/${eventId}/messages/read`).set(auth(verifier.token));
       expect(read.body.updated).toBe(1);
 
+      await request(app).patch("/api/v1/notifications/preferences").set(auth(verifier.token))
+        .send({ messages: false });
+      const beforeBroadcast = await prisma.notification.count({ where: { userId: verifier.id } });
       const broadcast = await request(app).post(`/api/v1/events/${eventId}/messages`).set(auth(owner.token))
         .send({ broadcast: true, body: "Team update." });
       expect(broadcast.status).toBe(201);
       expect(broadcast.body.items).toHaveLength(1);
+      expect(await prisma.notification.count({ where: { userId: verifier.id } })).toBe(beforeBroadcast);
 
       expect((await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(outsider.token))).status).toBe(403);
       expect((await request(app).post(`/api/v1/events/${eventId}/messages`).set(auth(owner.token))
