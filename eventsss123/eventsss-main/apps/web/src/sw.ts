@@ -113,12 +113,41 @@ function nextBackoff(attempts: number) {
   return Math.min(60_000, 1000 * 2 ** Math.min(attempts, 6));
 }
 
+// Defense in depth: the worker validates persisted records before replay too.
+// Keep this policy aligned with apps/web/src/lib/offline/outbox.ts.
+function isSafeOfflineMutation(method: string, rawUrl: string) {
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) return false;
+
+  let pathname: string;
+  try {
+    pathname = new URL(rawUrl, self.location.origin).pathname;
+  } catch {
+    return false;
+  }
+
+  if (!/^\\/api\\/v1\\//i.test(pathname)) return false;
+  if (/^\\/api\\/v1\\/(auth|login|register|refresh|logout|payments?|wallet|escrow)(?:\\/|$)/i.test(pathname)) return false;
+  if (/^\\/api\\/v1\\/checkout(?:\\/|$)/i.test(pathname) &&
+      !/^\\/api\\/v1\\/checkout\\/cart(?:\\/|$)/i.test(pathname)) return false;
+  return true;
+}
+
 async function replayOutboxInWorker() {
   if (!self.navigator.onLine) return;
 
   for (const original of await listOutbox()) {
     if (original.status === 'failed' && original.attempts >= MAX_ATTEMPTS) continue;
     if (original.nextAttemptAt > Date.now()) continue;
+
+    if (!isSafeOfflineMutation(original.method, original.url)) {
+      await putOutbox({
+        ...original,
+        status: 'failed',
+        lastError: 'Blocked by the service worker offline-mutation safety policy.',
+        updatedAt: Date.now(),
+      });
+      continue;
+    }
 
     const record: OutboxRecord = { ...original, status: 'processing', updatedAt: Date.now() };
     await putOutbox(record);
