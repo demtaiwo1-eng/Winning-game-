@@ -3,6 +3,7 @@
  * When secret keys are set in env, real initialize/verify is used.
  * Otherwise demo mode returns local checkout URLs.
  */
+import { createHmac } from "node:crypto";
 import { env } from "../../config/env";
 import { majorAmountToMinor } from "./webhookVerification";
 
@@ -132,6 +133,58 @@ export async function initializeOpay(input: {
     providerRef: data.data.reference || input.reference,
     authorizationUrl: data.data.cashierUrl,
     mode: "live",
+  };
+}
+
+/** Verify OPay status server-to-server; never trust the browser return URL. */
+export async function verifyOpay(reference: string): Promise<{
+  success: boolean;
+  amountMinor: bigint;
+  currency: string;
+  reference?: string;
+  raw: unknown;
+}> {
+  if (!env.OPAY_MERCHANT_ID || !env.OPAY_SECRET_KEY) {
+    throw new Error("OPay verification is not configured");
+  }
+  const requestBody = { country: "NG", reference };
+  const body = JSON.stringify(requestBody);
+  const signature = createHmac("sha512", env.OPAY_SECRET_KEY).update(body).digest("hex");
+  const res = await fetch("https://testapi.opaycheckout.com/api/v1/international/cashier/status", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${signature}`,
+      MerchantId: env.OPAY_MERCHANT_ID,
+      "Content-Type": "application/json",
+    },
+    body,
+    signal: AbortSignal.timeout(15_000),
+  });
+  const data = (await res.json()) as {
+    code?: string;
+    message?: string;
+    data?: {
+      reference?: string;
+      status?: string;
+      amount?: { total?: number | string; currency?: string };
+      isVoided?: boolean;
+    };
+  };
+  if (!res.ok) throw new Error(`OPay status verification failed (${res.status})`);
+  if (data.code !== "00000" || !data.data) {
+    throw new Error(data.message || "OPay status response was unsuccessful");
+  }
+  const amount = data.data.amount?.total;
+  if (amount === undefined || amount === null || !/^\\d+$/.test(String(amount))) {
+    throw new Error("OPay status response is missing a valid amount");
+  }
+  const responseReference = data.data.reference;
+  return {
+    success: data.data.status === "SUCCESS" && data.data.isVoided !== true,
+    amountMinor: BigInt(String(amount)),
+    currency: String(data.data.amount?.currency || "").toUpperCase(),
+    reference: responseReference,
+    raw: data,
   };
 }
 
