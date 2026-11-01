@@ -96,6 +96,7 @@ export async function initializeOpay(input: {
   currency: string;
   reference: string;
   callbackUrl: string;
+  notifyUrl?: string;
 }): Promise<InitResult> {
   assertPaymentMode();
   if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
@@ -116,6 +117,7 @@ export async function initializeOpay(input: {
       reference: input.reference,
       amount: { total: Number(input.amountMinor), currency: "NGN" },
       returnUrl: input.callbackUrl,
+      ...(input.notifyUrl ? { callbackUrl: input.notifyUrl } : {}),
       product: { name: "EPHINTA Wallet Deposit", description: "Wallet funding" },
     }),
     signal: AbortSignal.timeout(15_000),
