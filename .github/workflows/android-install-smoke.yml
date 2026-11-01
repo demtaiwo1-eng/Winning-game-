@@ -25,7 +25,7 @@ jobs:
     # Ubuntu 24.04 runners provide a more stable KVM-backed emulator environment
     # than the newly rolled-out ubuntu-latest image.
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       # Limit concurrent emulators to avoid package-manager crashes on busy runners.
@@ -78,7 +78,7 @@ jobs:
 
       - name: Install and launch APK on Android API ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
-        timeout-minutes: 10
+        timeout-minutes: 15
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
@@ -94,7 +94,7 @@ jobs:
             timeout 300s sh -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\\r")" = "1" ]; do sleep 3; done'
             timeout 120s sh -c 'until adb shell pm list packages >/dev/null 2>&1; do sleep 3; done'
             test -s "eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
-            timeout 120s adb install -r "eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+            timeout 300s adb install -r "eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
             adb shell pm path com.ephinta.app
             adb shell am force-stop com.ephinta.app
             timeout 60s adb shell am start -W -n com.ephinta.app/.MainActivity
