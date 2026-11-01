@@ -70,14 +70,18 @@ tasks.register("syncEphintaAndroidBranding") {
 
         ephintaAndroidIconSizes.each { density, pixels ->
             def sourceIcon = new File(ephintaBrandIconDir, "app-icon-${pixels}.png")
+            def sourceForeground = new File(ephintaBrandIconDir, "app-icon-foreground-${pixels}.png")
             if (!sourceIcon.isFile()) {
                 throw new GradleException("Missing EPHINTA launcher icon: ${sourceIcon}")
+            }
+            if (!sourceForeground.isFile()) {
+                throw new GradleException("Missing EPHINTA adaptive foreground icon: ${sourceForeground}")
             }
             def targetDir = file("src/main/res/mipmap-${density}")
             targetDir.mkdirs()
             copy { from sourceIcon; into targetDir; rename { "ic_launcher.png" } }
             copy { from sourceIcon; into targetDir; rename { "ic_launcher_round.png" } }
-            copy { from sourceIcon; into targetDir; rename { "ic_launcher_foreground.png" } }
+            copy { from sourceForeground; into targetDir; rename { "ic_launcher_foreground.png" } }
         }
 
         def splashSource = new File(ephintaBrandIconDir, "app-icon-512.png")
