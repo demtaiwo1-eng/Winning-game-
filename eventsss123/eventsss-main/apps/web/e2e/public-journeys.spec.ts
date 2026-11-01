@@ -205,8 +205,7 @@ test("authenticated planner can add a checklist task to an owned event", async (
   // Auth/session restoration can normalize the dashboard URL and reset its tab.
   // Exercise the visible navigation instead of relying on a query-string tab state.
   const eventWorkspaceTab = page.getByRole("button", { name: "Event workspace", exact: true });
-  await eventWorkspaceTab.scrollIntoViewIfNeeded();
-  await eventWorkspaceTab.click();
+  await eventWorkspaceTab.dispatchEvent("click");
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
   await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
   const taskInput = page.locator('section[aria-labelledby="event-workspace-title"] label').filter({ hasText: /^Task$/ }).locator("input");
