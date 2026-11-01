@@ -6,7 +6,7 @@
 import { env } from "../../config/env";
 import { majorAmountToMinor } from "./webhookVerification";
 
-export type ProviderName = "paystack" | "flutterwave" | "stripe" | "demo";
+export type ProviderName = "paystack" | "flutterwave" | "stripe" | "opay" | "demo";
 
 export function canUseDemoPayments(
   options: { nodeEnv?: string; paymentMode?: string } = {},
@@ -59,6 +59,8 @@ export function selectProvider(currency: string, country?: string): ProviderName
 
   const c = currency.toUpperCase();
 
+  if (c === "NGN" && env.OPAY_MERCHANT_ID && env.OPAY_PUBLIC_KEY && env.OPAY_SECRET_KEY) return "opay";
+
   if (["NGN", "GHS"].includes(c)) {
     if (env.PAYSTACK_SECRET_KEY) return "paystack";
     if (env.FLUTTERWAVE_SECRET_KEY) return "flutterwave";
@@ -85,6 +87,52 @@ export function selectProvider(currency: string, country?: string): ProviderName
   throw new Error(
     "No payment provider is configured; demo payments are disabled in live/production mode",
   );
+}
+
+/** Create an OPay cashier checkout. Keys are server-only; keep this adapter sandboxed. */
+export async function initializeOpay(input: {
+  amountMinor: bigint;
+  currency: string;
+  reference: string;
+  callbackUrl: string;
+}): Promise<InitResult> {
+  assertPaymentMode();
+  if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
+    throw new Error("OPay credentials are not configured");
+  }
+  if (input.currency.toUpperCase() !== "NGN") {
+    throw new Error("OPay checkout currently supports NGN only");
+  }
+  const res = await fetch("https://testapi.opaycheckout.com/api/v1/international/cashier/create", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.OPAY_PUBLIC_KEY}`,
+      MerchantId: env.OPAY_MERCHANT_ID,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      country: "NG",
+      reference: input.reference,
+      amount: { total: Number(input.amountMinor), currency: "NGN" },
+      returnUrl: input.callbackUrl,
+      product: { name: "EPHINTA Wallet Deposit", description: "Wallet funding" },
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  const data = (await res.json()) as {
+    code?: string;
+    message?: string;
+    data?: { cashierUrl?: string; reference?: string };
+  };
+  if (!res.ok || data.code !== "00000" || !data.data?.cashierUrl) {
+    throw new Error(data.message || "OPay checkout initialization failed");
+  }
+  return {
+    provider: "opay",
+    providerRef: data.data.reference || input.reference,
+    authorizationUrl: data.data.cashierUrl,
+    mode: "live",
+  };
 }
 
 export type InitResult = {
