@@ -18,6 +18,7 @@ import { initLiveUpdate } from "./lib/liveUpdate";
 import { initOfflineSync } from './lib/offline/sync';
 import "./styles/ephinta-landing-repair.css";
 import "./styles/ephinta-current-ui-repair.css";
+import { installEphintaIntroWatchdog, markEphintaAppReady } from "./lib/ephintaStartup";
 
 /* ---------- Platform setup ---------- */
 const capacitor = (window as unknown as {
@@ -25,6 +26,9 @@ const capacitor = (window as unknown as {
 }).Capacitor;
 const isNative = !!capacitor?.isNativePlatform?.();
 const AppRouter = isNative ? HashRouter : BrowserRouter;
+
+// Ensure an abandoned intro/splash overlay cannot permanently cover the app.
+installEphintaIntroWatchdog();
 
 if (!isNative) {
   registerSW({
@@ -35,11 +39,19 @@ if (!isNative) {
   });
 }
 
+function EphintaStartupReadySignal(): null {
+  React.useEffect(() => {
+    markEphintaAppReady();
+  }, []);
+  return null;
+}
+
 /* ---------- Render ---------- */
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AppRouter>
       <>
+        <EphintaStartupReadySignal />
         <Suspense fallback={null}>
           <App />
         </Suspense>
@@ -51,10 +63,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 
 initLiveUpdate();
-
 initOfflineSync();
 import "./styles/ephinta-polish.css";
-
 import "./styles/ephinta-audio.css";
-
-import { installEphintaIntroWatchdog, markEphintaAppReady } from "./lib/ephintaStartup";
