@@ -84,7 +84,9 @@ jobs:
           emulator-boot-timeout: 900
           disable-animations: true
           script: |
-            set -Eeuo pipefail
+            # The emulator action executes this script with /bin/sh (dash), not Bash.
+            # Keep it POSIX-compatible; pipefail and the Bash ERR trap break before adb install.
+            set -eu
             APK="eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
             dump_diagnostics() {
               echo "::group::ADB diagnostics"
@@ -94,7 +96,15 @@ jobs:
               adb logcat -d -t 2000 || true
               echo "::endgroup::"
             }
-            trap 'status=$?; echo "Android smoke test failed with exit code $status"; dump_diagnostics; exit "$status"' ERR
+            on_exit() {
+              status=$?
+              if [ "$status" -ne 0 ]; then
+                echo "Android smoke test failed with exit code $status"
+                dump_diagnostics
+              fi
+              exit "$status"
+            }
+            trap on_exit EXIT
 
             adb start-server
             adb wait-for-device
