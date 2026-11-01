@@ -59,9 +59,13 @@ jobs:
 
       - name: Build web application
         run: npm run build:web
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
 
       - name: Sync Capacitor Android project
         run: npm run sync -w apps/mobile
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
 
       - name: Build debug APK
         working-directory: eventsss123/eventsss-main/apps/mobile/android
