@@ -134,7 +134,8 @@ export async function initializeOpay(input: {
     provider: "opay",
     providerRef: data.data.reference || input.reference,
     authorizationUrl: data.data.cashierUrl,
-    mode: "live",
+    // This adapter targets OPay's test endpoint; never label it as live.
+    mode: "demo",
   };
 }
 
