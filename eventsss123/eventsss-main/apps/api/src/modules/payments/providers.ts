@@ -134,8 +134,8 @@ export async function initializeOpay(input: {
     provider: "opay",
     providerRef: data.data.reference || input.reference,
     authorizationUrl: data.data.cashierUrl,
-    // This adapter targets OPay's test endpoint; never label it as live.
-    mode: "demo",
+    // This adapter targets OPay's test endpoint; report sandbox explicitly.
+    mode: "sandbox",
   };
 }
 
@@ -196,7 +196,7 @@ export type InitResult = {
   providerRef: string;
   authorizationUrl?: string;
   accessCode?: string;
-  mode: "live" | "demo";
+  mode: "live" | "sandbox" | "demo";
 };
 
 /** Amount for Paystack is in major subunit already as kobo/pesewas (minor units). */
