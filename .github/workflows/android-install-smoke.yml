@@ -27,9 +27,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Covers the declared minimum Android version, older mainstream,
-        # mid-generation, and current Android system images.
-        api-level: [23, 28, 33, 36]
+        # Released Android versions supported by the current minSdk (23):
+        # 6.0, 8.0, 9, 10, 11, 12, 13, 14, 15 and 16.
+        # API 24/25/27/32 are point/maintenance releases within those generations.
+        api-level: [23, 26, 28, 29, 30, 31, 33, 34, 35, 36]
     defaults:
       run:
         working-directory: eventsss123/eventsss-main
