@@ -4,7 +4,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$projectRoot = Split-Path -Parent $PSScriptRoot
+$projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $target = Join-Path $projectRoot "apps\web\src\components\PublicLanding.tsx"
 
 if (-not (Test-Path $target)) {
