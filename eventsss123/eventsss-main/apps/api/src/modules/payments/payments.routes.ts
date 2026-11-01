@@ -116,7 +116,7 @@ paymentsRouter.post(
     } else {
       init = { provider: "demo", providerRef: reference, mode: "demo" };
     }
-    if (init.mode === "live") {
+    if (init.authorizationUrl) {
       let checkout: URL;
       try {
         checkout = new URL(init.authorizationUrl || "");
@@ -156,10 +156,9 @@ paymentsRouter.post(
       checkoutUrl,
       mode: init.mode,
       paymentMode: getPaymentMode(),
-      message:
-        init.mode === "live"
-          ? `Redirect customer to checkoutUrl (${init.provider}). Webhook will credit wallet.`
-          : `Demo mode. POST ${checkoutUrl} or set PAYSTACK_SECRET_KEY / FLUTTERWAVE_SECRET_KEY for live.`,
+      message: init.authorizationUrl
+        ? `Redirect customer to checkoutUrl (${init.provider}); this is ${init.mode} checkout. The verified webhook credits the wallet.`
+        : `Demo mode. POST ${checkoutUrl} to simulate checkout.`,
     });
   }),
 );
