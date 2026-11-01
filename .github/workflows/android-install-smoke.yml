@@ -1,4 +1,4 @@
-name: Android install and launch compatibility matrix
+name: Android install and launch compatibility
 
 on:
   workflow_dispatch:
@@ -21,18 +21,18 @@ concurrency:
 
 jobs:
   install-and-launch:
-    name: Android API ${{ matrix.api-level }} install and launch
+    name: Android compatibility (API ${{ matrix.api-level }}) install and launch
     # Ubuntu 24.04 runners provide a more stable KVM-backed emulator environment
     # than the newly rolled-out ubuntu-latest image.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
-      # Limit concurrent emulators to avoid package-manager crashes on busy runners.
-      max-parallel: 1
+      # Cover the declared minimum Android version, a widely used middle generation,
+      # and a current generation without tying support to one phone model.
+      max-parallel: 3
       matrix:
-        # Prioritize the user's Redmi 9A (Android 11 / API 30) to keep feedback fast.
-        api-level: [30]
+        api-level: [23, 30, 35]
     defaults:
       run:
         working-directory: eventsss123/eventsss-main
@@ -76,7 +76,7 @@ jobs:
           "$BT/apksigner" verify --verbose "$APK"
           "$BT/aapt" dump badging "$APK" | grep -E "^(package:|sdkVersion:|targetSdkVersion:)"
 
-      - name: Install and launch APK on Android API ${{ matrix.api-level }}
+      - name: Install and launch APK on Android compatibility target ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
         timeout-minutes: 15
         with:
@@ -100,13 +100,13 @@ jobs:
             timeout 60s adb shell am start -W -n com.ephinta.app/.MainActivity
             sleep 8
             adb shell pidof com.ephinta.app
-            echo "EPHINTA installed and remained running on Android API ${{ matrix.api-level }}."
+            echo "EPHINTA installed and remained running on Android compatibility target ${{ matrix.api-level }}."
 
       - name: Upload APK for manual device testing
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: ephinta-android-api36-emulator-verified-debug-apk
+          name: ephinta-android-debug-api-${{ matrix.api-level }}
           path: eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
