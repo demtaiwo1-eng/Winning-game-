@@ -177,7 +177,7 @@ export async function verifyOpay(reference: string): Promise<{
     throw new Error(data.message || "OPay status response was unsuccessful");
   }
   const amount = data.data.amount?.total;
-  if (amount === undefined || amount === null || !/^\\d+$/.test(String(amount))) {
+  if (amount === undefined || amount === null || !/^\d+$/.test(String(amount))) {
     throw new Error("OPay status response is missing a valid amount");
   }
   const responseReference = data.data.reference;
