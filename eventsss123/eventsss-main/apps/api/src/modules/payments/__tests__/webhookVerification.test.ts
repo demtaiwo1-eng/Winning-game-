@@ -2,11 +2,33 @@ import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   verifyFlutterwaveSignature,
+  verifyOpayCallbackSignature,
   verifyPaystackSignature,
   verifyStripeSignature,
 } from "../webhookVerification";
 
 describe("payment webhook signature verification", () => {
+  it("accepts OPay SHA3-512 callback signatures and rejects tampered or incomplete payloads", () => {
+    const payload = {
+      amount: "12500",
+      currency: "NGN",
+      reference: "ephinta_test_reference",
+      refunded: false,
+      status: "SUCCESS",
+      timestamp: "1730000000",
+      token: "opay-token",
+      transactionId: "opay-transaction-123",
+    };
+    const canonical = `{Amount:"${payload.amount}",Currency:"${payload.currency}",Reference:"${payload.reference}",Refunded:f,Status:"${payload.status}",Timestamp:"${payload.timestamp}",Token:"${payload.token}",TransactionID:"${payload.transactionId}"}`;
+    const secret = "opay-test-secret";
+    const signature = createHmac("sha3-512", secret).update(canonical).digest("hex");
+
+    expect(verifyOpayCallbackSignature(payload, signature, secret)).toBe(true);
+    expect(verifyOpayCallbackSignature({ ...payload, amount: "12501" }, signature, secret)).toBe(false);
+    expect(verifyOpayCallbackSignature({ ...payload, transactionId: undefined }, signature, secret)).toBe(false);
+    expect(verifyOpayCallbackSignature(payload, signature, "wrong-secret")).toBe(false);
+  });
+
   it("accepts a valid Paystack raw-body HMAC", () => {
     const body = Buffer.from('{"event":"charge.success"}');
     const secret = "paystack-test-secret";

@@ -3,10 +3,11 @@
  * When secret keys are set in env, real initialize/verify is used.
  * Otherwise demo mode returns local checkout URLs.
  */
+import { createHmac } from "node:crypto";
 import { env } from "../../config/env";
 import { majorAmountToMinor } from "./webhookVerification";
 
-export type ProviderName = "paystack" | "flutterwave" | "stripe" | "demo";
+export type ProviderName = "paystack" | "flutterwave" | "stripe" | "opay" | "demo";
 
 export function canUseDemoPayments(
   options: { nodeEnv?: string; paymentMode?: string } = {},
@@ -59,6 +60,8 @@ export function selectProvider(currency: string, country?: string): ProviderName
 
   const c = currency.toUpperCase();
 
+  if (c === "NGN" && env.OPAY_MERCHANT_ID && env.OPAY_PUBLIC_KEY && env.OPAY_SECRET_KEY) return "opay";
+
   if (["NGN", "GHS"].includes(c)) {
     if (env.PAYSTACK_SECRET_KEY) return "paystack";
     if (env.FLUTTERWAVE_SECRET_KEY) return "flutterwave";
@@ -85,6 +88,107 @@ export function selectProvider(currency: string, country?: string): ProviderName
   throw new Error(
     "No payment provider is configured; demo payments are disabled in live/production mode",
   );
+}
+
+/** Create an OPay cashier checkout. Keys are server-only; keep this adapter sandboxed. */
+export async function initializeOpay(input: {
+  amountMinor: bigint;
+  currency: string;
+  reference: string;
+  callbackUrl: string;
+  notifyUrl?: string;
+}): Promise<InitResult> {
+  assertPaymentMode();
+  if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
+    throw new Error("OPay credentials are not configured");
+  }
+  if (input.currency.toUpperCase() !== "NGN") {
+    throw new Error("OPay checkout currently supports NGN only");
+  }
+  const res = await fetch("https://testapi.opaycheckout.com/api/v1/international/cashier/create", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.OPAY_PUBLIC_KEY}`,
+      MerchantId: env.OPAY_MERCHANT_ID,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      country: "NG",
+      reference: input.reference,
+      amount: { total: Number(input.amountMinor), currency: "NGN" },
+      returnUrl: input.callbackUrl,
+      ...(input.notifyUrl ? { callbackUrl: input.notifyUrl } : {}),
+      product: { name: "EPHINTA Wallet Deposit", description: "Wallet funding" },
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  const data = (await res.json()) as {
+    code?: string;
+    message?: string;
+    data?: { cashierUrl?: string; reference?: string };
+  };
+  if (!res.ok || data.code !== "00000" || !data.data?.cashierUrl) {
+    throw new Error(data.message || "OPay checkout initialization failed");
+  }
+  return {
+    provider: "opay",
+    providerRef: data.data.reference || input.reference,
+    authorizationUrl: data.data.cashierUrl,
+    // This adapter targets OPay's test endpoint; never label it as live.
+    mode: "demo",
+  };
+}
+
+/** Verify OPay status server-to-server; never trust the browser return URL. */
+export async function verifyOpay(reference: string): Promise<{
+  success: boolean;
+  amountMinor: bigint;
+  currency: string;
+  reference?: string;
+  raw: unknown;
+}> {
+  if (!env.OPAY_MERCHANT_ID || !env.OPAY_SECRET_KEY) {
+    throw new Error("OPay verification is not configured");
+  }
+  const requestBody = { country: "NG", reference };
+  const body = JSON.stringify(requestBody);
+  const signature = createHmac("sha512", env.OPAY_SECRET_KEY).update(body).digest("hex");
+  const res = await fetch("https://sandboxapi.opaycheckout.com/api/v1/international/cashier/status", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${signature}`,
+      MerchantId: env.OPAY_MERCHANT_ID,
+      "Content-Type": "application/json",
+    },
+    body,
+    signal: AbortSignal.timeout(15_000),
+  });
+  const data = (await res.json()) as {
+    code?: string;
+    message?: string;
+    data?: {
+      reference?: string;
+      status?: string;
+      amount?: { total?: number | string; currency?: string };
+      isVoided?: boolean;
+    };
+  };
+  if (!res.ok) throw new Error(`OPay status verification failed (${res.status})`);
+  if (data.code !== "00000" || !data.data) {
+    throw new Error(data.message || "OPay status response was unsuccessful");
+  }
+  const amount = data.data.amount?.total;
+  if (amount === undefined || amount === null || !/^\d+$/.test(String(amount))) {
+    throw new Error("OPay status response is missing a valid amount");
+  }
+  const responseReference = data.data.reference;
+  return {
+    success: data.data.status === "SUCCESS" && data.data.isVoided !== true,
+    amountMinor: BigInt(String(amount)),
+    currency: String(data.data.amount?.currency || "").toUpperCase(),
+    reference: responseReference,
+    raw: data,
+  };
 }
 
 export type InitResult = {

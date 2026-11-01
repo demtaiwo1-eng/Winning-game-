@@ -41,6 +41,31 @@ export function verifyStripeSignature(
   return signatures.some((signature) => constantTimeStringEqual(signature, expected));
 }
 
+/** Verify OPay's documented HMAC-SHA3-512 callback signature. */
+export function verifyOpayCallbackSignature(
+  payload: {
+    amount?: string;
+    currency?: string;
+    reference?: string;
+    refunded?: boolean;
+    status?: string;
+    timestamp?: string;
+    token?: string;
+    transactionId?: string;
+  },
+  received: string,
+  secret: string,
+): boolean {
+  if (
+    payload.amount === undefined || !payload.currency || !payload.reference ||
+    payload.refunded === undefined || !payload.status || !payload.timestamp ||
+    !payload.transactionId
+  ) return false;
+  const signed = `{Amount:"${payload.amount}",Currency:"${payload.currency}",Reference:"${payload.reference}",Refunded:${payload.refunded ? "t" : "f"},Status:"${payload.status}",Timestamp:"${payload.timestamp}",Token:"${payload.token ?? ""}",TransactionID:"${payload.transactionId}"}`;
+  const expected = createHmac("sha3-512", secret).update(signed).digest("hex");
+  return constantTimeStringEqual(received, expected);
+}
+
 export function assertVerifiedPayment(
   payment: VerifiedProviderPayment,
   intent: { amountMinor: bigint; currency: string },
