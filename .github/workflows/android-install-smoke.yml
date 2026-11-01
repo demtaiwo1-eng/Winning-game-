@@ -31,9 +31,8 @@ jobs:
       # Limit concurrent emulators to avoid package-manager crashes on busy runners.
       max-parallel: 1
       matrix:
-        # Representative Android generations, including Android 11/API 30.
         # Prioritize the user's Redmi 9A (Android 11 / API 30) to keep feedback fast.
-      api-level: [30]
+        api-level: [30]
     defaults:
       run:
         working-directory: eventsss123/eventsss-main
@@ -104,7 +103,7 @@ jobs:
             echo "EPHINTA installed and remained running on Android API ${{ matrix.api-level }}."
 
       - name: Upload APK for manual device testing
-        if: success() && matrix.api-level == 36
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ephinta-android-api36-emulator-verified-debug-apk
