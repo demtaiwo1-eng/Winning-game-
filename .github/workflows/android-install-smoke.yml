@@ -22,14 +22,14 @@ concurrency:
 jobs:
   install-and-launch:
     name: Android API ${{ matrix.api-level }} install and launch
-    runs-on: ubuntu-latest
+    # Ubuntu 24.04 runners provide a more stable KVM-backed emulator environment
+    # than the newly rolled-out ubuntu-latest image.
+    runs-on: ubuntu-24.04
     timeout-minutes: 50
     strategy:
       fail-fast: false
       matrix:
-        # Released Android versions supported by the current minSdk (23):
-        # 6.0, 8.0, 9, 10, 11, 12, 13, 14, 15 and 16.
-        # API 24/25/27/32 are point/maintenance releases within those generations.
+        # Representative Android generations, including Android 11/API 30.
         api-level: [23, 26, 28, 29, 30, 31, 33, 34, 35, 36]
     defaults:
       run:
@@ -81,12 +81,38 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 600
+          emulator-boot-timeout: 900
           disable-animations: true
           script: |
-            set -euo pipefail
+            set -Eeuo pipefail
             APK="eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+            dump_diagnostics() {
+              echo "::group::ADB diagnostics"
+              adb devices -l || true
+              adb get-state || true
+              adb shell getprop sys.boot_completed || true
+              adb logcat -d -t 2000 || true
+              echo "::endgroup::"
+            }
+            trap 'status=$?; echo "Android smoke test failed with exit code $status"; dump_diagnostics; exit "$status"' ERR
+
+            adb start-server
             adb wait-for-device
+            booted=false
+            for attempt in $(seq 1 90); do
+              state="$(adb get-state 2>/dev/null || true)"
+              completed="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+              if [ "$state" = "device" ] && [ "$completed" = "1" ]; then
+                booted=true
+                break
+              fi
+              sleep 5
+            done
+            if [ "$booted" != true ]; then
+              echo "Emulator did not become fully ready before install."
+              false
+            fi
+
             adb install -r "$APK"
             adb shell pm path com.ephinta.app
             adb shell am force-stop com.ephinta.app
@@ -94,8 +120,7 @@ jobs:
             sleep 8
             if ! adb shell pidof com.ephinta.app >/dev/null; then
               echo "EPHINTA process did not remain alive after launch on API ${{ matrix.api-level }}."
-              adb logcat -d -t 2000
-              exit 1
+              false
             fi
             echo "EPHINTA installed and remained running on Android API ${{ matrix.api-level }}."
 
