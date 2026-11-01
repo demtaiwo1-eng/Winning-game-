@@ -100,6 +100,9 @@ paymentsRouter.post(
         currency,
         reference,
         callbackUrl,
+        notifyUrl: env.API_BASE_URL
+          ? new URL("/api/v1/payments/webhooks/opay", env.API_BASE_URL).toString()
+          : undefined,
       });
     } else if (provider === "stripe") {
       init = await initializeStripe({
@@ -216,6 +219,15 @@ paymentsRouter.post(
     const provider = (req.params.provider as string).toLowerCase();
     if (!["paystack", "flutterwave", "stripe", "opay"].includes(provider)) throw new HttpError(404, "UNKNOWN_PROVIDER", "Unsupported payment provider");
     verifyWebhookSignature(provider, req);
+
+    // OPay sends notifications for pending, failed and successful transactions.
+    // Acknowledge non-success/refund events without attempting settlement.
+    if (
+      provider === "opay" &&
+      (req.body?.payload?.status !== "SUCCESS" || req.body?.payload?.refunded === true)
+    ) {
+      return res.json({ ok: true, ignored: true });
+    }
 
     // Ignore unrelated Stripe events; only completed Checkout Sessions
     // are eligible to trigger payment verification and settlement.
