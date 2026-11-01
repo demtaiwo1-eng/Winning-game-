@@ -76,6 +76,7 @@ jobs:
 
       - name: Install and launch APK on Android API ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
+        timeout-minutes: 10
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
@@ -83,56 +84,20 @@ jobs:
           profile: pixel_2
           emulator-boot-timeout: 300
           disable-animations: true
-          timeout-minutes: 10
           script: |
-            # The emulator action executes this script with /bin/sh (dash), not Bash.
-            # Keep it POSIX-compatible; pipefail and the Bash ERR trap break before adb install.
-            set -eu
-            APK="eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
-            dump_diagnostics() {
-              echo "::group::ADB diagnostics"
-              adb devices -l || true
-              adb get-state || true
-              adb shell getprop sys.boot_completed || true
-              adb logcat -d -t 2000 || true
-              echo "::endgroup::"
-            }
-            on_exit() {
-              status=$?
-              if [ "$status" -ne 0 ]; then
-                echo "Android smoke test failed with exit code $status"
-                dump_diagnostics
-              fi
-              exit "$status"
-            }
-            trap on_exit EXIT
-
+            # This action executes each script line as a separate /bin/sh command.
+            # Keep every operation on one line; multiline shell functions/traps are unsupported.
             adb start-server
             adb wait-for-device
-            booted=false
-            for attempt in $(seq 1 90); do
-              state="$(adb get-state 2>/dev/null || true)"
-              completed="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
-              if [ "$state" = "device" ] && [ "$completed" = "1" ]; then
-                booted=true
-                break
-              fi
-              sleep 5
-            done
-            if [ "$booted" != true ]; then
-              echo "Emulator did not become fully ready before install."
-              false
-            fi
-
+            timeout 300s sh -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\\r")" = "1" ]; do sleep 3; done'
+            APK="eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+            test -s "$APK"
             timeout 120s adb install -r "$APK"
             adb shell pm path com.ephinta.app
             adb shell am force-stop com.ephinta.app
             timeout 60s adb shell am start -W -n com.ephinta.app/.MainActivity
             sleep 8
-            if ! adb shell pidof com.ephinta.app >/dev/null; then
-              echo "EPHINTA process did not remain alive after launch on API ${{ matrix.api-level }}."
-              false
-            fi
+            adb shell pidof com.ephinta.app
             echo "EPHINTA installed and remained running on Android API ${{ matrix.api-level }}."
 
       - name: Upload APK for manual device testing
