@@ -1,4 +1,4 @@
-name: Android install and launch smoke test
+name: Android install and launch compatibility matrix
 
 on:
   workflow_dispatch:
@@ -18,9 +18,15 @@ concurrency:
 
 jobs:
   install-and-launch:
-    name: Build, install, and launch on Android emulator
+    name: Android API ${{ matrix.api-level }} install and launch
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        # Covers the declared minimum Android version, older mainstream,
+        # mid-generation, and current Android system images.
+        api-level: [23, 28, 33, 36]
     defaults:
       run:
         working-directory: eventsss123/eventsss-main
@@ -54,14 +60,20 @@ jobs:
       - name: Build debug APK
         working-directory: eventsss123/eventsss-main/apps/mobile/android
         run: |
+          set -euo pipefail
           chmod +x gradlew
           ./gradlew --no-daemon clean assembleDebug
-          test -s app/build/outputs/apk/debug/app-debug.apk
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          BT="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          test -x "$BT/apksigner"
+          "$BT/apksigner" verify --verbose "$APK"
+          "$BT/aapt" dump badging "$APK" | grep -E "^(package:|sdkVersion:|targetSdkVersion:)"
 
-      - name: Install and launch APK on Android 15 emulator
+      - name: Install and launch APK on Android API ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: ${{ matrix.api-level }}
           target: google_apis
           arch: x86_64
           profile: pixel_2
@@ -77,17 +89,17 @@ jobs:
             adb shell am start -W -n com.ephinta.app/.MainActivity
             sleep 8
             if ! adb shell pidof com.ephinta.app >/dev/null; then
-              echo "EPHINTA process did not remain alive after launch."
-              adb logcat -d -t 1500
+              echo "EPHINTA process did not remain alive after launch on API ${{ matrix.api-level }}."
+              adb logcat -d -t 2000
               exit 1
             fi
-            echo "EPHINTA installed and remained running after launch."
+            echo "EPHINTA installed and remained running on Android API ${{ matrix.api-level }}."
 
       - name: Upload APK for manual device testing
-        if: success()
+        if: success() && matrix.api-level == 36
         uses: actions/upload-artifact@v4
         with:
-          name: ephinta-android-emulator-verified-debug-apk
+          name: ephinta-android-api36-emulator-verified-debug-apk
           path: eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
