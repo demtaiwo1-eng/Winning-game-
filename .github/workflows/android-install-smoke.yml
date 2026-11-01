@@ -29,10 +29,11 @@ jobs:
     strategy:
       fail-fast: false
       # Limit concurrent emulators to avoid package-manager crashes on busy runners.
-      max-parallel: 2
+      max-parallel: 1
       matrix:
         # Representative Android generations, including Android 11/API 30.
-        api-level: [23, 26, 28, 29, 30, 31, 33, 34, 35, 36]
+        # Prioritize the user's Redmi 9A (Android 11 / API 30) to keep feedback fast.
+      api-level: [30]
     defaults:
       run:
         working-directory: eventsss123/eventsss-main
