@@ -25,12 +25,12 @@ jobs:
     # Ubuntu 24.04 runners provide a more stable KVM-backed emulator environment
     # than the newly rolled-out ubuntu-latest image.
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       # Cover the declared minimum Android version, a widely used middle generation,
       # and a current generation without tying support to one phone model.
-      max-parallel: 3
+      max-parallel: 1
       matrix:
         api-level: [23, 30, 35]
     defaults:
@@ -78,26 +78,27 @@ jobs:
 
       - name: Install and launch APK on Android compatibility target ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
-        timeout-minutes: 15
+        timeout-minutes: 25
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 300
+          emulator-boot-timeout: 600
           disable-animations: true
           script: |
             # This action executes each script line as a separate /bin/sh command.
             # Keep every operation on one line; multiline shell functions/traps are unsupported.
             adb start-server
             adb wait-for-device
-            timeout 300s sh -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\\r")" = "1" ]; do sleep 3; done'
-            timeout 120s sh -c 'until adb shell pm list packages >/dev/null 2>&1; do sleep 3; done'
+            timeout 600s sh -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\\r")" = "1" ]; do sleep 5; done'
+            timeout 240s sh -c 'until adb shell cmd package list packages >/dev/null 2>&1 && adb shell service check package 2>/dev/null | grep -q found; do sleep 5; done'
+            adb shell am wait-for-broadcast-idle
             test -s "eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
             timeout 300s adb install -r "eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
             adb shell pm path com.ephinta.app
             adb shell am force-stop com.ephinta.app
-            timeout 60s adb shell am start -W -n com.ephinta.app/.MainActivity
+            timeout 180s adb shell am start -W -n com.ephinta.app/.MainActivity
             sleep 8
             adb shell pidof com.ephinta.app
             echo "EPHINTA installed and remained running on Android compatibility target ${{ matrix.api-level }}."
