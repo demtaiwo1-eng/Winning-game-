@@ -23,13 +23,15 @@ git fetch origin "$BRANCH"
 git switch "$BRANCH"
 git pull --ff-only origin "$BRANCH"
 
-# Refuse to overwrite any local work.
-[[ -z "$(git status --porcelain)" ]] ||
-  fail "Working tree is not clean. Commit or stash your changes first."
-
 PROVIDERS="$API_DIR/src/modules/payments/providers.ts"
 ROUTES="$API_DIR/src/modules/payments/payments.routes.ts"
 ENVFILE="$API_DIR/src/config/env.ts"
+
+# Unrelated local edits are safe: this script only pushes commits. Refuse to
+# continue if any payment file it validates has staged, unstaged, or untracked
+# local changes, so those changes cannot be mistaken for the checked version.
+[[ -z "$(git status --porcelain -- "$PROVIDERS" "$ROUTES" "$ENVFILE")" ]] ||
+  fail "Payment files have local changes. Commit or stash those files first."
 
 for file in "$PROVIDERS" "$ROUTES" "$ENVFILE"; do
   [[ -f "$file" ]] || fail "Missing expected file: $file"
