@@ -22,6 +22,9 @@ const schema = z.object({
   FLUTTERWAVE_SECRET_KEY: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  OPAY_MERCHANT_ID: z.string().optional(),
+  OPAY_PUBLIC_KEY: z.string().optional(),
+  OPAY_SECRET_KEY: z.string().optional(),
   PAYMENT_MODE: z.enum(["test", "live"]).default("test"),
 });
 
