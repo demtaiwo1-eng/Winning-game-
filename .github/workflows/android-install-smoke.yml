@@ -25,7 +25,7 @@ jobs:
     # Ubuntu 24.04 runners provide a more stable KVM-backed emulator environment
     # than the newly rolled-out ubuntu-latest image.
     runs-on: ubuntu-24.04
-    timeout-minutes: 50
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -81,8 +81,9 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 900
+          emulator-boot-timeout: 300
           disable-animations: true
+          timeout-minutes: 10
           script: |
             # The emulator action executes this script with /bin/sh (dash), not Bash.
             # Keep it POSIX-compatible; pipefail and the Bash ERR trap break before adb install.
@@ -123,10 +124,10 @@ jobs:
               false
             fi
 
-            adb install -r "$APK"
+            timeout 120s adb install -r "$APK"
             adb shell pm path com.ephinta.app
             adb shell am force-stop com.ephinta.app
-            adb shell am start -W -n com.ephinta.app/.MainActivity
+            timeout 60s adb shell am start -W -n com.ephinta.app/.MainActivity
             sleep 8
             if ! adb shell pidof com.ephinta.app >/dev/null; then
               echo "EPHINTA process did not remain alive after launch on API ${{ matrix.api-level }}."
