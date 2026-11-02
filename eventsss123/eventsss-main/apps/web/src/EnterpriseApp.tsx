@@ -3199,7 +3199,7 @@ function PasswordVisibilityButton({ visible, onToggle }: { visible: boolean; onT
       type="button"
       className="ess-password-visibility"
       style={{ minWidth: 44, minHeight: 44, display: "grid", placeItems: "center" }}
-      aria-label={visible ? "Hide password" : "Show password"}
+      aria-label={visible ? "Hide characters" : "Show characters"}
       aria-pressed={visible}
       onClick={onToggle}
     >
