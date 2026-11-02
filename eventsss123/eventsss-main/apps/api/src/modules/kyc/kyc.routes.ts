@@ -67,26 +67,14 @@ kycRouter.post(
       }
     }
 
-    let documentUrl: string | null = null;
-    if (typeof req.body.documentUrl === "string") {
-      try {
-        const candidate = new URL(req.body.documentUrl.trim());
-        if (candidate.protocol === "https:") documentUrl = candidate.toString();
-      } catch { /* invalid URLs are rejected below */ }
-    } else if (typeof req.body.documentBase64 === "string" && req.body.documentBase64.length > 32) {
-      const fileName = typeof req.body.fileName === "string" ? req.body.fileName : "document.pdf";
-      documentUrl = await storeKycDocument({
-        base64: req.body.documentBase64,
-        fileName,
-      });
+    if (typeof req.body.documentBase64 !== "string" || req.body.documentBase64.length <= 32) {
+      throw new HttpError(400, "DOCUMENT_REQUIRED", "Upload a document using the secure document upload flow.");
     }
-    if (!documentUrl) {
-      throw new HttpError(
-        400,
-        "DOCUMENT_REQUIRED",
-        "Provide a valid HTTPS documentUrl or use secure document upload when available",
-      );
-    }
+    const fileName = typeof req.body.fileName === "string" ? req.body.fileName : "document.pdf";
+    const documentUrl = await storeKycDocument({
+      base64: req.body.documentBase64,
+      fileName,
+    });
 
     const meta = {
       country,
