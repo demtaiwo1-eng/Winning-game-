@@ -32,7 +32,6 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
   const [notes, setNotes] = useState("");
   const [fileName, setFileName] = useState("");
   const [base64, setBase64] = useState("");
-  const [url, setUrl] = useState("");
   const [addressUrl, setAddressUrl] = useState("");
   const [businessUrl, setBusinessUrl] = useState("");
   const [items, setItems] = useState<KycItem[]>([]);
@@ -80,7 +79,6 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
       const prepared = await prepareKycUpload(file);
       setFileName(prepared.fileName);
       setBase64(prepared.base64);
-      setUrl("");
       setMsg(`Document ready (${Math.ceil(prepared.size / 1024)} KB).`);
     } catch (error) {
       setBase64("");
@@ -97,7 +95,8 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
       const res = await kycApi.submit({
         kind,
         notes: notes || undefined,
-        ...(url ? { documentUrl: url } : { documentBase64: base64, fileName: fileName || "document.pdf" }),
+        documentBase64: base64,
+        fileName: fileName || "document.pdf",
         // extended fields sent as any — api client posts JSON
         ...({
           country,
@@ -113,7 +112,6 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
       );
       setBase64("");
       setFileName("");
-      setUrl("");
       kycApi.me().then((r) => setItems((r.items as KycItem[]) || []));
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "Submit failed");
@@ -191,10 +189,6 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
           <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(e) => onFile(e.target.files?.[0] || null)} />
         </label>
         <label>
-          Or document HTTPS URL
-          <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
-        </label>
-        <label>
           Address proof URL (optional)
           <input type="url" value={addressUrl} onChange={(e) => setAddressUrl(e.target.value)} placeholder="Utility bill / bank statement" />
         </label>
@@ -208,7 +202,7 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
           Notes
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
         </label>
-        <button className="ess-primary" type="submit" disabled={busy || (!base64 && !url)}>
+        <button className="ess-primary" type="submit" disabled={busy || !base64}>
           {busy ? "Submitting…" : "Submit KYC for review"}
         </button>
       </form>
