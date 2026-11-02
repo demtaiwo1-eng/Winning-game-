@@ -38,7 +38,7 @@ Before running it, configure these repository Actions secrets:
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-Also configure the repository Actions variable `ANDROID_CERT_SHA256` with the SHA-256 fingerprint of the same signing certificate. The workflow verifies the APK signature and fingerprint and refuses to publish if they do not match. It also checks the configured production API's `/health` and `/ready` endpoints before building.
+Also configure the repository Actions variable `ANDROID_CERT_SHA256` with the SHA-256 fingerprint of the same signing certificate. The workflow verifies the APK signature and fingerprint and refuses to publish if they do not match. It also checks the configured production API's `/health` and `/ready` endpoints before building. Versioned OTA bundle assets (`ephinta-web-bundle.zip` and `version.json`) are included in each tagged production release so the app updater continues to receive the matching web layer.
 
 The automatically published APK from `ephinta-apk-download.yml` is deliberately an **unsigned debug/test APK**. It is marked as a prerelease and is not set as the latest release. Only the signed workflow publishes the production release.
 
