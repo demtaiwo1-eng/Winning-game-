@@ -6,6 +6,7 @@ import SplashLogo from './components/SplashLogo';
 import AudioExperience from './components/AudioExperience';
 
 import { initializeEphintaTheme } from "./lib/ephintaTheme";
+import { prepareKycUpload } from "./lib/prepareKycUpload";
 import { formatMoneyInput, formatMinorCurrency, majorToMinorUnits } from './lib/currency';
 type AuthPayload = {
   accessToken: string;
@@ -71,7 +72,8 @@ function VendorPortal({ payload, onLogout }: { payload: AuthPayload; onLogout: (
   const [vendorFeedback, setVendorFeedback] = useState('');
   const [kycRequests, setKycRequests] = useState<KycRequest[]>([]);
   const [kycKind, setKycKind] = useState('BUSINESS');
-  const [kycUrl, setKycUrl] = useState('');
+  const [kycFileName, setKycFileName] = useState('');
+  const [kycBase64, setKycBase64] = useState('');
   const [kycNotes, setKycNotes] = useState('');
 
   useEffect(() => {
@@ -127,12 +129,42 @@ function VendorPortal({ payload, onLogout }: { payload: AuthPayload; onLogout: (
     if (response.ok) { setListings((current) => current.filter((item) => item.id !== listing.id)); setVendorFeedback('Product removed.'); }
   };
 
+  const prepareVendorKycFile = async (file: File | null) => {
+    if (!file) {
+      setKycFileName('');
+      setKycBase64('');
+      return;
+    }
+    try {
+      const prepared = await prepareKycUpload(file);
+      setKycFileName(prepared.fileName);
+      setKycBase64(prepared.base64);
+      setVendorFeedback(`Document ready (${Math.ceil(prepared.size / 1024)} KB).`);
+    } catch (error) {
+      setKycFileName('');
+      setKycBase64('');
+      setVendorFeedback(error instanceof Error ? error.message : 'Unable to prepare this document.');
+    }
+  };
+
   const submitKyc = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const response = await fetch('/api/v1/vendor/kyc', { method: 'POST', headers: { Authorization: `Bearer ${payload.accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: kycKind, documentUrl: kycUrl, notes: kycNotes }) });
+    if (!kycBase64) {
+      setVendorFeedback('Choose a valid PDF, JPG, PNG, or WEBP document before submitting.');
+      return;
+    }
+    const response = await fetch('/api/v1/vendor/kyc', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${payload.accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: kycKind, documentBase64: kycBase64, fileName: kycFileName, notes: kycNotes }),
+    });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) { setVendorFeedback(result?.error?.message || 'Unable to submit verification.'); return; }
-    setKycRequests((current) => [result.request, ...current]); setKycUrl(''); setKycNotes(''); setVendorFeedback('Verification request submitted.');
+    setKycRequests((current) => [result.request, ...current]);
+    setKycFileName('');
+    setKycBase64('');
+    setKycNotes('');
+    setVendorFeedback('Verification request submitted.');
   };
 
   return (
@@ -147,7 +179,7 @@ function VendorPortal({ payload, onLogout }: { payload: AuthPayload; onLogout: (
         <div className="workspace-card"><p className="eyebrow">Marketplace status</p><h2>{listings.length}</h2><p>Active products visible to event planners.</p><div className="vendor-metric-row"><span>Profile status</span><strong>Ready for review</strong></div><div className="vendor-metric-row"><span>Portal role</span><strong>Vendor</strong></div></div>
       </section>
       <section className="workspace-card vendor-profile-card"><div className="section-header"><div><p className="eyebrow">Business profile</p><h2>Tell planners who you are</h2></div></div><form className="vendor-form" onSubmit={saveProfile}><input value={businessName} onChange={(event) => setBusinessName(event.target.value)} placeholder="Business name" required /><input value={city} onChange={(event) => setCity(event.target.value)} placeholder="City" /><input value={country} onChange={(event) => setCountry(event.target.value)} placeholder="Country" maxLength={2} /><textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Business description" rows={3} /><button className="primary-button" type="submit">Save profile</button></form></section>
-      <section className="workspace-card vendor-profile-card"><div className="section-header"><div><p className="eyebrow">Trust & verification</p><h2>KYC status</h2></div><strong>{kycRequests[0]?.status || 'NOT STARTED'}</strong></div><form className="vendor-form kyc-form" onSubmit={submitKyc}><div className="vendor-form-grid"><select value={kycKind} onChange={(event) => setKycKind(event.target.value)}><option value="BUSINESS">Business verification</option><option value="IDENTITY">Identity verification</option></select><input type="url" value={kycUrl} onChange={(event) => setKycUrl(event.target.value)} placeholder="Document URL" required /></div><textarea value={kycNotes} onChange={(event) => setKycNotes(event.target.value)} placeholder="Notes for the verification team" rows={2} /><button className="primary-button" type="submit">Submit verification</button></form>{kycRequests.length > 0 && <ul className="detail-list">{kycRequests.slice(0, 3).map((request) => <li key={request.id}><span>{request.kind} verification</span><small>{request.status}</small></li>)}</ul>}</section>
+      <section className="workspace-card vendor-profile-card"><div className="section-header"><div><p className="eyebrow">Trust & verification</p><h2>KYC status</h2></div><strong>{kycRequests[0]?.status || 'NOT STARTED'}</strong></div><form className="vendor-form kyc-form" onSubmit={submitKyc}><div className="vendor-form-grid"><select value={kycKind} onChange={(event) => setKycKind(event.target.value)}><option value="BUSINESS">Business verification</option><option value="IDENTITY">Identity verification</option></select><input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" onChange={(event) => prepareVendorKycFile(event.target.files?.[0] || null)} required /></div><textarea value={kycNotes} onChange={(event) => setKycNotes(event.target.value)} placeholder="Notes for the verification team" rows={2} /><button className="primary-button" type="submit" disabled={!kycBase64}>Submit verification</button></form>{kycRequests.length > 0 && <ul className="detail-list">{kycRequests.slice(0, 3).map((request) => <li key={request.id}><span>{request.kind} verification</span><small>{request.status}</small></li>)}</ul>}</section>
       <section className="workspace-card vendor-products-card" id="vendor-products"><div className="section-header"><div><p className="eyebrow">Storefront</p><h2>Publish a product or service</h2></div></div><form className="vendor-form product-form" onSubmit={createProduct}><input value={productTitle} onChange={(event) => setProductTitle(event.target.value)} placeholder="Product or service name" required /><textarea value={productDescription} onChange={(event) => setProductDescription(event.target.value)} placeholder="Describe what planners receive" rows={3} /><div className="vendor-form-grid"><select value={productCategory} onChange={(event) => setProductCategory(event.target.value)} required><option value="">Choose category</option>{categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select><select value={productType} onChange={(event) => setProductType(event.target.value)}><option value="SERVICE">Service</option><option value="GOOD">Product</option><option value="VENUE">Venue</option></select><input value={productPrice} onChange={(event) => setProductPrice(formatMoneyInput(event.target.value))} onBlur={() => setProductPrice((current) => formatMoneyInput(current, true))} placeholder="5,000,000.00" inputMode="decimal" aria-label="Price in major currency units" required /><select value={productStatus} onChange={(event) => setProductStatus(event.target.value)}><option value="DRAFT">Save as draft</option><option value="ACTIVE">Publish now</option></select></div><button className="primary-button" type="submit">Save product</button></form><div className="listing-grid">{isLoading ? <p>Loading your products...</p> : listings.length === 0 ? <div className="empty-marketplace"><strong>Your storefront is waiting for its first product.</strong><span>Create a product above with a category, price, location, and description.</span></div> : listings.map((listing) => <article className="listing-card" key={listing.id}><p className="eyebrow">{listing.category?.name || listing.type}</p><h3>{listing.title}</h3><p>{listing.description || 'No product description yet.'}</p><footer><span>{listing.city || 'Location not set'}</span><strong>{formatMinorCurrency(listing.priceMinor, listing.currency)}</strong></footer><button className="remove-button" onClick={() => removeProduct(listing)}>Delete product</button></article>)}</div></section>
     </main>
   );
