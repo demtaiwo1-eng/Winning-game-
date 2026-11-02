@@ -98,7 +98,6 @@ export function isStoredKycDocument(value: string | null | undefined): boolean {
 export async function storeKycDocument(input: {
   base64: string;
   fileName: string;
-  userId: string;
 }): Promise<string> {
   const encoded = input.base64.trim();
   if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encoded)) {
