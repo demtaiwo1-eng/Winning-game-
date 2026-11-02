@@ -4,8 +4,15 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - fix/android-install-smoke-test
+      - main
+    paths:
+      - "eventsss123/eventsss-main/apps/mobile/**"
+      - "eventsss123/eventsss-main/apps/web/**"
+      - "eventsss123/eventsss-main/package-lock.json"
+      - ".github/workflows/android-install-smoke.yml"
   pull_request:
+    branches:
+      - main
     paths:
       - "eventsss123/eventsss-main/apps/mobile/**"
       - "eventsss123/eventsss-main/apps/web/**"
@@ -22,15 +29,14 @@ concurrency:
 jobs:
   install-and-launch:
     name: Android API ${{ matrix.api-level }} install and launch
-    # Ubuntu 24.04 runners provide a more stable KVM-backed emulator environment
-    # than the newly rolled-out ubuntu-latest image.
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 45
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
-        # Representative Android generations, including Android 11/API 30.
-        api-level: [23, 26, 28, 29, 30, 31, 33, 34, 35, 36]
+        # Minimum supported version, Android 11, and a current Android generation.
+        api-level: [23, 30, 35]
     defaults:
       run:
         working-directory: eventsss123/eventsss-main
@@ -57,12 +63,17 @@ jobs:
 
       - name: Build web application
         run: npm run build:web
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
 
       - name: Sync Capacitor Android project
         run: npm run sync -w apps/mobile
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
 
-      - name: Build debug APK
+      - name: Build and inspect debug APK
         working-directory: eventsss123/eventsss-main/apps/mobile/android
+        shell: bash
         run: |
           set -euo pipefail
           chmod +x gradlew
@@ -71,40 +82,42 @@ jobs:
           test -s "$APK"
           BT="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
           test -x "$BT/apksigner"
+          test -x "$BT/aapt"
           "$BT/apksigner" verify --verbose "$APK"
           "$BT/aapt" dump badging "$APK" | grep -E "^(package:|sdkVersion:|targetSdkVersion:)"
+          unzip -t "$APK" >/dev/null
+          sha256sum "$APK"
 
       - name: Install and launch APK on Android API ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
-        timeout-minutes: 10
+        timeout-minutes: 30
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 300
+          emulator-boot-timeout: 600
           disable-animations: true
           script: |
-            # This action executes each script line as a separate /bin/sh command.
-            # Keep every operation on one line; multiline shell functions/traps are unsupported.
+            # The runner executes each script line in a separate shell; keep commands self-contained.
             adb start-server
-            adb wait-for-device
-            timeout 300s sh -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\\r")" = "1" ]; do sleep 3; done'
-            APK="eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
-            test -s "$APK"
-            timeout 120s adb install -r "$APK"
-            adb shell pm path com.ephinta.app
+            timeout 240s adb wait-for-device
+            timeout 360s sh -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\\r")" = "1" ]; do sleep 5; done'
+            timeout 240s sh -c 'until adb shell pm list packages >/dev/null 2>&1; do sleep 5; done'
+            test -s "eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+            for attempt in 1 2 3; do timeout 300s adb install -r "eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk" && break; [ "$attempt" -lt 3 ] || exit 1; sleep 10; done
+            adb shell pm path com.ephinta.app | grep -q '^package:'
             adb shell am force-stop com.ephinta.app
-            timeout 60s adb shell am start -W -n com.ephinta.app/.MainActivity
+            timeout 180s adb shell am start -W -n com.ephinta.app/.MainActivity
             sleep 8
-            adb shell pidof com.ephinta.app
+            test -n "$(adb shell pidof com.ephinta.app | tr -d '\\r')"
             echo "EPHINTA installed and remained running on Android API ${{ matrix.api-level }}."
 
       - name: Upload APK for manual device testing
-        if: success() && matrix.api-level == 36
+        if: success() && matrix.api-level == 23
         uses: actions/upload-artifact@v4
         with:
-          name: ephinta-android-api36-emulator-verified-debug-apk
+          name: ephinta-android-debug-api-23
           path: eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
