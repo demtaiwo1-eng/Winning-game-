@@ -2389,7 +2389,7 @@ function ResetPasswordPage({ token }: { token: string }) {
   return (
     <div className="ess-app">
       <main className="ess-content">
-        <div className="ess-auth-modal">
+        <div id="eph-auth-dialog" className="ess-auth-modal" role="dialog" aria-modal="true" aria-label={mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Sign in"}>
           <p className="ess-eyebrow">Secure recovery</p>
           <h2>Create a new password</h2>
           <p className="ess-muted">{PASSWORD_HELPER}</p>
