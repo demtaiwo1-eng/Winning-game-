@@ -4,7 +4,7 @@ import { Router } from "express";
 const GITHUB_RELEASE_API = "https://api.github.com/repos/demtaiwo1-eng/Winning-game-/releases/latest";
 const CACHE_MS = 60_000;
 
-type ReleaseAsset = { name: string; browser_download_url: string };
+type ReleaseAsset = { name: string; browser_download_url: string; size?: number };
 type ReleaseInfo = { assets?: ReleaseAsset[] };
 
 let cachedAssets: { expiresAt: number; assets: ReleaseAsset[] } | undefined;
@@ -37,8 +37,15 @@ async function fetchLatestAsset(name: string): Promise<Response> {
   const assets = await latestAssets();
   const asset = assets.find((item) => item.name === name);
   if (!asset) throw new Error(`OTA asset not found: ${name}`);
+  const assetUrl = new URL(asset.browser_download_url);
+  if (assetUrl.protocol !== "https:" || assetUrl.hostname !== "github.com") {
+    throw new Error("OTA asset host is not trusted");
+  }
+  if (typeof asset.size === "number" && asset.size > 100 * 1024 * 1024) {
+    throw new Error("OTA asset exceeds the allowed download size");
+  }
 
-  const response = await fetch(asset.browser_download_url, {
+  const response = await fetch(assetUrl.toString(), {
     headers: { "User-Agent": "EPHINTA-mobile-updater" },
     redirect: "follow",
     signal: AbortSignal.timeout(120_000),
