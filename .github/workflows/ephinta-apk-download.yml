@@ -30,6 +30,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
+      - name: Download verified OTA web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ephinta-web-ota-bundle
+          path: release-assets
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
       - name: Prepare release files
         shell: bash
         run: |
@@ -56,5 +64,8 @@ jobs:
           files: |
             release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk
             release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk.sha256
+            release-assets/ephinta-web-bundle.zip
+            release-assets/version.json
+          make_latest: true
           fail_on_unmatched_files: true
           generate_release_notes: false
