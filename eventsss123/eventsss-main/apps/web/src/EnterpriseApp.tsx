@@ -585,17 +585,29 @@ function VendorAvailabilityManager({ listingId }: { listingId: string }) {
   }, [listingId]);
   const addSlot = async (event: React.FormEvent) => {
     event.preventDefault();
+    const start = new Date(startsAt);
+    const end = new Date(endsAt);
+    const slotCapacity = Number(capacity);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) {
+      setMessage("Choose a valid end time after the start time.");
+      return;
+    }
+    if (!Number.isSafeInteger(slotCapacity) || slotCapacity < 1 || slotCapacity > 100000) {
+      setMessage("Capacity must be a whole number between 1 and 100,000.");
+      return;
+    }
     setBusy(true); setMessage("");
     try {
       await api(`/vendor/listings/${listingId}/availability`, {
         method: "POST",
-        body: JSON.stringify({ startsAt: new Date(startsAt).toISOString(), endsAt: new Date(endsAt).toISOString(), capacity: Number(capacity) }),
+        body: JSON.stringify({ startsAt: start.toISOString(), endsAt: end.toISOString(), capacity: slotCapacity }),
       });
       setStartsAt(""); setEndsAt(""); await refresh(); setMessage("Availability saved.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save availability."); }
     finally { setBusy(false); }
   };
   const removeSlot = async (id: string) => {
+    if (!window.confirm("Remove this availability window?")) return;
     setBusy(true); setMessage("");
     try {
       await api(`/vendor/listings/${listingId}/availability/${id}`, { method: "DELETE" });
@@ -628,7 +640,15 @@ function VendorEnquiriesPanel() {
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const load = async () => { const result = await api<{ items: typeof items }>("/vendor/enquiries"); setItems(result.items || []); };
+  const load = async () => {
+    try {
+      const result = await api<{ items: typeof items }>("/vendor/enquiries");
+      setItems(result.items || []);
+      setNotice("");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to refresh enquiries.");
+    }
+  };
   useEffect(() => { let active = true; api<{ items: typeof items }>("/vendor/enquiries").then(result => { if (active) setItems(result.items || []); }).catch((error: Error) => { if (active) setNotice(error.message); }); return () => { active = false; }; }, []);
   const reply = async (id: string, status: "RESPONDED" | "CLOSED" = "RESPONDED") => {
     setBusy(true); setNotice("");
@@ -636,7 +656,7 @@ function VendorEnquiriesPanel() {
     catch (error) { setNotice(error instanceof Error ? error.message : "Unable to update enquiry."); }
     finally { setBusy(false); }
   };
-  return <section className="ess-panel"><SectionTitle eyebrow="Customer demand" title="Listing enquiries" action={<button className="ess-quiet-button" onClick={() => load()}>Refresh</button>} />
+  return <section className="ess-panel"><SectionTitle eyebrow="Customer demand" title="Listing enquiries" action={<button type="button" className="ess-quiet-button" onClick={() => void load()}>Refresh</button>} />
     {notice && <p className="ess-muted" role="status">{notice}</p>}
     {items.length === 0 ? <p className="ess-muted">No customer enquiries yet.</p> : items.map(item => <article className="ess-enquiry-card" key={item.id}>
       <div><strong>{item.listing.title}</strong><span className="ess-card-category"> · {item.status}</span></div>
