@@ -2809,7 +2809,7 @@ function AuthModal({
     setPassword(`Ess-${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}!`);
   return (
     <div className="ess-modal-backdrop">
-      <div id="eph-auth-dialog" className="ess-auth-modal" role="dialog" aria-modal="true" aria-label={mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Sign in"}>
+      <div id="eph-auth-route-dialog" className="ess-auth-modal" role="dialog" aria-modal="true" aria-label={mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Sign in"}>
         <button className="ess-close" onClick={onClose}>
           ×
         </button>
@@ -3031,7 +3031,7 @@ function AuthModal({
           )}
           {(mode !== "signup" || registrationStep === 0) && <>
               <label>
-                Email
+                Email address
                 <input
                   type="email"
                   value={email}
