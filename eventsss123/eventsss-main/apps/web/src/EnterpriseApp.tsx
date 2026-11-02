@@ -3019,34 +3019,34 @@ function AuthModal({
             </>
           )}
           {mode === "signup" && registrationStep === 1 && role === "AFFILIATE" && (
-            <>
-              <label>
-                Primary referral channel
-                <select value={registrationCategory} onChange={(event) => setRegistrationCategory(event.target.value)}>
-                  <option value="">Choose a channel</option>
-                  <option>Social media</option>
-                  <option>Community</option>
-                  <option>Agency network</option>
-                  <option>Content publication</option>
-                </select>
-              </label>
-              <label>
-                Referral or partner code
-                <input
-                  value={referralCode}
-                  onChange={(event) => {
-                    setReferralCode(event.target.value);
-                    touch("referralCode");
-                  }}
-                  onBlur={() => touch("referralCode")}
-                  placeholder="Optional code"
-                  maxLength={80}
-                  aria-invalid={Boolean(fieldError("referralCode", referralCode))}
-                  aria-describedby={fieldError("referralCode", referralCode) ? "auth-referralCode-error" : undefined}
-                />
-                {fieldFeedback("referralCode", referralCode)}
-              </label>
-            </>
+            <label>
+              Primary referral channel
+              <select value={registrationCategory} onChange={(event) => setRegistrationCategory(event.target.value)}>
+                <option value="">Choose a channel</option>
+                <option>Social media</option>
+                <option>Community</option>
+                <option>Agency network</option>
+                <option>Content publication</option>
+              </select>
+            </label>
+          )}
+          {mode === "signup" && registrationStep === 1 && (
+            <label>
+              Referral or partner code
+              <input
+                value={referralCode}
+                onChange={(event) => {
+                  setReferralCode(event.target.value);
+                  touch("referralCode");
+                }}
+                onBlur={() => touch("referralCode")}
+                placeholder="Optional code"
+                maxLength={80}
+                aria-invalid={Boolean(fieldError("referralCode", referralCode))}
+                aria-describedby={fieldError("referralCode", referralCode) ? "auth-referralCode-error" : undefined}
+              />
+              {fieldFeedback("referralCode", referralCode)}
+            </label>
           )}
           {(mode !== "signup" || registrationStep === 0) && <>
               <label>
