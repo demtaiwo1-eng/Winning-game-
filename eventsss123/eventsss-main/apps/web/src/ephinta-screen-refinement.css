@@ -3,8 +3,8 @@
 
 /* Public landing and authentication */
 .eph-landing { min-width: 320px; overflow-x: clip; }
-.eph-landing .eph-brand img,
-.eph-landing .eph-menu-brand img { width: 34px; height: 34px; max-width: 34px; object-fit: contain; flex: 0 0 34px; }
+.eph-landing .eph-brand img { width: 34px; height: 34px; max-width: 34px; object-fit: contain; flex: 0 0 34px; }
+.eph-landing .eph-menu-brand img { width: 20px; height: 20px; max-width: 20px; max-height: 20px; object-fit: contain; flex: 0 0 20px; }
 .eph-landing .eph-modal-backdrop {
   z-index: 1000;
   padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
