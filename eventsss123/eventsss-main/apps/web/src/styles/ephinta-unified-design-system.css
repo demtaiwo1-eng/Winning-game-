@@ -428,7 +428,7 @@ button, input, select, textarea { font: inherit; }
   .ess-page-heading h1 { font-size: clamp(2rem, 9vw, 3rem); line-height: 1.04; }
   .ess-filter-row {
     position: sticky;
-    top: 0;
+    top: 62px;
     z-index: 20;
     margin-inline: -2px;
     padding: 9px 2px 12px;
