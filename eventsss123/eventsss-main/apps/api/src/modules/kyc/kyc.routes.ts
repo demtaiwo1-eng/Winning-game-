@@ -67,8 +67,11 @@ kycRouter.post(
     }
 
     let documentUrl: string | null = null;
-    if (typeof req.body.documentUrl === "string" && req.body.documentUrl.startsWith("http")) {
-      documentUrl = req.body.documentUrl.trim();
+    if (typeof req.body.documentUrl === "string") {
+      try {
+        const candidate = new URL(req.body.documentUrl.trim());
+        if (candidate.protocol === "https:") documentUrl = candidate.toString();
+      } catch { /* invalid URLs are rejected below */ }
     } else if (typeof req.body.documentBase64 === "string" && req.body.documentBase64.length > 32) {
       // Never create a pseudo-URL: no private object-storage adapter is configured yet.
       // Fail closed rather than accepting a document that reviewers/providers cannot retrieve.
@@ -82,7 +85,7 @@ kycRouter.post(
       throw new HttpError(
         400,
         "DOCUMENT_REQUIRED",
-        "Provide documentUrl (https) or documentBase64 + fileName",
+        "Provide a valid HTTPS documentUrl or use secure document upload when available",
       );
     }
 
