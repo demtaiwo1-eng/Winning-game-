@@ -108,7 +108,23 @@ export function createApp() {
   });
   app.post("/api/v1/vendor/kyc", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
     try {
-      const request = await prisma.verificationRequest.create({ data: { userId: req.user!.id, kind: req.body.kind === "IDENTITY" ? "IDENTITY" : "BUSINESS", documentUrl: String(req.body.documentUrl), notes: req.body.notes ? String(req.body.notes) : null } });
+      const documentUrl = typeof req.body.documentUrl === "string" ? req.body.documentUrl.trim() : "";
+      let parsedDocumentUrl: URL;
+      try { parsedDocumentUrl = new URL(documentUrl); } catch {
+        return res.status(400).json({ error: { code: "INVALID_DOCUMENT_URL", message: "A valid HTTPS document URL is required" } });
+      }
+      if (parsedDocumentUrl.protocol !== "https:") {
+        return res.status(400).json({ error: { code: "INVALID_DOCUMENT_URL", message: "A valid HTTPS document URL is required" } });
+      }
+      if (req.body.kind !== undefined && !["IDENTITY", "BUSINESS"].includes(req.body.kind)) {
+        return res.status(400).json({ error: { code: "INVALID_KYC_KIND", message: "kind must be IDENTITY or BUSINESS" } });
+      }
+      const request = await prisma.verificationRequest.create({ data: {
+        userId: req.user!.id,
+        kind: req.body.kind === "IDENTITY" ? "IDENTITY" : "BUSINESS",
+        documentUrl: parsedDocumentUrl.toString(),
+        notes: typeof req.body.notes === "string" ? req.body.notes.slice(0, 500) : null,
+      } });
       res.status(201).json({ request });
     } catch (error) { next(error); }
   });
