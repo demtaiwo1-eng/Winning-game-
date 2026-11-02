@@ -3168,8 +3168,8 @@ function AuthModal({
                   Next <span>→</span>
                 </button>
               ) : (
-                <button className="ess-primary ess-full-button" type="submit">
-                  Create account <span>→</span>
+                <button className="ess-primary ess-full-button" type="submit" aria-label="Create account">
+                  Create account <span aria-hidden="true">→</span>
                 </button>
               )}
             </div>
