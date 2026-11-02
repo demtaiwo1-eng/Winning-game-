@@ -1,10 +1,11 @@
 # ESS Android APK delivery and web-layer updates
 
-The Android pipeline has three delivery lanes:
+The active root-level Android pipeline has two delivery lanes:
 
-1. **Pull request and Actions artifact:** `ephinta-build-apk.yml` runs API/web checks, applies migrations to an isolated PostgreSQL service, runs database integration tests, verifies the deployed API `/ready` endpoint, and builds an installable debug APK. The APK is available from the successful Actions run for 30 days.
-2. **Downloadable GitHub Release:** after that workflow succeeds on the repository's default branch, `ephinta-apk-download.yml` publishes the exact APK artifact and its SHA-256 checksum as release assets. It does not rebuild or publish an APK from a failed run.
-3. **Signed APK and OTA web layer:** `android.yml` can build, sign, verify, and publish `ess-release.apk`; it also publishes `version.json` and `bundle.zip` to GitHub Pages. Native APK updates require Google Play, managed distribution, or a user-installed APK. OTA updates replace only the web layer, not native Android code.
+1. **Verified APK and OTA release:** `.github/workflows/ephinta-build-apk.yml` runs the API/web checks, database integration tests, and Android build. It also packages the web build as an OTA bundle and creates a version manifest. After the workflow succeeds on the default branch, `.github/workflows/ephinta-apk-download.yml` publishes the exact tested APK, checksum, web bundle, and `version.json` together in a GitHub Release.
+2. **Native Android changes:** changes to Android/Capacitor native code, permissions, plugins, or signing still require a newly built APK and a normal install/update. OTA delivery replaces only the web UI and web logic.
+
+The OTA endpoint is derived in CI as `https://github.com/<owner>/<repository>/releases/latest/download`. GitHub Pages is not required for this release-based delivery path.
 
 ## Required repository configuration
 
@@ -14,7 +15,7 @@ Set these GitHub Actions repository variables/secrets:
 
 - `VITE_API_URL` — production HTTPS API base, for example `https://api.example.com/api/v1`.
 - The API URL must serve `/health` and `/ready`; `/ready` must be connected to the database used by the deployed app. Web builds and APKs use this URL, while API calls continue through the server (the APK must never connect directly to PostgreSQL).
-- `VITE_UPDATE_URL` is derived automatically by CI as `https://<owner>.github.io/<repository>`; no manual variable is required. GitHub Pages must be enabled with **GitHub Actions** as the source.
+- `VITE_UPDATE_URL` is injected automatically by the verified APK workflow as the repository's latest GitHub Release download endpoint; no manual variable is required for that workflow.
 - `ANDROID_CERT_SHA256` — SHA-256 certificate fingerprint of the production signing key.
 
 ### Secrets
@@ -24,7 +25,7 @@ Set these GitHub Actions repository variables/secrets:
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-Enable GitHub Pages with **GitHub Actions** as the deployment source. The Android workflow publishes the web build, `version.json`, and `bundle.zip` there after every passing release.
+The verified APK workflow publishes `ephinta-web-bundle.zip` and `version.json` alongside the APK release assets after every passing default-branch build.
 
 ## Build, database, and release gates
 
