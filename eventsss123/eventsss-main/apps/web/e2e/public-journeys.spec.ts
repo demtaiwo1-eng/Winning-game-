@@ -449,6 +449,11 @@ test("affiliate referral links copy and prefill the signup code", async ({ page,
   const copiedLink = await page.evaluate(() => navigator.clipboard.readText());
   expect(copiedLink).toContain("/auth/signup?ref=PARTNER2026");
 
+  // Simulate the referred customer opening the shared link in a signed-out browser.
+  await page.evaluate(() => {
+    localStorage.removeItem("ess_user");
+    localStorage.removeItem("ess_access_token");
+  });
   await page.goto("/auth/signup?role=CLIENT&ref=PARTNER2026");
   const signupDialog = page.locator("#eph-auth-dialog");
   await expect(signupDialog).toBeVisible();
