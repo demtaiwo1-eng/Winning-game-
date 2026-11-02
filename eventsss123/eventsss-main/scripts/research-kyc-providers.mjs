@@ -136,4 +136,23 @@ async function main() {
     console.log(`Full machine-readable report: rerun with --format json`);
   }
 }
-main().catch((error) => { console.error(`KYC research failed: ${error.message}`); process.exitCode = 1; });
+if (args["self-test"] === "true") {
+  const cases = [
+    ["Nigeria", "Nigeria", true],
+    ["nigeria passport identity card", "Nigeria", true],
+    ["Côte d'Ivoire identity documents", "Cote d'Ivoire", true],
+    ["United Kingdom supported documents", "United Kingdom", true],
+    ["Kenya and Uganda", "Tanzania", false],
+  ];
+  for (const [source, country, expected] of cases) {
+    if (hasCountry(normalise(source), country) !== expected) {
+      throw new Error(`Country matching self-test failed for ${country}`);
+    }
+  }
+  if (score(PROVIDERS[0], true, "AFRICA") <= score(PROVIDERS[0], false, "AFRICA")) {
+    throw new Error("Country-verified coverage must outrank unverified coverage.");
+  }
+  console.log(`KYC provider research self-test passed (${cases.length} country matching cases).`);
+} else {
+  main().catch((error) => { console.error(`KYC research failed: ${error.message}`); process.exitCode = 1; });
+}
