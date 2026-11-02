@@ -194,3 +194,132 @@ button, input, select, textarea { font: inherit; }
   .ess-metrics, .ess-catalog-grid, .listing-grid { grid-template-columns: minmax(0, 1fr); }
   .ess-content { padding-left: 16px; padding-right: 16px; }
 }
+
+
+/* Phase 2: public registration and landing-page responsive finish. */
+.eph-landing .eph-modal-backdrop {
+  z-index: 120;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.eph-landing .eph-modal {
+  width: min(100%, 520px);
+  max-height: min(760px, calc(100dvh - 32px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.eph-landing .eph-modal-brand {
+  min-height: 40px;
+  gap: 10px;
+}
+.eph-landing .eph-modal-brand img {
+  display: block;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  flex: 0 0 36px;
+  object-fit: contain;
+}
+.eph-landing .eph-modal form {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.eph-landing .eph-modal .eph-field {
+  min-width: 0;
+  margin: 0;
+}
+.eph-landing .eph-modal .eph-control {
+  min-height: 48px;
+  width: 100%;
+}
+.eph-landing .eph-modal .eph-registration-navigation {
+  position: sticky;
+  bottom: -1px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(104px, .65fr) minmax(0, 1.35fr);
+  gap: 10px;
+  padding: 12px 0 max(4px, env(safe-area-inset-bottom));
+  margin-top: 6px;
+  background: var(--surface, #fff);
+}
+.eph-landing .eph-modal .eph-registration-navigation button {
+  min-width: 0;
+  min-height: 48px;
+  margin: 0;
+}
+.eph-landing .eph-registration-progress {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.eph-landing .eph-registration-progress-copy {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted, #716078);
+  font-size: 12px;
+}
+.eph-landing .eph-registration-progress-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border, #e8e5f1);
+}
+.eph-landing .eph-registration-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6d42d8, #f97316);
+  transition: width .2s ease;
+}
+.eph-landing .eph-registration-review dl {
+  overflow-wrap: anywhere;
+}
+.eph-landing .eph-modal :focus-visible {
+  outline: 3px solid #f97316;
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .eph-landing .eph-modal-backdrop {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+  }
+  .eph-landing .eph-modal {
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100dvh - 20px);
+    padding: 18px 16px;
+    margin: 0 auto;
+    border-radius: 18px;
+  }
+  .eph-landing .eph-modal-brand img {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    flex-basis: 32px;
+  }
+  .eph-landing .eph-modal h2 {
+    font-size: clamp(21px, 6vw, 25px);
+  }
+  .eph-landing .eph-modal .eph-registration-navigation {
+    grid-template-columns: minmax(92px, .7fr) minmax(0, 1.3fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eph-landing .eph-registration-progress-track span {
+    transition: none;
+  }
+}
