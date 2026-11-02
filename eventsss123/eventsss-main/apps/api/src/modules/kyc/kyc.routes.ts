@@ -52,19 +52,23 @@ kycRouter.post(
   asyncHandler(async (req, res) => {
     const country = String(req.body.country || "NG").toUpperCase();
     const profile = getKycProfile(country);
+    if (req.body.kind !== "IDENTITY" && req.body.kind !== "BUSINESS") {
+      throw new HttpError(400, "INVALID_KYC_KIND", "kind must be IDENTITY or BUSINESS");
+    }
     const kind: VerificationKind =
       req.body.kind === "IDENTITY" ? VerificationKind.IDENTITY : VerificationKind.BUSINESS;
 
-    const primaryDocType = String(req.body.primaryDocType || profile.identityDocs[0]) as DocType;
-    if (!profile.identityDocs.includes(primaryDocType) && kind === VerificationKind.IDENTITY) {
-      // allow passport always
-      if (primaryDocType !== "PASSPORT") {
-        throw new HttpError(
-          400,
-          "INVALID_DOC_TYPE",
-          `For ${profile.name}, accepted identity docs: ${profile.identityDocs.join(", ")}`,
-        );
-      }
+    const allowedDocTypes = kind === VerificationKind.IDENTITY ? profile.identityDocs : profile.businessDocs;
+    const primaryDocType = String(req.body.primaryDocType || allowedDocTypes[0] || "") as DocType;
+    const isAllowedDocType =
+      allowedDocTypes.includes(primaryDocType) ||
+      (kind === VerificationKind.IDENTITY && primaryDocType === "PASSPORT");
+    if (!isAllowedDocType) {
+      throw new HttpError(
+        400,
+        "INVALID_DOC_TYPE",
+        `For ${profile.name}, accepted ${kind.toLowerCase()} docs: ${allowedDocTypes.join(", ")}`,
+      );
     }
 
     if (typeof req.body.documentBase64 !== "string" || req.body.documentBase64.length <= 32) {
