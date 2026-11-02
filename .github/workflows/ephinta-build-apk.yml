@@ -233,13 +233,22 @@ jobs:
           find apps/mobile -maxdepth 4 -type f \( -name gradlew -o -name settings.gradle -o -name settings.gradle.kts \) -print || true
           exit 1
 
-      - name: Build debug APK
+      - name: Build and verify debug APK
         working-directory: ${{ github.workspace }}/eventsss123/eventsss-main/${{ steps.android-path.outputs.dir }}
         shell: bash
         run: |
           set -euo pipefail
           chmod +x ./gradlew
-          ./gradlew --no-daemon assembleDebug
+          ./gradlew --no-daemon clean assembleDebug
+          APK="$(find app/build/outputs/apk -type f -name '*.apk' -print -quit)"
+          test -n "$APK" && test -s "$APK"
+          BT="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          test -x "$BT/apksigner"
+          test -x "$BT/aapt"
+          "$BT/apksigner" verify --verbose "$APK"
+          "$BT/aapt" dump badging "$APK" | grep -E "^(package:|sdkVersion:|targetSdkVersion:)"
+          unzip -t "$APK" >/dev/null
+          sha256sum "$APK"
 
       - name: Collect APK
         shell: bash
