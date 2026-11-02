@@ -3105,44 +3105,44 @@ function AuthModal({
                   )}
                 </div>
               )}
-              {mode === "signup" && registrationStep === 2 && (
-                <div className="ess-locale-row">
-                  <label>
-                    Country
-                    <select
-                      value={country}
-                      onChange={(e) => {
-                        setCountry(e.target.value);
-                        const match = COUNTRIES.find((c) => c.code === e.target.value);
-                        if (match) {
-                          setCurrency(match.currency);
-                          setLocalePref(match.locale);
-                        }
-                      }}
-                    >
-                      {COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Currency
-                    <select
-                      value={currency}
-                      onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-                    >
-                      {CURRENCIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.code} — {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              )}
           </>}
+          {mode === "signup" && registrationStep === 2 && (
+            <div className="ess-locale-row">
+              <label>
+                Country
+                <select
+                  value={country}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    const match = COUNTRIES.find((c) => c.code === e.target.value);
+                    if (match) {
+                      setCurrency(match.currency);
+                      setLocalePref(match.locale);
+                    }
+                  }}
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Currency
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} — {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+              )}
           {mode === "signup" && registrationStep === 2 && (
             <div className="ess-auth-trust">
               <span>✓ Escrow-protected bookings</span>
