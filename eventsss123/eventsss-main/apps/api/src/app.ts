@@ -16,6 +16,7 @@ import { marketplaceRouter } from "./modules/marketplace/marketplace.routes";
 import { walletRouter } from "./modules/wallet/wallet.routes";
 import { billingRouter } from "./modules/billing/billing.routes";
 import { kycRouter } from "./modules/kyc/kyc.routes";
+import { storeKycDocument } from "./lib/kyc-storage";
 import { paymentsRouter } from "./modules/payments/payments.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { checkoutRouter } from "./modules/checkout/checkout.routes";
@@ -108,21 +109,18 @@ export function createApp() {
   });
   app.post("/api/v1/vendor/kyc", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
     try {
-      const documentUrl = typeof req.body.documentUrl === "string" ? req.body.documentUrl.trim() : "";
-      let parsedDocumentUrl: URL;
-      try { parsedDocumentUrl = new URL(documentUrl); } catch {
-        return res.status(400).json({ error: { code: "INVALID_DOCUMENT_URL", message: "A valid HTTPS document URL is required" } });
-      }
-      if (parsedDocumentUrl.protocol !== "https:") {
-        return res.status(400).json({ error: { code: "INVALID_DOCUMENT_URL", message: "A valid HTTPS document URL is required" } });
-      }
       if (req.body.kind !== undefined && !["IDENTITY", "BUSINESS"].includes(req.body.kind)) {
         return res.status(400).json({ error: { code: "INVALID_KYC_KIND", message: "kind must be IDENTITY or BUSINESS" } });
       }
+      if (typeof req.body.documentBase64 !== "string" || req.body.documentBase64.length <= 32) {
+        return res.status(400).json({ error: { code: "DOCUMENT_REQUIRED", message: "Upload a document using the secure document upload flow." } });
+      }
+      const fileName = typeof req.body.fileName === "string" ? req.body.fileName : "document.pdf";
+      const documentUrl = await storeKycDocument({ base64: req.body.documentBase64, fileName });
       const request = await prisma.verificationRequest.create({ data: {
         userId: req.user!.id,
         kind: req.body.kind === "IDENTITY" ? "IDENTITY" : "BUSINESS",
-        documentUrl: parsedDocumentUrl.toString(),
+        documentUrl,
         notes: typeof req.body.notes === "string" ? req.body.notes.slice(0, 500) : null,
       } });
       res.status(201).json({ request });
