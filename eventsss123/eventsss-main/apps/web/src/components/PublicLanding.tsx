@@ -1152,31 +1152,7 @@ export default function PublicLanding({
 
           <div className="eph-auth-switch">{authMode === 'signin' ? <>Forgot password? <button onClick={() => { setAuthMode('forgot'); setRegistrationStep(0); setError(''); setNotice(''); }}>Reset it</button><br />New to EPHINTA? <button onClick={() => { setAuthMode('signup'); setRegistrationStep(0); setError(''); setNotice(''); }}>Create an account</button></> : <>Already have an account? <button onClick={() => { setAuthMode('signin'); setRegistrationStep(0); setError(''); setNotice(''); }}>Sign in</button>
 
-      <section className="ephinta-faq" aria-labelledby="ephinta-faq-title">
-
-        <p className="ephinta-faq__eyebrow">Help centre</p>
-
-        <h2 id="ephinta-faq-title">Questions, answered.</h2>
-
-        <p className="ephinta-faq__intro">Clear guidance for planning, booking, account security and payments on EPHINTA.</p>
-
-        <div className="ephinta-faq__grid">
-
-          <details><summary>How do I create an account?</summary><p>Choose the account type that matches your role, complete the required fields and use an email address you control. Never share your password or one-time verification codes.</p></details>
-
-          <details><summary>How do I find the right portal?</summary><p>Sign in with your account. Your permissions should determine the portal you can access. If you land on the wrong dashboard, sign out and contact support rather than creating a duplicate account.</p></details>
-
-          <details><summary>How are payments protected?</summary><p>Use only the payment methods shown in the official checkout. Payment status must be confirmed by the payment provider and the server; a browser success message alone is not proof of payment.</p></details>
-
-          <details><summary>Does EPHINTA store my card details?</summary><p>Card details should be entered only in a PCI-compliant payment provider's secure checkout or hosted fields. EPHINTA should not ask you to submit a full card number, CVV, PIN or banking password in a normal form.</p></details>
-
-          <details><summary>What if a booking or transaction looks wrong?</summary><p>Keep your transaction reference and contact support through the official channel. Do not send passwords, CVV, PINs or one-time codes to support staff.</p></details>
-
-          <details><summary>How do I protect my account?</summary><p>Use a unique strong password, sign out on shared devices, verify the site address before paying, and report suspicious activity immediately.</p></details>
-
-        </div>
-
-      </section>
+      </>}
 
 
 
