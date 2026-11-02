@@ -450,5 +450,12 @@ test("affiliate referral links copy and prefill the signup code", async ({ page,
   expect(copiedLink).toContain("/auth/signup?ref=PARTNER2026");
 
   await page.goto("/auth/signup?role=CLIENT&ref=PARTNER2026");
-  await expect(page.getByLabel("Referral or partner code")).toHaveValue("PARTNER2026");
+  const signupDialog = page.locator("#eph-auth-dialog");
+  await expect(signupDialog).toBeVisible();
+  await signupDialog.getByLabel("Full name").fill("Referred Customer");
+  await signupDialog.getByLabel("Email address").fill("referred-customer@example.test");
+  await signupDialog.getByLabel("Password").fill("StrongPass123!");
+  await signupDialog.getByRole("button", { name: "Next" }).click();
+  await expect(signupDialog.getByText("Step 2 of 3")).toBeVisible();
+  await expect(signupDialog.getByLabel("Referral or partner code")).toHaveValue("PARTNER2026");
 });
