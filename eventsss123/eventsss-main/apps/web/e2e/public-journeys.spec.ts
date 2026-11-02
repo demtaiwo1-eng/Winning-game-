@@ -175,7 +175,7 @@ test("mobile menu opens and provides sign-in access", async ({ page }, testInfo)
   await expect(menu).toBeVisible();
   await menu.getByRole("button", { name: "Sign in to your account" }).click();
 
-  await expect(page.getByRole("dialog", { name: "Welcome back" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Sign in" })).toBeVisible();
 });
 
 test("authenticated planner can add a checklist task to an owned event", async ({ page }) => {
@@ -238,7 +238,7 @@ test("authenticated planner can add a checklist task to an owned event", async (
   await eventWorkspaceTab.dispatchEvent("click");
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
   await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
-  const taskInput = page.locator('section[aria-labelledby="event-workspace-title"] label').filter({ hasText: /^Task$/ }).locator("input");
+  const taskInput = page.getByLabel("Task", { exact: true });
   await expect(taskInput).toBeVisible();
   await taskInput.fill("Confirm event venue");
   // Submit with the keyboard: the sticky branded header can overlap the button in CI.
@@ -264,4 +264,206 @@ test("authenticated planner receives no private event data outside the owned eve
   await page.goto("/dashboard/client?tab=overview");
   await expect(page.getByRole("heading", { name: /Welcome back, Other/ })).toBeVisible();
   await expect(page.getByText("Another Owner's Private Event")).toHaveCount(0);
+});
+
+test("mobile registration keeps its logo compact and navigation reachable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: "Create customer account" }).click();
+
+  const dialog = page.locator("#eph-auth-dialog");
+  await expect(dialog).toBeVisible();
+  const logo = dialog.locator(".eph-modal-brand img");
+  const logoBox = await logo.boundingBox();
+  expect(logoBox).not.toBeNull();
+  expect(logoBox!.width).toBeLessThanOrEqual(36);
+  expect(logoBox!.height).toBeLessThanOrEqual(36);
+
+  const back = dialog.getByRole("button", { name: "Back" });
+  const next = dialog.getByRole("button", { name: "Next" });
+  await expect(back).toBeVisible();
+  await expect(next).toBeVisible();
+  const navigationBox = await dialog.locator(".eph-registration-navigation").boundingBox();
+  expect(navigationBox).not.toBeNull();
+  expect(navigationBox!.x).toBeGreaterThanOrEqual(0);
+  expect(navigationBox!.x + navigationBox!.width).toBeLessThanOrEqual(390);
+
+  await dialog.getByLabel("Full name").fill("Mobile Layout Check");
+  await dialog.getByLabel("Email address").fill("mobile-layout@example.test");
+  await dialog.getByLabel("Password").fill("StrongPass123!");
+  await next.click();
+  await expect(dialog.getByText("Step 2 of 3")).toBeVisible();
+  await expect(back).toBeVisible();
+  await expect(next).toBeVisible();
+});
+
+test("signed-in dashboard navigation remains usable on narrow mobile screens", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "planner-mobile-nav", email: "mobile-nav@example.test", name: "Mobile Planner", role: "CLIENT",
+    }));
+    localStorage.setItem("ess_access_token", "mobile-nav-token");
+  });
+  await page.route("**/api/v1/events", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }),
+  }));
+  await page.route("**/api/v1/readiness/mine", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }),
+  }));
+  await page.goto("/dashboard/client?tab=overview");
+
+  const navigation = page.locator(".ess-filter-row").first();
+  await expect(navigation).toBeVisible();
+  await expect(navigation.getByRole("button", { name: "Overview" })).toBeVisible();
+  await expect(navigation.getByRole("button", { name: "Wallet & escrow" })).toBeAttached();
+
+  const dimensions = await navigation.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    bodyClientWidth: document.documentElement.clientWidth,
+    bodyScrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBeGreaterThanOrEqual(dimensions.clientWidth);
+  expect(dimensions.bodyScrollWidth).toBeLessThanOrEqual(dimensions.bodyClientWidth + 1);
+
+  await navigation.getByRole("button", { name: "Wallet & escrow" }).click();
+  await expect(page.getByRole("heading", { name: /Funds & protection/i })).toBeVisible();
+  await expect(page.locator(".ess-wallet-panel")).toBeVisible();
+});
+
+
+test("role workspaces remain readable and contained on narrow mobile screens", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/v1/**", (route) => route.fulfill({
+    status: 503,
+    contentType: "application/json",
+    body: JSON.stringify({ error: { code: "E2E_OFFLINE", message: "Test API unavailable" } }),
+  }));
+
+  const roleCases = [
+    { role: "vendor", heading: "Sell the experience." },
+    { role: "affiliate", heading: "Grow the event network." },
+    { role: "verifier", heading: "Pre-event service confirmation" },
+    { role: "consultant", heading: "Operations updates" },
+    { role: "admin", heading: "Platform operations" },
+  ];
+
+  await page.addInitScript(() => {
+    const role = location.pathname.split("/").pop() || "client";
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: `mobile-${role}`,
+      email: `${role}@example.test`,
+      name: "Mobile Role Tester",
+      role: role.toUpperCase(),
+    }));
+    localStorage.setItem("ess_access_token", "role-workspace-test-token");
+  });
+
+  for (const item of roleCases) {
+    await page.goto(`/dashboard/${item.role}`);
+    await expect(page.getByRole("heading", { name: item.heading, exact: true })).toBeVisible();
+
+    const dimensions = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      document: document.documentElement.scrollWidth,
+      content: document.querySelector(".ess-content")?.getBoundingClientRect().width ?? 0,
+    }));
+    expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport + 1);
+    expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport + 1);
+  }
+});
+
+
+test("vendor can save availability and delete only a selected listing", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "vendor-e2e", email: "vendor@example.test", name: "E2E Vendor", role: "VENDOR",
+    }));
+    localStorage.setItem("ess_access_token", "vendor-e2e-token");
+  });
+  const listing = {
+    id: "listing-vendor-e2e", title: "E2E Catering Package", description: "Food and service",
+    priceMinor: "250000", currency: "NGN", city: "Ibadan", capacity: 120,
+    status: "DRAFT", type: "SERVICE", category: { id: "cat-catering", name: "Catering" },
+  };
+  await page.route("**/api/v1/vendor/listings", async (route) => {
+    if (route.request().method() === "GET") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [listing] }) });
+    }
+    return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ listing }) });
+  });
+  await page.route("**/api/v1/vendor/categories", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify({ items: [{ id: "cat-catering", name: "Catering" }] }),
+  }));
+  await page.route("**/api/v1/vendor/metrics", (route) => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ listings: { DRAFT: 1 }, bookings: {}, enquiries: {}, reviews: { averageRating: null, count: 0 } }),
+  }));
+  await page.route("**/api/v1/vendor/listings/listing-vendor-e2e/availability", async (route) => {
+    if (route.request().method() === "GET") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }) });
+    }
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().headers().authorization).toBe("Bearer vendor-e2e-token");
+    expect(route.request().postDataJSON()).toMatchObject({ capacity: 25 });
+    return route.fulfill({
+      status: 201, contentType: "application/json",
+      body: JSON.stringify({ item: { id: "availability-e2e", startsAt: "2030-05-01T09:00:00.000Z", endsAt: "2030-05-01T17:00:00.000Z", capacity: 25 } }),
+    });
+  });
+  let deleted = false;
+  await page.route("**/api/v1/vendor/listings/listing-vendor-e2e", async (route) => {
+    expect(route.request().method()).toBe("DELETE");
+    expect(route.request().headers().authorization).toBe("Bearer vendor-e2e-token");
+    deleted = true;
+    return route.fulfill({ status: 204, body: "" });
+  });
+  await page.goto("/dashboard/vendor");
+  await expect(page.getByRole("heading", { name: "E2E Catering Package" })).toBeVisible();
+  await page.getByLabel("Starts").fill("2030-05-01T09:00");
+  await page.getByLabel("Ends").fill("2030-05-01T17:00");
+  await page.getByLabel("Capacity").fill("25");
+  await page.getByRole("button", { name: "Add time slot" }).click();
+  await expect(page.getByText(/Availability saved\./)).toBeVisible();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Delete listing" }).click();
+  await expect.poll(() => deleted).toBe(true);
+  await expect(page.getByRole("heading", { name: "E2E Catering Package" })).toHaveCount(0);
+});
+
+test("affiliate referral links copy and prefill the signup code", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.addInitScript(() => {
+    // Seed the affiliate session only for the dashboard navigation. Do not
+    // recreate it when the same browser later opens the public referral URL.
+    if (location.pathname !== "/dashboard/affiliate") return;
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "affiliate-e2e", email: "affiliate@example.test", name: "E2E Affiliate", role: "AFFILIATE",
+    }));
+    localStorage.setItem("ess_access_token", "affiliate-e2e-token");
+  });
+  await page.goto("/dashboard/affiliate");
+  await page.getByLabel("Referral code").fill("PARTNER2026");
+  await page.getByRole("button", { name: "Copy referral link" }).click();
+
+  const copiedLink = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copiedLink).toContain("/auth/signup?ref=PARTNER2026");
+
+  // Simulate the referred customer opening the shared link in a signed-out browser.
+  await page.evaluate(() => {
+    localStorage.removeItem("ess_user");
+    localStorage.removeItem("ess_access_token");
+  });
+  await page.goto("/auth/signup?role=CLIENT&ref=PARTNER2026");
+  const signupDialog = page.locator("#eph-auth-dialog");
+  await expect(signupDialog).toBeVisible();
+  await signupDialog.getByLabel("Full name").fill("Referred Customer");
+  await signupDialog.getByLabel("Email address").fill("referred-customer@example.test");
+  await signupDialog.getByLabel("Password").fill("StrongPass123!");
+  await signupDialog.getByRole("button", { name: "Next" }).click();
+  await expect(signupDialog.getByText("Step 2 of 3")).toBeVisible();
+  await expect(signupDialog.getByLabel("Referral or partner code")).toHaveValue("PARTNER2026");
 });

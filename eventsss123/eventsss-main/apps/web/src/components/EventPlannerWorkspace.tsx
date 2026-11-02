@@ -56,7 +56,15 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   const [notice, setNotice] = useState("");
   const currency = event?.currency || "NGN";
 
-  useEffect(() => { if (initialEventId) setEventId(initialEventId); }, [initialEventId]);
+  useEffect(() => {
+    if (initialEventId) {
+      setEventId(initialEventId);
+      return;
+    }
+    // The workspace is mounted while the parent is still loading owned events.
+    // Select the first event when that asynchronous list arrives.
+    if (!eventId && events.length > 0) setEventId(events[0].id);
+  }, [initialEventId, eventId, events]);
   useEffect(() => { if (!eventId) { setEvent(null); return; } }, [eventId]);
 
   const refresh = async () => {

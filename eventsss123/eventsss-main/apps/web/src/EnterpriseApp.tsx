@@ -585,17 +585,29 @@ function VendorAvailabilityManager({ listingId }: { listingId: string }) {
   }, [listingId]);
   const addSlot = async (event: React.FormEvent) => {
     event.preventDefault();
+    const start = new Date(startsAt);
+    const end = new Date(endsAt);
+    const slotCapacity = Number(capacity);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) {
+      setMessage("Choose a valid end time after the start time.");
+      return;
+    }
+    if (!Number.isSafeInteger(slotCapacity) || slotCapacity < 1 || slotCapacity > 100000) {
+      setMessage("Capacity must be a whole number between 1 and 100,000.");
+      return;
+    }
     setBusy(true); setMessage("");
     try {
       await api(`/vendor/listings/${listingId}/availability`, {
         method: "POST",
-        body: JSON.stringify({ startsAt: new Date(startsAt).toISOString(), endsAt: new Date(endsAt).toISOString(), capacity: Number(capacity) }),
+        body: JSON.stringify({ startsAt: start.toISOString(), endsAt: end.toISOString(), capacity: slotCapacity }),
       });
       setStartsAt(""); setEndsAt(""); await refresh(); setMessage("Availability saved.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save availability."); }
     finally { setBusy(false); }
   };
   const removeSlot = async (id: string) => {
+    if (!window.confirm("Remove this availability window?")) return;
     setBusy(true); setMessage("");
     try {
       await api(`/vendor/listings/${listingId}/availability/${id}`, { method: "DELETE" });
@@ -628,7 +640,15 @@ function VendorEnquiriesPanel() {
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const load = async () => { const result = await api<{ items: typeof items }>("/vendor/enquiries"); setItems(result.items || []); };
+  const load = async () => {
+    try {
+      const result = await api<{ items: typeof items }>("/vendor/enquiries");
+      setItems(result.items || []);
+      setNotice("");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to refresh enquiries.");
+    }
+  };
   useEffect(() => { let active = true; api<{ items: typeof items }>("/vendor/enquiries").then(result => { if (active) setItems(result.items || []); }).catch((error: Error) => { if (active) setNotice(error.message); }); return () => { active = false; }; }, []);
   const reply = async (id: string, status: "RESPONDED" | "CLOSED" = "RESPONDED") => {
     setBusy(true); setNotice("");
@@ -636,7 +656,7 @@ function VendorEnquiriesPanel() {
     catch (error) { setNotice(error instanceof Error ? error.message : "Unable to update enquiry."); }
     finally { setBusy(false); }
   };
-  return <section className="ess-panel"><SectionTitle eyebrow="Customer demand" title="Listing enquiries" action={<button className="ess-quiet-button" onClick={() => load()}>Refresh</button>} />
+  return <section className="ess-panel"><SectionTitle eyebrow="Customer demand" title="Listing enquiries" action={<button type="button" className="ess-quiet-button" onClick={() => void load()}>Refresh</button>} />
     {notice && <p className="ess-muted" role="status">{notice}</p>}
     {items.length === 0 ? <p className="ess-muted">No customer enquiries yet.</p> : items.map(item => <article className="ess-enquiry-card" key={item.id}>
       <div><strong>{item.listing.title}</strong><span className="ess-card-category"> · {item.status}</span></div>
@@ -686,6 +706,7 @@ function VendorPortal({
     includes: "",
   });
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [deletingListingId, setDeletingListingId] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     Promise.all([
@@ -813,6 +834,34 @@ function VendorPortal({
       setNotice(error instanceof Error ? error.message : "Unable to save package.");
     }
   };
+  const exportVendorRequests = () => {
+    const escapeCell = (value: string) => '"' + value.replace(/"/g, '""') + '"';
+    const rows = [
+      ["Event", "Service", "Location", "Amount", "Status"],
+      ...gigs.map((gig) => [gig.event, gig.service, gig.location, gig.amount, gig.status]),
+    ];
+    const csv = rows.map((row) => row.map(escapeCell).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ephinta-vendor-requests.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  const deleteListing = async (listing: Listing) => {
+    if (typeof listing.id !== "string" || !window.confirm(`Delete “${listing.name}”? This cannot be undone.`)) return;
+    setDeletingListingId(listing.id);
+    setNotice("");
+    try {
+      await api(`/vendor/listings/${encodeURIComponent(listing.id)}`, { method: "DELETE" });
+      setListings((current) => current.filter((item) => item.id !== listing.id));
+      setNotice("Listing deleted.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to delete listing.");
+    } finally {
+      setDeletingListingId(null);
+    }
+  };
   const [vendorTab, setVendorTab] = useDashboardTab(
     ["catalog", "wallet", "plans", "kyc", "messages", "notifications", "promotions"] as const,
     "catalog",
@@ -901,7 +950,7 @@ function VendorPortal({
           <SectionTitle
             eyebrow="Demand"
             title="Event gig requests"
-            action={<button className="ess-quiet-button">Export CSV</button>}
+            action={<button type="button" className="ess-quiet-button" onClick={exportVendorRequests}>Export CSV</button>}
           />
           <div className="ess-table-wrap">
             <table className="ess-table">
@@ -927,30 +976,10 @@ function VendorPortal({
                     <td>
                       <StatusPill status={gig.status} />
                     </td>
-                    <td>
-                      <button
-                        className="ess-row-action"
-                        onClick={() =>
-                          setGigs((current) =>
-                            current.map((item) =>
-                              item.id === gig.id
-                                ? {
-                                    ...item,
-                                    status:
-                                      item.status === "Pending"
-                                        ? "Confirmed"
-                                        : item.status,
-                                  }
-                                : item,
-                            ),
-                          )
-                        }
-                      >
-                        {gig.status === "Pending" ? "Confirm" : "Open"}
-                      </button>
-                    </td>
+                    <td><span className="ess-muted">View booking details in Wallet & escrow</span></td>
                   </tr>
                 ))}
+                {gigs.length === 0 && <tr><td colSpan={6} className="ess-muted">No event gig requests are connected to this workspace yet. Customer enquiries are available under Enquiries & messages.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -997,12 +1026,25 @@ function VendorPortal({
                     {listing.city || "Location not set"} ·{" "}
                     {listing.capacity || "Capacity not set"}
                   </small>
-                  <button
-                    className="ess-outline-button"
-                    onClick={() => openForm(listing)}
-                  >
-                    Edit package
-                  </button>
+                  <div className="ess-filter-row">
+                    <button
+                      className="ess-outline-button"
+                      type="button"
+                      onClick={() => openForm(listing)}
+                    >
+                      Edit package
+                    </button>
+                    {typeof listing.id === "string" && (
+                      <button
+                        className="ess-quiet-button"
+                        type="button"
+                        disabled={deletingListingId === listing.id}
+                        onClick={() => void deleteListing(listing)}
+                      >
+                        {deletingListingId === listing.id ? "Deleting…" : "Delete listing"}
+                      </button>
+                    )}
+                  </div>
                   {typeof listing.id === "string" && <VendorAvailabilityManager listingId={listing.id} />}
                 </div>
               </article>
@@ -1054,6 +1096,7 @@ function VendorPortal({
                 Category
                 <select
                   value={form.category}
+                  disabled={Boolean(editing)}
                   onChange={(event) =>
                     setForm({ ...form, category: event.target.value })
                   }
@@ -1067,6 +1110,7 @@ function VendorPortal({
                 Currency
                 <select
                   value={form.currency}
+                  disabled={Boolean(editing)}
                   onChange={(event) =>
                     setForm({ ...form, currency: event.target.value })
                   }
@@ -1110,41 +1154,7 @@ function VendorPortal({
                   required
                 />
               </label>
-              <label>
-                Lead time
-                <input
-                  value={form.leadTime}
-                  onChange={(event) =>
-                    setForm({ ...form, leadTime: event.target.value })
-                  }
-                  placeholder="7 days"
-                  required
-                />
-              </label>
-              <label>
-                Visibility
-                <select
-                  value={form.status}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      status: event.target.value as "Live" | "Draft",
-                    })
-                  }
-                >
-                  <option>Draft</option>
-                </select>
-              </label>
-              <label>
-                Portfolio visual token
-                <input
-                  value={form.image}
-                  onChange={(event) =>
-                    setForm({ ...form, image: event.target.value })
-                  }
-                  placeholder="📸"
-                />
-              </label>
+              {editing && <p className="ess-muted">Category and currency are fixed after creation. New listings are always saved as drafts for review.</p>}
             </div>
             <button className="ess-primary" type="submit">
               Save complete package
@@ -1162,6 +1172,21 @@ function AffiliatePortal() {
   const [code, setCode] = useState("");
   const [channel, setChannel] = useState("Social media");
   const [notice, setNotice] = useState("");
+  const copyReferralLink = async () => {
+    const referralCode = code.trim();
+    if (!referralCode) {
+      setNotice("Enter your referral code before copying your link.");
+      return;
+    }
+    const referralUrl = new URL("/auth/signup", window.location.origin);
+    referralUrl.searchParams.set("ref", referralCode);
+    try {
+      await navigator.clipboard.writeText(referralUrl.toString());
+      setNotice("Referral link copied to clipboard.");
+    } catch {
+      setNotice(`Clipboard access is unavailable. Copy this link: ${referralUrl.toString()}`);
+    }
+  };
   return (
     <>
       <div className="ess-page-heading">
@@ -1174,7 +1199,7 @@ function AffiliatePortal() {
         </div>
         <button
           className="ess-primary"
-          onClick={() => setNotice("Referral link copied to clipboard.")}
+          onClick={() => void copyReferralLink()}
         >
           Copy referral link
         </button>
@@ -1228,10 +1253,11 @@ function AffiliatePortal() {
         </div>
         <button
           className="ess-primary"
-          onClick={() => setNotice("Affiliate preferences saved.")}
+          onClick={() => setNotice("Channel selection is local to this session; profile saving is not connected yet.")}
         >
-          Save partner profile
+          Preview partner profile
         </button>
+        <p className="ess-muted">Selected channel: {channel}. Profile changes remain local until affiliate profile saving is connected.</p>
       </section>
     </>
   );
@@ -1720,6 +1746,7 @@ export default function EnterpriseApp() {
   const location = useLocation();
   const navigate = useNavigate();
   const [session, setSession] = useState<UserSession | null>(null);
+  const [sessionHydrated, setSessionHydrated] = useState(false);
   const initialRouteRole = location.pathname.match(/^\/auth\/(signin|signup|forgot)\/?$/)
     ? new URLSearchParams(location.search).get("role")
     : null;
@@ -1759,6 +1786,12 @@ export default function EnterpriseApp() {
       const pending = localStorage.getItem("ess_resume_event");
       if (pending) setResumeLabel(pending);
     } catch { /* */ }
+    finally {
+      // Do not redirect a persisted user away from a dashboard before local
+      // session restoration has completed. This also prevents a signed-out
+      // flash on refresh and deep links in installed/PWA sessions.
+      setSessionHydrated(true);
+    }
   }, []);
 
 
@@ -1769,6 +1802,10 @@ export default function EnterpriseApp() {
   const [business, setBusiness] = useState("");
   const [registrationCategory, setRegistrationCategory] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  useEffect(() => {
+    const incomingReferralCode = new URLSearchParams(location.search).get("ref");
+    if (incomingReferralCode) setReferralCode(incomingReferralCode.slice(0, 80));
+  }, [location.search]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [vendorPhone, setVendorPhone] = useState("");
   const [vendorCity, setVendorCity] = useState("");
@@ -1989,6 +2026,9 @@ export default function EnterpriseApp() {
       onStartBuilder={startEventBuilder}
     />
   );
+  if (!sessionHydrated && !session) {
+    return <main className="ess-shell" aria-busy="true"><p className="ess-muted" role="status">Restoring your secure session…</p></main>;
+  }
   if (!session) {
     return (
       <>
@@ -2245,6 +2285,9 @@ export default function EnterpriseApp() {
       </header>
       <Routes>
         <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
+        {/* Auth URLs are handled by the AuthModal rendered below. Keep them out of
+            the dashboard fallback, which assumes an authenticated session. */}
+        <Route path="/auth/:mode" element={null} />
         <Route element={<DashboardRouteGuard session={session} />}>
           <Route
             path={APP_ROUTE_PATHS.dashboard}
@@ -2766,7 +2809,7 @@ function AuthModal({
     setPassword(`Ess-${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}!`);
   return (
     <div className="ess-modal-backdrop">
-      <div className="ess-auth-modal">
+      <div id="eph-auth-dialog" className="ess-auth-modal" role="dialog" aria-modal="true" aria-label={mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Sign in"}>
         <button className="ess-close" onClick={onClose}>
           ×
         </button>
@@ -2957,38 +3000,38 @@ function AuthModal({
             </>
           )}
           {mode === "signup" && registrationStep === 1 && role === "AFFILIATE" && (
-            <>
-              <label>
-                Primary referral channel
-                <select value={registrationCategory} onChange={(event) => setRegistrationCategory(event.target.value)}>
-                  <option value="">Choose a channel</option>
-                  <option>Social media</option>
-                  <option>Community</option>
-                  <option>Agency network</option>
-                  <option>Content publication</option>
-                </select>
-              </label>
-              <label>
-                Referral or partner code
-                <input
-                  value={referralCode}
-                  onChange={(event) => {
-                    setReferralCode(event.target.value);
-                    touch("referralCode");
-                  }}
-                  onBlur={() => touch("referralCode")}
-                  placeholder="Optional code"
-                  maxLength={80}
-                  aria-invalid={Boolean(fieldError("referralCode", referralCode))}
-                  aria-describedby={fieldError("referralCode", referralCode) ? "auth-referralCode-error" : undefined}
-                />
-                {fieldFeedback("referralCode", referralCode)}
-              </label>
-            </>
+            <label>
+              Primary referral channel
+              <select value={registrationCategory} onChange={(event) => setRegistrationCategory(event.target.value)}>
+                <option value="">Choose a channel</option>
+                <option>Social media</option>
+                <option>Community</option>
+                <option>Agency network</option>
+                <option>Content publication</option>
+              </select>
+            </label>
+          )}
+          {mode === "signup" && registrationStep === 1 && (
+            <label>
+              Referral or partner code
+              <input
+                value={referralCode}
+                onChange={(event) => {
+                  setReferralCode(event.target.value);
+                  touch("referralCode");
+                }}
+                onBlur={() => touch("referralCode")}
+                placeholder="Optional code"
+                maxLength={80}
+                aria-invalid={Boolean(fieldError("referralCode", referralCode))}
+                aria-describedby={fieldError("referralCode", referralCode) ? "auth-referralCode-error" : undefined}
+              />
+              {fieldFeedback("referralCode", referralCode)}
+            </label>
           )}
           {(mode !== "signup" || registrationStep === 0) && <>
               <label>
-                Email
+                Email address
                 <input
                   type="email"
                   value={email}
@@ -3062,44 +3105,44 @@ function AuthModal({
                   )}
                 </div>
               )}
-              {mode === "signup" && registrationStep === 2 && (
-                <div className="ess-locale-row">
-                  <label>
-                    Country
-                    <select
-                      value={country}
-                      onChange={(e) => {
-                        setCountry(e.target.value);
-                        const match = COUNTRIES.find((c) => c.code === e.target.value);
-                        if (match) {
-                          setCurrency(match.currency);
-                          setLocalePref(match.locale);
-                        }
-                      }}
-                    >
-                      {COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Currency
-                    <select
-                      value={currency}
-                      onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-                    >
-                      {CURRENCIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.code} — {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              )}
           </>}
+          {mode === "signup" && registrationStep === 2 && (
+            <div className="ess-locale-row">
+              <label>
+                Country
+                <select
+                  value={country}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    const match = COUNTRIES.find((c) => c.code === e.target.value);
+                    if (match) {
+                      setCurrency(match.currency);
+                      setLocalePref(match.locale);
+                    }
+                  }}
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Currency
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} — {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+              )}
           {mode === "signup" && registrationStep === 2 && (
             <div className="ess-auth-trust">
               <span>✓ Escrow-protected bookings</span>
@@ -3125,8 +3168,8 @@ function AuthModal({
                   Next <span>→</span>
                 </button>
               ) : (
-                <button className="ess-primary ess-full-button" type="submit">
-                  Create account <span>→</span>
+                <button className="ess-primary ess-full-button" type="submit" aria-label="Create account">
+                  Create account <span aria-hidden="true">→</span>
                 </button>
               )}
             </div>
@@ -3156,7 +3199,7 @@ function PasswordVisibilityButton({ visible, onToggle }: { visible: boolean; onT
       type="button"
       className="ess-password-visibility"
       style={{ minWidth: 44, minHeight: 44, display: "grid", placeItems: "center" }}
-      aria-label={visible ? "Hide password" : "Show password"}
+      aria-label={visible ? "Hide characters" : "Show characters"}
       aria-pressed={visible}
       onClick={onToggle}
     >
