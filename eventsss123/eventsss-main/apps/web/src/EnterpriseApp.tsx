@@ -1162,6 +1162,21 @@ function AffiliatePortal() {
   const [code, setCode] = useState("");
   const [channel, setChannel] = useState("Social media");
   const [notice, setNotice] = useState("");
+  const copyReferralLink = async () => {
+    const referralCode = code.trim();
+    if (!referralCode) {
+      setNotice("Enter your referral code before copying your link.");
+      return;
+    }
+    const referralUrl = new URL("/", window.location.origin);
+    referralUrl.searchParams.set("ref", referralCode);
+    try {
+      await navigator.clipboard.writeText(referralUrl.toString());
+      setNotice("Referral link copied to clipboard.");
+    } catch {
+      setNotice(`Clipboard access is unavailable. Copy this link: ${referralUrl.toString()}`);
+    }
+  };
   return (
     <>
       <div className="ess-page-heading">
@@ -1174,7 +1189,7 @@ function AffiliatePortal() {
         </div>
         <button
           className="ess-primary"
-          onClick={() => setNotice("Referral link copied to clipboard.")}
+          onClick={() => void copyReferralLink()}
         >
           Copy referral link
         </button>
@@ -1230,8 +1245,9 @@ function AffiliatePortal() {
           className="ess-primary"
           onClick={() => setNotice("Affiliate preferences saved.")}
         >
-          Save partner profile
+          Preview partner profile
         </button>
+        {notice && <p className="ess-muted" role="status">Selected channel: {channel}. Profile changes are local until affiliate profile saving is connected.</p>}
       </section>
     </>
   );
