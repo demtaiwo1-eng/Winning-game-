@@ -1,0 +1,196 @@
+/*
+ * EPHINTA Unified Design System
+ * Premium hybrid: midnight surfaces, violet identity, warm orange actions,
+ * and clean light content surfaces. Loaded last so shared tokens win without
+ * replacing component behavior or page-specific layout.
+ */
+:root {
+  color-scheme: light;
+  --eph-brand-ink: #101329;
+  --eph-brand-navy: #11152f;
+  --eph-brand-navy-2: #1b2042;
+  --eph-brand-violet: #7046e8;
+  --eph-brand-violet-strong: #5932cf;
+  --eph-brand-orange: #ffad32;
+  --eph-brand-orange-strong: #f39216;
+  --eph-page: #f5f6fb;
+  --eph-surface: #ffffff;
+  --eph-surface-muted: #f0f1f8;
+  --eph-text: #171a31;
+  --eph-muted: #68708a;
+  --eph-border: #e1e4ef;
+  --eph-success: #16865d;
+  --eph-warning: #a96708;
+  --eph-danger: #c43f50;
+  --eph-radius-sm: 10px;
+  --eph-radius-md: 16px;
+  --eph-radius-lg: 22px;
+  --eph-shadow-card: 0 8px 28px rgba(23, 26, 49, .07);
+  --eph-shadow-float: 0 20px 60px rgba(16, 19, 41, .18);
+  --eph-motion-fast: 150ms;
+  --eph-motion: 200ms;
+  --eph-tap-size: 44px;
+}
+html { min-width: 320px; scroll-behavior: smooth; }
+body { min-width: 320px; color: var(--eph-text); background: var(--eph-page); }
+button, input, select, textarea { font: inherit; }
+:where(button, a, input, select, textarea, [role="button"]):focus-visible {
+  outline: 3px solid rgba(112, 70, 232, .48);
+  outline-offset: 3px;
+}
+:where(button, input[type="button"], input[type="submit"], [role="button"]) {
+  min-height: var(--eph-tap-size);
+}
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+  border-radius: var(--eph-radius-sm);
+}
+:where(img, video, canvas, svg) { max-width: 100%; }
+:where(main, section, article, aside, header, footer, nav, form) { min-width: 0; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Signed-in product shell: keep the premium dark frame and simplify accents. */
+.ess-app {
+  color: #f5f6ff;
+  background:
+    radial-gradient(ellipse at 92% 0%, rgba(112,70,232,.16), transparent 34rem),
+    var(--eph-brand-ink);
+}
+.ess-topbar {
+  min-height: 68px;
+  border-bottom-color: rgba(255,255,255,.09);
+  background: rgba(16,19,41,.94);
+}
+.ess-brand-mark {
+  background: linear-gradient(135deg, var(--eph-brand-violet), #9a7cff);
+  color: #fff;
+}
+.ess-role-nav button.active,
+.ess-role-nav button:hover,
+.ess-auth-roles button.active {
+  background: rgba(112,70,232,.22);
+  color: #c9baff;
+}
+.ess-eyebrow, .ess-kicker { color: #b49cff; }
+.ess-metric, .ess-panel {
+  border-color: rgba(255,255,255,.09);
+  border-radius: var(--eph-radius-md);
+  box-shadow: 0 16px 48px rgba(0,0,0,.14);
+}
+.ess-metric-accent {
+  border-color: rgba(255,173,50,.32);
+  background: linear-gradient(145deg, rgba(255,173,50,.12), rgba(27,32,66,.78));
+}
+.ess-primary {
+  border-color: var(--eph-brand-orange);
+  background: var(--eph-brand-orange);
+  color: #241a09;
+  border-radius: 11px;
+}
+.ess-primary:hover { background: #ffc15d; border-color: #ffc15d; }
+.ess-secondary, .ess-outline-button {
+  border-radius: 11px;
+}
+.ess-status-confirmed, .ess-status-completed, .ess-status-live, .ess-status-active {
+  background: rgba(22,134,93,.17); color: #8ce0bc;
+}
+.ess-status-pending, .ess-status-requested, .ess-status-review {
+  background: rgba(255,173,50,.16); color: #ffd18a;
+}
+.ess-status-revision, .ess-status-draft {
+  background: rgba(196,63,80,.16); color: #ffabb4;
+}
+
+/* Authentication and registration: compact identity, clear form rhythm. */
+.ess-modal-backdrop {
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+.ess-modal, .ess-auth-modal {
+  border-radius: 20px;
+  box-shadow: var(--eph-shadow-float);
+}
+.ess-auth-modal .ess-auth-brand img,
+.eph-modal .eph-modal-brand img {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  flex: 0 0 34px !important;
+  object-fit: contain !important;
+}
+.ess-registration-progress-track span,
+.eph-registration-progress-track span {
+  background: linear-gradient(90deg, var(--eph-brand-violet), var(--eph-brand-orange));
+}
+.ess-registration-navigation, .eph-registration-navigation {
+  gap: 10px;
+}
+.ess-registration-navigation > *, .eph-registration-navigation > * {
+  min-height: 46px;
+}
+.ess-registration-navigation .ess-primary,
+.eph-registration-navigation .eph-planner-submit {
+  flex: 1 1 auto;
+}
+@media (max-width: 680px) {
+  .ess-modal-backdrop, .eph-modal-backdrop {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+  }
+  .ess-auth-modal, .eph-modal {
+    width: 100% !important;
+    max-width: 480px !important;
+    max-height: calc(100dvh - max(20px, env(safe-area-inset-top) + env(safe-area-inset-bottom))) !important;
+    margin: 0 auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  .ess-registration-navigation, .eph-registration-navigation {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    padding: 10px 0 max(4px, env(safe-area-inset-bottom));
+    background: #111927;
+  }
+  .eph-registration-navigation { background: #fff; }
+}
+
+/* Public landing palette: retain its composition, align the brand and controls. */
+.esg {
+  --ink: var(--eph-text);
+  --mute: var(--eph-muted);
+  --line: var(--eph-border);
+  --cyan: var(--eph-brand-violet);
+  --blue: var(--eph-brand-violet);
+  --card: var(--eph-surface);
+}
+.esg-nav { background: rgba(17,21,47,.97); }
+.esg-mark { background: linear-gradient(135deg, var(--eph-brand-violet), var(--eph-brand-orange)); }
+.esg-btn.p {
+  background: linear-gradient(135deg, #ffc45f, var(--eph-brand-orange));
+  color: #241a09;
+  box-shadow: 0 8px 24px rgba(255,173,50,.22);
+}
+.esg-card { border-radius: var(--eph-radius-md); box-shadow: var(--eph-shadow-card); }
+.esg-card:hover { border-color: rgba(112,70,232,.42); box-shadow: 0 14px 34px rgba(23,26,49,.10); }
+
+/* General responsive safeguards. */
+@media (max-width: 767px) {
+  html, body, #root { max-width: 100%; }
+  .ess-content { padding-top: 28px; padding-bottom: max(84px, env(safe-area-inset-bottom)); }
+  .ess-page-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .ess-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ess-grid-main, .ess-grid-review { grid-template-columns: minmax(0, 1fr); }
+  .ess-panel { padding: 18px; }
+  .ess-catalog-grid, .listing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .ess-metrics, .ess-catalog-grid, .listing-grid { grid-template-columns: minmax(0, 1fr); }
+  .ess-content { padding-left: 16px; padding-right: 16px; }
+}
