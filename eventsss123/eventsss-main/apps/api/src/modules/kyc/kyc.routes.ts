@@ -70,15 +70,13 @@ kycRouter.post(
     if (typeof req.body.documentUrl === "string" && req.body.documentUrl.startsWith("http")) {
       documentUrl = req.body.documentUrl.trim();
     } else if (typeof req.body.documentBase64 === "string" && req.body.documentBase64.length > 32) {
-      // express.json is capped at 1 MB; reject oversized encoded documents explicitly.
-      if (req.body.documentBase64.length > 900_000) {
-        throw new HttpError(413, "KYC_DOCUMENT_TOO_LARGE", "KYC document exceeds the 650 KB upload limit. Compress the file and try again.");
-      }
-      const fileName =
-        typeof req.body.fileName === "string"
-          ? req.body.fileName.replace(/[^\w.\-]/g, "")
-          : "kyc.bin";
-      documentUrl = `ess-kyc://${country}/${req.user!.id}/${Date.now()}-${fileName}`;
+      // Never create a pseudo-URL: no private object-storage adapter is configured yet.
+      // Fail closed rather than accepting a document that reviewers/providers cannot retrieve.
+      throw new HttpError(
+        503,
+        "KYC_STORAGE_NOT_CONFIGURED",
+        "Secure document upload is temporarily unavailable. Please use hosted identity verification when it is enabled.",
+      );
     }
     if (!documentUrl) {
       throw new HttpError(
