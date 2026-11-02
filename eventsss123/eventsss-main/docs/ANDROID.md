@@ -27,6 +27,21 @@ Set these GitHub Actions repository variables/secrets:
 
 The verified APK workflow publishes `ephinta-web-bundle.zip` and `version.json` alongside the APK release assets after every passing default-branch build.
 
+## Production-signed Android release
+
+The active repository-root workflow is `.github/workflows/ephinta-production-apk.yml`. It can be started manually from GitHub Actions to produce a signed APK artifact, or by pushing a version tag such as `v1.0.0` to publish a production GitHub Release.
+
+Before running it, configure these repository Actions secrets:
+
+- `ANDROID_KEYSTORE_BASE64` — base64-encoded production keystore
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+Also configure the repository Actions variable `ANDROID_CERT_SHA256` with the SHA-256 fingerprint of the same signing certificate. The workflow verifies the APK signature and fingerprint and refuses to publish if they do not match. It also checks the configured production API's `/health` and `/ready` endpoints before building.
+
+The automatically published APK from `ephinta-apk-download.yml` is deliberately an **unsigned debug/test APK**. It is marked as a prerelease and is not set as the latest release. Only the signed workflow publishes the production release.
+
 ## Build, database, and release gates
 
 `ephinta-build-apk.yml` runs on pull requests, pushes to its configured branches, and manual dispatch:
