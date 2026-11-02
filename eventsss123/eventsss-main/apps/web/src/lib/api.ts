@@ -157,8 +157,7 @@ export const kycApi = {
   me: () => api<{ items: unknown[] }>("/kyc/me"),
   submit: (body: {
     kind: "IDENTITY" | "BUSINESS";
-    documentUrl?: string;
-    documentBase64?: string;
+    documentBase64: string;
     fileName?: string;
     notes?: string;
   }) => api("/kyc/submit", { method: "POST", body: JSON.stringify(body) }),
