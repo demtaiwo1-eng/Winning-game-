@@ -379,6 +379,12 @@ test("role workspaces remain readable and contained on narrow mobile screens", a
 
 test("affiliate referral links copy and prefill the signup code", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "affiliate-e2e", email: "affiliate@example.test", name: "E2E Affiliate", role: "AFFILIATE",
+    }));
+    localStorage.setItem("ess_access_token", "affiliate-e2e-token");
+  });
   await page.goto("/dashboard/affiliate");
   await page.getByLabel("Referral code").fill("PARTNER2026");
   await page.getByRole("button", { name: "Copy referral link" }).click();
