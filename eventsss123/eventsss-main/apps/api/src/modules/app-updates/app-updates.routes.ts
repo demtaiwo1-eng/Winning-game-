@@ -56,12 +56,12 @@ appUpdatesRouter.get("/version.json", async (_req, res) => {
     const response = await fetchLatestAsset("version.json");
     const raw = await response.text();
     const manifest = JSON.parse(raw) as { version?: unknown };
-    if (typeof manifest.version !== "string" || !manifest.version.trim()) {
+    if (typeof manifest.version !== "string" || !/^[a-zA-Z0-9._-]{1,64}$/.test(manifest.version)) {
       return res.status(502).json({ error: { code: "INVALID_UPDATE_MANIFEST", message: "The update manifest is invalid." } });
     }
 
     res.setHeader("Cache-Control", "no-store");
-    res.json({ version: manifest.version, url: "ephinta-web-bundle.zip" });
+    res.json({ version: manifest.version, url: `ephinta-web-bundle.zip?v=${encodeURIComponent(manifest.version)}` });
   } catch {
     res.status(503).json({ error: { code: "UPDATE_CHECK_UNAVAILABLE", message: "App updates are temporarily unavailable." } });
   }
@@ -72,7 +72,7 @@ appUpdatesRouter.get("/ephinta-web-bundle.zip", async (_req, res) => {
     const response = await fetchLatestAsset("ephinta-web-bundle.zip");
     res.status(200);
     res.setHeader("Content-Type", "application/zip");
-    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     const length = response.headers.get("content-length");
     if (length) res.setHeader("Content-Length", length);
     Readable.fromWeb(response.body as import("node:stream/web").ReadableStream).pipe(res);
