@@ -2389,7 +2389,7 @@ function ResetPasswordPage({ token }: { token: string }) {
   return (
     <div className="ess-app">
       <main className="ess-content">
-        <div id="eph-auth-dialog" className="ess-auth-modal" role="dialog" aria-modal="true" aria-label={mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Sign in"}>
+        <div className="ess-auth-modal">
           <p className="ess-eyebrow">Secure recovery</p>
           <h2>Create a new password</h2>
           <p className="ess-muted">{PASSWORD_HELPER}</p>
@@ -2809,7 +2809,7 @@ function AuthModal({
     setPassword(`Ess-${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}!`);
   return (
     <div className="ess-modal-backdrop">
-      <div className="ess-auth-modal">
+      <div id="eph-auth-dialog" className="ess-auth-modal" role="dialog" aria-modal="true" aria-label={mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Sign in"}>
         <button className="ess-close" onClick={onClose}>
           ×
         </button>
