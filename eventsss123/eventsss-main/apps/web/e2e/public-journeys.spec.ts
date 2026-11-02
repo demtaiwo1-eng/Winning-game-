@@ -298,3 +298,38 @@ test("mobile registration keeps its logo compact and navigation reachable", asyn
   await expect(back).toBeVisible();
   await expect(next).toBeVisible();
 });
+
+test("signed-in dashboard navigation remains usable on narrow mobile screens", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "planner-mobile-nav", email: "mobile-nav@example.test", name: "Mobile Planner", role: "CLIENT",
+    }));
+    localStorage.setItem("ess_access_token", "mobile-nav-token");
+  });
+  await page.route("**/api/v1/events", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }),
+  }));
+  await page.route("**/api/v1/readiness/mine", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }),
+  }));
+  await page.goto("/dashboard/client?tab=overview");
+
+  const navigation = page.locator(".ess-filter-row").first();
+  await expect(navigation).toBeVisible();
+  await expect(navigation.getByRole("button", { name: "Overview" })).toBeVisible();
+  await expect(navigation.getByRole("button", { name: "Wallet & escrow" })).toBeAttached();
+
+  const dimensions = await navigation.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    bodyClientWidth: document.documentElement.clientWidth,
+    bodyScrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBeGreaterThanOrEqual(dimensions.clientWidth);
+  expect(dimensions.bodyScrollWidth).toBeLessThanOrEqual(dimensions.bodyClientWidth + 1);
+
+  await navigation.getByRole("button", { name: "Wallet & escrow" }).click();
+  await expect(page.getByRole("heading", { name: /Funds & protection/i })).toBeVisible();
+  await expect(page.locator(".ess-wallet-panel")).toBeVisible();
+});
