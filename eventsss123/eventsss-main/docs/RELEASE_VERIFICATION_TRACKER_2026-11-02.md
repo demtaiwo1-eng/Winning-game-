@@ -76,3 +76,27 @@ Keep `main`. Delete only branches confirmed fully superseded after final compari
 3. Coordinate and validate the Capacitor 7 toolchain migration to remove development dependency advisories.
 4. Review the old OPay collection branch before any deletion.
 5. Delete only the confirmed stale non-main branches once the repository owner has reviewed the inventory.
+
+
+## Verification update — 2026-11-02, 06:16 UTC
+
+Latest source revision: `e44d923e576a2f7b653d85fe6e183f9d91bb4279`.
+
+| Check | Run | Result |
+|---|---:|---|
+| Web checks and Android APK build | [41398155223](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41398155223) | Passed |
+| Browser E2E and regression | [41398155229](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41398155229) | Passed |
+| Dependency advisory report | [41398155192](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41398155192) | Completed; findings remain |
+| Android API 23/30/35 install and launch matrix | [41398155180](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41398155180) | In progress at 06:16 UTC; API 23 running, API 30 and 35 queued |
+
+### Android APK build 229
+
+- Release: https://github.com/demtaiwo1-eng/Winning-game-/releases/tag/ephinta-apk-41398155223
+- Direct APK: https://github.com/demtaiwo1-eng/Winning-game-/releases/download/ephinta-apk-41398155223/ephinta-229.apk
+- Package: `com.ephinta.app`
+- APK size: 57,928,365 bytes
+- SHA-256: `d2bd81d591198e153db5377276ca2da546ef995b3a2b23185598a0052b92baa6`
+- Build workflow: passed web checks, APK build, signature verification, manifest inspection and ZIP integrity checks.
+- This is an unsigned debug/testing APK. It is not evidence of physical-device installation or complete emulator-matrix compatibility.
+
+The earlier sections above are historical snapshots for their stated revisions. Do not treat them as the latest CI state.
