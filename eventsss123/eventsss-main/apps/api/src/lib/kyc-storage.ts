@@ -85,7 +85,7 @@ async function signedRequest(method: "PUT" | "GET", key: string, body?: Buffer, 
   return fetch(url, {
     method,
     headers: requestHeaders,
-    body: method === "PUT" ? body : undefined,
+    body: method === "PUT" && body ? new Uint8Array(body) : undefined,
     redirect: "error",
     signal: AbortSignal.timeout(20_000),
   });
