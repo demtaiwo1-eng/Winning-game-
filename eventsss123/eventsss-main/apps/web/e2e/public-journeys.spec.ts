@@ -94,21 +94,47 @@ test("registration blocks a password shorter than the input minimum", async ({ p
   await password.fill("short");
   await expect(password).toHaveValue("short");
 
-  // Native browser validity must reject fewer than the application's stated 12 chars.
+  // The first step must reject a short password before advancing.
   const validity = await password.evaluate((element) => ({
     minLength: element.getAttribute("minlength"),
     tooShort: element.validity.tooShort,
     valueLength: element.value.length,
   }));
-  if (validity.minLength && Number(validity.minLength) >= 8) {
-    expect(validity.tooShort || validity.valueLength < Number(validity.minLength)).toBeTruthy();
-  } else {
-    // If native minlength is not exposed, verify that submitting short credentials
-    // produces a validation message and does not start a successful registration.
-    await dialog.getByRole("button", { name: "Create account", exact: true }).click();
-    await expect(dialog).toBeVisible();
-  }
+  expect(validity.minLength).toBe("12");
+  await dialog.getByRole("button", { name: "Next" }).click();
+  await expect(dialog.getByText("Step 1 of 3")).toBeVisible();
+  await expect(password).toBeVisible();
 });
+test("registration supports back and next navigation and a review step", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: "Create customer account" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Create your EPHINTA account" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Full name").fill("Mobile Registration Test");
+  await dialog.getByLabel("Email address").fill("mobile-registration@example.test");
+  await dialog.getByLabel("Password").fill("StrongPass123!");
+
+  await dialog.getByRole("button", { name: "Next" }).click();
+  await expect(dialog.getByText("Step 2 of 3")).toBeVisible();
+  await expect(dialog.getByText("Event planner account")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Back" }).click();
+  await expect(dialog.getByLabel("Full name")).toHaveValue("Mobile Registration Test");
+
+  await dialog.getByRole("button", { name: "Next" }).click();
+  await dialog.getByRole("button", { name: "Next" }).click();
+  await expect(dialog.getByText("Step 3 of 3")).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Review your account" })).toBeVisible();
+  await expect(dialog.getByText("mobile-registration@example.test")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Create account" })).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Back" }).click();
+  await expect(dialog.getByLabel("Account type")).toHaveValue("CLIENT");
+});
+
 test("sign-in displays a readable error when authentication fails", async ({
   page,
 }) => {
