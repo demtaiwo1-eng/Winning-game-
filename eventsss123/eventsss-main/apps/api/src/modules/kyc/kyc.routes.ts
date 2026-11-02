@@ -94,7 +94,6 @@ kycRouter.post(
       currency: profile.currency,
       assurance: profile.assurance,
       primaryDocType,
-      nationalId: typeof req.body.nationalId === "string" ? req.body.nationalId.slice(0, 64) : null,
       nationalIdLabel: profile.nationalIdLabel || null,
       addressDocUrl:
         typeof req.body.addressDocUrl === "string" ? req.body.addressDocUrl.slice(0, 500) : null,
@@ -108,7 +107,6 @@ kycRouter.post(
       typeof req.body.notes === "string" ? req.body.notes.slice(0, 400) : "",
       `country=${country}`,
       `doc=${primaryDocType}`,
-      meta.nationalId ? `nid=${meta.nationalId}` : "",
     ].filter(Boolean);
 
     const request = await prisma.verificationRequest.create({
