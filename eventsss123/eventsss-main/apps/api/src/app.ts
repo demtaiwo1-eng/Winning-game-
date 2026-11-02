@@ -22,6 +22,7 @@ import { notificationsRouter } from "./modules/notifications/notifications.route
 import { checkoutRouter } from "./modules/checkout/checkout.routes";
 import { readinessRouter } from "./modules/readiness/readiness.routes";
 import { adminRouter } from "./modules/admin/admin.routes";
+import { appUpdatesRouter } from "./modules/app-updates/app-updates.routes";
 
 import { hasRole, requireAuth } from "./middleware/auth";
 import { requireRole } from "./middleware/auth";
@@ -64,6 +65,16 @@ export function createApp() {
       res.status(503).json({ status: "db_unavailable" });
     }
   });
+
+  app.use(
+    "/api/v1/app-updates",
+    cors({ origin: "*", methods: ["GET", "HEAD", "OPTIONS"], allowedHeaders: ["Content-Type"], maxAge: 86_400 }),
+    (_req, res, next) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      next();
+    },
+    appUpdatesRouter,
+  );
 
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/events", eventMessagesRouter);
