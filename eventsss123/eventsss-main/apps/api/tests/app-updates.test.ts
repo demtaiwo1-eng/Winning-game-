@@ -38,7 +38,7 @@ describe("public mobile OTA endpoints", () => {
     expect(response.status).toBe(200);
     expect(response.headers["access-control-allow-origin"]).toBe("*");
     expect(response.headers["cross-origin-resource-policy"]).toBe("cross-origin");
-    expect(response.body).toEqual({ version: "e2b8ccebada1", url: "ephinta-web-bundle.zip" });
+    expect(response.body).toEqual({ version: "e2b8ccebada1", url: "ephinta-web-bundle.zip?v=e2b8ccebada1" });
   });
 
   it("streams the OTA zip with cross-origin download headers", async () => {
