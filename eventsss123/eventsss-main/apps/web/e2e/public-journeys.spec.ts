@@ -84,7 +84,7 @@ test("registration blocks a password shorter than the input minimum", async ({ p
   await page.getByRole("navigation", { name: "Main navigation" })
     .getByRole("button", { name: "Create customer account" }).click();
 
-  const dialog = page.getByRole("dialog", { name: "Create your EPHINTA account" });
+  const dialog = page.locator("#eph-auth-dialog");
   await expect(dialog).toBeVisible();
   await dialog.getByLabel("Full name").fill("ESS E2E Customer");
   await dialog.getByLabel("Email address").fill("e2e-customer@example.test");
@@ -111,7 +111,7 @@ test("registration supports back and next navigation and a review step", async (
   await page.getByRole("navigation", { name: "Main navigation" })
     .getByRole("button", { name: "Create customer account" }).click();
 
-  const dialog = page.getByRole("dialog", { name: "Create your EPHINTA account" });
+  const dialog = page.locator("#eph-auth-dialog");
   await expect(dialog).toBeVisible();
   await dialog.getByLabel("Full name").fill("Mobile Registration Test");
   await dialog.getByLabel("Email address").fill("mobile-registration@example.test");
