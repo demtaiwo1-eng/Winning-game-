@@ -191,6 +191,8 @@ export default function PublicLanding({
 
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
 
+  const [registrationStep, setRegistrationStep] = useState(0);
+
   const [role, setRole] = useState<AccountRole>('CLIENT');
 
   const [name, setName] = useState('');
@@ -330,6 +332,8 @@ export default function PublicLanding({
     setNotice('');
 
     setRole(requestedRole);
+
+    setRegistrationStep(0);
 
     setAuthMode(mode);
 
@@ -1048,33 +1052,105 @@ export default function PublicLanding({
         <section id="eph-auth-dialog" className="eph-modal" role="dialog" aria-modal="true" aria-labelledby="eph-auth-title">
 
           <div className="eph-modal-brand"><img src="/brand/ephinta_logo2.png" alt="" /><span>EPHINTA</span></div>
-          <div className="eph-modal-top"><div><h2 id="eph-auth-title">{authMode === 'signin' ? 'Welcome back' : authMode === 'forgot' ? 'Reset your password' : 'Create your EPHINTA account'}</h2><p>{authMode === 'signin' ? 'Sign in to continue planning.' : authMode === 'forgot' ? 'Enter your email and we\'ll send reset instructions if an account exists.' : 'A few details to get you started.'}</p></div><button className="eph-close" onClick={() => setAuthMode(null)} aria-label="Close dialog">&times;</button></div>
+          <div className="eph-modal-top"><div><h2 id="eph-auth-title">{authMode === 'signin' ? 'Welcome back' : authMode === 'forgot' ? 'Reset your password' : ['Create your EPHINTA account', 'Choose your account type', 'Confirm your details'][registrationStep]}</h2><p>{authMode === 'signin' ? 'Sign in to continue planning.' : authMode === 'forgot' ? 'Enter your email and we\'ll send reset instructions if an account exists.' : ['Start with your contact details.', 'Choose how you will use EPHINTA.', 'Check your information before creating your account.'][registrationStep]}</p></div><button className="eph-close" onClick={() => setAuthMode(null)} aria-label="Close dialog">&times;</button></div>
 
           {error && <div className="eph-auth-error" role="alert">{error}</div>}
 
           {notice && <div className="eph-auth-notice" role="status">{notice}</div>}
 
+          {authMode === 'signup' && (
+            <div className="eph-registration-progress" aria-label={`Registration step ${registrationStep + 1} of 3`}>
+              <div className="eph-registration-progress-copy">
+                <strong>Step {registrationStep + 1} of 3</strong>
+                <span>{['Your details', 'Account type', 'Review'][registrationStep]}</span>
+              </div>
+              <div className="eph-registration-progress-track"><span style={{ width: `${((registrationStep + 1) / 3) * 100}%` }} /></div>
+            </div>
+          )}
+
           <form onSubmit={submitAuth}>
+            {authMode === 'signup' && registrationStep === 0 && (
+              <div className="eph-field">
+                <label htmlFor="eph-name">Full name</label>
+                <input id="eph-name" className="eph-control" autoComplete="name" required minLength={2} value={name} onChange={e => setName(e.target.value)} />
+              </div>
+            )}
 
-            {authMode === 'signup' && <>
+            {(authMode !== 'signup' || registrationStep === 0) && (
+              <>
+                <div className="eph-field">
+                  <label htmlFor="eph-email">Email address</label>
+                  <input id="eph-email" className="eph-control" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} />
+                </div>
+                {authMode !== 'forgot' && (
+                  <div className="eph-field">
+                    <label htmlFor="eph-password">Password</label>
+                    <div className="eph-password-wrap">
+                      <input id="eph-password" className="eph-control" type={showPassword ? 'text' : 'password'} autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'} required minLength={authMode === 'signup' ? 12 : 1} value={password} onChange={e => setPassword(e.target.value)} />
+                      <button className="eph-text-btn" type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
+                    </div>
+                    {authMode === 'signup' && <small style={{ color: '#77788d' }}>Use at least 12 characters and meet the password rules shown by the application.</small>}
+                  </div>
+                )}
+              </>
+            )}
 
-              <div className="eph-field"><label htmlFor="eph-name">Full name</label><input id="eph-name" className="eph-control" autoComplete="name" required minLength={2} value={name} onChange={e => setName(e.target.value)} /></div>
+            {authMode === 'signup' && registrationStep === 1 && (
+              <>
+                <div className="eph-field">
+                  <label htmlFor="eph-role">Account type</label>
+                  <select id="eph-role" className="eph-control" value={role} onChange={e => setRole(e.target.value as AccountRole)}>
+                    <option value="CLIENT">Event planner / customer</option>
+                    <option value="VENDOR">Vendor / service provider</option>
+                    <option value="ORGANIZATION">Event organization</option>
+                  </select>
+                </div>
+                {(role === 'VENDOR' || role === 'ORGANIZATION') ? (
+                  <div className="eph-field">
+                    <label htmlFor="eph-business">Business / organization name</label>
+                    <input id="eph-business" className="eph-control" required minLength={2} value={businessName} onChange={e => setBusinessName(e.target.value)} />
+                  </div>
+                ) : (
+                  <div className="eph-registration-note">
+                    <strong>Event planner account</strong>
+                    <span>No business details are required. Your account will open the event-planning workspace.</span>
+                  </div>
+                )}
+              </>
+            )}
 
-              <div className="eph-field"><label htmlFor="eph-role">Account type</label><select id="eph-role" className="eph-control" value={role} onChange={e => setRole(e.target.value as AccountRole)}><option value="CLIENT">Event planner / customer</option><option value="VENDOR">Vendor / service provider</option><option value="ORGANIZATION">Event organization</option></select></div>
+            {authMode === 'signup' && registrationStep === 2 && (
+              <div className="eph-registration-review">
+                <p className="eph-registration-review-kicker">Ready to join EPHINTA?</p>
+                <h3>Review your account</h3>
+                <dl>
+                  <div><dt>Name</dt><dd>{name || '—'}</dd></div>
+                  <div><dt>Email</dt><dd>{email || '—'}</dd></div>
+                  <div><dt>Account type</dt><dd>{role === 'CLIENT' ? 'Event planner / customer' : role === 'VENDOR' ? 'Vendor / service provider' : 'Event organization'}</dd></div>
+                  {(role === 'VENDOR' || role === 'ORGANIZATION') && <div><dt>Business</dt><dd>{businessName || '—'}</dd></div>}
+                </dl>
+                <p className="eph-registration-review-note">Your details will be used to create your EPHINTA account. You can complete additional profile and verification details after signing in.</p>
+              </div>
+            )}
 
-              {(role === 'VENDOR' || role === 'ORGANIZATION') && <div className="eph-field"><label htmlFor="eph-business">Business / organization name</label><input id="eph-business" className="eph-control" required value={businessName} onChange={e => setBusinessName(e.target.value)} /></div>}
-
-            </>}
-
-            <div className="eph-field"><label htmlFor="eph-email">Email address</label><input id="eph-email" className="eph-control" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-
-            {authMode !== 'forgot' && <div className="eph-field"><label htmlFor="eph-password">Password</label><div className="eph-password-wrap"><input id="eph-password" className="eph-control" type={showPassword ? 'text' : 'password'} autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'} required minLength={authMode === 'signup' ? 12 : 1} value={password} onChange={e => setPassword(e.target.value)} /><button className="eph-text-btn" type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div>{authMode === 'signup' && <small style={{ color: '#77788d' }}>Use at least 12 characters and meet the password rules shown by the application.</small>}</div>}
-
-            <button className="eph-btn eph-btn-purple eph-planner-submit" type="submit" disabled={busy}>{busy ? 'Please wait...' : authMode === 'signin' ? 'Sign in' : authMode === 'forgot' ? 'Send reset instructions' : 'Create account'}</button>
-
+            {authMode === 'signup' ? (
+              <div className="eph-registration-navigation">
+                {registrationStep > 0 && <button type="button" className="eph-btn eph-btn-outline" onClick={() => setRegistrationStep(step => Math.max(0, step - 1))}>Back</button>}
+                {registrationStep < 2 ? (
+                  <button type="button" className="eph-btn eph-btn-purple eph-planner-submit" onClick={event => {
+                    const formElement = event.currentTarget.form;
+                    if (formElement?.reportValidity()) setRegistrationStep(step => Math.min(2, step + 1));
+                  }}>Next <span aria-hidden="true">→</span></button>
+                ) : (
+                  <button className="eph-btn eph-btn-purple eph-planner-submit" type="submit" disabled={busy}>{busy ? 'Please wait...' : 'Create account'}</button>
+                )}
+              </div>
+            ) : (
+              <button className="eph-btn eph-btn-purple eph-planner-submit" type="submit" disabled={busy}>{busy ? 'Please wait...' : authMode === 'signin' ? 'Sign in' : 'Send reset instructions'}</button>
+            )}
           </form>
 
-          <div className="eph-auth-switch">{authMode === 'signin' ? <>Forgot password? <button onClick={() => { setAuthMode('forgot'); setError(''); setNotice(''); }}>Reset it</button><br />New to EPHINTA? <button onClick={() => { setAuthMode('signup'); setError(''); setNotice(''); }}>Create an account</button></> : <>Already have an account? <button onClick={() => { setAuthMode('signin'); setError(''); setNotice(''); }}>Sign in</button>
+          <div className="eph-auth-switch">{authMode === 'signin' ? <>Forgot password? <button onClick={() => { setAuthMode('forgot'); setRegistrationStep(0); setError(''); setNotice(''); }}>Reset it</button><br />New to EPHINTA? <button onClick={() => { setAuthMode('signup'); setRegistrationStep(0); setError(''); setNotice(''); }}>Create an account</button></> : <>Already have an account? <button onClick={() => { setAuthMode('signin'); setRegistrationStep(0); setError(''); setNotice(''); }}>Sign in</button>
 
       <section className="ephinta-faq" aria-labelledby="ephinta-faq-title">
 
