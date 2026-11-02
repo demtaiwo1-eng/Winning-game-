@@ -1746,6 +1746,7 @@ export default function EnterpriseApp() {
   const location = useLocation();
   const navigate = useNavigate();
   const [session, setSession] = useState<UserSession | null>(null);
+  const [sessionHydrated, setSessionHydrated] = useState(false);
   const initialRouteRole = location.pathname.match(/^\/auth\/(signin|signup|forgot)\/?$/)
     ? new URLSearchParams(location.search).get("role")
     : null;
@@ -1785,6 +1786,12 @@ export default function EnterpriseApp() {
       const pending = localStorage.getItem("ess_resume_event");
       if (pending) setResumeLabel(pending);
     } catch { /* */ }
+    finally {
+      // Do not redirect a persisted user away from a dashboard before local
+      // session restoration has completed. This also prevents a signed-out
+      // flash on refresh and deep links in installed/PWA sessions.
+      setSessionHydrated(true);
+    }
   }, []);
 
 
@@ -2019,6 +2026,9 @@ export default function EnterpriseApp() {
       onStartBuilder={startEventBuilder}
     />
   );
+  if (!sessionHydrated && !session) {
+    return <main className="ess-shell" aria-busy="true"><p className="ess-muted" role="status">Restoring your secure session…</p></main>;
+  }
   if (!session) {
     return (
       <>
