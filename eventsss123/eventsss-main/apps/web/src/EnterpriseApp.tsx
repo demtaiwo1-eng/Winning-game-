@@ -2777,7 +2777,7 @@ function AuthModal({
         <p className="ess-eyebrow">Secure access</p>
         <h2>
           {mode === "signup"
-            ? "Create your workspace"
+            ? ["Create your account", "Set up your profile", "Choose your preferences"][registrationStep]
             : mode === "forgot"
               ? "Reset your password"
               : `${roleMeta[role].short} sign in`}
@@ -2832,6 +2832,12 @@ function AuthModal({
               />
               {fieldFeedback("name", name)}
             </label>
+          )}
+          {mode === "signup" && registrationStep === 1 && role === "CLIENT" && (
+            <div className="ess-registration-note">
+              <strong>Your account is ready to plan.</strong>
+              <span>No business details are needed for an event-planner account. Continue to set your country and preferred currency.</span>
+            </div>
           )}
           {mode === "signup" && registrationStep === 1 && role === "ORGANIZATION" && (
             <fieldset className="ess-choice-group">
