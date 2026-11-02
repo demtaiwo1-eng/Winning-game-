@@ -5,6 +5,7 @@ import { hasRole, requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { getKycProfile, listKycCountries, type DocType } from "../../lib/kyc-countries";
+import { readKycDocument, storeKycDocument } from "../../lib/kyc-storage";
 
 export const kycRouter = Router();
 
@@ -73,13 +74,11 @@ kycRouter.post(
         if (candidate.protocol === "https:") documentUrl = candidate.toString();
       } catch { /* invalid URLs are rejected below */ }
     } else if (typeof req.body.documentBase64 === "string" && req.body.documentBase64.length > 32) {
-      // Never create a pseudo-URL: no private object-storage adapter is configured yet.
-      // Fail closed rather than accepting a document that reviewers/providers cannot retrieve.
-      throw new HttpError(
-        503,
-        "KYC_STORAGE_NOT_CONFIGURED",
-        "Secure document upload is temporarily unavailable. Please use hosted identity verification when it is enabled.",
-      );
+      const fileName = typeof req.body.fileName === "string" ? req.body.fileName : "document.pdf";
+      documentUrl = await storeKycDocument({
+        base64: req.body.documentBase64,
+        fileName,
+      });
     }
     if (!documentUrl) {
       throw new HttpError(
@@ -177,6 +176,25 @@ kycRouter.get(
       },
     });
     res.json({ items });
+  }),
+);
+
+kycRouter.get(
+  "/:id/document",
+  requireRole("ADMIN", "CONSULTANT"),
+  asyncHandler(async (req, res) => {
+    const request = await prisma.verificationRequest.findUnique({ where: { id: req.params.id } });
+    if (!request || !request.documentUrl?.startsWith("neon-kyc://")) {
+      throw new HttpError(404, "KYC_DOCUMENT_NOT_FOUND", "Stored KYC document not found.");
+    }
+    const document = await readKycDocument(request.documentUrl);
+    const extension = document.contentType === "application/pdf" ? "pdf" : document.contentType.split("/")[1];
+    res.setHeader("Content-Type", document.contentType);
+    res.setHeader("Content-Disposition", `attachment; filename="kyc-${request.id}.${extension}"`);
+    res.setHeader("Cache-Control", "private, no-store, max-age=0");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Length", String(document.bytes.length));
+    res.status(200).send(document.bytes);
   }),
 );
 
