@@ -333,3 +333,43 @@ test("signed-in dashboard navigation remains usable on narrow mobile screens", a
   await expect(page.getByRole("heading", { name: /Funds & protection/i })).toBeVisible();
   await expect(page.locator(".ess-wallet-panel")).toBeVisible();
 });
+
+
+test("role workspaces remain readable and contained on narrow mobile screens", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/v1/**", (route) => route.fulfill({
+    status: 503,
+    contentType: "application/json",
+    body: JSON.stringify({ error: { code: "E2E_OFFLINE", message: "Test API unavailable" } }),
+  }));
+
+  const roleCases = [
+    { role: "vendor", heading: "Sell the experience." },
+    { role: "affiliate", heading: "Grow the event network." },
+    { role: "verifier", heading: "Pre-event service confirmation" },
+    { role: "consultant", heading: "Operations updates" },
+    { role: "admin", heading: "Platform operations" },
+  ];
+
+  for (const item of roleCases) {
+    await page.addInitScript((role) => {
+      localStorage.setItem("ess_user", JSON.stringify({
+        id: `mobile-${role}`,
+        email: `${role}@example.test`,
+        name: "Mobile Role Tester",
+        role: role.toUpperCase(),
+      }));
+      localStorage.setItem("ess_access_token", "role-workspace-test-token");
+    }, item.role);
+    await page.goto(`/dashboard/${item.role}`);
+    await expect(page.getByRole("heading", { name: item.heading, exact: true })).toBeVisible();
+
+    const dimensions = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      document: document.documentElement.scrollWidth,
+      content: document.querySelector(".ess-content")?.getBoundingClientRect().width ?? 0,
+    }));
+    expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport + 1);
+    expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport + 1);
+  }
+});
