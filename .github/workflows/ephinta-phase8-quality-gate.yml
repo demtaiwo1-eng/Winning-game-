@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "eventsss123/eventsss-main/**"
-      - ".github/workflows/ephinta-phase8-quality-gate.yml"
+      - ".github/workflows/**"
   push:
     branches: [main]
     paths:
