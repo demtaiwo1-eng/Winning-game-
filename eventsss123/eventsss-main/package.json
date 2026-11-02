@@ -14,7 +14,7 @@
     "dev:serve": "node scripts/dev-safe.mjs",
     "build": "npm run prisma:generate && npm run build -w apps/api",
     "start": "npm run start -w apps/api",
-    "check": "npm run check -w apps/api && npm run test -w apps/web",
+    "check": "npm run check -w apps/api && npm run test -w apps/web && npm run test:kyc-research",
     "test": "npm run test -w apps/api && npm run test -w apps/web",
     "prisma:generate": "npm run prisma:generate -w apps/api",
     "db:deploy": "npm run db:deploy -w apps/api",
@@ -30,7 +30,8 @@
     "dev:web": "npm run dev -w apps/web",
     "web:preview": "npm run dev -w apps/web -- --host 0.0.0.0 --port 5173",
     "web:check": "npm run test -w apps/web && npm run build -w apps/web",
-    "kyc:research": "node scripts/research-kyc-providers.mjs"
+    "kyc:research": "node scripts/research-kyc-providers.mjs",
+    "test:kyc-research": "node scripts/research-kyc-providers.mjs --self-test"
   },
   "devDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.65.1",
