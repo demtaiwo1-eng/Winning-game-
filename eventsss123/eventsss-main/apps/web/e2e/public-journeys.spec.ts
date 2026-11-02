@@ -175,7 +175,7 @@ test("mobile menu opens and provides sign-in access", async ({ page }, testInfo)
   await expect(menu).toBeVisible();
   await menu.getByRole("button", { name: "Sign in to your account" }).click();
 
-  await expect(page.getByRole("dialog", { name: "Welcome back" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Sign in" })).toBeVisible();
 });
 
 test("authenticated planner can add a checklist task to an owned event", async ({ page }) => {
