@@ -821,7 +821,7 @@ function VendorPortal({
       ...gigs.map((gig) => [gig.event, gig.service, gig.location, gig.amount, gig.status]),
     ];
     const csv = rows.map((row) => row.map(escapeCell).join(",")).join("\r\n");
-    const url = URL.createObjectURL(new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+    const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url;
     link.download = "ephinta-vendor-requests.csv";
@@ -930,7 +930,7 @@ function VendorPortal({
           <SectionTitle
             eyebrow="Demand"
             title="Event gig requests"
-            action={<button className="ess-quiet-button">Export CSV</button>}
+            action={<button type="button" className="ess-quiet-button" onClick={exportVendorRequests}>Export CSV</button>}
           />
           <div className="ess-table-wrap">
             <table className="ess-table">
