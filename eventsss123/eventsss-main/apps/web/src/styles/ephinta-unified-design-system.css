@@ -658,3 +658,13 @@ button, input, select, textarea { font: inherit; }
 @media (max-width: 380px) {
   .ess-content .ess-metrics { grid-template-columns: minmax(0,1fr); }
 }
+
+
+/* Keep sticky workspace chrome from covering controls brought into view. */
+.ess-content button,
+.ess-content a,
+.ess-content input,
+.ess-content select,
+.ess-content textarea {
+  scroll-margin-top: 100px;
+}
