@@ -33,7 +33,7 @@ export default defineConfig({
       // The browser app proxies unmatched /api requests to port 5000. Start the
       // real API against the disposable CI database so dashboard-wide effects
       // (wallet, billing, profile and notifications) never hit a dead proxy.
-      command: "npm run dev -w apps/api",
+      command: "cd ../.. && npm run dev -w apps/api",
       url: "http://127.0.0.1:5000/health",
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
