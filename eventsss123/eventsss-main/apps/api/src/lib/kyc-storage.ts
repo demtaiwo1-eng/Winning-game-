@@ -118,6 +118,16 @@ export async function storeKycDocument(input: {
   };
   const contentType = mimeTypes[extension];
   if (!contentType) throw new HttpError(400, "UNSUPPORTED_DOCUMENT_TYPE", "Upload a PDF, JPG, PNG, or WEBP document.");
+  const signatures: Record<string, boolean> = {
+    pdf: bytes.subarray(0, 5).toString("ascii") === "%PDF-",
+    jpg: bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff,
+    jpeg: bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff,
+    png: bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+    webp: bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WEBP",
+  };
+  if (!signatures[extension]) {
+    throw new HttpError(400, "DOCUMENT_CONTENT_MISMATCH", "The document content does not match its file type.");
+  }
   const key = `documents/${randomUUID()}.${extension}`;
   let response: Response;
   try {
