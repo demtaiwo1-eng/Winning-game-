@@ -2751,9 +2751,10 @@ function AuthModal({
   setLocalePref: (value: LocaleCode) => void;
 }) {
   const [passwordVisible, setPasswordVisible] = useState(true);
+  const [registrationStep, setRegistrationStep] = useState(0);
   const [touched, setTouched] = useState<Partial<Record<RegistrationField, boolean>>>({});
   const internal = role === "VERIFIER" || role === "ADMIN";
-  useEffect(() => setTouched({}), [role, mode]);
+  useEffect(() => { setTouched({}); setRegistrationStep(0); }, [role, mode]);
   const touch = (field: RegistrationField) => setTouched((current) => ({ ...current, [field]: true }));
   const fieldError = (field: RegistrationField, value: string) =>
     touched[field] ? registrationFieldError(field, value, { role, mode, organizationMode }) : null;
@@ -2804,6 +2805,15 @@ function AuthModal({
         )}
         <form onSubmit={onSubmit}>
           {mode === "signup" && (
+            <div className="ess-registration-progress" aria-label={`Registration step ${registrationStep + 1} of 3`}>
+              <div className="ess-registration-progress-copy">
+                <strong>Step {registrationStep + 1} of 3</strong>
+                <span>{["Account details", "Your profile", "Preferences"][registrationStep]}</span>
+              </div>
+              <div className="ess-registration-progress-track"><span style={{ width: `${((registrationStep + 1) / 3) * 100}%` }} /></div>
+            </div>
+          )}
+          {mode === "signup" && registrationStep === 0 && (
             <label>
               Full name
               <input
@@ -2823,7 +2833,7 @@ function AuthModal({
               {fieldFeedback("name", name)}
             </label>
           )}
-          {mode === "signup" && role === "ORGANIZATION" && (
+          {mode === "signup" && registrationStep === 1 && role === "ORGANIZATION" && (
             <fieldset className="ess-choice-group">
               <legend>How will your organization use ESS?</legend>
               <label>
@@ -2849,7 +2859,7 @@ function AuthModal({
               </label>
             </fieldset>
           )}
-          {mode === "signup" && (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) && (
+          {mode === "signup" && registrationStep === 1 && (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) && (
             <>
               <label>
                 Business name
@@ -2940,7 +2950,7 @@ function AuthModal({
               </label>
             </>
           )}
-          {mode === "signup" && role === "AFFILIATE" && (
+          {mode === "signup" && registrationStep === 1 && role === "AFFILIATE" && (
             <>
               <label>
                 Primary referral channel
@@ -2970,7 +2980,7 @@ function AuthModal({
               </label>
             </>
           )}
-          <>
+          {(mode !== "signup" || registrationStep === 0) && <>
               <label>
                 Email
                 <input
@@ -3046,7 +3056,7 @@ function AuthModal({
                   )}
                 </div>
               )}
-              {mode === "signup" && (
+              {mode === "signup" && registrationStep === 2 && (
                 <div className="ess-locale-row">
                   <label>
                     Country
@@ -3083,8 +3093,8 @@ function AuthModal({
                   </label>
                 </div>
               )}
-          </>
-          {mode === "signup" && (
+          </>}
+          {mode === "signup" && registrationStep === 2 && (
             <div className="ess-auth-trust">
               <span>✓ Escrow-protected bookings</span>
               <span>✓ Multi-currency wallet</span>
@@ -3092,16 +3102,36 @@ function AuthModal({
             </div>
           )}
           {error && <div className="ess-form-error">{error}</div>}
-          <button className="ess-primary ess-full-button" type="submit">
-            {internal
-              ? "Open authorized portal"
-              : mode === "signup"
-                ? "Create account"
-                : mode === "forgot"
-                  ? "Send reset link"
-                  : "Continue securely"}{" "}
-            <span>→</span>
-          </button>
+          {mode === "signup" ? (
+            <div className="ess-registration-navigation">
+              {registrationStep > 0 && (
+                <button className="ess-outline-button" type="button" onClick={() => setRegistrationStep((step) => Math.max(0, step - 1))}>
+                  Back
+                </button>
+              )}
+              {registrationStep < 2 ? (
+                <button
+                  className="ess-primary ess-full-button"
+                  type="button"
+                  onClick={(event) => {
+                    const form = event.currentTarget.form;
+                    if (form?.reportValidity()) setRegistrationStep((step) => Math.min(2, step + 1));
+                  }}
+                >
+                  Next <span>→</span>
+                </button>
+              ) : (
+                <button className="ess-primary ess-full-button" type="submit">
+                  Create account <span>→</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <button className="ess-primary ess-full-button" type="submit">
+              {internal ? "Open authorized portal" : mode === "forgot" ? "Send reset link" : "Continue securely"}{" "}
+              <span>→</span>
+            </button>
+          )}
         </form>
         {mode === "signin" && (
           <button
