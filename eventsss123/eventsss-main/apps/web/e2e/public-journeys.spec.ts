@@ -375,3 +375,17 @@ test("role workspaces remain readable and contained on narrow mobile screens", a
     expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport + 1);
   }
 });
+
+
+test("affiliate referral links copy and prefill the signup code", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/dashboard/affiliate");
+  await page.getByLabel("Referral code").fill("PARTNER2026");
+  await page.getByRole("button", { name: "Copy referral link" }).click();
+
+  const copiedLink = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copiedLink).toContain("/auth/signup?ref=PARTNER2026");
+
+  await page.goto("/auth/signup?role=CLIENT&ref=PARTNER2026");
+  await expect(page.getByLabel("Referral or partner code")).toHaveValue("PARTNER2026");
+});
