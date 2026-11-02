@@ -686,6 +686,7 @@ function VendorPortal({
     includes: "",
   });
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [deletingListingId, setDeletingListingId] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     Promise.all([
@@ -811,6 +812,20 @@ function VendorPortal({
       setShowForm(false);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to save package.");
+    }
+  };
+  const deleteListing = async (listing: Listing) => {
+    if (typeof listing.id !== "string" || !window.confirm(`Delete “${listing.name}”? This cannot be undone.`)) return;
+    setDeletingListingId(listing.id);
+    setNotice("");
+    try {
+      await api(`/vendor/listings/${encodeURIComponent(listing.id)}`, { method: "DELETE" });
+      setListings((current) => current.filter((item) => item.id !== listing.id));
+      setNotice("Listing deleted.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to delete listing.");
+    } finally {
+      setDeletingListingId(null);
     }
   };
   const [vendorTab, setVendorTab] = useDashboardTab(
@@ -997,12 +1012,25 @@ function VendorPortal({
                     {listing.city || "Location not set"} ·{" "}
                     {listing.capacity || "Capacity not set"}
                   </small>
-                  <button
-                    className="ess-outline-button"
-                    onClick={() => openForm(listing)}
-                  >
-                    Edit package
-                  </button>
+                  <div className="ess-filter-row">
+                    <button
+                      className="ess-outline-button"
+                      type="button"
+                      onClick={() => openForm(listing)}
+                    >
+                      Edit package
+                    </button>
+                    {typeof listing.id === "string" && (
+                      <button
+                        className="ess-quiet-button"
+                        type="button"
+                        disabled={deletingListingId === listing.id}
+                        onClick={() => void deleteListing(listing)}
+                      >
+                        {deletingListingId === listing.id ? "Deleting…" : "Delete listing"}
+                      </button>
+                    )}
+                  </div>
                   {typeof listing.id === "string" && <VendorAvailabilityManager listingId={listing.id} />}
                 </div>
               </article>
