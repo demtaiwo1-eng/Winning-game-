@@ -445,3 +445,113 @@ button, input, select, textarea { font: inherit; }
   .ess-filter-row > button { font-size: 11px; padding-inline: 11px; }
   .ess-topbar { padding-inline: 12px; }
 }
+
+
+/* Phase 4: role workspace consistency across vendor, partner, verifier,
+   consultant, organization and platform-operations screens. */
+.ess-shell {
+  width: min(100%, 1460px);
+  min-width: 0;
+  margin-inline: auto;
+  padding: clamp(18px, 3vw, 40px) clamp(16px, 4vw, 56px);
+}
+.ess-shell > .ess-page-heading,
+.ess-shell > header.ess-page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 0 0 22px;
+}
+.ess-shell .ess-page-heading h1,
+.ess-shell > header h1 {
+  max-width: 900px;
+  margin: 4px 0 10px;
+  color: #fff;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+.ess-shell .ess-page-heading p:not(.ess-eyebrow),
+.ess-shell > header p:not(.ess-eyebrow) {
+  max-width: 760px;
+  color: #aeb8cb;
+  line-height: 1.65;
+}
+.ess-shell > .ess-panel,
+.ess-shell > section.ess-panel {
+  min-width: 0;
+  margin-block: 16px;
+  padding: clamp(16px, 2.5vw, 26px);
+  background: linear-gradient(145deg, rgba(29,35,67,.96), rgba(20,25,50,.96));
+}
+.ess-shell .ess-wallet-card,
+.ess-shell .ess-card,
+.ess-shell .ess-enquiry-card,
+.ess-shell .ess-availability-slot {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  background: rgba(255,255,255,.045);
+  padding: 15px;
+  overflow-wrap: anywhere;
+}
+.ess-shell .ess-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-block: 14px;
+}
+.ess-shell .ess-form-grid label,
+.ess-shell label {
+  min-width: 0;
+  color: #dce2ef;
+  font-size: 13px;
+  font-weight: 650;
+}
+.ess-shell input:not([type="checkbox"]):not([type="radio"]),
+.ess-shell select,
+.ess-shell textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  margin-top: 7px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 10px;
+  background: rgba(10,14,32,.72);
+  color: #f7f8ff;
+}
+.ess-shell textarea { min-height: 88px; resize: vertical; }
+.ess-shell input::placeholder,
+.ess-shell textarea::placeholder { color: #8490a8; }
+.ess-shell .ess-table-wrap,
+.ess-shell [style*="overflowX"] { max-width: 100%; overflow-x: auto; }
+.ess-shell table { width: 100%; border-collapse: collapse; }
+.ess-shell th {
+  color: #bfc8dc;
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ess-shell td { color: #e5e9f3; vertical-align: top; }
+.ess-shell th, .ess-shell td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.ess-shell .ess-muted { color: #aeb8cb; line-height: 1.6; }
+.ess-shell .ess-status { display: inline-flex; align-items: center; min-height: 26px; padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 750; }
+.ess-shell button { max-width: 100%; }
+@media (max-width: 767px) {
+  .ess-shell { padding: 20px 16px max(88px, env(safe-area-inset-bottom)); }
+  .ess-shell > .ess-page-heading,
+  .ess-shell > header.ess-page-heading { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; }
+  .ess-shell .ess-form-grid { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .ess-shell > .ess-panel,
+  .ess-shell > section.ess-panel { margin-block: 12px; padding: 16px; }
+  .ess-shell .ess-page-heading h1,
+  .ess-shell > header h1 { font-size: clamp(1.7rem, 8vw, 2.35rem); }
+}
