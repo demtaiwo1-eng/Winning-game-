@@ -3110,11 +3110,9 @@ function AuthModal({
           {error && <div className="ess-form-error">{error}</div>}
           {mode === "signup" ? (
             <div className="ess-registration-navigation">
-              {registrationStep > 0 && (
-                <button className="ess-outline-button" type="button" onClick={() => setRegistrationStep((step) => Math.max(0, step - 1))}>
-                  Back
-                </button>
-              )}
+              <button className="ess-outline-button" type="button" onClick={() => registrationStep > 0 ? setRegistrationStep((step) => Math.max(0, step - 1)) : onClose()}>
+                Back
+              </button>
               {registrationStep < 2 ? (
                 <button
                   className="ess-primary ess-full-button"
