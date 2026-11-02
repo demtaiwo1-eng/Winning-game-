@@ -1168,7 +1168,7 @@ function AffiliatePortal() {
       setNotice("Enter your referral code before copying your link.");
       return;
     }
-    const referralUrl = new URL("/", window.location.origin);
+    const referralUrl = new URL("/auth/signup", window.location.origin);
     referralUrl.searchParams.set("ref", referralCode);
     try {
       await navigator.clipboard.writeText(referralUrl.toString());
@@ -1243,11 +1243,11 @@ function AffiliatePortal() {
         </div>
         <button
           className="ess-primary"
-          onClick={() => setNotice("Affiliate preferences saved.")}
+          onClick={() => setNotice("Channel selection is local to this session; profile saving is not connected yet.")}
         >
           Preview partner profile
         </button>
-        {notice && <p className="ess-muted" role="status">Selected channel: {channel}. Profile changes are local until affiliate profile saving is connected.</p>}
+        <p className="ess-muted">Selected channel: {channel}. Profile changes remain local until affiliate profile saving is connected.</p>
       </section>
     </>
   );
@@ -1785,6 +1785,10 @@ export default function EnterpriseApp() {
   const [business, setBusiness] = useState("");
   const [registrationCategory, setRegistrationCategory] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  useEffect(() => {
+    const incomingReferralCode = new URLSearchParams(location.search).get("ref");
+    if (incomingReferralCode) setReferralCode(incomingReferralCode.slice(0, 80));
+  }, [location.search]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [vendorPhone, setVendorPhone] = useState("");
   const [vendorCity, setVendorCity] = useState("");
