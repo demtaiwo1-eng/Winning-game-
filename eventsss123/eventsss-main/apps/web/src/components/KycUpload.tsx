@@ -29,7 +29,6 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
   const [profile, setProfile] = useState<Country | null>(null);
   const [kind, setKind] = useState<"IDENTITY" | "BUSINESS">(defaultKind);
   const [primaryDocType, setPrimaryDocType] = useState("PASSPORT");
-  const [nationalId, setNationalId] = useState("");
   const [notes, setNotes] = useState("");
   const [fileName, setFileName] = useState("");
   const [base64, setBase64] = useState("");
@@ -103,7 +102,6 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
         ...({
           country,
           primaryDocType,
-          nationalId: nationalId || undefined,
           addressDocUrl: addressUrl || undefined,
           businessDocUrl: businessUrl || undefined,
         } as object),
@@ -188,16 +186,7 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
           </select>
         </label>
 
-        {profile?.nationalIdLabel && (
-          <label>
-            {profile.nationalIdLabel}
-            <input
-              value={nationalId}
-              onChange={(e) => setNationalId(e.target.value)}
-              placeholder={profile.nationalIdLabel}
-            />
-          </label>
-        )}
+}
 
         <label>
           Primary document file
