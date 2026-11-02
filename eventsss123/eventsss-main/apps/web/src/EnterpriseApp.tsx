@@ -2275,6 +2275,9 @@ export default function EnterpriseApp() {
       </header>
       <Routes>
         <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
+        {/* Auth URLs are handled by the AuthModal rendered below. Keep them out of
+            the dashboard fallback, which assumes an authenticated session. */}
+        <Route path="/auth/:mode" element={null} />
         <Route element={<DashboardRouteGuard session={session} />}>
           <Route
             path={APP_ROUTE_PATHS.dashboard}
