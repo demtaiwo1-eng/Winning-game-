@@ -55,17 +55,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ephinta-apk-${{ github.event.workflow_run.id }}
-          name: EPHINTA Android APK - Build ${{ github.event.workflow_run.run_number }}
+          name: EPHINTA Android Test APK - Build ${{ github.event.workflow_run.run_number }}
           body: |
-            Download the tested EPHINTA Android APK below.
+            Download the EPHINTA Android TEST APK below.
 
-            This build passed web checks and the Android APK build. SHA-256 checksum is included
-            for integrity verification. This is an unsigned debug APK for testing.
+            This build passed web checks and the APK build. SHA-256 checksum is included
+            for integrity verification. This is an UNSIGNED DEBUG APK for device testing only.
+            It is not a production-signed release and must not be submitted to an app store.
+            Production-signed releases are published separately by the Ephinta Production Android APK workflow.
           files: |
             release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk
             release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk.sha256
             release-assets/ephinta-web-bundle.zip
             release-assets/version.json
-          make_latest: true
+          prerelease: true
+          make_latest: false
           fail_on_unmatched_files: true
           generate_release_notes: false
