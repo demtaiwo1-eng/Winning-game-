@@ -133,6 +133,10 @@ test("registration supports back and next navigation and a review step", async (
 
   await dialog.getByRole("button", { name: "Back" }).click();
   await expect(dialog.getByLabel("Account type")).toHaveValue("CLIENT");
+  await dialog.getByRole("button", { name: "Back" }).click();
+  await expect(dialog.getByLabel("Full name")).toHaveValue("Mobile Registration Test");
+  await dialog.getByRole("button", { name: "Back" }).click();
+  await expect(dialog).toBeHidden();
 });
 
 test("sign-in displays a readable error when authentication fails", async ({
