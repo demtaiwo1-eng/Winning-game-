@@ -113,6 +113,24 @@ jobs:
             test -n "$(adb shell pidof com.ephinta.app | tr -d '\\r')"
             echo "EPHINTA installed and remained running on Android API ${{ matrix.api-level }}."
 
+      - name: Capture Android emulator diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/android-emulator-diagnostics"
+          adb devices -l > "$RUNNER_TEMP/android-emulator-diagnostics/adb-devices.txt" 2>&1 || true
+          adb shell getprop > "$RUNNER_TEMP/android-emulator-diagnostics/getprop.txt" 2>&1 || true
+          adb logcat -d -t 3000 > "$RUNNER_TEMP/android-emulator-diagnostics/logcat.txt" 2>&1 || true
+
+      - name: Upload Android emulator diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-emulator-diagnostics-api-${{ matrix.api-level }}
+          path: ${{ runner.temp }}/android-emulator-diagnostics/
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload APK for manual device testing
         if: success() && matrix.api-level == 23
         uses: actions/upload-artifact@v4
