@@ -65,6 +65,16 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
       .catch(() => setProfile(null));
   }, [country]);
 
+  const availableDocTypes = kind === "BUSINESS"
+    ? profile?.businessDocs || []
+    : profile?.identityDocs || [];
+
+  useEffect(() => {
+    if (availableDocTypes.length && !availableDocTypes.includes(primaryDocType)) {
+      setPrimaryDocType(availableDocTypes[0]);
+    }
+  }, [kind, profile, primaryDocType]);
+
   const filteredCountries = countries.filter(
     (c) =>
       !filter ||
@@ -175,7 +185,7 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
         <label>
           Primary document type
           <select value={primaryDocType} onChange={(e) => setPrimaryDocType(e.target.value)}>
-            {(profile?.identityDocs || ["PASSPORT", "NATIONAL_ID"]).map((d) => (
+            {(availableDocTypes.length ? availableDocTypes : ["PASSPORT", "NATIONAL_ID"]).map((d) => (
               <option key={d} value={d}>
                 {d.replace(/_/g, " ")}
               </option>
