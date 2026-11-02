@@ -377,6 +377,63 @@ test("role workspaces remain readable and contained on narrow mobile screens", a
 });
 
 
+test("vendor can save availability and delete only a selected listing", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "vendor-e2e", email: "vendor@example.test", name: "E2E Vendor", role: "VENDOR",
+    }));
+    localStorage.setItem("ess_access_token", "vendor-e2e-token");
+  });
+  const listing = {
+    id: "listing-vendor-e2e", title: "E2E Catering Package", description: "Food and service",
+    priceMinor: "250000", currency: "NGN", city: "Ibadan", capacity: 120,
+    status: "DRAFT", type: "SERVICE", category: { id: "cat-catering", name: "Catering" },
+  };
+  await page.route("**/api/v1/vendor/listings", async (route) => {
+    if (route.request().method() === "GET") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [listing] }) });
+    }
+    return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ listing }) });
+  });
+  await page.route("**/api/v1/vendor/categories", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify({ items: [{ id: "cat-catering", name: "Catering" }] }),
+  }));
+  await page.route("**/api/v1/vendor/metrics", (route) => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ listings: { DRAFT: 1 }, bookings: {}, enquiries: {}, reviews: { averageRating: null, count: 0 } }),
+  }));
+  await page.route("**/api/v1/vendor/listings/listing-vendor-e2e/availability", async (route) => {
+    if (route.request().method() === "GET") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }) });
+    }
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().headers().authorization).toBe("Bearer vendor-e2e-token");
+    expect(route.request().postDataJSON()).toMatchObject({ capacity: 25 });
+    return route.fulfill({
+      status: 201, contentType: "application/json",
+      body: JSON.stringify({ item: { id: "availability-e2e", startsAt: "2030-05-01T09:00:00.000Z", endsAt: "2030-05-01T17:00:00.000Z", capacity: 25 } }),
+    });
+  });
+  let deleted = false;
+  await page.route("**/api/v1/vendor/listings/listing-vendor-e2e", async (route) => {
+    expect(route.request().method()).toBe("DELETE");
+    expect(route.request().headers().authorization).toBe("Bearer vendor-e2e-token");
+    deleted = true;
+    return route.fulfill({ status: 204, body: "" });
+  });
+  await page.goto("/dashboard/vendor");
+  await expect(page.getByRole("heading", { name: "E2E Catering Package" })).toBeVisible();
+  await page.getByLabel("Starts").fill("2030-05-01T09:00");
+  await page.getByLabel("Ends").fill("2030-05-01T17:00");
+  await page.getByLabel("Capacity").fill("25");
+  await page.getByRole("button", { name: "Add time slot" }).click();
+  await expect(page.getByText(/Availability saved\./)).toBeVisible();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Delete listing" }).click();
+  await expect.poll(() => deleted).toBe(true);
+  await expect(page.getByRole("heading", { name: "E2E Catering Package" })).toHaveCount(0);
+});
+
 test("affiliate referral links copy and prefill the signup code", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.addInitScript(() => {
