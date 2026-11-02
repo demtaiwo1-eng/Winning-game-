@@ -108,6 +108,27 @@ jobs:
         run: npm run build -w apps/web
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
+          VITE_UPDATE_URL: https://github.com/${{ github.repository }}/releases/latest/download
+
+      - name: Package OTA web bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ephinta-ota"
+          (cd apps/web/dist && zip -qr "$RUNNER_TEMP/ephinta-ota/ephinta-web-bundle.zip" .)
+          VERSION="${GITHUB_SHA::12}"
+          BUNDLE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/ephinta-web-bundle.zip"
+          printf '{\n  "version": "%s",\n  "url": "%s"\n}\n' "$VERSION" "$BUNDLE_URL" > "$RUNNER_TEMP/ephinta-ota/version.json"
+          test -s "$RUNNER_TEMP/ephinta-ota/ephinta-web-bundle.zip"
+          test -s "$RUNNER_TEMP/ephinta-ota/version.json"
+
+      - name: Upload OTA web bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-web-ota-bundle
+          path: ${{ runner.temp }}/ephinta-ota/*
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload web build
         uses: actions/upload-artifact@v4
@@ -203,11 +224,13 @@ jobs:
         run: npm run build -w apps/web
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
+          VITE_UPDATE_URL: https://github.com/${{ github.repository }}/releases/latest/download
 
       - name: Sync Capacitor Android project
         shell: bash
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
+          VITE_UPDATE_URL: https://github.com/${{ github.repository }}/releases/latest/download
         run: |
           set -euo pipefail
           if npm run | grep -qE 'mobile:sync'; then
