@@ -351,16 +351,18 @@ test("role workspaces remain readable and contained on narrow mobile screens", a
     { role: "admin", heading: "Platform operations" },
   ];
 
+  await page.addInitScript(() => {
+    const role = location.pathname.split("/").pop() || "client";
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: `mobile-${role}`,
+      email: `${role}@example.test`,
+      name: "Mobile Role Tester",
+      role: role.toUpperCase(),
+    }));
+    localStorage.setItem("ess_access_token", "role-workspace-test-token");
+  });
+
   for (const item of roleCases) {
-    await page.addInitScript((role) => {
-      localStorage.setItem("ess_user", JSON.stringify({
-        id: `mobile-${role}`,
-        email: `${role}@example.test`,
-        name: "Mobile Role Tester",
-        role: role.toUpperCase(),
-      }));
-      localStorage.setItem("ess_access_token", "role-workspace-test-token");
-    }, item.role);
     await page.goto(`/dashboard/${item.role}`);
     await expect(page.getByRole("heading", { name: item.heading, exact: true })).toBeVisible();
 
