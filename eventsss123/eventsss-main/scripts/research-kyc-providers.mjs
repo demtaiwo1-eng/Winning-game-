@@ -76,7 +76,8 @@ function hasCountry(text, name) {
   const needle = normalise(name);
   if (!needle || needle.length < 3) return false;
   // Require word boundaries after normalisation to avoid partial-name matches.
-  return (` ${text} `).includes(` ${needle} `);
+  const haystack = normalise(text);
+  return (` ${haystack} `).includes(` ${needle} `);
 }
 function score(provider, exactCountryMatch, region) {
   let value = exactCountryMatch ? 65 : provider.confidence === "global-claim" ? 30 : 0;
