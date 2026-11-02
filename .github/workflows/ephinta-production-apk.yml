@@ -76,6 +76,18 @@ jobs:
       - name: Sync Capacitor Android project
         run: npm run sync -w apps/mobile
 
+      - name: Package OTA web bundle and version manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ephinta-production"
+          (cd apps/web/dist && zip -qr "$RUNNER_TEMP/ephinta-production/ephinta-web-bundle.zip" .)
+          VERSION="${GITHUB_SHA::12}"
+          BUNDLE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/ephinta-web-bundle.zip"
+          printf '{\n  "version": "%s",\n  "url": "%s"\n}\n' "$VERSION" "$BUNDLE_URL" > "$RUNNER_TEMP/ephinta-production/version.json"
+          test -s "$RUNNER_TEMP/ephinta-production/ephinta-web-bundle.zip"
+          test -s "$RUNNER_TEMP/ephinta-production/version.json"
+
       - name: Restore and validate production signing keystore
         shell: bash
         env:
@@ -160,6 +172,8 @@ jobs:
           files: |
             ${{ runner.temp }}/ephinta-production/ephinta-production.apk
             ${{ runner.temp }}/ephinta-production/SHA256SUMS.txt
+            ${{ runner.temp }}/ephinta-production/ephinta-web-bundle.zip
+            ${{ runner.temp }}/ephinta-production/version.json
           make_latest: true
           prerelease: false
           fail_on_unmatched_files: true
