@@ -186,8 +186,6 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
           </select>
         </label>
 
-}
-
         <label>
           Primary document file
           <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(e) => onFile(e.target.files?.[0] || null)} />
