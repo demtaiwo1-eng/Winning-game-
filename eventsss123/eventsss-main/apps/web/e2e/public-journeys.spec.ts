@@ -437,6 +437,9 @@ test("vendor can save availability and delete only a selected listing", async ({
 test("affiliate referral links copy and prefill the signup code", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.addInitScript(() => {
+    // Seed the affiliate session only for the dashboard navigation. Do not
+    // recreate it when the same browser later opens the public referral URL.
+    if (location.pathname !== "/dashboard/affiliate") return;
     localStorage.setItem("ess_user", JSON.stringify({
       id: "affiliate-e2e", email: "affiliate@example.test", name: "E2E Affiliate", role: "AFFILIATE",
     }));
