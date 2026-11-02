@@ -814,6 +814,20 @@ function VendorPortal({
       setNotice(error instanceof Error ? error.message : "Unable to save package.");
     }
   };
+  const exportVendorRequests = () => {
+    const escapeCell = (value: string) => '"' + value.replace(/"/g, '""') + '"';
+    const rows = [
+      ["Event", "Service", "Location", "Amount", "Status"],
+      ...gigs.map((gig) => [gig.event, gig.service, gig.location, gig.amount, gig.status]),
+    ];
+    const csv = rows.map((row) => row.map(escapeCell).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ephinta-vendor-requests.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
   const deleteListing = async (listing: Listing) => {
     if (typeof listing.id !== "string" || !window.confirm(`Delete “${listing.name}”? This cannot be undone.`)) return;
     setDeletingListingId(listing.id);
@@ -942,30 +956,10 @@ function VendorPortal({
                     <td>
                       <StatusPill status={gig.status} />
                     </td>
-                    <td>
-                      <button
-                        className="ess-row-action"
-                        onClick={() =>
-                          setGigs((current) =>
-                            current.map((item) =>
-                              item.id === gig.id
-                                ? {
-                                    ...item,
-                                    status:
-                                      item.status === "Pending"
-                                        ? "Confirmed"
-                                        : item.status,
-                                  }
-                                : item,
-                            ),
-                          )
-                        }
-                      >
-                        {gig.status === "Pending" ? "Confirm" : "Open"}
-                      </button>
-                    </td>
+                    <td><span className="ess-muted">View booking details in Wallet & escrow</span></td>
                   </tr>
                 ))}
+                {gigs.length === 0 && <tr><td colSpan={6} className="ess-muted">No event gig requests are connected to this workspace yet. Customer enquiries are available under Enquiries & messages.</td></tr>}
               </tbody>
             </table>
           </div>
