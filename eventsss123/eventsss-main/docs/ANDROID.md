@@ -5,7 +5,7 @@ The active root-level Android pipeline has two delivery lanes:
 1. **Verified APK and OTA release:** `.github/workflows/ephinta-build-apk.yml` runs the API/web checks, database integration tests, and Android build. It also packages the web build as an OTA bundle and creates a version manifest. After the workflow succeeds on the default branch, `.github/workflows/ephinta-apk-download.yml` publishes the exact tested APK, checksum, web bundle, and `version.json` together in a GitHub Release.
 2. **Native Android changes:** changes to Android/Capacitor native code, permissions, plugins, or signing still require a newly built APK and a normal install/update. OTA delivery replaces only the web UI and web logic.
 
-The OTA endpoint is derived in CI as `https://github.com/<owner>/<repository>/releases/latest/download`. GitHub Pages is not required for this release-based delivery path.
+The app checks the CORS-enabled API proxy at `https://ephinta-wss.onrender.com/api/v1/app-updates`. The API reads the latest GitHub Release server-side and streams the versioned web bundle to the app, avoiding browser CORS restrictions on GitHub release assets. GitHub Pages is not required.
 
 ## Required repository configuration
 
@@ -15,7 +15,7 @@ Set these GitHub Actions repository variables/secrets:
 
 - `VITE_API_URL` — production HTTPS API base, for example `https://api.example.com/api/v1`.
 - The API URL must serve `/health` and `/ready`; `/ready` must be connected to the database used by the deployed app. Web builds and APKs use this URL, while API calls continue through the server (the APK must never connect directly to PostgreSQL).
-- `VITE_UPDATE_URL` is injected automatically by the verified APK workflow as the repository's latest GitHub Release download endpoint; no manual variable is required for that workflow.
+- `VITE_UPDATE_URL` is injected automatically by the verified APK workflow as the EPHINTA API update-proxy URL; no manual variable is required for that workflow.
 - `ANDROID_CERT_SHA256` — SHA-256 certificate fingerprint of the production signing key.
 
 ### Secrets
