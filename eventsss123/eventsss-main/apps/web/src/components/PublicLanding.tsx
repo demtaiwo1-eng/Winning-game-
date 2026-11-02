@@ -1135,7 +1135,7 @@ export default function PublicLanding({
 
             {authMode === 'signup' ? (
               <div className="eph-registration-navigation">
-                {registrationStep > 0 && <button type="button" className="eph-btn eph-btn-outline" onClick={() => setRegistrationStep(step => Math.max(0, step - 1))}>Back</button>}
+                <button type="button" className="eph-btn eph-btn-outline" onClick={() => registrationStep > 0 ? setRegistrationStep(step => Math.max(0, step - 1)) : setAuthMode(null)}>Back</button>
                 {registrationStep < 2 ? (
                   <button type="button" className="eph-btn eph-btn-purple eph-planner-submit" onClick={event => {
                     const formElement = event.currentTarget.form;
