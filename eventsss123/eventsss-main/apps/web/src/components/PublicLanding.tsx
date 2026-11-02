@@ -1150,13 +1150,7 @@ export default function PublicLanding({
             )}
           </form>
 
-          <div className="eph-auth-switch">{authMode === 'signin' ? <>Forgot password? <button onClick={() => { setAuthMode('forgot'); setRegistrationStep(0); setError(''); setNotice(''); }}>Reset it</button><br />New to EPHINTA? <button onClick={() => { setAuthMode('signup'); setRegistrationStep(0); setError(''); setNotice(''); }}>Create an account</button></> : <>Already have an account? <button onClick={() => { setAuthMode('signin'); setRegistrationStep(0); setError(''); setNotice(''); }}>Sign in</button>
-
-      </>}
-
-
-
-</>}</div>
+          <div className="eph-auth-switch">{authMode === 'signin' ? <>Forgot password? <button onClick={() => { setAuthMode('forgot'); setRegistrationStep(0); setError(''); setNotice(''); }}>Reset it</button><br />New to EPHINTA? <button onClick={() => { setAuthMode('signup'); setRegistrationStep(0); setError(''); setNotice(''); }}>Create an account</button></> : <>Already have an account? <button onClick={() => { setAuthMode('signin'); setRegistrationStep(0); setError(''); setNotice(''); }}>Sign in</button></>}</div>
 
         </section>
 
