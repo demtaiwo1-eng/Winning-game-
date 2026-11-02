@@ -1096,6 +1096,7 @@ function VendorPortal({
                 Category
                 <select
                   value={form.category}
+                  disabled={Boolean(editing)}
                   onChange={(event) =>
                     setForm({ ...form, category: event.target.value })
                   }
@@ -1109,6 +1110,7 @@ function VendorPortal({
                 Currency
                 <select
                   value={form.currency}
+                  disabled={Boolean(editing)}
                   onChange={(event) =>
                     setForm({ ...form, currency: event.target.value })
                   }
@@ -1152,41 +1154,7 @@ function VendorPortal({
                   required
                 />
               </label>
-              <label>
-                Lead time
-                <input
-                  value={form.leadTime}
-                  onChange={(event) =>
-                    setForm({ ...form, leadTime: event.target.value })
-                  }
-                  placeholder="7 days"
-                  required
-                />
-              </label>
-              <label>
-                Visibility
-                <select
-                  value={form.status}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      status: event.target.value as "Live" | "Draft",
-                    })
-                  }
-                >
-                  <option>Draft</option>
-                </select>
-              </label>
-              <label>
-                Portfolio visual token
-                <input
-                  value={form.image}
-                  onChange={(event) =>
-                    setForm({ ...form, image: event.target.value })
-                  }
-                  placeholder="📸"
-                />
-              </label>
+              {editing && <p className="ess-muted">Category and currency are fixed after creation. New listings are always saved as drafts for review.</p>}
             </div>
             <button className="ess-primary" type="submit">
               Save complete package
