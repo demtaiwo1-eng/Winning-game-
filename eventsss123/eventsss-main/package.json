@@ -29,7 +29,8 @@
     "dev:api": "npm run dev -w apps/api",
     "dev:web": "npm run dev -w apps/web",
     "web:preview": "npm run dev -w apps/web -- --host 0.0.0.0 --port 5173",
-    "web:check": "npm run test -w apps/web && npm run build -w apps/web"
+    "web:check": "npm run test -w apps/web && npm run build -w apps/web",
+    "kyc:research": "node scripts/research-kyc-providers.mjs"
   },
   "devDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.65.1",
