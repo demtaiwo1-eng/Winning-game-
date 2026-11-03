@@ -90,7 +90,7 @@ for (const portal of portals) {
     await page.getByLabel("Email").fill(portal.email);
     await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
     const loginRequest = page.waitForRequest((request) => request.method() === "POST" && request.url().includes("/auth/login"), { timeout: 15_000 });
-    await page.locator("form").getByLabel("Password").press("Enter");
+    await page.getByRole("textbox", { name: "Password" }).press("Enter");
     await loginRequest;
 
     await expect(page).toHaveURL(new RegExp(`/dashboard/${portal.role.toLowerCase()}$`));
@@ -139,7 +139,7 @@ test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", a
   await page.getByLabel("Email").fill(client.email);
   await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
   const loginRequest = page.waitForRequest((request) => request.method() === "POST" && request.url().includes("/auth/login"), { timeout: 15_000 });
-  await page.locator("form").getByLabel("Password").press("Enter");
+  await page.getByRole("textbox", { name: "Password" }).press("Enter");
   await loginRequest;
   await expect(page.getByRole("heading", { name: client.heading }).first()).toBeVisible();
   const clientWidth = await page.evaluate(() => document.documentElement.scrollWidth);
