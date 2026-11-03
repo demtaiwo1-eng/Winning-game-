@@ -282,6 +282,15 @@ test("branded startup splash appears and clears after the app shell is ready", a
 });
 
 
+test("music player respects a saved sound-off choice after reload", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("ephinta:sound", "off"));
+  await page.goto("/");
+  const player = page.getByRole("region", { name: "EPHINTA music player" });
+  await expect(player).toBeVisible();
+  await expect(player.getByRole("button", { name: "Play music" })).toBeVisible();
+  await expect(player.locator("audio")).toHaveJSProperty("paused", true);
+});
+
 test("production app plays bundled music or explains the browser gesture fallback", async ({ page }) => {
   await page.goto("/");
   const player = page.getByRole("region", { name: "EPHINTA music player" });
