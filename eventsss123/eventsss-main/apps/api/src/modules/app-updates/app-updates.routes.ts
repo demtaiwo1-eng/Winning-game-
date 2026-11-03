@@ -1,7 +1,7 @@
 import { Readable } from "node:stream";
 import { Router } from "express";
 
-const GITHUB_RELEASE_API = "https://api.github.com/repos/demtaiwo1-eng/Winning-game-/releases/latest";
+const GITHUB_RELEASE_API = "https://api.github.com/repos/demtaiwo1-eng/Winning-game-/releases/tags/ephinta-web-latest";
 const CACHE_MS = 60_000;
 
 type ReleaseAsset = { name: string; browser_download_url: string; size?: number };
@@ -9,7 +9,7 @@ type ReleaseInfo = { assets?: ReleaseAsset[] };
 
 let cachedAssets: { expiresAt: number; assets: ReleaseAsset[] } | undefined;
 
-async function latestAssets(): Promise<ReleaseAsset[]> {
+async function otaAssets(): Promise<ReleaseAsset[]> {
   if (cachedAssets && cachedAssets.expiresAt > Date.now()) return cachedAssets.assets;
 
   const response = await fetch(GITHUB_RELEASE_API, {
@@ -26,15 +26,15 @@ async function latestAssets(): Promise<ReleaseAsset[]> {
   const assets = Array.isArray(release.assets) ? release.assets : [];
   if (!assets.some((asset) => asset.name === "version.json") ||
       !assets.some((asset) => asset.name === "ephinta-web-bundle.zip")) {
-    throw new Error("Latest EPHINTA release is missing its OTA assets");
+    throw new Error("The EPHINTA OTA release is missing its required assets");
   }
 
   cachedAssets = { expiresAt: Date.now() + CACHE_MS, assets };
   return assets;
 }
 
-async function fetchLatestAsset(name: string): Promise<Response> {
-  const assets = await latestAssets();
+async function fetchOtaAsset(name: string): Promise<Response> {
+  const assets = await otaAssets();
   const asset = assets.find((item) => item.name === name);
   if (!asset) throw new Error(`OTA asset not found: ${name}`);
   const assetUrl = new URL(asset.browser_download_url);
@@ -60,7 +60,7 @@ export const appUpdatesRouter = Router();
 
 appUpdatesRouter.get("/version.json", async (_req, res) => {
   try {
-    const response = await fetchLatestAsset("version.json");
+    const response = await fetchOtaAsset("version.json");
     const raw = await response.text();
     const manifest = JSON.parse(raw) as { version?: unknown };
     if (typeof manifest.version !== "string" || !/^[a-zA-Z0-9._-]{1,64}$/.test(manifest.version)) {
@@ -76,7 +76,7 @@ appUpdatesRouter.get("/version.json", async (_req, res) => {
 
 appUpdatesRouter.get("/ephinta-web-bundle.zip", async (_req, res) => {
   try {
-    const response = await fetchLatestAsset("ephinta-web-bundle.zip");
+    const response = await fetchOtaAsset("ephinta-web-bundle.zip");
     res.status(200);
     res.setHeader("Content-Type", "application/zip");
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
