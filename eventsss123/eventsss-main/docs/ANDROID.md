@@ -24,6 +24,7 @@ Set these GitHub Actions repository variables/secrets:
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
+- `GOOGLE_SERVICES_JSON_BASE64` — optional base64-encoded Firebase `google-services.json` for package `com.ephinta.app`; without it, Android push notifications are not configured.
 
 The post-build publisher updates the dedicated `ephinta-web-latest` OTA release with `ephinta-web-bundle.zip` and `version.json`; the debug APK remains in its own test prerelease.
 
