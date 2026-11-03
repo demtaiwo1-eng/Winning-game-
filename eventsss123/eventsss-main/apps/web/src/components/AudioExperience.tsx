@@ -26,6 +26,8 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [message, setMessage] = useState("Music is off. Tap Play when you are ready.");
   const [needsGesture, setNeedsGesture] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [soundPreferenceLoaded, setSoundPreferenceLoaded] = useState(false);
+  const [autoPlayEnabled, setAutoPlayEnabled] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const autoAttempted = useRef(false);
   const continuePlayback = useRef(false);
@@ -38,7 +40,9 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       if (Number.isFinite(savedVolume) && savedVolume >= 0 && savedVolume <= 0.7) setVolume(savedVolume);
       const savedTrack = Number(localStorage.getItem("ephinta:music-track"));
       if (Number.isInteger(savedTrack) && savedTrack >= 0 && savedTrack < TRACKS.length) setTrackIndex(savedTrack);
+      if (localStorage.getItem("ephinta:sound") === "off") setAutoPlayEnabled(false);
     } catch { /* Storage may be unavailable in private browsing. */ }
+    finally { setSoundPreferenceLoaded(true); }
   }, []);
 
   useEffect(() => {
@@ -59,7 +63,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         setNeedsGesture(true);
         setMessage("Tap Play to continue to the next track.");
       });
-    } else if (autoPlay && !autoAttempted.current) {
+    } else if (autoPlay && soundPreferenceLoaded && autoPlayEnabled && !autoAttempted.current) {
       autoAttempted.current = true;
       void audio.play().then(() => {
         setPlaying(true);
@@ -70,7 +74,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         setMessage("Your browser blocked automatic playback. Tap Play to start the music.");
       });
     }
-  }, [audioUrl, selectedTrack.src, autoPlay]);
+  }, [audioUrl, selectedTrack.src, autoPlay, soundPreferenceLoaded, autoPlayEnabled]);
 
   useEffect(() => {
     try {
@@ -100,6 +104,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       setPlaying(true);
       setNeedsGesture(false);
       setMessage("Music is playing.");
+      setAutoPlayEnabled(true);
       try { localStorage.setItem("ephinta:sound", "on"); } catch {}
     } catch (error) {
       setPlaying(false);
@@ -114,6 +119,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   function pause() {
     audioRef.current?.pause();
     setPlaying(false);
+    setAutoPlayEnabled(false);
     setMessage("Music paused.");
     try { localStorage.setItem("ephinta:sound", "off"); } catch {}
   }
