@@ -28,6 +28,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [expanded, setExpanded] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const autoAttempted = useRef(false);
+  const continuePlayback = useRef(false);
   const selectedTrack = TRACKS[trackIndex];
   const playlistUrl = safeEphintaPlaylistUrl(EPHINTA_MUSIC.playlistUrl);
 
@@ -47,7 +48,18 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     audio.src = audioUrl || selectedTrack.src;
     audio.load();
     setPlaying(false);
-    if (autoPlay && !autoAttempted.current) {
+    if (continuePlayback.current) {
+      continuePlayback.current = false;
+      void audio.play().then(() => {
+        setPlaying(true);
+        setNeedsGesture(false);
+        setMessage("Playing the next track.");
+      }).catch(() => {
+        setPlaying(false);
+        setNeedsGesture(true);
+        setMessage("Tap Play to continue to the next track.");
+      });
+    } else if (autoPlay && !autoAttempted.current) {
       autoAttempted.current = true;
       void audio.play().then(() => {
         setPlaying(true);
@@ -118,7 +130,11 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         ref={audioRef}
         src={audioUrl || selectedTrack.src}
         preload="metadata"
-        onEnded={() => changeTrack(trackIndex + 1)}
+        onEnded={() => {
+          continuePlayback.current = true;
+          setTrackIndex((current) => (current + 1) % TRACKS.length);
+          setMessage("Loading the next track…");
+        }}
         onError={() => { setPlaying(false); setMessage("This track is unavailable. Choose another track or open the playlist."); }}
       />
       <div className="eph-audio__heading">
