@@ -16,6 +16,8 @@ jobs:
     timeout-minutes: 45
     env:
       EPHINTA_TEST_API_URL: ${{ secrets.EPHINTA_TEST_API_URL }}
+      EPHINTA_TEST_ACCOUNT_EMAIL: ${{ secrets.EPHINTA_TEST_ACCOUNT_EMAIL }}
+      EPHINTA_TEST_ACCOUNT_PASSWORD: ${{ secrets.EPHINTA_TEST_ACCOUNT_PASSWORD }}
       VITE_API_URL: ${{ vars.VITE_API_URL }}
       EPHINTA_TEST_ACCOUNT_EMAIL: ${{ secrets.EPHINTA_TEST_ACCOUNT_EMAIL }}
       EPHINTA_TEST_ACCOUNT_PASSWORD: ${{ secrets.EPHINTA_TEST_ACCOUNT_PASSWORD }}
@@ -30,6 +32,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: gradle
+          cache-dependency-path: eventsss123/eventsss-main/apps/mobile/android/**/*.gradle*
       - name: Configure preinstalled Android SDK
         run: |
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
