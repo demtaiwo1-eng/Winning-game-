@@ -582,7 +582,7 @@ paymentsRouter.post(
     const initialPaymentRaw = req.body.initialPaymentMinor === undefined
       ? total.toString()
       : String(req.body.initialPaymentMinor);
-    if (!/^[1-9]\\d*$/.test(initialPaymentRaw)) {
+    if (!/^[1-9]\d*$/.test(initialPaymentRaw)) {
       throw new HttpError(400, "INVALID_INITIAL_PAYMENT", "initialPaymentMinor must be a positive whole number");
     }
     const initialPayment = BigInt(initialPaymentRaw);
@@ -748,7 +748,7 @@ paymentsRouter.post(
   asyncHandler(async (req, res) => {
     const amountRaw = String(req.body.amountMinor ?? "");
     const reason = String(req.body.reason ?? "").trim();
-    if (!/^[1-9]\\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive whole number");
+    if (!/^[1-9]\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive whole number");
     if (reason.length < 8 || reason.length > 500) throw new HttpError(400, "INVALID_REASON", "Explain the requested essentials or milestone (8–500 characters)");
     const booking = await prisma.booking.findUnique({
       where: { id: req.params.id },
