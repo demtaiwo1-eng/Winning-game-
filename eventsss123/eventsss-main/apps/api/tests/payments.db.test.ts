@@ -80,6 +80,17 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect(walletAfterReplay.availableMinor).toBe(80000n);
       expect(walletAfterReplay.escrowMinor).toBe(20000n);
 
+      const concurrentRequests = await Promise.all([
+        request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
+          .set(auth(vendor.token)).send({ amountMinor: "45000", reason: "Concurrent essential materials request A" }),
+        request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
+          .set(auth(vendor.token)).send({ amountMinor: "45000", reason: "Concurrent essential materials request B" }),
+      ]);
+      expect(concurrentRequests.map((response) => response.status).sort()).toEqual([201, 409]);
+      const reservedRequest = concurrentRequests.find((response) => response.status === 201)!.body.request;
+      expect((await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests/${reservedRequest.id}/reject`)
+        .set(auth(planner.token)).send({})).status).toBe(200);
+
       const firstRequest = await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
         .set(auth(vendor.token)).send({ amountMinor: "30000", reason: "Purchase essential catering ingredients" });
       expect(firstRequest.status).toBe(201);
