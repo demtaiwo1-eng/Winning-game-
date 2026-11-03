@@ -9,6 +9,7 @@ import {
   ListingStatus,
   PaymentStatus,
   Prisma,
+  type BookingPaymentRequest,
 } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { prisma } from "../../lib/prisma";
@@ -761,13 +762,31 @@ paymentsRouter.post(
   asyncHandler(async (req, res) => {
     const amountRaw = String(req.body.amountMinor ?? "");
     const reason = String(req.body.reason ?? "").trim();
-    if (!/^[1-9]\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive whole number");
+    if (!/^[1-9]\\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive whole number");
     if (reason.length < 8 || reason.length > 500) throw new HttpError(400, "INVALID_REASON", "Explain the requested essentials or milestone (8–500 characters)");
     const amountMinor = BigInt(amountRaw);
+    const suppliedKey = req.body.idempotencyKey;
+    if (suppliedKey !== undefined && (typeof suppliedKey !== "string" || suppliedKey.length < 8 || suppliedKey.length > 100)) {
+      throw new HttpError(400, "INVALID_IDEMPOTENCY_KEY", "idempotencyKey must contain 8–100 characters");
+    }
+    const idempotencyKey = `booking-payment-request:${req.user!.id}:${req.params.id}:${suppliedKey || randomUUID()}`;
+    const replay = (existing: BookingPaymentRequest) => {
+      if (
+        existing.bookingId !== req.params.id ||
+        existing.requestedById !== req.user!.id ||
+        existing.amountMinor !== amountMinor ||
+        existing.reason !== reason
+      ) {
+        throw new HttpError(409, "IDEMPOTENCY_CONFLICT", "This request key was already used with different payment details");
+      }
+      return { request: existing, alreadyProcessed: true };
+    };
 
-    let paymentRequest;
+    let outcome: { request: BookingPaymentRequest; alreadyProcessed: boolean };
     try {
-      paymentRequest = await prisma.$transaction(async (tx) => {
+      outcome = await prisma.$transaction(async (tx) => {
+        const existing = await tx.bookingPaymentRequest.findUnique({ where: { idempotencyKey } });
+        if (existing) return replay(existing);
         const booking = await tx.booking.findUnique({
           where: { id: req.params.id },
           include: { vendor: { select: { userId: true } } },
@@ -783,17 +802,32 @@ paymentsRouter.post(
         });
         const remaining = booking.totalMinor - booking.paidMinor - (pending._sum.amountMinor ?? 0n);
         if (amountMinor > remaining) throw new HttpError(409, "AMOUNT_EXCEEDS_REMAINING", "Requested amount exceeds the unpaid booking balance");
-        return tx.bookingPaymentRequest.create({
-          data: { bookingId: booking.id, requestedById: req.user!.id, amountMinor, reason },
+        const request = await tx.bookingPaymentRequest.create({
+          data: { bookingId: booking.id, requestedById: req.user!.id, amountMinor, reason, idempotencyKey },
         });
+        return { request, alreadyProcessed: false };
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     } catch (error) {
-      if (typeof error === "object" && error !== null && "code" in error && error.code === "P2034") {
-        throw new HttpError(409, "BOOKING_BALANCE_CHANGED", "Another payment request was submitted at the same time. Refresh the booking and try again.");
+      const code = typeof error === "object" && error !== null && "code" in error ? error.code : null;
+      if (code === "P2002" || code === "P2034") {
+        const existing = await prisma.bookingPaymentRequest.findUnique({ where: { idempotencyKey } });
+        if (existing) {
+          const result = replay(existing);
+          return res.status(200).json({
+            request: { ...result.request, amountMinor: result.request.amountMinor.toString() },
+            alreadyProcessed: true,
+          });
+        }
+        if (code === "P2034") {
+          throw new HttpError(409, "BOOKING_BALANCE_CHANGED", "Another payment request was submitted at the same time. Refresh the booking and try again.");
+        }
       }
       throw error;
     }
-    res.status(201).json({ request: { ...paymentRequest, amountMinor: paymentRequest.amountMinor.toString() } });
+    res.status(outcome.alreadyProcessed ? 200 : 201).json({
+      request: { ...outcome.request, amountMinor: outcome.request.amountMinor.toString() },
+      alreadyProcessed: outcome.alreadyProcessed,
+    });
   }),
 );
 
