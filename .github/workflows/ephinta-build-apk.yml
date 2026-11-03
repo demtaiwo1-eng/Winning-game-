@@ -117,7 +117,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/ephinta-ota"
           (cd apps/web/dist && zip -qr "$RUNNER_TEMP/ephinta-ota/ephinta-web-bundle.zip" .)
           VERSION="${GITHUB_SHA::12}"
-          BUNDLE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/ephinta-web-bundle.zip"
+          BUNDLE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/ephinta-web-latest/ephinta-web-bundle.zip"
           printf '{\n  "version": "%s",\n  "url": "%s"\n}\n' "$VERSION" "$BUNDLE_URL" > "$RUNNER_TEMP/ephinta-ota/version.json"
           test -s "$RUNNER_TEMP/ephinta-ota/ephinta-web-bundle.zip"
           test -s "$RUNNER_TEMP/ephinta-ota/version.json"
