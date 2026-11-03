@@ -3047,7 +3047,7 @@ function AuthModal({
                       onBlur={() => touch("password")}
                       placeholder={PASSWORD_HELPER}
                       required
-                      minLength={PASSWORD_MIN_LENGTH}
+                      minLength={mode === "signup" ? PASSWORD_MIN_LENGTH : undefined}
                       maxLength={PASSWORD_MAX_LENGTH}
                       style={{ flex: 1, minWidth: 0 }}
                       aria-invalid={Boolean(fieldError("password", password))}
