@@ -233,6 +233,38 @@ test("landing-page sign-in explains incorrect passwords and accepts legacy passw
   await expect(dialog.locator(".eph-auth-error")).toContainText("Forgot password");
 });
 
+test("switching from registration to sign-in clears signup-only password validation", async ({ page }) => {
+  await page.route("**/api/v1/auth/login", async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({ error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password" } }),
+    });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: "Create customer account" }).click();
+  const dialog = page.locator("#eph-auth-dialog");
+  await dialog.getByLabel("Full name").fill("Password Mode Switch Test");
+  await dialog.getByLabel("Email address").fill("switch@example.test");
+  const signupPassword = dialog.getByLabel("Password");
+  await signupPassword.fill("short");
+  await expect(signupPassword).toHaveAttribute("minlength", "8");
+  await expect(signupPassword).toHaveJSProperty("validity.valid", false);
+
+  await dialog.locator(".eph-auth-switch").getByRole("button", { name: "Sign in" }).click();
+  await expect(dialog.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+  const signinPassword = dialog.getByLabel("Password");
+  await expect(signinPassword).not.toHaveAttribute("minlength");
+  await expect(signinPassword).toHaveValue("");
+  await signinPassword.fill("short");
+  await dialog.getByRole("button", { name: "Sign in" }).click();
+
+  await expect(dialog.locator(".eph-auth-error")).toContainText("That email and password do not match");
+});
+
 test("music dock fits the phone screen and exposes playback controls @mobile", async ({ page }) => {
   await page.goto("/");
   const player = page.getByRole("region", { name: "EPHINTA music player" });
