@@ -796,7 +796,8 @@ function VendorPortal({
             city: form.city.trim(),
             capacity: form.capacity ? Number(form.capacity) : undefined,
           }),
-        });        const item = result.listing;
+        });
+        const item = result.listing;
         setListings((current) => current.map((existing) => existing.id === editing.id ? {
           ...existing, id: item.id, name: item.title, category: item.category?.name || existing.category,
           price: String(Number(item.priceMinor) / 100), currency: item.currency,
@@ -1596,7 +1597,8 @@ function AdminControlsPanel() {
         <label>Currency<select value={currency} onChange={(event) => setCurrency(event.target.value)}><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="USD">USD</option></select></label>
         <div><button className="ess-primary-button" type="submit" disabled={working !== "" || entityId.trim().length === 0 || reason.trim().length < 8}>{working === "create" ? "Submitting…" : "Submit approval request"}</button></div>
       </form>
-      <h3>Approval queue · {approvals.length} recent</h3>      {approvals.length ? <div style={{ display: "grid", gap: 10 }}>
+      <h3>Approval queue · {approvals.length} recent</h3>
+      {approvals.length ? <div style={{ display: "grid", gap: 10 }}>
         {approvals.map((item) => <article className="ess-card" key={item.id}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
             <strong>{item.action.replace(/_/g, " ")} · {item.status}</strong>
@@ -2396,7 +2398,8 @@ function ResetPasswordPage({ token }: { token: string }) {
                   onToggle={() => setPasswordVisible((visible) => !visible)}
                 />
               </div>
-              <PasswordRuleChecklist password={password} />            </div>
+              <PasswordRuleChecklist password={password} />
+            </div>
             {feedback && <div className="ess-form-error">{feedback}</div>}
             <button className="ess-primary ess-full-button" type="submit">
               Update password
