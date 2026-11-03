@@ -50,7 +50,7 @@ function inspect(file) {
     if (inaccessibleClickTargets.length) {
       warn(relative + ": review clickable div/span semantics and keyboard support");
     }
-    if (/href\s*=\s*["']#["']/.test(uncommented)) warn(relative + ": placeholder hash link detected");
+    if (/href\s*=\s*["']#["']/.test(executableSource)) warn(relative + ": placeholder hash link detected");
     if (/(?:\/\/|\/\*|\*|<!--)\s*(?:TODO|FIXME|IMPLEMENT LATER)\b/i.test(source)) {
       warn(relative + ": unfinished-work marker detected");
     }
