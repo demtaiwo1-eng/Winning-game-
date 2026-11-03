@@ -35,6 +35,9 @@ npm run db:deploy -w apps/api
 printf '\n==> Run API checks and web unit/regression tests\n'
 npm run check
 
+printf '\n==> Run EPHINTA frontend design-quality audit\n'
+npm run design:audit -w apps/web
+
 printf '\n==> Run API database integration tests\n'
 npm run test:db -w apps/api
 
