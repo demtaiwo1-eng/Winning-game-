@@ -200,3 +200,12 @@
 @media (prefers-reduced-motion: reduce) {
   .eph-landing *, .ess-app * { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Keep controls clear of the fixed authenticated workspace header when
+   browser focus/scrollIntoView brings an off-screen control into view. */
+.ess-app button,
+.ess-app a,
+.ess-portal-stack button,
+.ess-portal-stack a {
+  scroll-margin-block-start: 104px;
+}
