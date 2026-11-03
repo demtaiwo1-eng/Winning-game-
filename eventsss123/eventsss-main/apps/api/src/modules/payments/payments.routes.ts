@@ -604,7 +604,10 @@ paymentsRouter.post(
               include: { items: true },
             })
           : null;
-        if (existingBooking) return existingBooking;
+        if (existingBooking) {
+          if (existingBooking.totalMinor === total && existingBooking.paidMinor === initialPayment) return existingBooking;
+          throw new HttpError(409, "IDEMPOTENCY_CONFLICT", "This booking key was reused with different payment details");
+        }
         throw new HttpError(409, "IDEMPOTENCY_CONFLICT", "This booking key was already used for another operation");
       }
 
