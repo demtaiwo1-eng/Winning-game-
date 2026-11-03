@@ -120,7 +120,7 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       const serviceCheck = await prisma.eventServiceCheck.findFirst({ where: { eventId, bookingId: booking.id } });
       expect(serviceCheck).toBeTruthy();
       const confirmation = await request(app).patch(`/api/v1/readiness/checks/${serviceCheck!.id}`)
-        .set(auth(verifier.token)).send({ status: "GREEN", note: "Service delivered and checked by assigned verifier" });
+        .set(auth(verifier.token)).send({ status: "GREEN", notes: "Service delivered and checked by assigned verifier" });
       expect(confirmation.status).toBe(200);
       expect(confirmation.body.check.status).toBe("GREEN");
       const finalized = await request(app).post(`/api/v1/readiness/events/${eventId}/finalize`).set(auth(verifier.token)).send({});
