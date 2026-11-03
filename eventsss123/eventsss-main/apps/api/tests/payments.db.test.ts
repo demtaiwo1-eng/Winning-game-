@@ -70,6 +70,13 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect(booking.status).toBe("PENDING");
       expect(booking.paidMinor).toBe("20000");
       expect(booking.totalMinor).toBe("100000");
+      const replay = await request(app).post("/api/v1/payments/book").set(auth(planner.token))
+        .send({ listingId: listing.id, eventId, quantity: 1, initialPaymentMinor: "20000", idempotencyKey: `initial-${eventId}` });
+      expect(replay.status).toBe(201);
+      expect(replay.body.booking.id).toBe(booking.id);
+      const walletAfterReplay = await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
+      expect(walletAfterReplay.availableMinor).toBe(80000n);
+      expect(walletAfterReplay.escrowMinor).toBe(20000n);
 
       const firstRequest = await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
         .set(auth(vendor.token)).send({ amountMinor: "30000", reason: "Purchase essential catering ingredients" });
