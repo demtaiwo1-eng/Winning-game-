@@ -40,6 +40,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   const [eventDepositTotal, setEventDepositTotal] = useState("0");
   const [bookingPaymentsHeld, setBookingPaymentsHeld] = useState("0");
   const [depositAmount, setDepositAmount] = useState("");
+  const [depositIdempotencyKey, setDepositIdempotencyKey] = useState("");
   const [paymentRequests, setPaymentRequests] = useState<Record<string, PaymentRequest[]>>({});
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [readiness, setReadiness] = useState<ReadinessData | null>(null);
@@ -139,14 +140,16 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
     }
     setBusy(true); setError(""); setNotice("");
     try {
-      const idempotencyKey = typeof crypto !== "undefined" && "randomUUID" in crypto
+      const idempotencyKey = depositIdempotencyKey || (typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
-        : `event-deposit-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        : `event-deposit-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      setDepositIdempotencyKey(idempotencyKey);
       const result = await paymentsApi.eventDeposit(eventId, {
         amountMinor: String(Math.round(amount * 100)), idempotencyKey,
       });
       setNotice(result.alreadyProcessed ? "This event deposit was already recorded." : "Event deposit transferred into protected event escrow.");
       setDepositAmount("");
+      setDepositIdempotencyKey("");
       await refresh();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to record event deposit."); }
     finally { setBusy(false); }
