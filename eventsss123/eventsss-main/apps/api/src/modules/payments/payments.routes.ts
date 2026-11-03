@@ -8,6 +8,7 @@ import {
   LedgerType,
   ListingStatus,
   PaymentStatus,
+  Prisma,
 } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { prisma } from "../../lib/prisma";
@@ -760,30 +761,42 @@ paymentsRouter.post(
   asyncHandler(async (req, res) => {
     const amountRaw = String(req.body.amountMinor ?? "");
     const reason = String(req.body.reason ?? "").trim();
-    if (!/^[1-9]\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive whole number");
+    if (!/^[1-9]\\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive whole number");
     if (reason.length < 8 || reason.length > 500) throw new HttpError(400, "INVALID_REASON", "Explain the requested essentials or milestone (8–500 characters)");
-    const booking = await prisma.booking.findUnique({
-      where: { id: req.params.id },
-      include: { vendor: { select: { userId: true } } },
-    });
-    if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
-    if (booking.vendor.userId !== req.user!.id) throw new HttpError(403, "FORBIDDEN", "Only the assigned vendor can request a booking payment");
-    if (!booking.eventId || ["CANCELLED", "REFUNDED", "FULFILLED"].includes(booking.status)) {
-      throw new HttpError(409, "BOOKING_NOT_PAYABLE", "This booking cannot accept further payment requests");
-    }
     const amountMinor = BigInt(amountRaw);
-    const pending = await prisma.bookingPaymentRequest.aggregate({
-      where: { bookingId: booking.id, status: "PENDING" },
-      _sum: { amountMinor: true },
-    });
-    const remaining = booking.totalMinor - booking.paidMinor - (pending._sum.amountMinor ?? 0n);
-    if (amountMinor > remaining) throw new HttpError(409, "AMOUNT_EXCEEDS_REMAINING", "Requested amount exceeds the unpaid booking balance");
-    const request = await prisma.bookingPaymentRequest.create({
-      data: { bookingId: booking.id, requestedById: req.user!.id, amountMinor, reason },
-    });
-    res.status(201).json({ request: { ...request, amountMinor: request.amountMinor.toString() } });
+
+    let paymentRequest;
+    try {
+      paymentRequest = await prisma.$transaction(async (tx) => {
+        const booking = await tx.booking.findUnique({
+          where: { id: req.params.id },
+          include: { vendor: { select: { userId: true } } },
+        });
+        if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
+        if (booking.vendor.userId !== req.user!.id) throw new HttpError(403, "FORBIDDEN", "Only the assigned vendor can request a booking payment");
+        if (!booking.eventId || ["CANCELLED", "REFUNDED", "FULFILLED"].includes(booking.status)) {
+          throw new HttpError(409, "BOOKING_NOT_PAYABLE", "This booking cannot accept further payment requests");
+        }
+        const pending = await tx.bookingPaymentRequest.aggregate({
+          where: { bookingId: booking.id, status: "PENDING" },
+          _sum: { amountMinor: true },
+        });
+        const remaining = booking.totalMinor - booking.paidMinor - (pending._sum.amountMinor ?? 0n);
+        if (amountMinor > remaining) throw new HttpError(409, "AMOUNT_EXCEEDS_REMAINING", "Requested amount exceeds the unpaid booking balance");
+        return tx.bookingPaymentRequest.create({
+          data: { bookingId: booking.id, requestedById: req.user!.id, amountMinor, reason },
+        });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "P2034") {
+        throw new HttpError(409, "BOOKING_BALANCE_CHANGED", "Another payment request was submitted at the same time. Refresh the booking and try again.");
+      }
+      throw error;
+    }
+    res.status(201).json({ request: { ...paymentRequest, amountMinor: paymentRequest.amountMinor.toString() } });
   }),
 );
+
 
 /** Planner and vendor can view requests for a booking they participate in. */
 paymentsRouter.get(
