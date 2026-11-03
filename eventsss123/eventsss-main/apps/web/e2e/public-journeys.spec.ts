@@ -166,7 +166,7 @@ test("sign-in displays a readable error when authentication fails", async ({
   );
 });
 
-test("mobile menu opens and provides sign-in access", async ({ page }, testInfo) => {
+test("mobile menu opens and provides sign-in access @mobile", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium", "Mobile menu is checked on the mobile viewport.");
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).click();
