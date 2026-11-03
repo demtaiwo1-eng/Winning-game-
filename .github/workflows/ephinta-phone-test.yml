@@ -1,0 +1,64 @@
+name: EPHINTA phone test account and Android launch
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "eventsss123/eventsss-main/scripts/android-phone-test.sh"
+      - ".github/workflows/ephinta-phone-test.yml"
+      - "eventsss123/eventsss-main/apps/mobile/**"
+      - "eventsss123/eventsss-main/apps/web/**"
+permissions:
+  contents: read
+  actions: read
+jobs:
+  android-test-account-launch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      EPHINTA_TEST_API_URL: ${{ secrets.EPHINTA_TEST_API_URL }}
+      EPHINTA_TEST_ACCOUNT_EMAIL: ${{ secrets.EPHINTA_TEST_ACCOUNT_EMAIL }}
+      EPHINTA_TEST_ACCOUNT_PASSWORD: ${{ secrets.EPHINTA_TEST_ACCOUNT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools" "emulator"
+      - name: Install dependencies
+        working-directory: eventsss123/eventsss-main
+        run: npm ci
+      - name: Verify test-account secrets are configured
+        run: |
+          for name in EPHINTA_TEST_API_URL EPHINTA_TEST_ACCOUNT_EMAIL EPHINTA_TEST_ACCOUNT_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Configure the repository Actions secret $name. Use a dedicated staging API and a non-privileged CLIENT test account."
+              exit 1
+            fi
+          done
+      - name: Run Android emulator and test account smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -no-audio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: eventsss123/eventsss-main
+          script: bash scripts/android-phone-test.sh
+      - name: Upload installable Android test APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-android-test-apk
+          path: eventsss123/eventsss-main/artifacts/android-phone-test/
+          if-no-files-found: warn
+          retention-days: 14
