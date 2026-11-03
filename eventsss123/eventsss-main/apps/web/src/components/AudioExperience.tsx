@@ -74,7 +74,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         setMessage("Your browser blocked automatic playback. Tap Play to start the music.");
       });
     }
-  }, [audioUrl, selectedTrack.src, autoPlay, soundPreferenceLoaded, autoPlayEnabled]);
+  }, [audioUrl, selectedTrack.src, autoPlay, soundPreferenceLoaded]);
 
   useEffect(() => {
     try {
