@@ -268,6 +268,12 @@ test("authenticated planner receives no private event data outside the owned eve
 
 
 test("branded startup splash appears and clears after the app shell is ready", async ({ page }) => {
+  // Hold the entry module briefly so the short first-paint splash can be
+  // observed deterministically instead of racing its 450ms dismissal timer.
+  await page.route("**/src/main.tsx", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await route.continue();
+  });
   await page.goto("/", { waitUntil: "commit" });
   const splash = page.locator("[data-ephinta-startup-splash]");
   await expect(splash).toBeVisible({ timeout: 5000 });
