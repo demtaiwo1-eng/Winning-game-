@@ -1,0 +1,128 @@
+import { expect, test, type Page, type Route } from "@playwright/test";
+
+type PortalCase = {
+  role: string;
+  email: string;
+  organizationMode?: "EVENT_PLANNING" | "SERVICE_PROVIDER";
+  heading: RegExp;
+};
+
+const portals: PortalCase[] = [
+  { role: "CLIENT", email: "qa-client@example.test", heading: /Welcome back, QA\./ },
+  { role: "ORGANIZATION", email: "qa-org-planning@example.test", organizationMode: "EVENT_PLANNING", heading: /Welcome back, QA\./ },
+  { role: "ORGANIZATION", email: "qa-org-provider@example.test", organizationMode: "SERVICE_PROVIDER", heading: /Sell the experience\./ },
+  { role: "VENDOR", email: "qa-vendor@example.test", heading: /Sell the experience\./ },
+  { role: "AFFILIATE", email: "qa-affiliate@example.test", heading: /Grow the event network\./ },
+  { role: "VERIFIER", email: "qa-verifier@example.test", heading: /Pre-event service confirmation/ },
+  { role: "CONSULTANT", email: "qa-consultant@example.test", heading: /Operations updates/ },
+  { role: "ADMIN", email: "qa-admin@example.test", heading: /Platform operations/ },
+];
+
+async function installRoleApiFixtures(page: Page, portal: PortalCase) {
+  await page.addInitScript(() => localStorage.setItem("ess_onboard_v1", "1"));
+  await page.route("**/api/v1/**", async (route: Route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const path = url.pathname;
+    const json = (body: unknown, status = 200) => route.fulfill({
+      status, contentType: "application/json", body: JSON.stringify(body),
+    });
+
+    if (path.endsWith("/auth/login") && request.method() === "POST") {
+      return json({
+        user: {
+          id: `qa-${portal.role.toLowerCase()}`,
+          name: "QA Tester",
+          email: portal.email,
+          role: portal.role,
+          organizationMode: portal.organizationMode ?? null,
+          country: "NG",
+          currency: "NGN",
+          locale: "en",
+        },
+        accessToken: "qa-e2e-access-token",
+        refreshToken: "qa-e2e-refresh-token",
+        expiresIn: 900,
+      });
+    }
+    if (path.endsWith("/vendor/categories")) return json({ items: [{ id: "cat-catering", name: "Catering" }] });
+    if (path.endsWith("/vendor/listings") && request.method() === "POST") {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      return json({
+        listing: {
+          id: "qa-listing-001",
+          title: body.title,
+          description: body.description,
+          priceMinor: String(body.priceMinor),
+          currency: body.currency || "NGN",
+          city: body.city || "Ibadan",
+          capacity: body.capacity || 100,
+          status: "DRAFT",
+          type: body.type || "SERVICE",
+          category: { name: "Catering" },
+        },
+      }, 201);
+    }
+    if (path.endsWith("/vendor/listings")) return json({ items: [] });
+    if (path.endsWith("/vendor/analytics")) return json({
+      bookings: 0, enquiries: 0, reviews: { count: 0, average: 0 }, listings: { ACTIVE: 0, DRAFT: 0, PAUSED: 0 },
+    });
+    if (path.endsWith("/vendor/profile")) return json({ profile: { id: "qa-profile", businessName: "QA Services", country: "NG", city: "Ibadan" } });
+    if (path.endsWith("/readiness/queue")) return json({ items: [] });
+    if (path.endsWith("/readiness/mine")) return json({ items: [] });
+    if (path.endsWith("/admin/overview")) return json({
+      accounts: { total: 8, active: 8 }, events: 0, vendors: 2, activeListings: 0,
+      activeMarkets: 0, pendingVerifications: 0, disputedBookings: 0,
+      bookingsByStatus: {}, settledBookingValue: [], recentAudit: [],
+    });
+    if (path.endsWith("/notifications")) return json({ items: [] });
+    if (path.includes("/admin/") || path.includes("/finance/")) {
+      return json({ items: [], total: 0, pages: 0, summary: [], readOnly: true });
+    }
+    return json({ items: [], total: 0, pages: 0, summary: [] });
+  });
+}
+
+for (const portal of portals) {
+  test(`sign-in and workspace smoke journey: ${portal.role}${portal.organizationMode ? ":" + portal.organizationMode : ""}`, async ({ page }) => {
+    await installRoleApiFixtures(page, portal);
+    await page.goto(`/auth/signin?role=${portal.role}`);
+    await page.getByLabel("Email").fill(portal.email);
+    await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
+    await page.getByRole("button", { name: /Continue securely/ }).click();
+
+    await expect(page).toHaveURL(new RegExp(`/dashboard/${portal.role.toLowerCase()}$`));
+    await expect(page.getByRole("heading", { name: portal.heading }).first()).toBeVisible();
+
+    if (portal.role === "CLIENT" || (portal.role === "ORGANIZATION" && portal.organizationMode === "EVENT_PLANNING")) {
+      await page.getByRole("button", { name: /New event/ }).click();
+      await expect(page.getByRole("heading", { name: /Create an event|New event|Event details/i }).first()).toBeVisible();
+    } else if (portal.role === "VENDOR" || (portal.role === "ORGANIZATION" && portal.organizationMode === "SERVICE_PROVIDER")) {
+      await page.getByRole("button", { name: /Add package/ }).first().click();
+      await expect(page.getByRole("heading", { name: "Add service package" })).toBeVisible();
+      await page.getByLabel("Package name").fill("QA Catering Package");
+      await page.getByLabel("What is included?").fill("Test-only catering package");
+      await page.getByLabel("Price").fill("50000");
+      await page.getByLabel("Capacity").fill("120");
+      await page.getByLabel("Operating city").fill("Ibadan");
+      await page.getByLabel("Lead time").fill("7 days");
+      await page.getByRole("button", { name: "Save complete package" }).click();
+      await expect(page.getByText(/Package saved as a draft/)).toBeVisible();
+    } else if (portal.role === "AFFILIATE") {
+      await page.getByLabel("Referral code").fill("QA-E2E-REF");
+      await page.getByRole("button", { name: "Save partner profile" }).click();
+      await expect(page.getByText("Affiliate preferences saved.")).toBeVisible();
+    } else if (portal.role === "VERIFIER") {
+      await expect(page.getByText(/No recent or upcoming events need verifier action/)).toBeVisible();
+    } else if (portal.role === "CONSULTANT") {
+      await expect(page.getByText(/No updates yet/)).toBeVisible();
+    } else if (portal.role === "ADMIN") {
+      await expect(page.getByText("8")).toBeVisible();
+      await page.getByRole("button", { name: "Refresh" }).click();
+      await expect(page.getByRole("heading", { name: "Platform operations" })).toBeVisible();
+    }
+
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page).toHaveURL("/");
+  });
+}
