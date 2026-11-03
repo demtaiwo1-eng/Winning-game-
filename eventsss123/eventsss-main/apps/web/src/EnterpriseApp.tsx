@@ -94,16 +94,21 @@ function getAuthErrorMessage(status: number, error: unknown, mode: "signin" | "s
   const payload = error && typeof error === "object" ? error as Record<string, unknown> : {};
   const code = typeof payload.code === "string" ? payload.code : "";
   const message = typeof payload.message === "string" ? payload.message : "";
-  if (code === "INVALID_CREDENTIALS" || (status === 401 && mode === "signin")) return "That email and password do not match. Check your details and try again, or reset your password.";
-  if (code === "ALREADY_EXISTS" || status === 409) return "An account with this email or phone number already exists. Sign in instead, or use a different email or phone number.";
-  if (code === "VALIDATION_ERROR" || status === 400) return mode === "signup"
-    ? "Some registration details are missing or invalid. Review the fields and try again."
-    : "Please check your email address and try again.";
+  if (code === "INVALID_CREDENTIALS" || (status === 401 && mode === "signin")) return "That email and password do not match. Check your details and try again, or use Forgot password to reset it.";
+  if (code === "ALREADY_EXISTS" || status === 409) return "An account with this email or phone number already exists. Sign in with that account, or use a different email or phone number.";
+  if (code === "VALIDATION_ERROR" || status === 400 || status === 422) return mode === "signup"
+    ? "Some registration details are missing or invalid. Review the highlighted fields and try again."
+    : mode === "forgot"
+      ? "Enter a valid email address and try again."
+      : "Please check your email address and password, then try again.";
   if (code === "ACCOUNT_DISABLED") return "This account is currently unavailable. Please contact support for help.";
   if (status === 429) return "Too many attempts. Please wait a few minutes before trying again.";
   if (status >= 500) return "We could not complete your request because of a server problem. Please try again shortly.";
-  if (message && !/internal|exception|prisma|stack|undefined|null/i.test(message)) return message;
-  return "We could not complete that request. Check your connection and try again.";
+  return mode === "signup"
+    ? "We could not create your account. Check your details and connection, then try again."
+    : mode === "forgot"
+      ? "We could not send the reset link. Check your connection and try again."
+      : "We could not sign you in. Check your connection and try again.";
 }
 
 const roleMeta: Record<
@@ -797,8 +802,7 @@ function VendorPortal({
         setListings((current) => current.map((existing) => existing.id === editing.id ? {
           ...existing, id: item.id, name: item.title, category: item.category?.name || existing.category,
           price: String(Number(item.priceMinor) / 100), currency: item.currency,
-          status: item.status === "ACTIVE" ? "Live" : "Draft", city: item.city || "",
-          capacity: item.capacity == null ? "" : String(item.capacity), includes: item.description || "",
+          status: item.status === "ACTIVE" ? "Live" : "Draft", city: item.city || "",          capacity: item.capacity == null ? "" : String(item.capacity), includes: item.description || "",
         } : existing));
         setNotice("Package updated.");
       } else {
@@ -1597,8 +1601,7 @@ function AdminControlsPanel() {
       {approvals.length ? <div style={{ display: "grid", gap: 10 }}>
         {approvals.map((item) => <article className="ess-card" key={item.id}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-            <strong>{item.action.replace(/_/g, " ")} · {item.status}</strong>
-            <small>{new Date(item.createdAt).toLocaleString()}</small>
+            <strong>{item.action.replace(/_/g, " ")} · {item.status}</strong>            <small>{new Date(item.createdAt).toLocaleString()}</small>
           </div>
           <p className="ess-muted">{item.entity} · {item.entityId} · Requested by {item.requestedById}</p>
           <p>{item.reason}</p>
@@ -2397,8 +2400,7 @@ function ResetPasswordPage({ token }: { token: string }) {
               <PasswordRuleChecklist password={password} />
             </div>
             {feedback && <div className="ess-form-error">{feedback}</div>}
-            <button className="ess-primary ess-full-button" type="submit">
-              Update password
+            <button className="ess-primary ess-full-button" type="submit">              Update password
             </button>
           </form>
         </div>
@@ -3131,7 +3133,7 @@ function AuthModal({
               <span>✓ Role-based workspace</span>
             </div>
           )}
-          {error && <div className="ess-form-error">{error}</div>}
+          {error && <div className="ess-form-error" role="alert" aria-live="assertive">{error}</div>}
           {mode === "signup" ? (
             <div className="ess-registration-navigation">
               <button className="ess-outline-button" type="button" onClick={() => registrationStep > 0 ? setRegistrationStep((step) => Math.max(0, step - 1)) : onClose()}>
