@@ -21,6 +21,7 @@ export default function VendorPaymentRequestsPanel() {
   const [requests, setRequests] = useState<Record<string, RequestItem[]>>({});
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [requestKeys, setRequestKeys] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -51,13 +52,20 @@ export default function VendorPaymentRequestsPanel() {
       setError("Enter a valid positive amount."); return;
     }
     if (reason.length < 8) { setError("Explain which essential item or milestone needs payment (at least 8 characters)."); return; }
+    const idempotencyKey = requestKeys[booking.id] || (
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `vendor-request-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    );
+    setRequestKeys((current) => ({ ...current, [booking.id]: idempotencyKey }));
     setBusyId(booking.id); setError(""); setNotice("");
     try {
       await paymentsApi.requestBookingPayment(booking.id, {
-        amountMinor: String(Math.round(major * 100)), reason,
+        amountMinor: String(Math.round(major * 100)), reason, idempotencyKey,
       });
       setAmounts((current) => ({ ...current, [booking.id]: "" }));
       setReasons((current) => ({ ...current, [booking.id]: "" }));
+      setRequestKeys((current) => ({ ...current, [booking.id]: "" }));
       setNotice("Payment request sent to the event planner for approval. No money has moved yet.");
       await refresh();
     } catch (cause) {
@@ -87,8 +95,8 @@ export default function VendorPaymentRequestsPanel() {
             <p>Awaiting planner approval: {money(String(pendingRequestedMinor), booking.currency)}</p>
             <p>Available to request: <strong>{money(String(remaining), booking.currency)}</strong></p>
             <form className="ess-form-grid" onSubmit={(event) => { event.preventDefault(); void submit(booking); }}>
-              <label>Requested amount ({booking.currency})<input type="number" min="0.01" step="0.01" max={(remaining / 100).toFixed(2)} value={amounts[booking.id] || ""} onChange={(event) => setAmounts((current) => ({ ...current, [booking.id]: event.target.value }))} required disabled={remaining <= 0} /></label>
-              <label>Essential item / milestone reason<textarea rows={2} minLength={8} maxLength={500} value={reasons[booking.id] || ""} onChange={(event) => setReasons((current) => ({ ...current, [booking.id]: event.target.value }))} required disabled={remaining <= 0} placeholder="e.g. 50% deposit for catering ingredients and venue setup" /></label>
+              <label>Requested amount ({booking.currency})<input type="number" min="0.01" step="0.01" max={(remaining / 100).toFixed(2)} value={amounts[booking.id] || ""} onChange={(event) => { setAmounts((current) => ({ ...current, [booking.id]: event.target.value })); setRequestKeys((current) => ({ ...current, [booking.id]: "" })); }} required disabled={remaining <= 0} /></label>
+              <label>Essential item / milestone reason<textarea rows={2} minLength={8} maxLength={500} value={reasons[booking.id] || ""} onChange={(event) => { setReasons((current) => ({ ...current, [booking.id]: event.target.value })); setRequestKeys((current) => ({ ...current, [booking.id]: "" })); }} required disabled={remaining <= 0} placeholder="e.g. 50% deposit for catering ingredients and venue setup" /></label>
               <button className="ess-primary" type="submit" disabled={!!busyId || remaining <= 0}>{busyId === booking.id ? "Sending…" : "Request planner approval"}</button>
             </form>
             <div style={{ marginTop: 10 }}>
