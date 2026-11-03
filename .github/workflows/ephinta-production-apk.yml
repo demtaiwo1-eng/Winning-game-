@@ -195,6 +195,7 @@ jobs:
             exit 1
           fi
           "$APKSIGNER" verify --verbose "$APK" >/dev/null
+          jarsigner -verify -verbose -certs "$AAB" >/dev/null
           (cd "$RUNNER_TEMP/ephinta-production" && sha256sum ephinta-production.apk ephinta-production.aab > SHA256SUMS.txt)
           unzip -t "$APK" >/dev/null
 
