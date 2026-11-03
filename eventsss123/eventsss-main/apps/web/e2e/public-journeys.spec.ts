@@ -161,9 +161,40 @@ test("sign-in displays a readable error when authentication fails", async ({
   await page.getByRole("textbox", { name: "Password" }).fill("wrong-password");
   await page.getByRole("button", { name: /Continue securely/ }).click();
 
+  await expect(page.locator(".ess-form-error")).toHaveAttribute("role", "alert");
   await expect(page.locator(".ess-form-error")).toContainText(
-    "Invalid email or password",
+    "That email and password do not match",
   );
+  await expect(page.locator(".ess-form-error")).toContainText("Forgot password");
+});
+
+test("registration explains when an email or phone number is already in use", async ({ page }) => {
+  await page.route("**/api/v1/auth/register", async (route) => {
+    await route.fulfill({
+      status: 409,
+      contentType: "application/json",
+      body: JSON.stringify({
+        error: {
+          code: "ALREADY_EXISTS",
+          message: "Email or phone already registered",
+        },
+      }),
+    });
+  });
+
+  await page.goto("/auth/signup?role=CLIENT");
+  const dialog = page.locator("#eph-auth-dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Full name").fill("Existing Account Test");
+  await dialog.getByLabel("Email").fill("existing@example.test");
+  await dialog.getByLabel("Password").fill("StrongPass123!");
+  await dialog.getByRole("button", { name: /Next/ }).click();
+  await dialog.getByRole("button", { name: /Next/ }).click();
+  await dialog.getByRole("button", { name: /Create account/ }).click();
+
+  await expect(dialog.locator(".ess-form-error")).toHaveAttribute("role", "alert");
+  await expect(dialog.locator(".ess-form-error")).toContainText("already exists");
+  await expect(dialog.locator(".ess-form-error")).toContainText("Sign in");
 });
 
 test("music dock fits the phone screen and exposes playback controls @mobile", async ({ page }) => {
