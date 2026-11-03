@@ -4,6 +4,13 @@
 set -Eeuo pipefail
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+if [[ -d "$ROOT/eventsss123/eventsss-main/apps/mobile/android" ]]; then
+  ROOT="$ROOT/eventsss123/eventsss-main"
+elif [[ -d "$ROOT/apps/mobile/android" ]]; then
+  ROOT="$ROOT"
+else
+  ROOT="$(pwd)"
+fi
 cd "$ROOT"
 ANDROID_DIR="apps/mobile/android"
 GRADLEW="$ANDROID_DIR/gradlew"
