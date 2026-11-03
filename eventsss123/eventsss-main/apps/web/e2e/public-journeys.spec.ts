@@ -185,7 +185,7 @@ test("registration explains when an email or phone number is already in use", as
   });
 
   await page.goto("/auth/signup?role=CLIENT");
-  const dialog = page.locator("#eph-auth-dialog");
+  const dialog = page.locator(".ess-auth-modal");
   await expect(dialog).toBeVisible();
   await dialog.getByLabel("Full name").fill("Existing Account Test");
   await dialog.getByLabel("Email").fill("existing@example.test");
@@ -292,7 +292,7 @@ test("authenticated planner can add a checklist task to an owned event", async (
   await eventWorkspaceTab.dispatchEvent("click");
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
   await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
-  const taskInput = page.getByLabel("Task", { exact: true });
+  const taskInput = page.locator('section[aria-labelledby="event-workspace-title"] label').filter({ hasText: /^Task$/ }).locator("input");
   await expect(taskInput).toBeVisible();
   await taskInput.fill("Confirm event venue");
   // Submit with the keyboard: the sticky branded header can overlap the button in CI.
