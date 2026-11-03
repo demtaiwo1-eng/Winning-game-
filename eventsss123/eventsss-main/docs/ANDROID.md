@@ -2,7 +2,7 @@
 
 The active root-level Android pipeline has two delivery lanes:
 
-1. **Verified APK and OTA release:** `.github/workflows/ephinta-build-apk.yml` runs the API/web checks, database integration tests, and Android build. It also packages the web build as an OTA bundle and creates a version manifest. After the workflow succeeds on the default branch, `.github/workflows/ephinta-apk-download.yml` publishes the exact tested APK, checksum, web bundle, and `version.json` together in a GitHub Release.
+1. **Verified test APK and OTA release:** `.github/workflows/ephinta-build-apk.yml` runs the API/web checks, database integration tests, and Android build. It packages the web build as an OTA bundle and creates a version manifest. After a successful default-branch run, `.github/workflows/ephinta-apk-download.yml` publishes the unsigned debug APK and checksum as a test prerelease, and updates the separate stable `ephinta-web-latest` OTA release with `ephinta-web-bundle.zip` and `version.json`.
 2. **Native Android changes:** changes to Android/Capacitor native code, permissions, plugins, or signing still require a newly built APK and a normal install/update. OTA delivery replaces only the web UI and web logic.
 
 The app checks the CORS-enabled API proxy at `https://ephinta-wss.onrender.com/api/v1/app-updates`. The API reads the dedicated `ephinta-web-latest` GitHub release tag server-side and streams the versioned web bundle to the app, avoiding browser CORS restrictions on GitHub release assets. This OTA tag is kept separate from APK releases, so publishing an unsigned test APK or a signed production APK cannot interrupt web-layer updates. GitHub Pages is not required.
@@ -25,7 +25,7 @@ Set these GitHub Actions repository variables/secrets:
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-The verified APK workflow publishes `ephinta-web-bundle.zip` and `version.json` alongside the APK release assets after every passing default-branch build.
+The post-build publisher updates the dedicated `ephinta-web-latest` OTA release with `ephinta-web-bundle.zip` and `version.json`; the debug APK remains in its own test prerelease.
 
 ## Production-signed Android release
 
@@ -51,7 +51,7 @@ The automatically published APK from `ephinta-apk-download.yml` is deliberately 
 - A reachability and database-readiness check against `VITE_API_URL`
 - Capacitor sync and an installable Android debug APK build
 
-A failed check prevents the APK artifact from being released. A successful default-branch run publishes the exact tested debug APK and checksum to a GitHub Release. Production-signed releases remain separate and require the signing secrets above.
+A failed check prevents the APK artifact from being released. A successful default-branch run publishes the exact tested debug APK and checksum as a test prerelease, and refreshes the independent OTA release tag. Production-signed releases remain separate and require the signing secrets above.
 
 ## Local verification
 
