@@ -75,12 +75,17 @@ export default function VendorPaymentRequestsPanel() {
     {bookings.length === 0 ? <p className="ess-muted">No event bookings are linked to your vendor account yet.</p> :
       <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
         {bookings.map((booking) => {
-          const remaining = Math.max(0, Number(booking.totalMinor) - Number(booking.paidMinor || "0"));
+          const bookingRequests = requests[booking.id] || [];
+          const pendingRequestedMinor = bookingRequests
+            .filter((request) => request.status === "PENDING" || request.status === "PROCESSING")
+            .reduce((total, request) => total + Number(request.amountMinor || "0"), 0);
+          const remaining = Math.max(0, Number(booking.totalMinor) - Number(booking.paidMinor || "0") - pendingRequestedMinor);
           return <article className="ess-card" key={booking.id}>
             <strong>{booking.items?.map((item) => item.listing?.title).filter(Boolean).join(", ") || "Vendor service"}</strong>
             <p className="ess-muted">{booking.event?.title || "Event"} · {booking.status}</p>
             <p>Paid into escrow: {money(booking.paidMinor || "0", booking.currency)} / {money(booking.totalMinor, booking.currency)}</p>
-            <p>Remaining: <strong>{money(String(remaining), booking.currency)}</strong></p>
+            <p>Awaiting planner approval: {money(String(pendingRequestedMinor), booking.currency)}</p>
+            <p>Available to request: <strong>{money(String(remaining), booking.currency)}</strong></p>
             <form className="ess-form-grid" onSubmit={(event) => { event.preventDefault(); void submit(booking); }}>
               <label>Requested amount ({booking.currency})<input type="number" min="0.01" step="0.01" max={(remaining / 100).toFixed(2)} value={amounts[booking.id] || ""} onChange={(event) => setAmounts((current) => ({ ...current, [booking.id]: event.target.value }))} required disabled={remaining <= 0} /></label>
               <label>Essential item / milestone reason<textarea rows={2} minLength={8} maxLength={500} value={reasons[booking.id] || ""} onChange={(event) => setReasons((current) => ({ ...current, [booking.id]: event.target.value }))} required disabled={remaining <= 0} placeholder="e.g. 50% deposit for catering ingredients and venue setup" /></label>
@@ -89,7 +94,7 @@ export default function VendorPaymentRequestsPanel() {
             <div style={{ marginTop: 10 }}>
               <strong>Payment request history</strong>
               {(requests[booking.id] || []).length === 0 ? <p className="ess-muted">No requests yet.</p> :
-                (requests[booking.id] || []).map((request) => <p className="ess-muted" key={request.id}>{money(request.amountMinor, booking.currency)} · {request.reason} · {request.status}</p>)}
+                bookingRequests.map((request) => <p className="ess-muted" key={request.id}>{money(request.amountMinor, booking.currency)} · {request.reason} · {request.status}</p>)}
             </div>
           </article>;
         })}
