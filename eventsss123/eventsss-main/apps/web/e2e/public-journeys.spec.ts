@@ -100,7 +100,7 @@ test("registration blocks a password shorter than the input minimum", async ({ p
     tooShort: element.validity.tooShort,
     valueLength: element.value.length,
   }));
-  expect(validity.minLength).toBe("12");
+  expect(validity.minLength).toBe("8");
   await dialog.getByRole("button", { name: "Next" }).click();
   await expect(dialog.getByText("Step 1 of 3")).toBeVisible();
   await expect(password).toBeVisible();
