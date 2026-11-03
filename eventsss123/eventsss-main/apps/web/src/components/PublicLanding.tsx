@@ -321,6 +321,11 @@ export default function PublicLanding({
   }, [draft]);
 
   useEffect(() => {
+    const passwordInput = document.getElementById('eph-password') as HTMLInputElement | null;
+    passwordInput?.setCustomValidity('');
+  }, [authMode]);
+
+  useEffect(() => {
     applyEphintaTheme(themeMode);
   }, [themeMode]);
 
@@ -397,8 +402,7 @@ export default function PublicLanding({
       return;
     }
 
-    setBusy(true);
-    setError('');
+    setBusy(true);    setError('');
 
     setNotice('');
 
@@ -797,8 +801,7 @@ export default function PublicLanding({
 
         <label className="eph-theme-select" aria-label="Colour theme"><select value={themeMode} onChange={e => setThemeMode(e.target.value as ThemeMode)} aria-label="Colour theme">
 
-              <option value="dark">Dark</option><option value="light">Light</option><option value="colorful">Multicolor</option>
-            </select>
+              <option value="dark">Dark</option><option value="light">Light</option><option value="colorful">Multicolor</option>            </select>
 
           </label>
 
