@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../lib/api";
+import { api, paymentsApi } from "../lib/api";
 
 type EventOption = { id: string; title: string; startsAt?: string | null; endsAt?: string | null; city?: string | null; currency?: string };
 type Task = { id: string; title: string; tier: "ESSENTIAL" | "RECOMMENDED" | "OPTIONAL"; status: "TODO" | "DOING" | "DONE"; dueAt?: string | null };
 type Guest = { id: string; name: string; email?: string | null; phone?: string | null; rsvp: string; checkedInAt?: string | null; checkInMethod?: string | null; plusOnes: number };
 type BudgetItem = { id: string; label: string; category?: string | null; plannedMinor: string; actualMinor: string };
+type PaymentRequest = { id: string; amountMinor: string; reason: string; status: string; requestedBy: { id: string; name: string } };
 type CheckIn = { id: string; method: string; checkedInAt: string; guest: { id: string; name: string } };
-type Booking = { id: string; status: string; currency: string; totalMinor: string; createdAt: string; event?: { id: string; title: string } | null; vendor?: { businessName: string }; items?: Array<{ listing?: { title: string } }> };
+type Booking = { id: string; status: string; currency: string; totalMinor: string; paidMinor?: string; createdAt: string; event?: { id: string; title: string } | null; vendor?: { businessName: string }; items?: Array<{ listing?: { title: string } }> };
 type ReadinessData = { readiness: { status: string; totalChecks: number; greenCount: number; amberCount: number; redCount: number; pendingCount: number }; checks: Array<{ id: string; label: string; status: string; zone?: string | null; checkedAt?: string | null }> };
 const PLAN_FIELDS = [
   ["desiredOutcome", "Desired outcome"],
@@ -36,6 +37,9 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   const [guests, setGuests] = useState<Guest[]>([]);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
+  const [eventDepositTotal, setEventDepositTotal] = useState("0");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [paymentRequests, setPaymentRequests] = useState<Record<string, PaymentRequest[]>>({});
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [readiness, setReadiness] = useState<ReadinessData | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -68,7 +72,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
         api<{ tasks: Task[] }>(`/events/${eventId}/tasks`),
         api<{ items: Guest[]; total: number }>(`/events/${eventId}/guests?limit=200`),
         api<{ items: CheckIn[] }>(`/events/${eventId}/guests/check-ins`),
-        api<{ items: BudgetItem[] }>(`/events/${eventId}/budget`),
+        api<{ items: BudgetItem[]; funding?: { depositTotalMinor: string } }>(`/events/${eventId}/budget`),
         api<{ items: Booking[] }>("/payments/bookings"),
         api<{ answers: Record<string, string> }>(`/events/${eventId}/plan-answers`),
         api<ReadinessData>(`/readiness/events/${eventId}`),
@@ -79,7 +83,15 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
       setCity(detail.event.city || "");
       setTasks(taskData.tasks || []); setGuests(guestData.items || []); setCheckIns(checkInData.items || []);
       setBudgetItems(budgetData.items || []);
-      setBookings((bookingData.items || []).filter((b) => b.event?.id === eventId));
+      setEventDepositTotal(budgetData.funding?.depositTotalMinor || "0");
+      const eventBookings = (bookingData.items || []).filter((b) => b.event?.id === eventId);
+      setBookings(eventBookings);
+      const requestPages = await Promise.all(eventBookings.map((booking) =>
+        api<{ items: PaymentRequest[] }>(`/payments/bookings/${booking.id}/payment-requests`)
+          .then((result) => [booking.id, result.items] as const)
+          .catch(() => [booking.id, []] as const),
+      ));
+      setPaymentRequests(Object.fromEntries(requestPages));
       setReadiness(readinessData);
       setAnswers(planData.answers || {});
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load this event workspace."); }
@@ -114,6 +126,37 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
       const result = await api<{ task: Task }>(`/events/${eventId}/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify(patch) });
       setTasks((current) => current.map((t) => t.id === task.id ? result.task : t));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to update task."); }
+    finally { setBusy(false); }
+  };
+
+  const payEventDeposit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = Number(depositAmount);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > Number.MAX_SAFE_INTEGER / 100) {
+      setError("Enter a valid positive event deposit amount."); return;
+    }
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const idempotencyKey = typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `event-deposit-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const result = await paymentsApi.eventDeposit(eventId, {
+        amountMinor: String(Math.round(amount * 100)), idempotencyKey,
+      });
+      setNotice(result.alreadyProcessed ? "This event deposit was already recorded." : "Event deposit transferred into protected event escrow.");
+      setDepositAmount("");
+      await refresh();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to record event deposit."); }
+    finally { setBusy(false); }
+  };
+  const decidePaymentRequest = async (bookingId: string, requestId: string, approve: boolean) => {
+    setBusy(true); setError(""); setNotice("");
+    try {
+      if (approve) await paymentsApi.approveBookingPayment(bookingId, requestId);
+      else await paymentsApi.rejectBookingPayment(bookingId, requestId);
+      setNotice(approve ? "Payment approved and moved into protected escrow." : "Payment request declined.");
+      await refresh();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to process payment request."); }
     finally { setBusy(false); }
   };
   const addBudgetItem = async (e: React.FormEvent) => {
@@ -216,6 +259,15 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
           <p className="ess-muted">Due dates and overdue indicators are tracked here. Download a 24-hour calendar reminder for any dated task and import it into your calendar; automatic push/email delivery is not enabled.</p>
         </section>
         <section style={{ marginTop: 22 }}>
+          <h3>Event deposit and protected funding</h3>
+          <p className="ess-muted">Deposits are moved from your available wallet balance into event-linked escrow and appear here separately from actual vendor spend.</p>
+          <p><strong>Event deposits held: {money(eventDepositTotal,currency)}</strong></p>
+          <form onSubmit={payEventDeposit} className="ess-form-grid">
+            <label>Deposit amount ({currency})<input type="number" min="0.01" step="0.01" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} required /></label>
+            <button className="ess-primary" type="submit" disabled={busy || !depositAmount}>Pay event deposit from wallet</button>
+          </form>
+        </section>
+        <section style={{ marginTop: 22 }}>
           <h3>Budget · planned vs actual</h3>
           <form onSubmit={addBudgetItem} className="ess-form-grid">
             <label>Budget line<input value={budgetLabel} onChange={(e) => setBudgetLabel(e.target.value)} required /></label>
@@ -243,7 +295,14 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Vendor bookings linked to this event</h3>
-          {bookings.length ? <div style={{ display: "grid", gap: 8 }}>{bookings.map((booking) => <article className="ess-card" key={booking.id}><strong>{booking.items?.map((i) => i.listing?.title).filter(Boolean).join(", ") || "Vendor booking"}</strong><p className="ess-muted">{booking.vendor?.businessName || "Vendor"} · {booking.status} · {money(booking.totalMinor,booking.currency)}</p></article>)}</div> : <p className="ess-muted">No bookings are currently linked to this event. Create a booking from this event context to have it appear here.</p>}
+          {bookings.length ? <div style={{ display: "grid", gap: 8 }}>{bookings.map((booking) => <article className="ess-card" key={booking.id}>
+            <strong>{booking.items?.map((i) => i.listing?.title).filter(Boolean).join(", ") || "Vendor booking"}</strong>
+            <p className="ess-muted">{booking.vendor?.businessName || "Vendor"} · {booking.status} · Paid {money(booking.paidMinor || "0",booking.currency)} of {money(booking.totalMinor,booking.currency)}</p>
+            {(paymentRequests[booking.id] || []).map((request) => <div key={request.id} className="ess-filter-row" style={{ alignItems: "center", marginTop: 8 }}>
+              <span>{request.requestedBy.name}: {request.reason} · {money(request.amountMinor,booking.currency)} · {request.status}</span>
+              {request.status === "PENDING" && <><button className="ess-primary" type="button" disabled={busy} onClick={() => void decidePaymentRequest(booking.id,request.id,true)}>Approve & pay</button><button className="ess-outline-button" type="button" disabled={busy} onClick={() => void decidePaymentRequest(booking.id,request.id,false)}>Decline</button></>}
+            </div>)}
+          </article>)}</div> : <p className="ess-muted">No bookings are currently linked to this event. Create a booking from this event context to have it appear here.</p>}
         </section>
       </>}
     </>}
