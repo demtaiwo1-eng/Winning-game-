@@ -96,7 +96,7 @@ for (const portal of portals) {
 
     if (portal.role === "CLIENT" || (portal.role === "ORGANIZATION" && portal.organizationMode === "EVENT_PLANNING")) {
       await page.getByRole("button", { name: /New event/ }).click();
-      await expect(page.getByRole("heading", { name: /Create an event|New event|Event details/i }).first()).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Create event/i }).first()).toBeVisible();
     } else if (portal.role === "VENDOR" || (portal.role === "ORGANIZATION" && portal.organizationMode === "SERVICE_PROVIDER")) {
       await page.getByRole("button", { name: /Add package/ }).first().click();
       await expect(page.getByRole("heading", { name: "Add service package" })).toBeVisible();
