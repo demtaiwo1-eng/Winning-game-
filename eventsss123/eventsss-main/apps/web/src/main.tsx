@@ -38,11 +38,47 @@ if (!isNative) {
   });
 }
 
-function EphintaStartupReadySignal(): null {
+function EphintaStartupReadySignal(): React.ReactElement | null {
+  const [visible, setVisible] = React.useState(true);
   React.useEffect(() => {
-    markEphintaAppReady();
+    let hideTimer = 0;
+    const frame = window.requestAnimationFrame(() => {
+      markEphintaAppReady();
+      // Keep the branded first-paint overlay briefly so the mounted app shell
+      // is ready underneath it before users can interact with the screen.
+      hideTimer = window.setTimeout(() => setVisible(false), 450);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (hideTimer) window.clearTimeout(hideTimer);
+    };
   }, []);
-  return null;
+  if (!visible) return null;
+  return (
+    <div
+      data-ephinta-startup-splash
+      role="status"
+      aria-label="Loading EPHINTA"
+      aria-live="polite"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 10000,
+        display: "grid",
+        placeContent: "center",
+        justifyItems: "center",
+        gap: 12,
+        background: "#10002f",
+        color: "#fff",
+        fontFamily: "system-ui, sans-serif",
+        opacity: 1,
+      }}
+    >
+      <img src="/brand/ephinta_logo2.png" alt="" width="76" height="76" style={{ objectFit: "contain" }} />
+      <strong style={{ fontSize: 24, letterSpacing: 1 }}>EPHINTA</strong>
+      <span style={{ color: "#c4b5fd", fontSize: 13 }}>Preparing your workspace…</span>
+    </div>
+  );
 }
 
 class StartupErrorBoundary extends React.Component<
