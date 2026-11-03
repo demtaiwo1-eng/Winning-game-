@@ -598,7 +598,14 @@ paymentsRouter.post(
     const result = await prisma.$transaction(async (tx) => {
       const existingLedger = await tx.ledgerEntry.findUnique({ where: { idempotencyKey } });
       if (existingLedger) {
-        throw new HttpError(409, "DUPLICATE", "Booking already processed for this key");
+        const existingBooking = existingLedger.refType === "BOOKING" && existingLedger.refId
+          ? await tx.booking.findFirst({
+              where: { id: existingLedger.refId, buyerId: req.user!.id, eventId, items: { some: { listingId } } },
+              include: { items: true },
+            })
+          : null;
+        if (existingBooking) return existingBooking;
+        throw new HttpError(409, "IDEMPOTENCY_CONFLICT", "This booking key was already used for another operation");
       }
 
       const wallet = await tx.wallet.findUnique({
