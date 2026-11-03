@@ -152,6 +152,9 @@ test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", a
   expect(clientWidth).toBeLessThanOrEqual(390);
 
   await page.evaluate(() => { localStorage.removeItem("ess_user"); localStorage.removeItem("ess_access_token"); localStorage.removeItem("ess_refresh_token"); });
+  // Clear the in-memory React session as well as persisted credentials before
+  // exercising a different account in the same mobile browser context.
+  await page.reload();
   const vendor = portals.find((portal) => portal.role === "VENDOR")!;
   await installRoleApiFixtures(page, vendor);
   await page.goto("/auth/signin?role=VENDOR");
