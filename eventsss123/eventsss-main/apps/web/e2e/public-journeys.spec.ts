@@ -282,16 +282,30 @@ test("branded startup splash appears and clears after the app shell is ready", a
 });
 
 
-test("music player offers bundled tracks and an explicit playback action", async ({ page }) => {
+test("production app plays bundled music or explains the browser gesture fallback", async ({ page }) => {
   await page.goto("/");
   const player = page.getByRole("region", { name: "EPHINTA music player" });
   await expect(player).toBeVisible();
-  await expect(player.getByRole("button", { name: /^(Play music|Pause music)$/ })).toBeVisible();
+  await expect(player.getByRole("button", { name: /Play music|Pause music/ })).toBeVisible();
   await player.getByRole("button", { name: "Music settings" }).click();
   const tracks = player.getByLabel("Choose music");
   await expect(tracks.locator("option")).toHaveCount(6);
   await tracks.selectOption("2");
   await expect(player.locator(".eph-audio__heading")).toContainText("Welcome, Little One");
-  await expect(player.getByRole("button", { name: "Play music" })).toBeVisible();
+  await expect(player.getByRole("button", { name: "Enable sound and play music" })).toBeVisible();
   await expect(player.getByRole("slider", { name: /Volume/ })).toBeVisible();
+
+  const audio = player.locator("audio");
+  const audioUrl = await audio.evaluate((element: HTMLAudioElement) => element.currentSrc || element.src);
+  const asset = await page.request.get(audioUrl);
+  expect(asset.ok()).toBeTruthy();
+  expect(asset.headers()["content-type"]).toContain("audio/mpeg");
+  expect(Number(asset.headers()["content-length"] || 0)).toBeGreaterThan(100_000);
+
+  await player.getByRole("button", { name: "Enable sound and play music" }).click();
+  await expect.poll(async () => {
+    const playing = await audio.evaluate((element: HTMLAudioElement) => !element.paused);
+    const status = await player.locator(".eph-audio__status").innerText();
+    return playing || /Playback needs your tap|Music could not start|This track is unavailable/i.test(status);
+  }).toBe(true);
 });
