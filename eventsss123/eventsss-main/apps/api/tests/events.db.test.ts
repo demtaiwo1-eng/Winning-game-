@@ -93,12 +93,13 @@ describe.skipIf(!run)("events flow (DB)", () => {
     });
     try {
       const payload = { amountMinor: "25000", idempotencyKey: "event-deposit-test-0001" };
-      const first = await request(app).post(`/api/v1/events/${eventId}/deposits`).set(auth).send(payload);
-      expect(first.status).toBe(201);
-      expect(first.body.deposit.amountMinor).toBe("25000");
-      const retry = await request(app).post(`/api/v1/events/${eventId}/deposits`).set(auth).send(payload);
-      expect(retry.status).toBe(200);
-      expect(retry.body.alreadyProcessed).toBe(true);
+      const concurrent = await Promise.all([
+        request(app).post(`/api/v1/events/${eventId}/deposits`).set(auth).send(payload),
+        request(app).post(`/api/v1/events/${eventId}/deposits`).set(auth).send(payload),
+      ]);
+      expect(concurrent.map((response) => response.status).sort()).toEqual([200, 201]);
+      expect(concurrent.every((response) => response.body.deposit.amountMinor === "25000")).toBe(true);
+      expect(concurrent.some((response) => response.body.alreadyProcessed === true)).toBe(true);
       const updatedWallet = await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
       expect(updatedWallet.availableMinor).toBe(75000n);
       expect(updatedWallet.escrowMinor).toBe(25000n);
