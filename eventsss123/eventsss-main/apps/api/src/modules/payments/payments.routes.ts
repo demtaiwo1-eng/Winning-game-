@@ -828,6 +828,11 @@ paymentsRouter.post(
     }
 
     await prisma.$transaction(async (tx) => {
+      const claimed = await tx.bookingPaymentRequest.updateMany({
+        where: { id: paymentRequest.id, bookingId: booking.id, status: "PENDING" },
+        data: { status: "PROCESSING" },
+      });
+      if (claimed.count !== 1) throw new HttpError(409, "REQUEST_NOT_PENDING", "This payment request was already processed");
       const wallet = await tx.wallet.findUnique({
         where: { userId_currency: { userId: req.user!.id, currency: booking.currency } },
       });
