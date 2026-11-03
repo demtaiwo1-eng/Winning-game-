@@ -8,14 +8,14 @@ type PortalCase = {
 };
 
 const portals: PortalCase[] = [
-  { role: "CLIENT", email: "qa-client@example.test", heading: /Welcome back, QA\./ },
-  { role: "ORGANIZATION", email: "qa-org-planning@example.test", organizationMode: "EVENT_PLANNING", heading: /Welcome back, QA\./ },
-  { role: "ORGANIZATION", email: "qa-org-provider@example.test", organizationMode: "SERVICE_PROVIDER", heading: /Sell the experience\./ },
-  { role: "VENDOR", email: "qa-vendor@example.test", heading: /Sell the experience\./ },
-  { role: "AFFILIATE", email: "qa-affiliate@example.test", heading: /Grow the event network\./ },
-  { role: "VERIFIER", email: "qa-verifier@example.test", heading: /Pre-event service confirmation/ },
-  { role: "CONSULTANT", email: "qa-consultant@example.test", heading: /Operations updates/ },
-  { role: "ADMIN", email: "qa-admin@example.test", heading: /Platform operations/ },
+  { role: "CLIENT", email: "qa-client@example.com", heading: /Welcome back, QA\./ },
+  { role: "ORGANIZATION", email: "qa-org-planning@example.com", organizationMode: "EVENT_PLANNING", heading: /Welcome back, QA\./ },
+  { role: "ORGANIZATION", email: "qa-org-provider@example.com", organizationMode: "SERVICE_PROVIDER", heading: /Sell the experience\./ },
+  { role: "VENDOR", email: "qa-vendor@example.com", heading: /Sell the experience\./ },
+  { role: "AFFILIATE", email: "qa-affiliate@example.com", heading: /Grow the event network\./ },
+  { role: "VERIFIER", email: "qa-verifier@example.com", heading: /Pre-event service confirmation/ },
+  { role: "CONSULTANT", email: "qa-consultant@example.com", heading: /Operations updates/ },
+  { role: "ADMIN", email: "qa-admin@example.com", heading: /Platform operations/ },
 ];
 
 async function installRoleApiFixtures(page: Page, portal: PortalCase) {
@@ -95,8 +95,8 @@ for (const portal of portals) {
     await expect(page.getByRole("heading", { name: portal.heading }).first()).toBeVisible();
 
     if (portal.role === "CLIENT" || (portal.role === "ORGANIZATION" && portal.organizationMode === "EVENT_PLANNING")) {
-      await page.getByRole("button", { name: /New event/ }).click({ force: true });
-      await expect(page.getByRole("heading", { name: /Create event/i }).first()).toBeVisible();
+      await page.getByRole("button", { name: /New event/ }).click();
+      await expect(page.getByRole("heading", { name: "Create event", exact: true })).toBeVisible();
     } else if (portal.role === "VENDOR" || (portal.role === "ORGANIZATION" && portal.organizationMode === "SERVICE_PROVIDER")) {
       await page.getByRole("button", { name: /Add package/ }).first().click({ force: true });
       await expect(page.getByRole("heading", { name: "Add service package" })).toBeVisible();
@@ -117,7 +117,7 @@ for (const portal of portals) {
     } else if (portal.role === "CONSULTANT") {
       await expect(page.getByText(/No updates yet/)).toBeVisible();
     } else if (portal.role === "ADMIN") {
-      await expect(page.getByText("8")).toBeVisible();
+      await expect(page.getByText("8", { exact: true }).first()).toBeVisible();
       await page.getByRole("button", { name: "Refresh" }).click({ force: true });
       await expect(page.getByRole("heading", { name: "Platform operations" })).toBeVisible();
     }
