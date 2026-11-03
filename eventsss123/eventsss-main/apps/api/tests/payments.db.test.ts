@@ -30,6 +30,7 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       .send({ title: "Milestone payment event", type: "PERSONAL", currency: "NGN" });
     expect(eventResponse.status).toBe(201);
     const eventId = eventResponse.body.event.id as string;
+    let bookingId: string | undefined;
 
     const vendorProfile = await prisma.vendorProfile.findUniqueOrThrow({ where: { userId: vendor.id } });
     const category = await prisma.category.upsert({
@@ -74,6 +75,7 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
         .send({ listingId: listing.id, eventId, quantity: 1, initialPaymentMinor: "20000", idempotencyKey: `initial-${eventId}` });
       expect(created.status).toBe(201);
       const booking = created.body.booking;
+      bookingId = booking.id as string;
       expect(booking.status).toBe("PENDING");
       expect(booking.paidMinor).toBe("20000");
       expect(booking.totalMinor).toBe("100000");
@@ -192,6 +194,8 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       const releasedBudget = await request(app).get(`/api/v1/events/${eventId}/budget`).set(auth(planner.token));
       expect(releasedBudget.body.funding.bookingPaymentsHeldMinor).toBe("0");
     } finally {
+      // BookingItem references Listing with RESTRICT; remove the booking first.
+      if (bookingId) await prisma.booking.deleteMany({ where: { id: bookingId } });
       await prisma.event.delete({ where: { id: eventId } });
       await prisma.listing.delete({ where: { id: listing.id } });
     }
