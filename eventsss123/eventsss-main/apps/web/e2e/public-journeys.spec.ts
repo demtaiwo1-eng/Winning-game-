@@ -170,7 +170,7 @@ test("sign-in displays a readable error when authentication fails", async ({
   await expect(page.locator(".ess-form-error")).toContainText("Forgot password");
 });
 
-test("registration explains when an email or phone number is already in use", async ({ page }) => {
+test("landing-page registration explains when an email or phone number is already in use", async ({ page }) => {
   await page.route("**/api/v1/auth/register", async (route) => {
     await route.fulfill({
       status: 409,
@@ -184,19 +184,53 @@ test("registration explains when an email or phone number is already in use", as
     });
   });
 
-  await page.goto("/auth/signup?role=CLIENT");
-  const dialog = page.locator(".ess-auth-modal");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: "Create customer account" }).click();
+  const dialog = page.locator("#eph-auth-dialog");
   await expect(dialog).toBeVisible();
   await dialog.getByLabel("Full name").fill("Existing Account Test");
-  await dialog.getByLabel("Email").fill("existing@example.test");
+  await dialog.getByLabel("Email address").fill("existing@example.test");
   await dialog.getByLabel("Password").fill("StrongPass123!");
   await dialog.getByRole("button", { name: /Next/ }).click();
   await dialog.getByRole("button", { name: /Next/ }).click();
   await dialog.getByRole("button", { name: /Create account/ }).click();
 
-  await expect(dialog.locator(".ess-form-error")).toHaveAttribute("role", "alert");
-  await expect(dialog.locator(".ess-form-error")).toContainText("already exists");
-  await expect(dialog.locator(".ess-form-error")).toContainText("Sign in");
+  await expect(dialog.locator(".eph-auth-error")).toHaveAttribute("role", "alert");
+  await expect(dialog.locator(".eph-auth-error")).toContainText("already exists");
+  await expect(dialog.locator(".eph-auth-error")).toContainText("Sign in");
+});
+
+test("landing-page sign-in explains incorrect passwords and accepts legacy password lengths", async ({ page }) => {
+  await page.route("**/api/v1/auth/login", async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({
+        error: {
+          code: "INVALID_CREDENTIALS",
+          message: "Invalid email or password",
+        },
+      }),
+    });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: "Sign in to your account" }).click();
+  const dialog = page.locator("#eph-auth-dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Email address").fill("legacy@example.test");
+  const password = dialog.getByLabel("Password");
+  await expect(password).not.toHaveAttribute("minlength");
+  await password.fill("short");
+  await dialog.getByRole("button", { name: "Sign in" }).click();
+
+  await expect(dialog.locator(".eph-auth-error")).toHaveAttribute("role", "alert");
+  await expect(dialog.locator(".eph-auth-error")).toContainText("That email and password do not match");
+  await expect(dialog.locator(".eph-auth-error")).toContainText("Forgot password");
 });
 
 test("music dock fits the phone screen and exposes playback controls @mobile", async ({ page }) => {
