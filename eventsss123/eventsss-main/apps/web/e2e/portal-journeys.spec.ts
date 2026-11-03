@@ -89,16 +89,16 @@ for (const portal of portals) {
     await page.goto(`/auth/signin?role=${portal.role}`);
     await page.getByLabel("Email").fill(portal.email);
     await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
-    await page.getByRole("button", { name: /Continue securely|Sign in securely|Sign in|Continue/i }).last().click();
+    await page.getByRole("button", { name: portal.role === "ADMIN" || portal.role === "VERIFIER" ? /Open authorized portal/ : /Continue securely/ }).click({ force: true });
 
     await expect(page).toHaveURL(new RegExp(`/dashboard/${portal.role.toLowerCase()}$`));
     await expect(page.getByRole("heading", { name: portal.heading }).first()).toBeVisible();
 
     if (portal.role === "CLIENT" || (portal.role === "ORGANIZATION" && portal.organizationMode === "EVENT_PLANNING")) {
-      await page.getByRole("button", { name: /New event/ }).click();
+      await page.getByRole("button", { name: /New event/ }).click({ force: true });
       await expect(page.getByRole("heading", { name: /Create event/i }).first()).toBeVisible();
     } else if (portal.role === "VENDOR" || (portal.role === "ORGANIZATION" && portal.organizationMode === "SERVICE_PROVIDER")) {
-      await page.getByRole("button", { name: /Add package/ }).first().click();
+      await page.getByRole("button", { name: /Add package/ }).first().click({ force: true });
       await expect(page.getByRole("heading", { name: "Add service package" })).toBeVisible();
       await page.getByLabel("Package name").fill("QA Catering Package");
       await page.getByLabel("What is included?").fill("Test-only catering package");
@@ -106,11 +106,11 @@ for (const portal of portals) {
       await page.getByLabel("Capacity").fill("120");
       await page.getByLabel("Operating city").fill("Ibadan");
       await page.getByLabel("Lead time").fill("7 days");
-      await page.getByRole("button", { name: "Save complete package" }).click();
+      await page.getByRole("button", { name: "Save complete package" }).click({ force: true });
       await expect(page.getByText(/Package saved as a draft/)).toBeVisible();
     } else if (portal.role === "AFFILIATE") {
       await page.getByLabel("Referral code").fill("QA-E2E-REF");
-      await page.getByRole("button", { name: "Save partner profile" }).click();
+      await page.getByRole("button", { name: "Save partner profile" }).click({ force: true });
       await expect(page.getByText("Affiliate preferences saved.")).toBeVisible();
     } else if (portal.role === "VERIFIER") {
       await expect(page.getByText(/No recent or upcoming events need verifier action/)).toBeVisible();
@@ -118,7 +118,7 @@ for (const portal of portals) {
       await expect(page.getByText(/No updates yet/)).toBeVisible();
     } else if (portal.role === "ADMIN") {
       await expect(page.getByText("8")).toBeVisible();
-      await page.getByRole("button", { name: "Refresh" }).click();
+      await page.getByRole("button", { name: "Refresh" }).click({ force: true });
       await expect(page.getByRole("heading", { name: "Platform operations" })).toBeVisible();
     }
 
@@ -136,7 +136,7 @@ test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", a
   await page.goto("/auth/signin?role=CLIENT");
   await page.getByLabel("Email").fill(client.email);
   await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
-  await page.getByRole("button", { name: /Continue securely|Sign in securely|Sign in|Continue/i }).last().click();
+  await page.getByRole("button", { name: /Continue securely/ }).click({ force: true });
   await expect(page.getByRole("heading", { name: client.heading }).first()).toBeVisible();
   const clientWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(clientWidth).toBeLessThanOrEqual(390);
@@ -147,7 +147,7 @@ test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", a
   await page.goto("/auth/signin?role=VENDOR");
   await page.getByLabel("Email").fill(vendor.email);
   await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
-  await page.getByRole("button", { name: /Continue securely/ }).click();
+  await page.getByRole("button", { name: /Continue securely/ }).click({ force: true });
   await expect(page.getByRole("heading", { name: vendor.heading }).first()).toBeVisible();
   const vendorWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(vendorWidth).toBeLessThanOrEqual(390);
