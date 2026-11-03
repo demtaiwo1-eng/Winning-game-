@@ -60,6 +60,7 @@ function inspect(file) {
       warn(relative + ": review large fixed minimum width");
     }
   }
+}
 
 function main() {
   if (!fs.existsSync(SOURCE)) fail("Missing frontend src directory.");
