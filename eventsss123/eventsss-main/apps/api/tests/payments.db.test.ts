@@ -72,6 +72,9 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect(eventDeposit.status).toBe(201);
       const depositBudget = await request(app).get(`/api/v1/events/${eventId}/budget`).set(auth(planner.token));
       expect(depositBudget.body.funding.depositTotalMinor).toBe("10000");
+      const walletAfterEventDeposit = await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
+      expect(walletAfterEventDeposit.availableMinor).toBe(100000n);
+      expect(walletAfterEventDeposit.escrowMinor).toBe(10000n);
 
       const created = await request(app).post("/api/v1/payments/book").set(auth(planner.token))
         .send({ listingId: listing.id, eventId, quantity: 1, initialPaymentMinor: "20000", idempotencyKey: `initial-${eventId}` });
