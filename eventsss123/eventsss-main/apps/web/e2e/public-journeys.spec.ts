@@ -297,6 +297,34 @@ test("branded startup splash appears and clears after the app shell is ready", a
 });
 
 
+test("blocked autoplay offers a user-gesture sound activation", async ({ page }) => {
+  await page.addInitScript(() => {
+    const state = window as Window & { __ephintaAudioUserGesture?: boolean };
+    state.__ephintaAudioUserGesture = false;
+    document.addEventListener("pointerdown", () => { state.__ephintaAudioUserGesture = true; }, true);
+    document.addEventListener("keydown", () => { state.__ephintaAudioUserGesture = true; }, true);
+    const nativePlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      if (!state.__ephintaAudioUserGesture) {
+        return Promise.reject(new DOMException("User gesture required", "NotAllowedError"));
+      }
+      return nativePlay.call(this);
+    };
+  });
+  await page.goto("/");
+  const player = page.getByRole("region", { name: "EPHINTA music player" });
+  await expect(player.getByRole("button", { name: "Enable sound and play music" })).toBeVisible();
+  await expect(player.locator(".eph-audio__notice")).toContainText("blocked automatic playback");
+  await player.getByRole("button", { name: "Enable sound and play music" }).click();
+  expect(await page.evaluate(() => (window as Window & { __ephintaAudioUserGesture?: boolean }).__ephintaAudioUserGesture)).toBe(true);
+  await expect.poll(async () => {
+    const audio = player.locator("audio");
+    const playing = await audio.evaluate((element: HTMLAudioElement) => !element.paused);
+    const status = await player.locator(".eph-audio__status").innerText();
+    return playing || /Music could not start|This track is unavailable/i.test(status);
+  }).toBe(true);
+});
+
 test("music player respects a saved sound-off choice after reload", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("ephinta:sound", "off"));
   await page.goto("/");
