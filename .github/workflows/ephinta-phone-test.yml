@@ -16,6 +16,7 @@ jobs:
     timeout-minutes: 45
     env:
       EPHINTA_TEST_API_URL: ${{ secrets.EPHINTA_TEST_API_URL }}
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
       EPHINTA_TEST_ACCOUNT_EMAIL: ${{ secrets.EPHINTA_TEST_ACCOUNT_EMAIL }}
       EPHINTA_TEST_ACCOUNT_PASSWORD: ${{ secrets.EPHINTA_TEST_ACCOUNT_PASSWORD }}
     steps:
@@ -43,14 +44,6 @@ jobs:
       - name: Install dependencies
         working-directory: eventsss123/eventsss-main
         run: npm ci
-      - name: Verify test-account secrets are configured
-        run: |
-          for name in EPHINTA_TEST_API_URL EPHINTA_TEST_ACCOUNT_EMAIL EPHINTA_TEST_ACCOUNT_PASSWORD; do
-            if [ -z "${!name}" ]; then
-              echo "::error::Configure the repository Actions secret $name. Use a dedicated staging API and a non-privileged CLIENT test account."
-              exit 1
-            fi
-          done
       - name: Run Android emulator and test account smoke test
         uses: reactivecircus/android-emulator-runner@v2
         with:
