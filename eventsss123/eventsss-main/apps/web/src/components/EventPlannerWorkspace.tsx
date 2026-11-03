@@ -38,6 +38,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [eventDepositTotal, setEventDepositTotal] = useState("0");
+  const [bookingPaymentsHeld, setBookingPaymentsHeld] = useState("0");
   const [depositAmount, setDepositAmount] = useState("");
   const [paymentRequests, setPaymentRequests] = useState<Record<string, PaymentRequest[]>>({});
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -72,7 +73,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
         api<{ tasks: Task[] }>(`/events/${eventId}/tasks`),
         api<{ items: Guest[]; total: number }>(`/events/${eventId}/guests?limit=200`),
         api<{ items: CheckIn[] }>(`/events/${eventId}/guests/check-ins`),
-        api<{ items: BudgetItem[]; funding?: { depositTotalMinor: string } }>(`/events/${eventId}/budget`),
+        api<{ items: BudgetItem[]; funding?: { depositTotalMinor: string; bookingPaymentsHeldMinor?: string } }>(`/events/${eventId}/budget`),
         api<{ items: Booking[] }>("/payments/bookings"),
         api<{ answers: Record<string, string> }>(`/events/${eventId}/plan-answers`),
         api<ReadinessData>(`/readiness/events/${eventId}`),
@@ -84,6 +85,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
       setTasks(taskData.tasks || []); setGuests(guestData.items || []); setCheckIns(checkInData.items || []);
       setBudgetItems(budgetData.items || []);
       setEventDepositTotal(budgetData.funding?.depositTotalMinor || "0");
+      setBookingPaymentsHeld(budgetData.funding?.bookingPaymentsHeldMinor || "0");
       const eventBookings = (bookingData.items || []).filter((b) => b.event?.id === eventId);
       setBookings(eventBookings);
       const requestPages = await Promise.all(eventBookings.map((booking) =>
@@ -262,6 +264,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
           <h3>Event deposit and protected funding</h3>
           <p className="ess-muted">Deposits are moved from your available wallet balance into event-linked escrow and appear here separately from actual vendor spend.</p>
           <p><strong>Event deposits held: {money(eventDepositTotal,currency)}</strong></p>
+          <p><strong>Vendor booking payments held in escrow: {money(bookingPaymentsHeld,currency)}</strong></p>
           <form onSubmit={payEventDeposit} className="ess-form-grid">
             <label>Deposit amount ({currency})<input type="number" min="0.01" step="0.01" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} required /></label>
             <button className="ess-primary" type="submit" disabled={busy || !depositAmount}>Pay event deposit from wallet</button>
