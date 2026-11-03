@@ -106,9 +106,9 @@ for (const portal of portals) {
 
     await expect(page).toHaveURL(new RegExp(`/dashboard/${portal.role.toLowerCase()}$`));
     await expect(page.getByRole("heading", { name: portal.heading }).first()).toBeVisible();
-    // Let initial authenticated workspace requests settle before interacting.
-    // This prevents async dashboard hydration from detaching controls mid-click.
-    await page.waitForLoadState("networkidle");
+    // The role heading and each subsequent action locator provide explicit
+    // readiness checks. Avoid networkidle: optional promotion polling can keep
+    // the browser busy even though the workspace is fully interactive.
 
     if (portal.role === "CLIENT" || (portal.role === "ORGANIZATION" && portal.organizationMode === "EVENT_PLANNING")) {
       await page.getByRole("button", { name: /New event/ }).click();
