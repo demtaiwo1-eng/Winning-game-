@@ -9,7 +9,11 @@ const run = process.env.RUN_DB_TESTS === "1";
 async function register(tag: string, role: "CLIENT" | "VENDOR" | "VERIFIER" = "CLIENT") {
   const email = `${tag}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@test.dev`;
   const response = await request(app).post("/api/v1/auth/register").send({
-    email, password: "correct-horse-1", name: `User ${tag}`, role,
+    email,
+    password: "correct-horse-1",
+    name: `User ${tag}`,
+    role,
+    ...(role === "VENDOR" ? { businessName: `Test business ${tag}` } : {}),
   });
   expect(response.status).toBe(201);
   return { token: response.body.accessToken as string, id: response.body.user.id as string };
