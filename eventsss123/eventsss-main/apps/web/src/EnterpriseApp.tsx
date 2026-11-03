@@ -31,6 +31,7 @@ import "./event-builder.css";
 import "./public-landing.css";
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
+const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
 const PromotionsPanel = lazy(() => import("./components/PromotionsPanel"));
 const MarketplaceBrowse = lazy(() => import("./components/MarketplaceBrowse"));
 const FeedbackPanel = lazy(() => import("./components/FeedbackPanel"));
@@ -814,7 +815,7 @@ function VendorPortal({
     }
   };
   const [vendorTab, setVendorTab] = useDashboardTab(
-    ["catalog", "wallet", "plans", "kyc", "messages", "notifications", "promotions"] as const,
+    ["catalog", "wallet", "payments", "plans", "kyc", "messages", "notifications", "promotions"] as const,
     "catalog",
   );
   return (
@@ -841,6 +842,7 @@ function VendorPortal({
       <div className="ess-filter-row" style={{ marginBottom: 12 }}>
         <button type="button" className={vendorTab === "catalog" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("catalog")}>Catalog & demand</button>
         <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
+        <button type="button" className={vendorTab === "payments" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("payments")}>Booking payments</button>
         <button type="button" className={vendorTab === "plans" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("plans")}>Plans & promos</button>
         <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
         <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
@@ -851,6 +853,8 @@ function VendorPortal({
         <PromotionsPanel mode="vendor" />
       ) : vendorTab === "wallet" ? (
         <WalletPanel role="VENDOR" />
+      ) : vendorTab === "payments" ? (
+        <VendorPaymentRequestsPanel />
       ) : vendorTab === "plans" ? (
         <SubscriptionsPanel audience="VENDOR" />
       ) : vendorTab === "kyc" ? (
