@@ -1,0 +1,29 @@
+name: App verification suite
+on:
+  workflow_dispatch:
+  push:
+    branches: [chore/android-launch-readiness]
+    paths:
+      - 'eventsss123/eventsss-main/**'
+      - '.github/workflows/verify-app-suite.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - run: npm ci
+      - run: npm run build --workspace @ess/web
+      - run: npm run test --workspace @ess/web
+      - run: npm run test:e2e --workspace @ess/web
+      - run: npm run design:audit:strict --workspace @ess/web
