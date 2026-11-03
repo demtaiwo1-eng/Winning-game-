@@ -21,6 +21,9 @@ npm run build -w @ess/web
 step "Web unit tests"
 npm run test -w @ess/web
 
+step "Install Playwright Chromium and Linux dependencies"
+npm exec --workspace @ess/web -- playwright install --with-deps chromium
+
 step "Browser end-to-end tests"
 npm run test:e2e -w @ess/web
 
