@@ -51,6 +51,24 @@ jobs:
           sha256sum "release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk" \
             > "release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk.sha256"
 
+      - name: Publish stable OTA bundle release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ephinta-web-latest
+          target_commitish: ${{ github.event.workflow_run.head_sha }}
+          name: EPHINTA Web OTA Update
+          body: |
+            Automatically updated EPHINTA web bundle for the native Android app.
+            This OTA-only prerelease is intentionally separate from the latest APK release.
+          files: |
+            release-assets/ephinta-web-bundle.zip
+            release-assets/version.json
+          overwrite_files: true
+          prerelease: true
+          make_latest: false
+          fail_on_unmatched_files: true
+          generate_release_notes: false
+
       - name: Publish APK download release
         uses: softprops/action-gh-release@v2
         with:
