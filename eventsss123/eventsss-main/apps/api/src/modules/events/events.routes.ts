@@ -104,7 +104,8 @@ eventsRouter.post("/:eventId/deposits", asyncHandler(async (req, res) => {
     alreadyProcessed: result.alreadyProcessed,
   });
 }));
-\n// ---- budget (amounts are minor-unit strings)
+
+// ---- budget (amounts are minor-unit strings)
 eventsRouter.get("/:eventId/budget", asyncHandler(async (req, res) => {
   res.json(await budget.getBudget(uid(req), param(req, "eventId")));
 }));
