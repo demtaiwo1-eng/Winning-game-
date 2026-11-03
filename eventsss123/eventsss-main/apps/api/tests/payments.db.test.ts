@@ -106,6 +106,25 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
 
       const vendorBookings = await request(app).get("/api/v1/payments/bookings?as=vendor").set(auth(vendor.token));
       expect(vendorBookings.body.items.find((item: { id: string }) => item.id === booking.id).paidMinor).toBe("100000");
+      await prisma.event.update({
+        where: { id: eventId },
+        data: { startsAt: new Date(Date.now() - 2 * 60 * 60 * 1000), endsAt: new Date(Date.now() - 60_000) },
+      });
+      const serviceCheck = await prisma.eventServiceCheck.findFirst({ where: { eventId, bookingId: booking.id } });
+      expect(serviceCheck).toBeTruthy();
+      await prisma.eventServiceCheck.update({ where: { id: serviceCheck!.id }, data: { status: "GREEN" } });
+      const finalized = await request(app).post(`/api/v1/readiness/events/${eventId}/finalize`).set(auth(verifier.token)).send({});
+      expect(finalized.status).toBe(200);
+      expect(finalized.body.event.status).toBe("COMPLETED");
+      const released = await request(app).post(`/api/v1/payments/bookings/${booking.id}/release`).set(auth(verifier.token)).send({});
+      expect(released.status).toBe(200);
+      expect(released.body.status).toBe("FULFILLED");
+      const buyerWalletAfterRelease = await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
+      expect(buyerWalletAfterRelease.escrowMinor).toBe(0n);
+      const vendorWallet = await prisma.wallet.findUniqueOrThrow({
+        where: { userId_currency: { userId: vendor.id, currency: "NGN" } },
+      });
+      expect(vendorWallet.availableMinor).toBeGreaterThan(0n);
     } finally {
       await prisma.event.delete({ where: { id: eventId } });
       await prisma.listing.delete({ where: { id: listing.id } });
