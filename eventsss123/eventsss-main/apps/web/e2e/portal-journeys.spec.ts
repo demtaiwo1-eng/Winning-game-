@@ -134,7 +134,7 @@ for (const portal of portals) {
       await expect(page.getByText(/No updates yet/)).toBeVisible();
     } else if (portal.role === "ADMIN") {
       await expect(page.getByText("8", { exact: true }).first()).toBeVisible();
-      await page.getByRole("button", { name: "Refresh" }).click({ force: true });
+      await page.getByRole("button", { name: "Refresh", exact: true }).first().click({ force: true });
       await expect(page.getByRole("heading", { name: "Platform operations" })).toBeVisible();
     }
 
