@@ -44,3 +44,22 @@
 .eph-audio label { display: block; margin: 14px 0 8px; }
 .eph-audio input[type="range"] { width: 100%; accent-color: #a78bfa; }
 .eph-audio__status { min-height: 1.4em; color: #a7f3d0; }
+
+.eph-audio select {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1px solid #65718a;
+  border-radius: 10px;
+  color: #f6f7fb;
+  background: #202b42;
+}
+.eph-audio a { display: inline-block; margin: 8px 0; color: #c4b5fd; text-underline-offset: 3px; }
+.eph-audio button:disabled { opacity: .55; cursor: not-allowed; }
+.eph-audio audio { display: none; }
+@media (max-width: 480px) {
+  .eph-audio { padding: 14px; border-radius: 14px; }
+  .eph-audio__controls > button { flex: 1 1 28%; padding-inline: 8px; }
+}
