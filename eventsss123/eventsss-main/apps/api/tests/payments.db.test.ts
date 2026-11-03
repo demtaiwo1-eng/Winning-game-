@@ -111,10 +111,25 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect((await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests/${reservedRequest.id}/reject`)
         .set(auth(planner.token)).send({})).status).toBe(200);
 
-      const firstRequest = await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
-        .set(auth(vendor.token)).send({ amountMinor: "30000", reason: "Purchase essential catering ingredients" });
-      expect(firstRequest.status).toBe(201);
+      const requestPayload = {
+        amountMinor: "30000",
+        reason: "Purchase essential catering ingredients",
+        idempotencyKey: `vendor-essentials-${booking.id}`,
+      };
+      const firstRequestPair = await Promise.all([
+        request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`).set(auth(vendor.token)).send(requestPayload),
+        request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`).set(auth(vendor.token)).send(requestPayload),
+      ]);
+      expect(firstRequestPair.map((response) => response.status).sort()).toEqual([200, 201]);
+      expect(firstRequestPair[0].body.request.id).toBe(firstRequestPair[1].body.request.id);
+      const firstRequest = firstRequestPair.find((response) => response.status === 201)!;
       const paymentRequestId = firstRequest.body.request.id as string;
+      expect(await prisma.bookingPaymentRequest.count({
+        where: { bookingId: booking.id, idempotencyKey: `booking-payment-request:${vendor.id}:${booking.id}:${requestPayload.idempotencyKey}` },
+      })).toBe(1);
+      const changedReplay = await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
+        .set(auth(vendor.token)).send({ ...requestPayload, amountMinor: "30001" });
+      expect(changedReplay.status).toBe(409);
 
       expect((await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests/${paymentRequestId}/approve`)
         .set(auth(outsider.token)).send({})).status).toBe(403);
