@@ -43,6 +43,7 @@ jobs:
       DATABASE_URL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
       DATABASE_URL_LOCAL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
       RUN_DB_TESTS: "1"
+      REQUIRE_PRODUCTION_SIGNING: "1"
       VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
