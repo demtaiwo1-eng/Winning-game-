@@ -87,7 +87,24 @@ eventsRouter.delete("/:eventId/tasks/:taskId", asyncHandler(async (req, res) => 
   res.status(204).end();
 }));
 
-// ---- budget (amounts are minor-unit strings)
+
+eventsRouter.post("/:eventId/deposits", asyncHandler(async (req, res) => {
+  const body = z.object({
+    amountMinor: z.string().regex(/^[1-9]\\d*$/, "amountMinor must be a positive integer string"),
+    idempotencyKey: z.string().min(8).max(100),
+  }).parse(req.body);
+  const result = await budget.createEventDeposit(
+    uid(req),
+    param(req, "eventId"),
+    BigInt(body.amountMinor),
+    body.idempotencyKey,
+  );
+  res.status(result.alreadyProcessed ? 200 : 201).json({
+    deposit: { ...result.deposit, amountMinor: result.deposit.amountMinor.toString() },
+    alreadyProcessed: result.alreadyProcessed,
+  });
+}));
+\n// ---- budget (amounts are minor-unit strings)
 eventsRouter.get("/:eventId/budget", asyncHandler(async (req, res) => {
   res.json(await budget.getBudget(uid(req), param(req, "eventId")));
 }));
