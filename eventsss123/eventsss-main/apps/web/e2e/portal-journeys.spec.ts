@@ -64,8 +64,11 @@ async function installRoleApiFixtures(page: Page, portal: PortalCase) {
       }, 201);
     }
     if (path.endsWith("/vendor/listings")) return json({ items: [] });
-    if (path.endsWith("/vendor/analytics")) return json({
-      bookings: 0, enquiries: 0, reviews: { count: 0, average: 0 }, listings: { ACTIVE: 0, DRAFT: 0, PAUSED: 0 },
+    if (path.endsWith("/vendor/metrics")) return json({
+      listings: { ACTIVE: 0, DRAFT: 0, PAUSED: 0 },
+      bookings: {},
+      enquiries: {},
+      reviews: { averageRating: null, count: 0 },
     });
     if (path.endsWith("/vendor/profile")) return json({ profile: { id: "qa-profile", businessName: "QA Services", country: "NG", city: "Ibadan" } });
     if (path.endsWith("/readiness/queue")) return json({ items: [] });
@@ -95,6 +98,9 @@ for (const portal of portals) {
 
     await expect(page).toHaveURL(new RegExp(`/dashboard/${portal.role.toLowerCase()}$`));
     await expect(page.getByRole("heading", { name: portal.heading }).first()).toBeVisible();
+    // Let initial authenticated workspace requests settle before interacting.
+    // This prevents async dashboard hydration from detaching controls mid-click.
+    await page.waitForLoadState("networkidle");
 
     if (portal.role === "CLIENT" || (portal.role === "ORGANIZATION" && portal.organizationMode === "EVENT_PLANNING")) {
       await page.getByRole("button", { name: /New event/ }).click();
