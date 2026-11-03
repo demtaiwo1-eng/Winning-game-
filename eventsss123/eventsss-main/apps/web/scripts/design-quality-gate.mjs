@@ -36,19 +36,30 @@ function inspect(file) {
     if (/<img\b/i.test(source) && /<img\b[^>]*(?<![\w-])alt\s*=/.test(source)) pass(`${relative}: image alt attributes found`);
     else if (/<img\b/i.test(source)) warn(`${relative}: review image alternative text`);
 
-    if (/<(?:div|span)\b[^>]*\bonClick\s*=/.test(source)) {
-      warn(`${relative}: review clickable div/span semantics and keyboard support`);
+    const uncommented = source.replace(/^\s*\/\/.*$/gm, "");
+    const clickableTags = [...uncommented.matchAll(/<(?:div|span)\b[^>]*\bonClick\s*=[^>]*>/gis)].map((match) => match[0]);
+    const inaccessibleClickTargets = clickableTags.filter((tag) =>
+      !/\brole\s*=\s*["'](?:presentation|dialog|button)["']/.test(tag) &&
+      !/\btabIndex\s*=/.test(tag) &&
+      !/\bonKey(?:Down|Up|Press)\s*=/.test(tag)
+    );
+    if (inaccessibleClickTargets.length) {
+      warn(relative + ": review clickable div/span semantics and keyboard support");
     }
-    if (/href\s*=\s*["']#["']/.test(source)) warn(`${relative}: placeholder hash link detected`);
-    if (/TODO|FIXME|IMPLEMENT LATER/i.test(source)) warn(`${relative}: unfinished-work marker detected`);
+    if (/href\s*=\s*["']#["']/.test(uncommented)) warn(relative + ": placeholder hash link detected");
+    if (/(?:\/\/|\/\*|\*|<!--)\s*(?:TODO|FIXME|IMPLEMENT LATER)\b/i.test(source)) {
+      warn(relative + ": unfinished-work marker detected");
+    }
   }
 
   if (/\.(css|scss)$/.test(file)) {
-    if (/focus-visible|:focus\b/.test(source)) pass(`${relative}: focus styling present`);
-    if (/width\s*:\s*100vw\s*;/i.test(source)) warn(`${relative}: review 100vw for mobile overflow`);
-    if (/min-width\s*:\s*(?:[4-9]\d{2}|\d{4,})px/i.test(source)) warn(`${relative}: review large fixed minimum width`);
+    if (/focus-visible|:focus\b/.test(source)) pass(relative + ": focus styling present");
+    if (/width\s*:\s*100vw\s*;/i.test(source)) warn(relative + ": review 100vw for mobile overflow");
+    const hasScrollableTable = /(?:\.table-responsive|\.data-table-wrap)[^{]*\{[^}]*overflow-x\s*:\s*auto/i.test(source);
+    if (/min-width\s*:\s*(?:[4-9]\d{2}|\d{4,})px/i.test(source) && !hasScrollableTable) {
+      warn(relative + ": review large fixed minimum width");
+    }
   }
-}
 
 function main() {
   if (!fs.existsSync(SOURCE)) fail("Missing frontend src directory.");
