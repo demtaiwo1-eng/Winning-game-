@@ -295,7 +295,7 @@ test("production app plays bundled music or explains the browser gesture fallbac
   await page.goto("/");
   const player = page.getByRole("region", { name: "EPHINTA music player" });
   await expect(player).toBeVisible();
-  await expect(player.getByRole("button", { name: /Play music|Pause music/ })).toBeVisible();
+  await expect(player.getByRole("button", { name: /play music|pause music/i })).toBeVisible();
   await player.getByRole("button", { name: "Music settings" }).click();
   const tracks = player.getByLabel("Choose music");
   await expect(tracks.locator("option")).toHaveCount(6);
