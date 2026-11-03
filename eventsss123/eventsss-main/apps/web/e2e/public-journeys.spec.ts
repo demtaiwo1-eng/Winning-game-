@@ -349,7 +349,7 @@ test("production app plays bundled music or explains the browser gesture fallbac
 
   const audio = player.locator("audio");
   const audioUrl = await audio.evaluate((element: HTMLAudioElement) => element.src);
-  expect(audioUrl).toContain("Welcome%2C%20Little%20One");
+  expect(decodeURIComponent(audioUrl)).toContain("Welcome, Little One");
   const asset = await page.request.get(audioUrl);
   expect(asset.ok()).toBeTruthy();
   expect(asset.headers()["content-type"]).toContain("audio/mpeg");
