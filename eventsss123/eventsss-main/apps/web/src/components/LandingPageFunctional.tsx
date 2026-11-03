@@ -376,7 +376,7 @@ export default function LandingPage({
       </header>
 
       {menu && (
-        <div className="esg-drawer" onClick={() => setMenu(false)}>
+        <div className="esg-drawer" role="presentation" onClick={() => setMenu(false)}>
           <nav onClick={(e) => e.stopPropagation()} aria-label="Mobile">
             <button type="button" className="link" style={{ alignSelf: "flex-end", fontSize: 28 }} onClick={() => setMenu(false)} aria-label="Close">
               ×
