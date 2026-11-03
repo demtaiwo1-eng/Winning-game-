@@ -40,7 +40,7 @@ BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d 
 for tool in aapt apksigner; do [[ -x "$BUILD_TOOLS/$tool" ]] || fail "Missing Android tool: $BUILD_TOOLS/$tool"; done
 
 chmod +x "$GRADLEW"
-"$GRADLEW" --no-daemon clean assembleDebug
+(cd "$ROOT/$ANDROID_DIR" && ./gradlew --no-daemon clean assembleDebug)
 APK="$ANDROID_DIR/app/build/outputs/apk/debug/app-debug.apk"
 [[ -s "$APK" ]] || fail "Gradle did not produce the expected debug APK."
 
