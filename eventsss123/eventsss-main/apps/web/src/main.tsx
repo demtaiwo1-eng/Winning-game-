@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, HashRouter } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
 import App from './EnterpriseApp';
+import AudioExperience from "./components/AudioExperience";
 import OfflineStatus from './components/OfflineStatus';
 import SyncConflictList from './components/SyncConflictList';
 import './index.css';
@@ -171,6 +172,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Suspense fallback={<StartupLoadingScreen />}>
             <App />
           </Suspense>
+          <AudioExperience showPrompt={false} autoPlay />
           <OfflineStatus />
           <SyncConflictList />
         </>
