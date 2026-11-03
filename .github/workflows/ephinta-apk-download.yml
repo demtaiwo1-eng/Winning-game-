@@ -48,8 +48,7 @@ jobs:
             exit 1
           fi
           cp "$APK" "release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk"
-          sha256sum "release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk" \
-            > "release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk.sha256"
+          (cd release-assets && sha256sum "ephinta-${{ github.event.workflow_run.run_number }}.apk" > "ephinta-${{ github.event.workflow_run.run_number }}.apk.sha256")
 
       - name: Publish stable OTA bundle release
         uses: softprops/action-gh-release@v2
