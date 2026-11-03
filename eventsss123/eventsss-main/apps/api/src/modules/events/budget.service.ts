@@ -35,7 +35,7 @@ export async function getBudget(ownerId: string, eventId: string) {
   const depositTotalMinor = deposits.reduce((total, deposit) => total + deposit.amountMinor, 0n);
   return {
     currency: ev.currency,
-    items,
+    items: items.map((item) => ({ ...item, plannedMinor: s(item.plannedMinor), actualMinor: s(item.actualMinor) })),
     deposits: deposits.map((deposit) => ({ ...deposit, amountMinor: s(deposit.amountMinor) })),
     funding: { depositTotalMinor: s(depositTotalMinor), depositCount: deposits.length },
     ...summarize(items),
@@ -44,7 +44,8 @@ export async function getBudget(ownerId: string, eventId: string) {
 
 export async function createItem(ownerId: string, eventId: string, data: Prisma.BudgetItemUncheckedCreateInput) {
   await getOwnedEvent(ownerId, eventId);
-  return prisma.budgetItem.create({ data: { ...data, eventId } });
+  const item = await prisma.budgetItem.create({ data: { ...data, eventId } });
+  return { ...item, plannedMinor: s(item.plannedMinor), actualMinor: s(item.actualMinor) };
 }
 
 async function ownedItem(ownerId: string, eventId: string, itemId: string) {
@@ -55,7 +56,8 @@ async function ownedItem(ownerId: string, eventId: string, itemId: string) {
 
 export async function updateItem(ownerId: string, eventId: string, itemId: string, data: Prisma.BudgetItemUncheckedUpdateInput) {
   await ownedItem(ownerId, eventId, itemId);
-  return prisma.budgetItem.update({ where: { id: itemId }, data });
+  const item = await prisma.budgetItem.update({ where: { id: itemId }, data });
+  return { ...item, plannedMinor: s(item.plannedMinor), actualMinor: s(item.actualMinor) };
 }
 
 export async function deleteItem(ownerId: string, eventId: string, itemId: string) {
