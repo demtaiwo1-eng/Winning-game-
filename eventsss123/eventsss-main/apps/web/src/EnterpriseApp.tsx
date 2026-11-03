@@ -90,6 +90,22 @@ type KycCase = {
 
 type UserSession = { name: string; email: string; role: Role; organizationMode?: OrganizationMode | null };
 
+function getAuthErrorMessage(status: number, error: unknown, mode: "signin" | "signup" | "forgot"): string {
+  const payload = error && typeof error === "object" ? error as Record<string, unknown> : {};
+  const code = typeof payload.code === "string" ? payload.code : "";
+  const message = typeof payload.message === "string" ? payload.message : "";
+  if (code === "INVALID_CREDENTIALS" || (status === 401 && mode === "signin")) return "That email and password do not match. Check your details and try again, or reset your password.";
+  if (code === "ALREADY_EXISTS" || status === 409) return "An account with this email or phone number already exists. Sign in instead, or use a different email or phone number.";
+  if (code === "VALIDATION_ERROR" || status === 400) return mode === "signup"
+    ? "Some registration details are missing or invalid. Review the fields and try again."
+    : "Please check your email address and try again.";
+  if (code === "ACCOUNT_DISABLED") return "This account is currently unavailable. Please contact support for help.";
+  if (status === 429) return "Too many attempts. Please wait a few minutes before trying again.";
+  if (status >= 500) return "We could not complete your request because of a server problem. Please try again shortly.";
+  if (message && !/internal|exception|prisma|stack|undefined|null/i.test(message)) return message;
+  return "We could not complete that request. Check your connection and try again.";
+}
+
 const roleMeta: Record<
   Role,
   { label: string; short: string; description: string }
@@ -1890,8 +1906,10 @@ export default function EnterpriseApp() {
         body: JSON.stringify(body),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok)
-        throw new Error(result?.error?.message || "Unable to authenticate.");
+      if (!response.ok) {
+        setAuthError(getAuthErrorMessage(response.status, result?.error, authMode));
+        return;
+      }
       if (authMode === "forgot") {
         setAuthError("");
         navigate("/auth/signin?role=CLIENT", { replace: true });
@@ -1917,7 +1935,9 @@ export default function EnterpriseApp() {
       } catch { /* */ }
     } catch (error) {
       setAuthError(
-        error instanceof Error ? error.message : "Unable to authenticate.",
+        error instanceof TypeError
+          ? "We could not reach EPHINTA. Check your internet connection and try again."
+          : "We could not complete your request. Please try again.",
       );
     }
   };
