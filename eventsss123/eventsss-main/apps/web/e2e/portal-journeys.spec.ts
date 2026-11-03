@@ -126,3 +126,28 @@ for (const portal of portals) {
     await expect(page).toHaveURL("/");
   });
 }
+
+
+test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", async ({ page }) => {
+  const client = portals.find((portal) => portal.role === "CLIENT")!;
+  await installRoleApiFixtures(page, client);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/auth/signin?role=CLIENT");
+  await page.getByLabel("Email").fill(client.email);
+  await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
+  await page.getByRole("button", { name: /Continue securely/ }).click();
+  await expect(page.getByRole("heading", { name: client.heading }).first()).toBeVisible();
+  const clientWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(clientWidth).toBeLessThanOrEqual(390);
+
+  await page.getByRole("button", { name: "Sign out" }).click();
+  const vendor = portals.find((portal) => portal.role === "VENDOR")!;
+  await installRoleApiFixtures(page, vendor);
+  await page.goto("/auth/signin?role=VENDOR");
+  await page.getByLabel("Email").fill(vendor.email);
+  await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
+  await page.getByRole("button", { name: /Continue securely/ }).click();
+  await expect(page.getByRole("heading", { name: vendor.heading }).first()).toBeVisible();
+  const vendorWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(vendorWidth).toBeLessThanOrEqual(390);
+});
