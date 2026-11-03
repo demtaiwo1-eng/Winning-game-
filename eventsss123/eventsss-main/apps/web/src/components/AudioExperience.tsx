@@ -146,14 +146,14 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       </button>
       {(showPrompt || needsGesture) && !playing && (
         <p className="eph-audio__notice">
-          {needsGesture ? "Automatic playback was blocked. Your browser does not need a separate audio permission; tap Play to grant playback through your action." : "Play music whenever you want. Sound starts only after your action if your browser requires it."}
+          {needsGesture ? "Your browser blocked automatic playback. Tap Enable sound & play to start music for this session. No microphone or recording permission is needed." : "Music starts automatically where your browser allows it. Otherwise, tap Play music whenever you are ready."}
         </p>
       )}
       <div className="eph-audio__controls">
         {playing ? (
           <button type="button" onClick={pause} aria-label="Pause music">Pause</button>
         ) : (
-          <button type="button" onClick={() => void play()} aria-label="Play music">Play music</button>
+          <button type="button" onClick={() => void play()} aria-label={needsGesture ? "Enable sound and play music" : "Play music"}>{needsGesture ? "Enable sound & play" : "Play music"}</button>
         )}
         <button type="button" onClick={() => changeTrack(trackIndex - 1)} aria-label="Previous track">Previous</button>
         <button type="button" onClick={() => changeTrack(trackIndex + 1)} aria-label="Next track">Next</button>
