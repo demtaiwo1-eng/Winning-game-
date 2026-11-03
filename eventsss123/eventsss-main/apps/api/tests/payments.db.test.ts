@@ -31,13 +31,7 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
     expect(eventResponse.status).toBe(201);
     const eventId = eventResponse.body.event.id as string;
 
-    const vendorProfile = await prisma.vendorProfile.create({
-      data: {
-        userId: vendor.id,
-        businessName: "Milestone Test Vendor",
-        slug: `milestone-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      },
-    });
+    const vendorProfile = await prisma.vendorProfile.findUniqueOrThrow({ where: { userId: vendor.id } });
     const category = await prisma.category.upsert({
       where: { slug: "milestone-test-services" },
       update: {},
@@ -200,7 +194,6 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
     } finally {
       await prisma.event.delete({ where: { id: eventId } });
       await prisma.listing.delete({ where: { id: listing.id } });
-      await prisma.vendorProfile.delete({ where: { id: vendorProfile.id } });
     }
   }, 45_000);
 });
