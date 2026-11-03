@@ -73,6 +73,14 @@ async function installRoleApiFixtures(page: Page, portal: PortalCase) {
     if (path.endsWith("/vendor/profile")) return json({ profile: { id: "qa-profile", businessName: "QA Services", country: "NG", city: "Ibadan" } });
     if (path.endsWith("/readiness/queue")) return json({ items: [] });
     if (path.endsWith("/readiness/mine")) return json({ items: [] });
+    if (path.endsWith("/admin/approvals")) return json({ items: [] });
+    if (path.includes("/admin/finance/reconciliation")) return json({
+      generatedAt: "2026-11-03T00:00:00.000Z", olderThanMinutes: 10,
+      stalePending: { total: 0, items: [] },
+      reconciliationDeadLetters: { total: 0, items: [] },
+      succeededDepositLedger: { scanned: 0, totalSucceeded: 0, scanTruncated: false, exceptionCountInScan: 0, exceptions: [] },
+      readOnly: true,
+    });
     if (path.endsWith("/admin/overview")) return json({
       accounts: { total: 8, active: 8 }, events: 0, vendors: 2, activeListings: 0,
       activeMarkets: 0, pendingVerifications: 0, disputedBookings: 0,
@@ -106,7 +114,7 @@ for (const portal of portals) {
       await page.getByRole("button", { name: /New event/ }).click();
       await expect(page.getByRole("heading", { name: "Create event", exact: true })).toBeVisible();
     } else if (portal.role === "VENDOR" || (portal.role === "ORGANIZATION" && portal.organizationMode === "SERVICE_PROVIDER")) {
-      await page.getByRole("button", { name: /Add package/ }).first().click({ force: true });
+      await page.getByRole("button", { name: "Add your first listing" }).click();
       await expect(page.getByRole("heading", { name: "Add service package" })).toBeVisible();
       await page.getByLabel("Package name").fill("QA Catering Package");
       await page.getByLabel("What is included?").fill("Test-only catering package");
@@ -118,7 +126,7 @@ for (const portal of portals) {
       await expect(page.getByText(/Package saved as a draft/)).toBeVisible();
     } else if (portal.role === "AFFILIATE") {
       await page.getByLabel("Referral code").fill("QA-E2E-REF");
-      await page.getByRole("button", { name: "Save partner profile" }).click({ force: true });
+      await page.getByRole("button", { name: "Save partner profile" }).click();
       await expect(page.getByText("Affiliate preferences saved.")).toBeVisible();
     } else if (portal.role === "VERIFIER") {
       await expect(page.getByText(/No recent or upcoming events need verifier action/)).toBeVisible();
@@ -160,7 +168,10 @@ test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", a
   await page.goto("/auth/signin?role=VENDOR");
   await page.getByLabel("Email").fill(vendor.email);
   await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
-  await page.getByRole("button", { name: /Continue securely/ }).click({ force: true });
+  const vendorLogin = page.waitForRequest((request) => request.method() === "POST" && request.url().includes("/auth/login"), { timeout: 15_000 });
+  await page.getByRole("textbox", { name: "Password" }).press("Enter");
+  await vendorLogin;
+  await expect(page).toHaveURL(/\/dashboard\/vendor$/);
   await expect(page.getByRole("heading", { name: vendor.heading }).first()).toBeVisible();
   const vendorWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(vendorWidth).toBeLessThanOrEqual(390);
