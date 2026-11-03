@@ -61,6 +61,8 @@ jobs:
             Automatically updated EPHINTA web bundle for the native Android app.
             This OTA-only prerelease is intentionally separate from the latest APK release.
           files: |
+            release-assets/ephinta-web-bundle.zip
+            release-assets/version.json
           overwrite_files: true
           prerelease: true
           make_latest: false
@@ -82,8 +84,6 @@ jobs:
           files: |
             release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk
             release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk.sha256
-            release-assets/ephinta-web-bundle.zip
-            release-assets/version.json
           prerelease: true
           make_latest: false
           fail_on_unmatched_files: true
