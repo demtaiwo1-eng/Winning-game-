@@ -280,3 +280,17 @@ test("branded startup splash appears and clears after the app shell is ready", a
   await expect(splash).toContainText("EPHINTA");
   await expect(splash).toBeHidden({ timeout: 5000 });
 });
+
+
+test("music player offers bundled tracks and an explicit playback action", async ({ page }) => {
+  await page.goto("/");
+  const player = page.getByRole("region", { name: "EPHINTA music player" });
+  await expect(player).toBeVisible();
+  await expect(player.getByRole("button", { name: "Play music" })).toBeVisible();
+  const tracks = player.getByLabel("Choose music");
+  await expect(tracks.locator("option")).toHaveCount(6);
+  await tracks.selectOption("2");
+  await expect(player.locator(".eph-audio__heading")).toContainText("Welcome, Little One");
+  await expect(player.getByRole("button", { name: "Play music" })).toBeVisible();
+  await expect(player.getByRole("slider", { name: /Volume/ })).toBeVisible();
+});
