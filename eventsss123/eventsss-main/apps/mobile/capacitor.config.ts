@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   server: { androidScheme: "https" },
   plugins: {
     CapacitorUpdater: { autoUpdate: false },
-    SplashScreen: { launchShowDuration: 0, backgroundColor: "#10002f", showSpinner: false },
+    SplashScreen: { launchShowDuration: 900, launchAutoHide: true, fadeOutDuration: 250, backgroundColor: "#10002f", androidScaleType: "CENTER_INSIDE", showSpinner: false },
     PushNotifications: { presentationOptions: ["badge", "sound", "alert"] },
   },
   android: { allowMixedContent: false },
