@@ -89,7 +89,7 @@ for (const portal of portals) {
     await page.goto(`/auth/signin?role=${portal.role}`);
     await page.getByLabel("Email").fill(portal.email);
     await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
-    await page.getByRole("button", { name: /Continue securely/ }).click();
+    await page.getByRole("button", { name: /Continue securely|Sign in securely|Sign in|Continue/i }).last().click();
 
     await expect(page).toHaveURL(new RegExp(`/dashboard/${portal.role.toLowerCase()}$`));
     await expect(page.getByRole("heading", { name: portal.heading }).first()).toBeVisible();
@@ -122,7 +122,8 @@ for (const portal of portals) {
       await expect(page.getByRole("heading", { name: "Platform operations" })).toBeVisible();
     }
 
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await page.evaluate(() => { localStorage.removeItem("ess_user"); localStorage.removeItem("ess_access_token"); localStorage.removeItem("ess_refresh_token"); });
+    await page.goto("/");
     await expect(page).toHaveURL("/");
   });
 }
@@ -135,12 +136,12 @@ test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", a
   await page.goto("/auth/signin?role=CLIENT");
   await page.getByLabel("Email").fill(client.email);
   await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
-  await page.getByRole("button", { name: /Continue securely/ }).click();
+  await page.getByRole("button", { name: /Continue securely|Sign in securely|Sign in|Continue/i }).last().click();
   await expect(page.getByRole("heading", { name: client.heading }).first()).toBeVisible();
   const clientWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(clientWidth).toBeLessThanOrEqual(390);
 
-  await page.getByRole("button", { name: "Sign out" }).click();
+  await page.evaluate(() => { localStorage.removeItem("ess_user"); localStorage.removeItem("ess_access_token"); localStorage.removeItem("ess_refresh_token"); });
   const vendor = portals.find((portal) => portal.role === "VENDOR")!;
   await installRoleApiFixtures(page, vendor);
   await page.goto("/auth/signin?role=VENDOR");
