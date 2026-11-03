@@ -19,8 +19,6 @@ jobs:
       EPHINTA_TEST_ACCOUNT_EMAIL: ${{ secrets.EPHINTA_TEST_ACCOUNT_EMAIL }}
       EPHINTA_TEST_ACCOUNT_PASSWORD: ${{ secrets.EPHINTA_TEST_ACCOUNT_PASSWORD }}
       VITE_API_URL: ${{ vars.VITE_API_URL }}
-      EPHINTA_TEST_ACCOUNT_EMAIL: ${{ secrets.EPHINTA_TEST_ACCOUNT_EMAIL }}
-      EPHINTA_TEST_ACCOUNT_PASSWORD: ${{ secrets.EPHINTA_TEST_ACCOUNT_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
