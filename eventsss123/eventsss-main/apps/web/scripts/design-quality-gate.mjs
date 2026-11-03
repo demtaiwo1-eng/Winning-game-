@@ -30,6 +30,11 @@ function collect(directory) {
 function inspect(file) {
   const source = fs.readFileSync(file, "utf8");
   const relative = path.relative(APP_ROOT, file);
+  // Ignore commented-out examples when auditing executable UI.
+  const executableSource = source
+    .replace(/<!--[\\s\\S]*?-->/g, "")
+    .replace(/\\/\\*[\\s\\S]*?\\*\\//g, "")
+    .replace(/^\\s*\\/\\/.*$/gm, "");
   report.inspectedFiles += 1;
 
   if (/\.(tsx|jsx|html)$/.test(file)) {
