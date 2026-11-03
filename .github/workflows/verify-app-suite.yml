@@ -27,12 +27,5 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: eventsss123/eventsss-main/package-lock.json
-      - uses: android-actions/setup-android@v3
-        with:
-          tools: ''
-          packages: |
-            platform-tools
-            platforms;android-35
-            build-tools;35.0.0
       - run: chmod +x scripts/verify-all.sh
       - run: scripts/verify-all.sh
