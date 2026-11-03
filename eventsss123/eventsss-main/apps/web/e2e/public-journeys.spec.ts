@@ -104,6 +104,16 @@ test("registration blocks a password shorter than the input minimum", async ({ p
   await dialog.getByRole("button", { name: "Next" }).click();
   await expect(dialog.getByText("Step 1 of 3")).toBeVisible();
   await expect(password).toBeVisible();
+
+  await password.fill("LongPassword123");
+  expect(await password.evaluate((element) => element.validity.valid)).toBe(false);
+  await dialog.getByRole("button", { name: "Next" }).click();
+  await expect(dialog.getByText("Step 1 of 3")).toBeVisible();
+
+  await password.fill("StrongPass123!");
+  expect(await password.evaluate((element) => element.validity.valid)).toBe(true);
+  await dialog.getByRole("button", { name: "Next" }).click();
+  await expect(dialog.getByText("Step 2 of 3")).toBeVisible();
 });
 test("registration supports back and next navigation and a review step", async ({ page }) => {
   await page.goto("/");
@@ -231,6 +241,29 @@ test("landing-page sign-in explains incorrect passwords and accepts legacy passw
   await expect(dialog.locator(".eph-auth-error")).toHaveAttribute("role", "alert");
   await expect(dialog.locator(".eph-auth-error")).toContainText("That email and password do not match");
   await expect(dialog.locator(".eph-auth-error")).toContainText("Forgot password");
+});
+
+test("forgot-password flow gives a privacy-safe confirmation", async ({ page }) => {
+  await page.route("**/api/v1/auth/forgot-password", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: "Sign in to your account" }).click();
+  const dialog = page.locator("#eph-auth-dialog");
+  await dialog.locator(".eph-auth-switch").getByRole("button", { name: "Reset it" }).click();
+  await expect(dialog.getByRole("heading", { name: "Reset your password" })).toBeVisible();
+  await dialog.getByLabel("Email address").fill("reset@example.test");
+  await dialog.getByRole("button", { name: "Send reset instructions" }).click();
+  await expect(dialog.locator(".eph-auth-notice")).toContainText(
+    "If an account exists for that email, a reset link has been sent",
+  );
 });
 
 test("switching from registration to sign-in clears signup-only password validation", async ({ page }) => {
