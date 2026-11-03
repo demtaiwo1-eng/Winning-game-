@@ -146,7 +146,8 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 600
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -no-snapshot -noaudio -gpu swiftshader_indirect
           disable-animations: true
           script: |
             set -e
@@ -158,9 +159,20 @@ jobs:
             for attempt in 1 2 3; do timeout 180s adb install -r artifacts/android/app-debug.apk && break; [ "$attempt" -lt 3 ] || exit 1; sleep 5; done
             adb shell pm path com.ephinta.app | grep -q '^package:'
             adb shell am force-stop com.ephinta.app
-            timeout 120s adb shell am start -W -n com.ephinta.app/.MainActivity
-            sleep 5
-            test -n "$(adb shell pidof com.ephinta.app | tr -d '\\r')"
+            timeout 180s adb shell am start -n com.ephinta.app/.MainActivity
+            launched=0
+            for attempt in $(seq 1 36); do
+              pid="$(adb shell pidof com.ephinta.app 2>/dev/null | tr -d '\\r' || true)"
+              resumed="$(adb shell dumpsys activity activities 2>/dev/null | grep -E 'mResumedActivity.*com\\.ephinta\\.app/\\.MainActivity|topResumedActivity.*com\\.ephinta\\.app/\\.MainActivity' || true)"
+              if [ -n "$pid" ] && [ -n "$resumed" ]; then launched=1; break; fi
+              sleep 5
+            done
+            if [ "$launched" -ne 1 ]; then
+              echo "EPHINTA did not reach a resumed MainActivity."
+              adb shell dumpsys activity activities | tail -n 160 || true
+              adb logcat -d -t 1200 | grep -Ei "com\\.ephinta\\.app|FATAL EXCEPTION|ANR in" | tail -n 240 || true
+              exit 1
+            fi
             echo "EPHINTA installed and remained running on Android API ${{ matrix.api-level }}."
 
       - name: Capture Android emulator diagnostics
