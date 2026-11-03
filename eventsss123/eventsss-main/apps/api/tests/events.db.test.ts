@@ -86,8 +86,10 @@ describe.skipIf(!run)("events flow (DB)", () => {
       .send({ title: "Funded event deposit", type: "PERSONAL", currency: "NGN" });
     expect(eventResponse.status).toBe(201);
     const eventId = eventResponse.body.event.id as string;
-    const wallet = await prisma.wallet.create({
-      data: { userId, currency: "NGN", availableMinor: 100000n, escrowMinor: 0n },
+    const wallet = await prisma.wallet.upsert({
+      where: { userId_currency: { userId, currency: "NGN" } },
+      update: { availableMinor: 100000n, escrowMinor: 0n },
+      create: { userId, currency: "NGN", availableMinor: 100000n, escrowMinor: 0n },
     });
     try {
       const payload = { amountMinor: "25000", idempotencyKey: "event-deposit-test-0001" };
