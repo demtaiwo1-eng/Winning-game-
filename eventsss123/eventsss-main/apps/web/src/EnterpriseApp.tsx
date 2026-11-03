@@ -2055,6 +2055,7 @@ export default function EnterpriseApp() {
             setLocalePref={setLocalePref}
           />
         )}
+        <AudioExperience showPrompt={false} autoPlay />
       </>
     );
   }
