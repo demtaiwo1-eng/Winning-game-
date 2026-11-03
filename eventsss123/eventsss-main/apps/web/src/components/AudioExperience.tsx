@@ -61,7 +61,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       }).catch(() => {
         setPlaying(false);
         setNeedsGesture(true);
-        setMessage("Tap Play to continue to the next track.");
+        setMessage("Tap Enable sound & play to continue to the next track.");
       });
     } else if (autoPlay && soundPreferenceLoaded && autoPlayEnabled && !autoAttempted.current) {
       autoAttempted.current = true;
@@ -71,7 +71,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         setMessage("Music is playing.");
       }).catch(() => {
         setNeedsGesture(true);
-        setMessage("Your browser blocked automatic playback. Tap Play to start the music.");
+        setMessage("Your browser blocked automatic playback. Tap Enable sound & play to start the music.");
       });
     }
   }, [audioUrl, selectedTrack.src, autoPlay, soundPreferenceLoaded]);
@@ -111,7 +111,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       setNeedsGesture(true);
       const mediaError = error instanceof DOMException ? error.name : "";
       setMessage(mediaError === "NotAllowedError"
-        ? "Playback needs your tap. Press Play again, and check that your device is not muted."
+        ? "Playback needs your tap. Tap Enable sound & play again, and check that your device is not muted."
         : "Music could not start. Check your connection, device volume, and try another track.");
     }
   }
@@ -127,7 +127,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   function changeTrack(next: number) {
     setTrackIndex((next + TRACKS.length) % TRACKS.length);
     setNeedsGesture(true);
-    setMessage("Track selected. Tap Play to listen.");
+    setMessage("Track selected. Tap Enable sound & play to listen.");
   }
 
   return (
