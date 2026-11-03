@@ -53,8 +53,8 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
     });
     const wallet = await prisma.wallet.upsert({
       where: { userId_currency: { userId: planner.id, currency: "NGN" } },
-      update: { availableMinor: 100000n, escrowMinor: 0n },
-      create: { userId: planner.id, currency: "NGN", availableMinor: 100000n, escrowMinor: 0n },
+      update: { availableMinor: 110000n, escrowMinor: 0n },
+      create: { userId: planner.id, currency: "NGN", availableMinor: 110000n, escrowMinor: 0n },
     });
     await prisma.eventReadiness.upsert({
       where: { eventId },
@@ -63,6 +63,12 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
     });
 
     try {
+      const eventDeposit = await request(app).post(`/api/v1/events/${eventId}/deposits`).set(auth(planner.token))
+        .send({ amountMinor: "10000", idempotencyKey: `full-flow-deposit-${eventId}` });
+      expect(eventDeposit.status).toBe(201);
+      const depositBudget = await request(app).get(`/api/v1/events/${eventId}/budget`).set(auth(planner.token));
+      expect(depositBudget.body.funding.depositTotalMinor).toBe("10000");
+
       const created = await request(app).post("/api/v1/payments/book").set(auth(planner.token))
         .send({ listingId: listing.id, eventId, quantity: 1, initialPaymentMinor: "20000", idempotencyKey: `initial-${eventId}` });
       expect(created.status).toBe(201);
@@ -78,7 +84,21 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect(replay.body.booking.id).toBe(booking.id);
       const walletAfterReplay = await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
       expect(walletAfterReplay.availableMinor).toBe(80000n);
-      expect(walletAfterReplay.escrowMinor).toBe(20000n);
+      expect(walletAfterReplay.escrowMinor).toBe(30000n);
+
+      const personalMessage = await request(app).post(`/api/v1/events/${eventId}/messages`).set(auth(planner.token))
+        .send({ recipientIds: [vendor.id], body: "Please confirm the catering essentials." });
+      expect(personalMessage.status).toBe(201);
+      expect(personalMessage.body.items).toHaveLength(1);
+      const vendorInbox = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(vendor.token));
+      expect(vendorInbox.body.items.some((message: { body: string }) => message.body === "Please confirm the catering essentials.")).toBe(true);
+      const teamMessage = await request(app).post(`/api/v1/events/${eventId}/messages`).set(auth(planner.token))
+        .send({ broadcast: true, body: "The event team schedule is confirmed." });
+      expect(teamMessage.status).toBe(201);
+      expect(teamMessage.body.items).toHaveLength(2);
+      const verifierInbox = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(verifier.token));
+      expect(verifierInbox.body.items.some((message: { body: string }) => message.body === "The event team schedule is confirmed.")).toBe(true);
+      expect((await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(outsider.token))).status).toBe(403);
 
       const concurrentRequests = await Promise.all([
         request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
@@ -123,7 +143,10 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect(fullyFundedBudget.body.funding.bookingPaymentsHeldMinor).toBe("100000");
       const updatedWallet = await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
       expect(updatedWallet.availableMinor).toBe(0n);
-      expect(updatedWallet.escrowMinor).toBe(100000n);
+      expect(updatedWallet.escrowMinor).toBe(110000n);
+      const fundedBudget = await request(app).get(`/api/v1/events/${eventId}/budget`).set(auth(planner.token));
+      expect(fundedBudget.body.funding.depositTotalMinor).toBe("10000");
+      expect(fundedBudget.body.funding.bookingPaymentsHeldMinor).toBe("100000");
       expect(await prisma.ledgerEntry.count({ where: { refType: "BOOKING_PAYMENT_REQUEST", refId: { in: [paymentRequestId, finalId] } } })).toBe(2);
 
       const vendorBookings = await request(app).get("/api/v1/payments/bookings?as=vendor").set(auth(vendor.token));
@@ -145,7 +168,7 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect(released.status).toBe(200);
       expect(released.body.status).toBe("FULFILLED");
       const buyerWalletAfterRelease = await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
-      expect(buyerWalletAfterRelease.escrowMinor).toBe(0n);
+      expect(buyerWalletAfterRelease.escrowMinor).toBe(10000n);
       const vendorWallet = await prisma.wallet.findUniqueOrThrow({
         where: { userId_currency: { userId: vendor.id, currency: "NGN" } },
       });
