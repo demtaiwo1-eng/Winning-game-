@@ -656,8 +656,8 @@ paymentsRouter.post(
       return booking;
     });
 
-    // Auto-create readiness checks so verifier board is fresh (no demo data required)
-    if (eventId) {
+    // Only fully funded bookings enter the service-verification and completion workflow.
+    if (eventId && initialPayment === total) {
       try {
         for (const item of result.items) {
           const listing = await prisma.listing.findUnique({ where: { id: item.listingId } });
@@ -734,7 +734,9 @@ paymentsRouter.post(
         })),
       },
       message:
-        "Payment held in platform-controlled escrow. The assigned lead verifier can authorize release only after the event ends and all service checks are green.",
+        initialPayment === total
+          ? "Full booking payment held in platform-controlled escrow. The assigned lead verifier can authorize release only after the event ends and all service checks are green."
+          : "Initial payment held in escrow. Vendors may request further milestone payments for planner approval; service verification begins when the booking is fully paid.",
     });
   }),
 );
@@ -860,6 +862,46 @@ paymentsRouter.post(
         where: { id: paymentRequest.id },
         data: { status: "PAID", paidAt: new Date() },
       });
+      if (booking.eventId && booking.paidMinor + paymentRequest.amountMinor === booking.totalMinor) {
+        for (const item of booking.items) {
+          const existingCheck = await tx.eventServiceCheck.findFirst({
+            where: { eventId: booking.eventId, bookingId: booking.id, listingId: item.listingId },
+          });
+          if (!existingCheck) {
+            await tx.eventServiceCheck.create({
+              data: {
+                eventId: booking.eventId,
+                bookingId: booking.id,
+                listingId: item.listingId,
+                label: item.listing.title,
+                category: item.listing.type,
+                status: "PENDING",
+              },
+            });
+          }
+        }
+        const checks = await tx.eventServiceCheck.findMany({ where: { eventId: booking.eventId } });
+        await tx.eventReadiness.upsert({
+          where: { eventId: booking.eventId },
+          create: {
+            eventId: booking.eventId,
+            status: "IN_PROGRESS",
+            totalChecks: checks.length,
+            greenCount: checks.filter((check) => check.status === "GREEN").length,
+            amberCount: checks.filter((check) => check.status === "AMBER").length,
+            redCount: checks.filter((check) => check.status === "RED").length,
+            pendingCount: checks.filter((check) => check.status === "PENDING").length,
+          },
+          update: {
+            status: "IN_PROGRESS",
+            totalChecks: checks.length,
+            greenCount: checks.filter((check) => check.status === "GREEN").length,
+            amberCount: checks.filter((check) => check.status === "AMBER").length,
+            redCount: checks.filter((check) => check.status === "RED").length,
+            pendingCount: checks.filter((check) => check.status === "PENDING").length,
+          },
+        });
+      }
     });
     res.json({ status: "paid_into_escrow", requestId: paymentRequest.id, amountMinor: paymentRequest.amountMinor.toString() });
   }),
