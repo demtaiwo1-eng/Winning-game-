@@ -252,7 +252,7 @@ test("switching from registration to sign-in clears signup-only password validat
   const signupPassword = dialog.getByLabel("Password");
   await signupPassword.fill("short");
   await expect(signupPassword).toHaveAttribute("minlength", "8");
-  await expect(signupPassword).toHaveJSProperty("validity.valid", false);
+  expect(await signupPassword.evaluate((element) => element.validity.valid)).toBe(false);
 
   await dialog.locator(".eph-auth-switch").getByRole("button", { name: "Sign in" }).click();
   await expect(dialog.getByRole("heading", { name: "Welcome back" })).toBeVisible();
