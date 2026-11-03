@@ -1,6 +1,11 @@
 name: App verification suite
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'eventsss123/eventsss-main/**'
+      - '.github/workflows/verify-app-suite.yml'
   push:
     branches: [chore/android-launch-readiness]
     paths:
