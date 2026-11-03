@@ -163,7 +163,7 @@ jobs:
             launched=0
             for attempt in $(seq 1 36); do
               pid="$(adb shell pidof com.ephinta.app 2>/dev/null | tr -d '\\r' || true)"
-              resumed="$(adb shell dumpsys activity activities 2>/dev/null | grep -E 'mResumedActivity.*com\\.ephinta\\.app/\\.MainActivity|topResumedActivity.*com\\.ephinta\\.app/\\.MainActivity' || true)"
+              resumed="$(adb shell dumpsys activity activities 2>/dev/null | grep -F 'com.ephinta.app/.MainActivity' || true)"
               if [ -n "$pid" ] && [ -n "$resumed" ]; then launched=1; break; fi
               sleep 5
             done
