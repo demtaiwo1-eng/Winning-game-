@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      NODE_ENV: production
+      NODE_ENV: test
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
       JWT_SECRET: ci-only-secret-change-me-0123456789abcdef0123456789abcdef
       VITE_API_URL: https://ephinta-wss.onrender.com/api/v1
