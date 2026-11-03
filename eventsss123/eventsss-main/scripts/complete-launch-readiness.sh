@@ -99,6 +99,12 @@ else
 fi
 
 say "5/5 — Production signing and release gate"
+if [[ -z "${ANDROID_KEYSTORE_PATH:-}" && -n "${ANDROID_KEYSTORE_BASE64:-}" ]]; then
+  KEYSTORE_TMP="${RUNNER_TEMP:-/tmp}/ephinta-release.keystore"
+  printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_TMP"
+  chmod 600 "$KEYSTORE_TMP"
+  export ANDROID_KEYSTORE_PATH="$KEYSTORE_TMP"
+fi
 SIGNING_READY=1
 for name in ANDROID_KEYSTORE_PATH ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
   [[ -n "${!name:-}" ]] || SIGNING_READY=0
