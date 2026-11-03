@@ -28,16 +28,22 @@ export function summarize(items: { category: string | null; plannedMinor: bigint
 
 export async function getBudget(ownerId: string, eventId: string) {
   const ev = await getOwnedEvent(ownerId, eventId);
-  const [items, deposits] = await Promise.all([
+  const [items, deposits, bookings] = await Promise.all([
     prisma.budgetItem.findMany({ where: { eventId }, orderBy: [{ category: "asc" }, { label: "asc" }] }),
     prisma.eventDeposit.findMany({ where: { eventId }, orderBy: { createdAt: "desc" } }),
+    prisma.booking.findMany({ where: { eventId, status: { notIn: ["CANCELLED", "REFUNDED"] } }, select: { paidMinor: true } }),
   ]);
   const depositTotalMinor = deposits.reduce((total, deposit) => total + deposit.amountMinor, 0n);
+  const bookingPaymentsHeldMinor = bookings.reduce((total, booking) => total + booking.paidMinor, 0n);
   return {
     currency: ev.currency,
     items: items.map((item) => ({ ...item, plannedMinor: s(item.plannedMinor), actualMinor: s(item.actualMinor) })),
     deposits: deposits.map((deposit) => ({ ...deposit, amountMinor: s(deposit.amountMinor) })),
-    funding: { depositTotalMinor: s(depositTotalMinor), depositCount: deposits.length },
+    funding: {
+      depositTotalMinor: s(depositTotalMinor),
+      depositCount: deposits.length,
+      bookingPaymentsHeldMinor: s(bookingPaymentsHeldMinor),
+    },
     ...summarize(items),
   };
 }
