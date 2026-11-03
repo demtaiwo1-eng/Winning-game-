@@ -27,10 +27,20 @@ curl --fail --silent --show-error --retry 3 --max-time 45 "$API_ORIGIN/health" >
 curl --fail --silent --show-error --retry 3 --max-time 45 "$API_ORIGIN/ready" >/dev/null || fail "Staging API database readiness failed"
 pass "Dedicated staging API is healthy"
 
-# Only authenticate an already-created, owner-controlled test account.
+# Provision the dedicated CLIENT test account if it does not exist yet.
+# HTTP 409 means it already exists; all other registration failures stop the run.
 # Credentials are never printed, written to artifacts, or passed to Gradle.
 LOGIN_JSON="$(node -e 'process.stdout.write(JSON.stringify({email:process.env.EPHINTA_TEST_ACCOUNT_EMAIL,password:process.env.EPHINTA_TEST_ACCOUNT_PASSWORD}))')"
-LOGIN_RESPONSE="$(curl --fail --silent --show-error --max-time 45 -H 'Content-Type: application/json' -d "$LOGIN_JSON" "$EPHINTA_TEST_API_URL/auth/login")" || fail "Test account login failed"
+LOGIN_CODE="$(curl --silent --show-error --max-time 45 -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$LOGIN_JSON" "$EPHINTA_TEST_API_URL/auth/login")" || fail "Staging login endpoint could not be reached"
+if [[ "$LOGIN_CODE" == "401" ]]; then
+  REGISTER_JSON="$(node -e 'process.stdout.write(JSON.stringify({email:process.env.EPHINTA_TEST_ACCOUNT_EMAIL,password:process.env.EPHINTA_TEST_ACCOUNT_PASSWORD,name:"Ephinta QA Test",role:"CLIENT",country:"NG",currency:"NGN",locale:"en"}))')"
+  REGISTER_CODE="$(curl --silent --show-error --max-time 45 -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$REGISTER_JSON" "$EPHINTA_TEST_API_URL/auth/register")" || fail "Could not provision the staging test account"
+  [[ "$REGISTER_CODE" == "201" || "$REGISTER_CODE" == "409" ]] || fail "Staging test-account registration returned HTTP $REGISTER_CODE"
+  unset REGISTER_JSON
+elif [[ "$LOGIN_CODE" != "200" ]]; then
+  fail "Staging login returned HTTP $LOGIN_CODE; refusing to create or use another account"
+fi
+LOGIN_RESPONSE="$(curl --fail --silent --show-error --max-time 45 -H 'Content-Type: application/json' -d "$LOGIN_JSON" "$EPHINTA_TEST_API_URL/auth/login")" || fail "Test account login failed after provisioning"
 ACCESS_TOKEN="$(printf '%s' "$LOGIN_RESPONSE" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);if(!j.accessToken)process.exit(2);process.stdout.write(j.accessToken)}catch{process.exit(2)}})')" || fail "Login response did not contain an access token"
 ME="$(curl --fail --silent --show-error --max-time 45 -H "Authorization: Bearer $ACCESS_TOKEN" "$EPHINTA_TEST_API_URL/auth/me")" || fail "Authenticated /auth/me request failed"
 EXPECTED_EMAIL="$(printf '%s' "$EPHINTA_TEST_ACCOUNT_EMAIL" | tr '[:upper:]' '[:lower:]')"
