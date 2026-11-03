@@ -111,6 +111,7 @@ describe.skipIf(!run)("events flow (DB)", () => {
       expect(insufficient.status).toBe(400);
     } finally {
       await prisma.event.delete({ where: { id: eventId } });
+      await prisma.ledgerEntry.deleteMany({ where: { walletId: wallet.id } });
       await prisma.wallet.delete({ where: { id: wallet.id } });
     }
   }, 30_000);
