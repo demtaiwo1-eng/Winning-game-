@@ -70,6 +70,8 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect(booking.status).toBe("PENDING");
       expect(booking.paidMinor).toBe("20000");
       expect(booking.totalMinor).toBe("100000");
+      const initialBudget = await request(app).get(`/api/v1/events/${eventId}/budget`).set(auth(planner.token));
+      expect(initialBudget.body.funding.bookingPaymentsHeldMinor).toBe("20000");
       const replay = await request(app).post("/api/v1/payments/book").set(auth(planner.token))
         .send({ listingId: listing.id, eventId, quantity: 1, initialPaymentMinor: "20000", idempotencyKey: `initial-${eventId}` });
       expect(replay.status).toBe(201);
@@ -106,6 +108,8 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       const refreshed = await prisma.booking.findUniqueOrThrow({ where: { id: booking.id } });
       expect(refreshed.paidMinor).toBe(100000n);
       expect(refreshed.status).toBe("PAID");
+      const fullyFundedBudget = await request(app).get(`/api/v1/events/${eventId}/budget`).set(auth(planner.token));
+      expect(fullyFundedBudget.body.funding.bookingPaymentsHeldMinor).toBe("100000");
       const updatedWallet = await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
       expect(updatedWallet.availableMinor).toBe(0n);
       expect(updatedWallet.escrowMinor).toBe(100000n);
@@ -135,6 +139,8 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
         where: { userId_currency: { userId: vendor.id, currency: "NGN" } },
       });
       expect(vendorWallet.availableMinor).toBeGreaterThan(0n);
+      const releasedBudget = await request(app).get(`/api/v1/events/${eventId}/budget`).set(auth(planner.token));
+      expect(releasedBudget.body.funding.bookingPaymentsHeldMinor).toBe("0");
     } finally {
       await prisma.event.delete({ where: { id: eventId } });
       await prisma.listing.delete({ where: { id: listing.id } });
