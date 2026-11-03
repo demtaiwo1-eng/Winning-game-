@@ -131,6 +131,9 @@ if [[ "$SIGNING_READY" == "1" ]]; then
   cp "$RELEASE_AAB" "$ANDROID_ARTIFACT_DIR/ephinta-production.aab"
   pass "Production APK/AAB built and signing certificate verified."
 else
+  if [[ "${REQUIRE_PRODUCTION_SIGNING:-0}" == "1" ]]; then
+    fail "Production signing is required for this run, but one or more keystore/certificate settings are missing."
+  fi
   warn "Production signing skipped: configure the four ANDROID_KEYSTORE_* environment values and ANDROID_CERT_SHA256. Never commit keystore files or passwords."
 fi
 
