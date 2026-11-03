@@ -185,7 +185,7 @@ export const paymentsApi = {
     api("/payments/book", { method: "POST", body: JSON.stringify(body) }),
   eventDeposit: (eventId: string, body: { amountMinor: string; idempotencyKey: string }) =>
     api<{ alreadyProcessed: boolean; deposit: { id: string; amountMinor: string; currency: string; status: string } }>(`/events/${eventId}/deposits`, { method: "POST", body: JSON.stringify(body) }),
-  requestBookingPayment: (bookingId: string, body: { amountMinor: string; reason: string }) =>
+  requestBookingPayment: (bookingId: string, body: { amountMinor: string; reason: string; idempotencyKey: string }) =>
     api(`/payments/bookings/${bookingId}/payment-requests`, { method: "POST", body: JSON.stringify(body) }),
   bookingPaymentRequests: (bookingId: string) =>
     api<{ items: Array<{ id: string; amountMinor: string; reason: string; status: string; requestedBy: { id: string; name: string } }> }>(`/payments/bookings/${bookingId}/payment-requests`),
