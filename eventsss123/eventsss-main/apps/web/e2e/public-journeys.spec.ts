@@ -265,3 +265,12 @@ test("authenticated planner receives no private event data outside the owned eve
   await expect(page.getByRole("heading", { name: /Welcome back, Other/ })).toBeVisible();
   await expect(page.getByText("Another Owner's Private Event")).toHaveCount(0);
 });
+
+
+test("branded startup splash appears and clears after the app shell is ready", async ({ page }) => {
+  await page.goto("/", { waitUntil: "commit" });
+  const splash = page.locator("[data-ephinta-startup-splash]");
+  await expect(splash).toBeVisible({ timeout: 5000 });
+  await expect(splash).toContainText("EPHINTA");
+  await expect(splash).toBeHidden({ timeout: 5000 });
+});
