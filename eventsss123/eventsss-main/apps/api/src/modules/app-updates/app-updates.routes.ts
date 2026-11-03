@@ -13,20 +13,20 @@ let cachedAssets: { expiresAt: number; assets: ReleaseAsset[] } | undefined;
 async function otaAssets(): Promise<ReleaseAsset[]> {
   if (cachedAssets && cachedAssets.expiresAt > Date.now()) return cachedAssets.assets;
 
-  const requestOptions = {
+  const requestOptions = () => ({
     headers: {
       Accept: "application/vnd.github+json",
       "User-Agent": "EPHINTA-mobile-updater",
       "X-GitHub-Api-Version": "2022-11-28",
     },
     signal: AbortSignal.timeout(15_000),
-  };
-  let response = await fetch(GITHUB_OTA_RELEASE_API, requestOptions);
+  });
+  let response = await fetch(GITHUB_OTA_RELEASE_API, requestOptions());
   // Keep existing installed apps updating while the dedicated OTA tag is first
   // being created, or if it is temporarily absent. APK releases also carry OTA
   // assets, so the legacy latest-release fallback remains compatible.
   if (response.status === 404) {
-    response = await fetch(GITHUB_LEGACY_RELEASE_API, requestOptions);
+    response = await fetch(GITHUB_LEGACY_RELEASE_API, requestOptions());
   }
   if (!response.ok) throw new Error(`GitHub OTA release lookup failed (${response.status})`);
 
