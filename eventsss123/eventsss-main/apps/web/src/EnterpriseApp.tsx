@@ -1,6 +1,5 @@
 import { lazy, useEffect, useState, type FormEvent } from "react";
 import DateWheelPicker from './components/DateWheelPicker';
-import AudioExperience from "./components/AudioExperience";
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { APP_ROUTE_PATHS, dashboardRouteRedirect, legacyDashboardPath } from "./lib/appRoutes";
 const EventReadinessBoard = lazy(() => import("./components/EventReadinessBoard"));
@@ -2055,7 +2054,6 @@ export default function EnterpriseApp() {
             setLocalePref={setLocalePref}
           />
         )}
-        <AudioExperience showPrompt={false} autoPlay />
       </>
     );
   }
@@ -2323,7 +2321,6 @@ export default function EnterpriseApp() {
           setLocalePref={setLocalePref}
         />
       )}
-      <AudioExperience showPrompt={false} autoPlay />
     </div>
   );
 }
