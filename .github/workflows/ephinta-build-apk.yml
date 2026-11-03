@@ -224,11 +224,13 @@ jobs:
         run: npm run build -w apps/web
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
+          VITE_UPDATE_URL: ${{ format('{0}/app-updates', vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1') }}
 
       - name: Sync Capacitor Android project
         shell: bash
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
+          VITE_UPDATE_URL: ${{ format('{0}/app-updates', vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1') }}
         run: |
           set -euo pipefail
           if npm run | grep -qE 'mobile:sync'; then
