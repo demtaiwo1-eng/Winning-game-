@@ -22,6 +22,7 @@ describe.skipIf(!run)("event messages (DB)", () => {
   it("restricts conversations to event participants and supports personal, broadcast, and read flows", async () => {
     const owner = await signup("message-owner");
     const verifier = await signup("message-verifier", "VERIFIER");
+    const verifierTwo = await signup("message-verifier-two", "VERIFIER");
     const outsider = await signup("message-outsider");
     const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
     const eventResponse = await request(app).post("/api/v1/events").set(auth(owner.token))
@@ -30,13 +31,17 @@ describe.skipIf(!run)("event messages (DB)", () => {
     const eventId = eventResponse.body.event.id as string;
 
     try {
-      await prisma.eventVerifierAssignment.create({
-        data: { eventId, verifierId: verifier.id, zone: "GENERAL", isLead: true },
+      await prisma.eventVerifierAssignment.createMany({
+        data: [
+          { eventId, verifierId: verifier.id, zone: "GENERAL", isLead: true },
+          { eventId, verifierId: verifierTwo.id, zone: "ACCESS", isLead: false },
+        ],
       });
 
       const thread = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(owner.token));
       expect(thread.status).toBe(200);
       expect(thread.body.participants.map((entry: { id: string }) => entry.id)).toContain(verifier.id);
+      expect(thread.body.participants.map((entry: { id: string }) => entry.id)).toContain(verifierTwo.id);
 
       const verifierPrefs = await request(app).get("/api/v1/notifications/preferences").set(auth(verifier.token));
       expect(verifierPrefs.status).toBe(200);
@@ -74,12 +79,20 @@ describe.skipIf(!run)("event messages (DB)", () => {
 
       await request(app).patch("/api/v1/notifications/preferences").set(auth(verifier.token))
         .send({ messages: false });
+      const secondVerifierBeforeBroadcast = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(verifierTwo.token));
+      expect(secondVerifierBeforeBroadcast.body.items).toHaveLength(0);
       const beforeBroadcast = await prisma.notification.count({ where: { userId: verifier.id } });
       const broadcast = await request(app).post(`/api/v1/events/${eventId}/messages`).set(auth(owner.token))
         .send({ broadcast: true, body: "Team update." });
       expect(broadcast.status).toBe(201);
-      expect(broadcast.body.items).toHaveLength(1);
+      expect(broadcast.body.items).toHaveLength(2);
       expect(await prisma.notification.count({ where: { userId: verifier.id } })).toBe(beforeBroadcast);
+      const secondVerifierReceived = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(verifierTwo.token));
+      expect(secondVerifierReceived.body.items).toHaveLength(1);
+      expect(secondVerifierReceived.body.items[0].body).toBe("Team update.");
+      const secondVerifierNotifications = await request(app).get("/api/v1/notifications").set(auth(verifierTwo.token));
+      expect(secondVerifierNotifications.body.items).toHaveLength(1);
+      expect(secondVerifierNotifications.body.items[0].type).toBe("MESSAGE");
 
       expect((await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(outsider.token))).status).toBe(403);
       expect((await request(app).post(`/api/v1/events/${eventId}/messages`).set(auth(owner.token))
