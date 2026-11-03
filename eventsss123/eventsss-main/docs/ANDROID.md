@@ -5,7 +5,7 @@ The active root-level Android pipeline has two delivery lanes:
 1. **Verified APK and OTA release:** `.github/workflows/ephinta-build-apk.yml` runs the API/web checks, database integration tests, and Android build. It also packages the web build as an OTA bundle and creates a version manifest. After the workflow succeeds on the default branch, `.github/workflows/ephinta-apk-download.yml` publishes the exact tested APK, checksum, web bundle, and `version.json` together in a GitHub Release.
 2. **Native Android changes:** changes to Android/Capacitor native code, permissions, plugins, or signing still require a newly built APK and a normal install/update. OTA delivery replaces only the web UI and web logic.
 
-The app checks the CORS-enabled API proxy at `https://ephinta-wss.onrender.com/api/v1/app-updates`. The API reads the latest GitHub Release server-side and streams the versioned web bundle to the app, avoiding browser CORS restrictions on GitHub release assets. GitHub Pages is not required.
+The app checks the CORS-enabled API proxy at `https://ephinta-wss.onrender.com/api/v1/app-updates`. The API reads the dedicated `ephinta-web-latest` GitHub release tag server-side and streams the versioned web bundle to the app, avoiding browser CORS restrictions on GitHub release assets. This OTA tag is kept separate from APK releases, so publishing an unsigned test APK or a signed production APK cannot interrupt web-layer updates. GitHub Pages is not required.
 
 ## Required repository configuration
 
