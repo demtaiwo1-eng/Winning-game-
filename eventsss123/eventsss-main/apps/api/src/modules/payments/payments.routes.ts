@@ -766,10 +766,10 @@ paymentsRouter.post(
     if (reason.length < 8 || reason.length > 500) throw new HttpError(400, "INVALID_REASON", "Explain the requested essentials or milestone (8–500 characters)");
     const amountMinor = BigInt(amountRaw);
     const suppliedKey = req.body.idempotencyKey;
-    if (suppliedKey !== undefined && (typeof suppliedKey !== "string" || suppliedKey.length < 8 || suppliedKey.length > 100)) {
-      throw new HttpError(400, "INVALID_IDEMPOTENCY_KEY", "idempotencyKey must contain 8–100 characters");
+    if (typeof suppliedKey !== "string" || suppliedKey.length < 8 || suppliedKey.length > 100) {
+      throw new HttpError(400, "INVALID_IDEMPOTENCY_KEY", "A unique idempotencyKey of 8–100 characters is required");
     }
-    const idempotencyKey = `booking-payment-request:${req.user!.id}:${req.params.id}:${suppliedKey || randomUUID()}`;
+    const idempotencyKey = `booking-payment-request:${req.user!.id}:${req.params.id}:${suppliedKey}`;
     const replay = (existing: BookingPaymentRequest) => {
       if (
         existing.bookingId !== req.params.id ||
