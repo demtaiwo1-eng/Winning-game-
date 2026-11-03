@@ -166,6 +166,21 @@ test("sign-in displays a readable error when authentication fails", async ({
   );
 });
 
+test("music dock fits the phone screen and exposes playback controls @mobile", async ({ page }) => {
+  await page.goto("/");
+  const player = page.getByRole("region", { name: "EPHINTA music player" });
+  await expect(player).toBeVisible();
+  const viewport = page.viewportSize();
+  const bounds = await player.boundingBox();
+  expect(viewport).not.toBeNull();
+  expect(bounds).not.toBeNull();
+  expect(bounds!.x).toBeGreaterThanOrEqual(0);
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport!.width);
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport!.height);
+  await expect(player.getByRole("button", { name: /play music|pause music/i })).toBeVisible();
+  await expect(player.getByRole("button", { name: "Music settings" })).toBeVisible();
+});
+
 test("mobile menu opens and provides sign-in access @mobile", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium", "Mobile menu is checked on the mobile viewport.");
   await page.goto("/");
