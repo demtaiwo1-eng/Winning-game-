@@ -102,9 +102,9 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
 
       const concurrentRequests = await Promise.all([
         request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
-          .set(auth(vendor.token)).send({ amountMinor: "45000", reason: "Concurrent essential materials request A" }),
+          .set(auth(vendor.token)).send({ amountMinor: "45000", reason: "Concurrent essential materials request A", idempotencyKey: `concurrent-request-a-${booking.id}` }),
         request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
-          .set(auth(vendor.token)).send({ amountMinor: "45000", reason: "Concurrent essential materials request B" }),
+          .set(auth(vendor.token)).send({ amountMinor: "45000", reason: "Concurrent essential materials request B", idempotencyKey: `concurrent-request-b-${booking.id}` }),
       ]);
       expect(concurrentRequests.map((response) => response.status).sort()).toEqual([201, 409]);
       const reservedRequest = concurrentRequests.find((response) => response.status === 201)!.body.request;
@@ -140,11 +140,11 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect(approval.body.status).toBe("paid_into_escrow");
 
       const tooMuch = await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
-        .set(auth(vendor.token)).send({ amountMinor: "60000", reason: "Remaining essentials and final setup" });
+        .set(auth(vendor.token)).send({ amountMinor: "60000", reason: "Remaining essentials and final setup", idempotencyKey: `too-much-request-${booking.id}` });
       expect(tooMuch.status).toBe(409);
 
       const finalRequest = await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests`)
-        .set(auth(vendor.token)).send({ amountMinor: "50000", reason: "Final agreed service milestone" });
+        .set(auth(vendor.token)).send({ amountMinor: "50000", reason: "Final agreed service milestone", idempotencyKey: `final-milestone-${booking.id}` });
       expect(finalRequest.status).toBe(201);
       const finalId = finalRequest.body.request.id as string;
       const finalApproval = await request(app).post(`/api/v1/payments/bookings/${booking.id}/payment-requests/${finalId}/approve`)
