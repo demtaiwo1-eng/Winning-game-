@@ -158,7 +158,9 @@ test("sign-in displays a readable error when authentication fails", async ({
   await page.goto("/auth/signin?role=CLIENT");
 
   await page.getByLabel("Email").fill("e2e@example.test");
-  await page.getByRole("textbox", { name: "Password" }).fill("wrong-password");
+  const password = page.getByRole("textbox", { name: "Password" });
+  await expect(password).not.toHaveAttribute("minlength");
+  await password.fill("short");
   await page.getByRole("button", { name: /Continue securely/ }).click();
 
   await expect(page.locator(".ess-form-error")).toHaveAttribute("role", "alert");
