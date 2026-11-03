@@ -221,6 +221,7 @@ export default function VerifierPicker({
         >
           <div
             className="ess-panel"
+            role="presentation"
             style={{ maxWidth: 420, width: "100%" }}
             onClick={(e) => e.stopPropagation()}
           >
