@@ -31,7 +31,7 @@ export async function getBudget(ownerId: string, eventId: string) {
   const [items, deposits, bookings] = await Promise.all([
     prisma.budgetItem.findMany({ where: { eventId }, orderBy: [{ category: "asc" }, { label: "asc" }] }),
     prisma.eventDeposit.findMany({ where: { eventId }, orderBy: { createdAt: "desc" } }),
-    prisma.booking.findMany({ where: { eventId, status: { notIn: ["CANCELLED", "REFUNDED"] } }, select: { paidMinor: true } }),
+    prisma.booking.findMany({ where: { eventId, status: { in: ["PENDING", "PAID", "CONFIRMED"] } }, select: { paidMinor: true } }),
   ]);
   const depositTotalMinor = deposits.reduce((total, deposit) => total + deposit.amountMinor, 0n);
   const bookingPaymentsHeldMinor = bookings.reduce((total, booking) => total + booking.paidMinor, 0n);
