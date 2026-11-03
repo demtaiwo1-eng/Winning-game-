@@ -238,7 +238,7 @@ test("authenticated planner can add a checklist task to an owned event", async (
   await eventWorkspaceTab.dispatchEvent("click");
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
   await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
-  const taskInput = page.locator('section[aria-labelledby="event-workspace-title"] label').filter({ hasText: /^Task$/ }).locator("input");
+  const taskInput = page.getByLabel("Task", { exact: true });
   await expect(taskInput).toBeVisible();
   await taskInput.fill("Confirm event venue");
   // Submit with the keyboard: the sticky branded header can overlap the button in CI.
