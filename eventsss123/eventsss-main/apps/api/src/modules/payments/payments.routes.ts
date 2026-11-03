@@ -727,6 +727,7 @@ paymentsRouter.post(
         subtotalMinor: result.subtotalMinor.toString(),
         commissionMinor: result.commissionMinor.toString(),
         totalMinor: result.totalMinor.toString(),
+        paidMinor: result.paidMinor.toString(),
         items: result.items.map((i) => ({
           ...i,
           unitPriceMinor: i.unitPriceMinor.toString(),
@@ -735,6 +736,149 @@ paymentsRouter.post(
       message:
         "Payment held in platform-controlled escrow. The assigned lead verifier can authorize release only after the event ends and all service checks are green.",
     });
+  }),
+);
+
+
+/** Vendor requests a milestone/essentials payment; planner must approve it. */
+paymentsRouter.post(
+  "/bookings/:id/payment-requests",
+  requireAuth,
+  requireRole("VENDOR"),
+  asyncHandler(async (req, res) => {
+    const amountRaw = String(req.body.amountMinor ?? "");
+    const reason = String(req.body.reason ?? "").trim();
+    if (!/^[1-9]\\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive whole number");
+    if (reason.length < 8 || reason.length > 500) throw new HttpError(400, "INVALID_REASON", "Explain the requested essentials or milestone (8–500 characters)");
+    const booking = await prisma.booking.findUnique({
+      where: { id: req.params.id },
+      include: { vendor: { select: { userId: true } } },
+    });
+    if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
+    if (booking.vendor.userId !== req.user!.id) throw new HttpError(403, "FORBIDDEN", "Only the assigned vendor can request a booking payment");
+    if (!booking.eventId || ["CANCELLED", "REFUNDED", "FULFILLED"].includes(booking.status)) {
+      throw new HttpError(409, "BOOKING_NOT_PAYABLE", "This booking cannot accept further payment requests");
+    }
+    const amountMinor = BigInt(amountRaw);
+    const pending = await prisma.bookingPaymentRequest.aggregate({
+      where: { bookingId: booking.id, status: "PENDING" },
+      _sum: { amountMinor: true },
+    });
+    const remaining = booking.totalMinor - booking.paidMinor - (pending._sum.amountMinor ?? 0n);
+    if (amountMinor > remaining) throw new HttpError(409, "AMOUNT_EXCEEDS_REMAINING", "Requested amount exceeds the unpaid booking balance");
+    const request = await prisma.bookingPaymentRequest.create({
+      data: { bookingId: booking.id, requestedById: req.user!.id, amountMinor, reason },
+    });
+    res.status(201).json({ request: { ...request, amountMinor: request.amountMinor.toString() } });
+  }),
+);
+
+/** Planner and vendor can view requests for a booking they participate in. */
+paymentsRouter.get(
+  "/bookings/:id/payment-requests",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const booking = await prisma.booking.findUnique({
+      where: { id: req.params.id },
+      include: { vendor: { select: { userId: true } } },
+    });
+    if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
+    if (booking.buyerId !== req.user!.id && booking.vendor.userId !== req.user!.id) {
+      throw new HttpError(403, "FORBIDDEN", "You are not a participant in this booking");
+    }
+    const items = await prisma.bookingPaymentRequest.findMany({
+      where: { bookingId: booking.id }, orderBy: { createdAt: "asc" },
+      include: { requestedBy: { select: { id: true, name: true } } },
+    });
+    res.json({ items: items.map((item) => ({ ...item, amountMinor: item.amountMinor.toString() })) });
+  }),
+);
+
+/** Planner approval transfers wallet funds into the booking escrow atomically. */
+paymentsRouter.post(
+  "/bookings/:id/payment-requests/:requestId/approve",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const booking = await prisma.booking.findUnique({
+      where: { id: req.params.id },
+      include: { vendor: { select: { userId: true } }, items: { include: { listing: { select: { title: true, type: true } } } } },
+    });
+    if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
+    if (booking.buyerId !== req.user!.id) throw new HttpError(403, "FORBIDDEN", "Only the event planner can approve this payment");
+    const paymentRequest = await prisma.bookingPaymentRequest.findFirst({
+      where: { id: req.params.requestId, bookingId: booking.id },
+    });
+    if (!paymentRequest) throw new HttpError(404, "PAYMENT_REQUEST_NOT_FOUND", "Payment request not found");
+    if (paymentRequest.status === "PAID") return res.json({ status: "already_paid", requestId: paymentRequest.id });
+    if (paymentRequest.status !== "PENDING") throw new HttpError(409, "REQUEST_NOT_PENDING", "This payment request is no longer pending");
+    if (booking.paidMinor + paymentRequest.amountMinor > booking.totalMinor) {
+      throw new HttpError(409, "AMOUNT_EXCEEDS_REMAINING", "Payment request exceeds the unpaid booking balance");
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({
+        where: { userId_currency: { userId: req.user!.id, currency: booking.currency } },
+      });
+      if (!wallet) throw new HttpError(400, "WALLET_NOT_FOUND", "Fund your wallet before approving this payment");
+      const debit = await tx.wallet.updateMany({
+        where: { id: wallet.id, availableMinor: { gte: paymentRequest.amountMinor } },
+        data: { availableMinor: { decrement: paymentRequest.amountMinor }, escrowMinor: { increment: paymentRequest.amountMinor } },
+      });
+      if (debit.count !== 1) throw new HttpError(400, "INSUFFICIENT_FUNDS", "Your available wallet balance is too low");
+      const paidUpdate = await tx.booking.updateMany({
+        where: { id: booking.id, paidMinor: booking.paidMinor },
+        data: {
+          paidMinor: { increment: paymentRequest.amountMinor },
+          ...(booking.paidMinor + paymentRequest.amountMinor === booking.totalMinor ? { status: BookingStatus.PAID } : {}),
+        },
+      });
+      if (paidUpdate.count !== 1) throw new HttpError(409, "BOOKING_BALANCE_CHANGED", "The booking balance changed. Refresh and try again.");
+      const updatedWallet = await tx.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
+      await tx.ledgerEntry.create({
+        data: {
+          walletId: wallet.id, type: LedgerType.ESCROW_HOLD,
+          amountMinor: paymentRequest.amountMinor,
+          balanceAfterMinor: updatedWallet.availableMinor,
+          refType: "BOOKING_PAYMENT_REQUEST", refId: paymentRequest.id,
+          idempotencyKey: `booking-payment-request:${paymentRequest.id}`,
+        },
+      });
+      const budgetLabel = "Vendor payments held in escrow";
+      const budgetItem = booking.eventId ? await tx.budgetItem.findFirst({
+        where: { eventId: booking.eventId, label: budgetLabel },
+      }) : null;
+      if (booking.eventId) {
+        if (budgetItem) {
+          await tx.budgetItem.update({ where: { id: budgetItem.id }, data: { actualMinor: { increment: paymentRequest.amountMinor } } });
+        } else {
+          await tx.budgetItem.create({
+            data: { eventId: booking.eventId, label: budgetLabel, category: "SERVICES", plannedMinor: 0n, actualMinor: paymentRequest.amountMinor },
+          });
+        }
+      }
+      await tx.bookingPaymentRequest.update({
+        where: { id: paymentRequest.id },
+        data: { status: "PAID", paidAt: new Date() },
+      });
+    });
+    res.json({ status: "paid_into_escrow", requestId: paymentRequest.id, amountMinor: paymentRequest.amountMinor.toString() });
+  }),
+);
+
+/** Planner can decline a vendor's pending payment request. */
+paymentsRouter.post(
+  "/bookings/:id/payment-requests/:requestId/reject",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const booking = await prisma.booking.findUnique({ where: { id: req.params.id } });
+    if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
+    if (booking.buyerId !== req.user!.id) throw new HttpError(403, "FORBIDDEN", "Only the event planner can reject this payment");
+    const result = await prisma.bookingPaymentRequest.updateMany({
+      where: { id: req.params.requestId, bookingId: booking.id, status: "PENDING" },
+      data: { status: "REJECTED" },
+    });
+    if (result.count !== 1) throw new HttpError(409, "REQUEST_NOT_PENDING", "This payment request is no longer pending");
+    res.json({ status: "rejected", requestId: req.params.requestId });
   }),
 );
 
@@ -793,6 +937,7 @@ paymentsRouter.get(
         subtotalMinor: b.subtotalMinor.toString(),
         commissionMinor: b.commissionMinor.toString(),
         totalMinor: b.totalMinor.toString(),
+        paidMinor: b.paidMinor.toString(),
         items: b.items.map((i) => ({
           ...i,
           unitPriceMinor: i.unitPriceMinor.toString(),
