@@ -32,17 +32,16 @@ function inspect(file) {
   const relative = path.relative(APP_ROOT, file);
   // Ignore commented-out examples when auditing executable UI.
   const executableSource = source
-    .replace(/<!--[\\s\\S]*?-->/g, "")
-    .replace(/\\/\\*[\\s\\S]*?\\*\\//g, "")
-    .replace(/^\\s*\\/\\/.*$/gm, "");
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
   report.inspectedFiles += 1;
 
   if (/\.(tsx|jsx|html)$/.test(file)) {
-    if (/<img\b/i.test(source) && /<img\b[^>]*(?<![\w-])alt\s*=/.test(source)) pass(`${relative}: image alt attributes found`);
-    else if (/<img\b/i.test(source)) warn(`${relative}: review image alternative text`);
+    if (/<img\b/i.test(executableSource) && /<img\b[^>]*(?<![\w-])alt\s*=/.test(executableSource)) pass(relative + ": image alt attributes found");
+    else if (/<img\b/i.test(executableSource)) warn(relative + ": review image alternative text");
 
-    const uncommented = source.replace(/^\s*\/\/.*$/gm, "");
-    const clickableTags = [...uncommented.matchAll(/<(?:div|span)\b[^>]*\bonClick\s*=[^>]*>/gis)].map((match) => match[0]);
+    const clickableTags = [...executableSource.matchAll(/<(?:div|span)\b[^>]*\bonClick\s*=[^>]*>/gis)].map((match) => match[0]);
     const inaccessibleClickTargets = clickableTags.filter((tag) =>
       !/\brole\s*=\s*["'](?:presentation|dialog|button)["']/.test(tag) &&
       !/\btabIndex\s*=/.test(tag) &&
