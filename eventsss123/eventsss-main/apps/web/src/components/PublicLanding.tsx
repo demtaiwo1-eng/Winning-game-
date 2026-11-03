@@ -349,9 +349,10 @@ export default function PublicLanding({
     setNotice('');
 
     setRole(requestedRole);
-
+    setPassword('');
+    setName('');
+    setBusinessName('');
     setRegistrationStep(0);
-
     setAuthMode(mode);
 
     setMenuOpen(false);
@@ -397,7 +398,6 @@ export default function PublicLanding({
     }
 
     setBusy(true);
-
     setError('');
 
     setNotice('');
@@ -798,7 +798,6 @@ export default function PublicLanding({
         <label className="eph-theme-select" aria-label="Colour theme"><select value={themeMode} onChange={e => setThemeMode(e.target.value as ThemeMode)} aria-label="Colour theme">
 
               <option value="dark">Dark</option><option value="light">Light</option><option value="colorful">Multicolor</option>
-
             </select>
 
           </label>
@@ -1172,7 +1171,7 @@ export default function PublicLanding({
             )}
           </form>
 
-          <div className="eph-auth-switch">{authMode === 'signin' ? <>Forgot password? <button onClick={() => { setAuthMode('forgot'); setRegistrationStep(0); setError(''); setNotice(''); }}>Reset it</button><br />New to EPHINTA? <button onClick={() => { setAuthMode('signup'); setRegistrationStep(0); setError(''); setNotice(''); }}>Create an account</button></> : <>Already have an account? <button onClick={() => { setAuthMode('signin'); setRegistrationStep(0); setError(''); setNotice(''); }}>Sign in</button></>}</div>
+          <div className="eph-auth-switch">{authMode === 'signin' ? <>Forgot password? <button onClick={() => { setAuthMode('forgot'); setRegistrationStep(0); setPassword(''); setError(''); setNotice(''); }}>Reset it</button><br />New to EPHINTA? <button onClick={() => { setAuthMode('signup'); setRegistrationStep(0); setPassword(''); setError(''); setNotice(''); }}>Create an account</button></> : <>Already have an account? <button onClick={() => { setAuthMode('signin'); setRegistrationStep(0); setPassword(''); setError(''); setNotice(''); }}>Sign in</button></>}</div>
 
         </section>
 
