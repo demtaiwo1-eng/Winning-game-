@@ -8,12 +8,16 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 4 : undefined,
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? "github" : "list",
   timeout: 30_000,
   expect: { timeout: 7_000 },
   use: {
     baseURL,
+    // Keep Playwright's page.route() fixtures in control of API traffic.
+    // A registered PWA service worker bypasses page.route() and sends requests
+    // to Vite's unavailable local API proxy during isolated browser journeys.
+    serviceWorkers: "block",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "off",
