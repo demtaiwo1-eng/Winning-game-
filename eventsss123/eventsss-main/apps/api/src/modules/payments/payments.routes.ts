@@ -579,6 +579,16 @@ paymentsRouter.post(
     const subtotal = listing.priceMinor * BigInt(quantity);
     const commission = commissionMinor(subtotal, env.COMMISSION_BPS);
     const total = subtotal;
+    const initialPaymentRaw = req.body.initialPaymentMinor === undefined
+      ? total.toString()
+      : String(req.body.initialPaymentMinor);
+    if (!/^[1-9]\\d*$/.test(initialPaymentRaw)) {
+      throw new HttpError(400, "INVALID_INITIAL_PAYMENT", "initialPaymentMinor must be a positive whole number");
+    }
+    const initialPayment = BigInt(initialPaymentRaw);
+    if (initialPayment > total) {
+      throw new HttpError(400, "INVALID_INITIAL_PAYMENT", "Initial payment cannot exceed the booking total");
+    }
     const currency = listing.currency;
     const idempotencyKey =
       typeof req.body.idempotencyKey === "string"
@@ -594,11 +604,11 @@ paymentsRouter.post(
       const wallet = await tx.wallet.findUnique({
         where: { userId_currency: { userId: req.user!.id, currency } },
       });
-      if (!wallet || wallet.availableMinor < total) {
+      if (!wallet || wallet.availableMinor < initialPayment) {
         throw new HttpError(
           400,
           "INSUFFICIENT_FUNDS",
-          `Need ${total.toString()} ${currency} available. Deposit via /payments/intents first.`,
+          `Need ${initialPayment.toString()} ${currency} available for the initial payment. Deposit via /payments/intents first.`,
         );
       }
 
@@ -607,11 +617,12 @@ paymentsRouter.post(
           buyerId: req.user!.id,
           vendorId: listing.vendorId,
           eventId,
-          status: BookingStatus.PAID,
+          status: initialPayment === total ? BookingStatus.PAID : BookingStatus.PENDING,
           currency,
           subtotalMinor: subtotal,
           commissionMinor: commission,
           totalMinor: total,
+          paidMinor: initialPayment,
           notes: typeof req.body.notes === "string" ? req.body.notes : null,
           items: {
             create: {
@@ -624,13 +635,13 @@ paymentsRouter.post(
         include: { items: true },
       });
 
-      const newAvailable = wallet.availableMinor - total;
-      const newEscrow = wallet.escrowMinor + total;
+      const newAvailable = wallet.availableMinor - initialPayment;
+      const newEscrow = wallet.escrowMinor + initialPayment;
       await tx.ledgerEntry.create({
         data: {
           walletId: wallet.id,
           type: LedgerType.ESCROW_HOLD,
-          amountMinor: total,
+          amountMinor: initialPayment,
           balanceAfterMinor: newAvailable,
           refType: "BOOKING",
           refId: booking.id,
