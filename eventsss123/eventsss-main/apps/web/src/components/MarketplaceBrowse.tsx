@@ -72,6 +72,7 @@ export default function MarketplaceBrowse({
   const [enquiryNotice, setEnquiryNotice] = useState("");
   const [depositListing, setDepositListing] = useState<MarketListing | null>(null);
   const [initialDepositAmount, setInitialDepositAmount] = useState("");
+  const [depositBookingKey, setDepositBookingKey] = useState("");
 
   useEffect(() => {
     api<{ items?: Array<{ id: string; title: string; startsAt?: string | null }> }>("/events")
@@ -175,6 +176,7 @@ export default function MarketplaceBrowse({
         quantity: 1,
         eventId,
         initialPaymentMinor: String(Math.round(major * 100)),
+        idempotencyKey: depositBookingKey || `booking-${depositListing.id}-${Date.now()}`,
       }) as { booking?: { id: string; paidMinor: string; totalMinor: string } };
       const booking = result.booking;
       setBookingMsg(booking
@@ -182,6 +184,7 @@ export default function MarketplaceBrowse({
         : "Booking created with the initial payment held in escrow.");
       setDepositListing(null);
       setInitialDepositAmount("");
+      setDepositBookingKey("");
     } catch (cause) {
       setBookingMsg(cause instanceof Error ? cause.message : "Unable to create booking with an initial payment.");
     } finally { setCheckoutBusy(false); }
@@ -538,7 +541,7 @@ export default function MarketplaceBrowse({
                   </div>
                   <div className="ess-listing-actions">
                     <button className="ess-primary" type="button" onClick={() => handleBook(l)}>Add to cart</button>
-                    <button className="ess-outline-button" type="button" disabled={!eventId} onClick={() => { setDepositListing(l); setInitialDepositAmount((Number(l.priceMinor) * 0.25 / 100).toFixed(2)); }}>Book with deposit</button>
+                    <button className="ess-outline-button" type="button" disabled={!eventId} onClick={() => { setDepositListing(l); setInitialDepositAmount((Number(l.priceMinor) * 0.25 / 100).toFixed(2)); setDepositBookingKey(typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `booking-${l.id}-${Date.now()}`); }}>Book with deposit</button>
                     <button className="ess-outline-button" type="button" onClick={() => { setEnquiryListing(l); setEnquiryNotice(""); }}>Enquire</button>
                   </div>
                 </div>
