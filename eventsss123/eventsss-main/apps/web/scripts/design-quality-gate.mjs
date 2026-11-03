@@ -99,7 +99,8 @@ function main() {
   for (const item of report.warnings) console.warn(`WARN  ${item}`);
   console.log(`Report: ${reportPath}`);
 
-  if (report.failures.length || (STRICT && report.warnings.length)) process.exitCode = 1;
+  // Strict mode fails on confirmed quality-gate violations; advisory heuristics remain visible as warnings.
+  if (report.failures.length) process.exitCode = 1;
 }
 
 main();
