@@ -205,6 +205,12 @@ test("authenticated planner can add a checklist task to an owned event", async (
     }));
     localStorage.setItem("ess_access_token", "e2e-access-token");
   });
+  // Keep ancillary dashboard requests deterministic while specific fixtures
+  // below continue to provide the owned event and task responses.
+  await page.route("**/api/v1/**", (route) => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ items: [], tasks: [], answers: {}, summary: [] }),
+  }));
   await page.route("**/api/v1/events", (route) => route.fulfill({
     status: 200, contentType: "application/json", body: JSON.stringify({ items: [event] }),
   }));
@@ -234,7 +240,7 @@ test("authenticated planner can add a checklist task to an owned event", async (
   await page.route("**/api/v1/events/event-e2e-001/budget", (route) => route.fulfill({
     status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }),
   }));
-  await page.route("**/api/v1/payments/bookings", (route) => route.fulfill({
+  await page.route("**/api/v1/payments/bookings**", (route) => route.fulfill({
     status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }),
   }));
   await page.route("**/api/v1/events/event-e2e-001/plan-answers", (route) => route.fulfill({
