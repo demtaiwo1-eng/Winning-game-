@@ -1,7 +1,8 @@
 import { Readable } from "node:stream";
 import { Router } from "express";
 
-const GITHUB_RELEASE_API = "https://api.github.com/repos/demtaiwo1-eng/Winning-game-/releases/tags/ephinta-web-latest";
+const GITHUB_OTA_RELEASE_API = "https://api.github.com/repos/demtaiwo1-eng/Winning-game-/releases/tags/ephinta-web-latest";
+const GITHUB_LEGACY_RELEASE_API = "https://api.github.com/repos/demtaiwo1-eng/Winning-game-/releases/latest";
 const CACHE_MS = 60_000;
 
 type ReleaseAsset = { name: string; browser_download_url: string; size?: number };
@@ -12,15 +13,22 @@ let cachedAssets: { expiresAt: number; assets: ReleaseAsset[] } | undefined;
 async function otaAssets(): Promise<ReleaseAsset[]> {
   if (cachedAssets && cachedAssets.expiresAt > Date.now()) return cachedAssets.assets;
 
-  const response = await fetch(GITHUB_RELEASE_API, {
+  const requestOptions = {
     headers: {
       Accept: "application/vnd.github+json",
       "User-Agent": "EPHINTA-mobile-updater",
       "X-GitHub-Api-Version": "2022-11-28",
     },
     signal: AbortSignal.timeout(15_000),
-  });
-  if (!response.ok) throw new Error(`GitHub release lookup failed (${response.status})`);
+  };
+  let response = await fetch(GITHUB_OTA_RELEASE_API, requestOptions);
+  // Keep existing installed apps updating while the dedicated OTA tag is first
+  // being created, or if it is temporarily absent. APK releases also carry OTA
+  // assets, so the legacy latest-release fallback remains compatible.
+  if (response.status === 404) {
+    response = await fetch(GITHUB_LEGACY_RELEASE_API, requestOptions);
+  }
+  if (!response.ok) throw new Error(`GitHub OTA release lookup failed (${response.status})`);
 
   const release = (await response.json()) as ReleaseInfo;
   const assets = Array.isArray(release.assets) ? release.assets : [];
