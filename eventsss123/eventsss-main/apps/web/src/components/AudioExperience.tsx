@@ -25,6 +25,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [playing, setPlaying] = useState(false);
   const [message, setMessage] = useState("Music is off. Tap Play when you are ready.");
   const [needsGesture, setNeedsGesture] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const autoAttempted = useRef(false);
   const selectedTrack = TRACKS[trackIndex];
@@ -112,7 +113,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   }
 
   return (
-    <section className="eph-audio" aria-label="EPHINTA music player">
+    <section className={expanded ? "eph-audio eph-audio--expanded" : "eph-audio eph-audio--compact"} aria-label="EPHINTA music player">
       <audio
         ref={audioRef}
         src={audioUrl || selectedTrack.src}
@@ -124,6 +125,9 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         <span aria-hidden="true">♫</span>
         <div><strong>EPHINTA music</strong><p>{selectedTrack.title}</p></div>
       </div>
+      <button className="eph-audio__expand" type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
+        {expanded ? "Hide music settings" : "Music settings"}
+      </button>
       {(showPrompt || needsGesture) && !playing && (
         <p className="eph-audio__notice">
           {needsGesture ? "Automatic playback was blocked. Your browser does not need a separate audio permission; tap Play to grant playback through your action." : "Play music whenever you want. Sound starts only after your action if your browser requires it."}
@@ -138,13 +142,15 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         <button type="button" onClick={() => changeTrack(trackIndex - 1)} aria-label="Previous track">Previous</button>
         <button type="button" onClick={() => changeTrack(trackIndex + 1)} aria-label="Next track">Next</button>
       </div>
-      <label htmlFor="eph-audio-track">Choose music</label>
-      <select id="eph-audio-track" value={trackIndex} onChange={(event) => changeTrack(Number(event.target.value))}>
-        {TRACKS.map((track, index) => <option key={track.src} value={index}>{track.title}</option>)}
-      </select>
-      <label htmlFor="eph-audio-volume">Volume: {Math.round(volume * 100)}%</label>
-      <input id="eph-audio-volume" type="range" min="0" max="0.7" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} />
-      {playlistUrl && <a href={playlistUrl} target="_blank" rel="noreferrer">Open EPHINTA playlist on YouTube Music</a>}
+      {expanded && <>
+        <label htmlFor="eph-audio-track">Choose music</label>
+        <select id="eph-audio-track" value={trackIndex} onChange={(event) => changeTrack(Number(event.target.value))}>
+          {TRACKS.map((track, index) => <option key={track.src} value={index}>{track.title}</option>)}
+        </select>
+        <label htmlFor="eph-audio-volume">Volume: {Math.round(volume * 100)}%</label>
+        <input id="eph-audio-volume" type="range" min="0" max="0.7" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} />
+        {playlistUrl && <a href={playlistUrl} target="_blank" rel="noreferrer">Open EPHINTA playlist on YouTube Music</a>}
+      </>}
       <p className="eph-audio__status" role="status" aria-live="polite">{message}</p>
       <p className="eph-audio__fineprint">Automatic playback depends on browser policy. Device mute, volume, data connection, and Bluetooth settings remain under your control.</p>
     </section>
