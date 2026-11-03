@@ -90,7 +90,7 @@ eventsRouter.delete("/:eventId/tasks/:taskId", asyncHandler(async (req, res) => 
 
 eventsRouter.post("/:eventId/deposits", asyncHandler(async (req, res) => {
   const body = z.object({
-    amountMinor: z.string().regex(/^[1-9]\\d*$/, "amountMinor must be a positive integer string"),
+    amountMinor: z.string().regex(/^[1-9]\d*$/, "amountMinor must be a positive integer string"),
     idempotencyKey: z.string().min(8).max(100),
   }).parse(req.body);
   const result = await budget.createEventDeposit(
