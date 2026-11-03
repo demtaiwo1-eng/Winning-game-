@@ -11,7 +11,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: eventsss123/eventsss-main
@@ -22,8 +22,6 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: eventsss123/eventsss-main/package-lock.json
-      - run: npm ci
-      - run: npm run build --workspace @ess/web
-      - run: npm run test --workspace @ess/web
-      - run: npm run test:e2e --workspace @ess/web
-      - run: npm run design:audit:strict --workspace @ess/web
+      - uses: android-actions/setup-android@v3
+      - run: chmod +x scripts/verify-all.sh
+      - run: scripts/verify-all.sh
