@@ -845,19 +845,6 @@ paymentsRouter.post(
           idempotencyKey: `booking-payment-request:${paymentRequest.id}`,
         },
       });
-      const budgetLabel = "Vendor payments held in escrow";
-      const budgetItem = booking.eventId ? await tx.budgetItem.findFirst({
-        where: { eventId: booking.eventId, label: budgetLabel },
-      }) : null;
-      if (booking.eventId) {
-        if (budgetItem) {
-          await tx.budgetItem.update({ where: { id: budgetItem.id }, data: { actualMinor: { increment: paymentRequest.amountMinor } } });
-        } else {
-          await tx.budgetItem.create({
-            data: { eventId: booking.eventId, label: budgetLabel, category: "SERVICES", plannedMinor: 0n, actualMinor: paymentRequest.amountMinor },
-          });
-        }
-      }
       await tx.bookingPaymentRequest.update({
         where: { id: paymentRequest.id },
         data: { status: "PAID", paidAt: new Date() },
