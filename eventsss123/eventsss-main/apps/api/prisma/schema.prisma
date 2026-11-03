@@ -511,17 +511,18 @@ model EventDeposit {
 }
 
 model BookingPaymentRequest {
-  id            String   @id @default(uuid())
-  bookingId     String
-  requestedById String
-  amountMinor   BigInt
-  reason        String
-  status        String   @default("PENDING")
-  paidAt        DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  requestedBy   User     @relation(fields: [requestedById], references: [id], onDelete: Restrict)
+  id             String   @id @default(uuid())
+  bookingId      String
+  requestedById  String
+  amountMinor    BigInt
+  reason         String
+  status         String   @default("PENDING")
+  idempotencyKey String?  @unique
+  paidAt         DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  requestedBy    User     @relation(fields: [requestedById], references: [id], onDelete: Restrict)
 
   @@index([bookingId, status])
   @@index([requestedById, createdAt])
