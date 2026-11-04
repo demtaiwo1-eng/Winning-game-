@@ -31,7 +31,8 @@
     "web:preview": "npm run dev -w apps/web -- --host 0.0.0.0 --port 5173",
     "web:check": "npm run test -w apps/web && npm run build -w apps/web",
     "kyc:research": "node scripts/research-kyc-providers.mjs",
-    "test:kyc-research": "node scripts/research-kyc-providers.mjs --self-test"
+    "test:kyc-research": "node scripts/research-kyc-providers.mjs --self-test",
+    "ux:audit": "node scripts/ux-audit.mjs"
   },
   "devDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.65.1",
