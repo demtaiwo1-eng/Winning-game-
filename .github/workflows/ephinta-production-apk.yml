@@ -158,7 +158,15 @@ jobs:
           set -euo pipefail
           GRADLE_FILE="apps/mobile/android/app/build.gradle"
           test -f "$GRADLE_FILE"
-          sed -i -E "s/versionCode [0-9]+/versionCode $GITHUB_RUN_ID/" "$GRADLE_FILE"
+          # Android versionCode is a signed 32-bit integer capped at 2,100,000,000.
+          # GitHub run IDs exceed that limit; the per-workflow run number is monotonic
+          # and safely remains within Android's supported range.
+          VERSION_CODE="$((GITHUB_RUN_NUMBER + 2))"
+          if (( VERSION_CODE > 2100000000 )); then
+            echo "::error::Calculated Android versionCode exceeds the Play Store limit."
+            exit 1
+          fi
+          sed -i -E "s/versionCode [0-9]+/versionCode $VERSION_CODE/" "$GRADLE_FILE"
           grep -n 'versionCode' "$GRADLE_FILE"
 
       - name: Build signed release APK
