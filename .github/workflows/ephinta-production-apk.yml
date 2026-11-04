@@ -259,8 +259,10 @@ jobs:
           # Allow the release asset and Render API cache/deploy path to settle.
           curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 10 --max-time 60 "$MANIFEST_URL" -o "$MANIFEST"
           jq -e '.version | type == "string" and length > 0' "$MANIFEST" >/dev/null
-          jq -e '.url | type == "string" and length > 0' "$MANIFEST" >/dev/null
+          jq -e '.url | type == "string" and startswith("ephinta-web-bundle.zip?")' "$MANIFEST" >/dev/null
 
+          BUNDLE_PATH="$(jq -r '.url' "$MANIFEST")"
+          BUNDLE_URL="$(node -e 'const [base, path] = process.argv.slice(1); const root = new URL(base.endsWith("/") ? base : base + "/"); const target = new URL(path, root); if (target.origin !== root.origin || !target.pathname.startsWith(root.pathname)) process.exit(2); process.stdout.write(target.toString())' "$VITE_UPDATE_URL" "$BUNDLE_PATH")"
           curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 10 --max-time 120 "$BUNDLE_URL" -o "$BUNDLE"
           test -s "$BUNDLE"
           unzip -t "$BUNDLE" >/dev/null
