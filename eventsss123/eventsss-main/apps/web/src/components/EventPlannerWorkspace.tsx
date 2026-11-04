@@ -63,6 +63,11 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   const currency = event?.currency || "NGN";
 
   useEffect(() => { if (initialEventId) setEventId(initialEventId); }, [initialEventId]);
+  // Events are loaded asynchronously by the parent. Select the first available
+  // event once they arrive so the workspace can fetch its details and render forms.
+  useEffect(() => {
+    if (!eventId && events.length) setEventId(initialEventId || events[0].id);
+  }, [events, eventId, initialEventId]);
   useEffect(() => { if (!eventId) { setEvent(null); return; } }, [eventId]);
 
   const refresh = async () => {
