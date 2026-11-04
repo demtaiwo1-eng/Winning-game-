@@ -142,14 +142,14 @@ jobs:
 
       - name: Install and launch APK on Android API ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
-        timeout-minutes: 20
+        timeout-minutes: 25
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
           arch: x86_64
           profile: pixel_2
           emulator-boot-timeout: 900
-          emulator-options: -no-window -no-snapshot -noaudio -gpu swiftshader_indirect -no-boot-anim -memory 2048 -cores 2
+          emulator-options: -no-window -no-snapshot -noaudio -gpu swiftshader_indirect -no-boot-anim -memory 4096 -cores 4
           disable-animations: true
           script: |
             set -e
