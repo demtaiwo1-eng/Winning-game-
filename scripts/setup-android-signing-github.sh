@@ -18,7 +18,7 @@ gh auth status >/dev/null 2>&1 || fail "Sign in to GitHub CLI in this Codespace,
 gh repo view "$REPO" >/dev/null 2>&1 || fail "Cannot access $REPO with the current GitHub account."
 
 SECRET_LIST="$(gh secret list --repo "$REPO" 2>/dev/null)" || fail "This GitHub account cannot manage repository Actions secrets. Ask a repository admin to run this setup from their Codespace."
-if printf '%s\\n' "$SECRET_LIST" | awk '{print $1}' | grep -qx 'ANDROID_KEYSTORE_BASE64'; then
+if printf '%s\n' "$SECRET_LIST" | awk '{print $1}' | grep -qx 'ANDROID_KEYSTORE_BASE64'; then
   fail "ANDROID_KEYSTORE_BASE64 already exists. Refusing to replace an existing release key."
 fi
 if [[ -e "$KEYSTORE" || -e "$BACKUP" ]]; then
