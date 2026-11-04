@@ -24,7 +24,7 @@ permissions:
 
 concurrency:
   group: android-install-smoke-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-apk:
@@ -162,18 +162,7 @@ jobs:
             adb shell pm path com.ephinta.app | grep -q '^package:'
             adb shell am force-stop com.ephinta.app
             timeout 180s adb shell am start -n com.ephinta.app/.MainActivity
-            launched=0
-            attempt=1
-            while [ "$attempt" -le 36 ]; do
-              pid="$(adb shell pidof com.ephinta.app 2>/dev/null | tr -d '\\r' || true)"
-              resumed="$(adb shell dumpsys activity activities 2>/dev/null | grep -F 'com.ephinta.app/.MainActivity' || true)"
-              if [ -n "$pid" ] && [ -n "$resumed" ]; then
-                launched=1
-                break
-              fi
-              attempt=$((attempt + 1))
-              sleep 5
-            done
+            launched=0; attempt=1; while [ "$attempt" -le 36 ]; do pid="$(adb shell pidof com.ephinta.app 2>/dev/null | tr -d '\\r' || true)"; resumed="$(adb shell dumpsys activity activities 2>/dev/null | grep -F 'com.ephinta.app/.MainActivity' || true)"; if [ -n "$pid" ] && [ -n "$resumed" ]; then launched=1; break; fi; attempt=$((attempt + 1)); sleep 5; done
             if [ "$launched" -ne 1 ]; then
               echo "EPHINTA did not reach a resumed MainActivity."
               adb shell dumpsys activity activities | tail -n 160 || true
