@@ -151,8 +151,8 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 1200
-          emulator-options: -no-window -no-snapshot -noaudio -gpu swiftshader_indirect -no-boot-anim -memory 4096 -cores 4
+          emulator-boot-timeout: 1800
+          emulator-options: -no-window -no-snapshot -no-snapshot-load -no-snapshot-save -noaudio -gpu swiftshader_indirect -no-boot-anim -memory 2048 -cores 2
           disable-animations: true
           script: bash eventsss123/eventsss-main/scripts/android-emulator-smoke.sh artifacts/android/app-debug.apk "${{ matrix.api-level }}"
 
