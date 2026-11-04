@@ -125,7 +125,7 @@ jobs:
     name: Android API ${{ matrix.api-level }} install and launch
     needs: build-apk
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       # Android emulators are memory-intensive; sequential boot avoids starving
@@ -134,6 +134,9 @@ jobs:
       matrix:
         api-level: [35, 36]
     steps:
+      - name: Check out repository smoke-test script
+        uses: actions/checkout@v4
+
       - name: Download the same verified APK
         uses: actions/download-artifact@v4
         with:
@@ -142,34 +145,16 @@ jobs:
 
       - name: Install and launch APK on Android API ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
-        timeout-minutes: 25
+        timeout-minutes: 35
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 900
+          emulator-boot-timeout: 1200
           emulator-options: -no-window -no-snapshot -noaudio -gpu swiftshader_indirect -no-boot-anim -memory 4096 -cores 4
           disable-animations: true
-          script: |
-            set -e
-            adb start-server
-            timeout 180s adb wait-for-device
-            timeout 300s sh -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\\r")" = "1" ]; do sleep 5; done'
-            timeout 180s sh -c 'until adb shell pm list packages >/dev/null 2>&1; do sleep 5; done'
-            test -s artifacts/android/app-debug.apk
-            for attempt in 1 2 3; do timeout 180s adb install -r artifacts/android/app-debug.apk && break; [ "$attempt" -lt 3 ] || exit 1; sleep 5; done
-            adb shell pm path com.ephinta.app | grep -q '^package:'
-            adb shell am force-stop com.ephinta.app
-            timeout 180s adb shell am start -n com.ephinta.app/.MainActivity
-            launched=0; attempt=1; while [ "$attempt" -le 36 ]; do pid="$(adb shell pidof com.ephinta.app 2>/dev/null | tr -d '\\r' || true)"; resumed="$(adb shell dumpsys activity activities 2>/dev/null | grep -F 'com.ephinta.app/.MainActivity' || true)"; if [ -n "$pid" ] && [ -n "$resumed" ]; then launched=1; break; fi; attempt=$((attempt + 1)); sleep 5; done
-            if [ "$launched" -ne 1 ]; then
-              echo "EPHINTA did not reach a resumed MainActivity."
-              adb shell dumpsys activity activities | tail -n 160 || true
-              adb logcat -d -t 1200 | grep -Ei "com\\.ephinta\\.app|FATAL EXCEPTION|ANR in" | tail -n 240 || true
-              exit 1
-            fi
-            echo "EPHINTA installed and remained running on Android API ${{ matrix.api-level }}."
+          script: bash eventsss123/eventsss-main/scripts/android-emulator-smoke.sh artifacts/android/app-debug.apk "${{ matrix.api-level }}"
 
       - name: Capture Android emulator diagnostics
         if: failure()
