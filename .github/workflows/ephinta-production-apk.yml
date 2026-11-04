@@ -226,3 +226,23 @@ jobs:
           make_latest: true
           prerelease: false
           fail_on_unmatched_files: true
+
+      - name: Verify published OTA update through production API
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          set -euo pipefail
+          MANIFEST_URL="${VITE_UPDATE_URL}/version.json"
+          BUNDLE_URL="${VITE_UPDATE_URL}/ephinta-web-bundle.zip"
+          MANIFEST="$RUNNER_TEMP/ephinta-ota-version.json"
+          BUNDLE="$RUNNER_TEMP/ephinta-ota-bundle.zip"
+
+          # Allow the release asset and Render API cache/deploy path to settle.
+          curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 10 --max-time 60 "$MANIFEST_URL" -o "$MANIFEST"
+          jq -e '.version | type == "string" and length > 0' "$MANIFEST" >/dev/null
+          jq -e '.url | type == "string" and length > 0' "$MANIFEST" >/dev/null
+
+          curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 10 --max-time 120 "$BUNDLE_URL" -o "$BUNDLE"
+          test -s "$BUNDLE"
+          unzip -t "$BUNDLE" >/dev/null
+          echo "Production OTA manifest and web bundle are reachable through the live API."
