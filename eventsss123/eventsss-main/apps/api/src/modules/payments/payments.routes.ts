@@ -8,6 +8,8 @@ import {
   LedgerType,
   ListingStatus,
   PaymentStatus,
+  Prisma,
+  type BookingPaymentRequest,
 } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { prisma } from "../../lib/prisma";
@@ -579,6 +581,16 @@ paymentsRouter.post(
     const subtotal = listing.priceMinor * BigInt(quantity);
     const commission = commissionMinor(subtotal, env.COMMISSION_BPS);
     const total = subtotal;
+    const initialPaymentRaw = req.body.initialPaymentMinor === undefined
+      ? total.toString()
+      : String(req.body.initialPaymentMinor);
+    if (!/^[1-9]\d*$/.test(initialPaymentRaw)) {
+      throw new HttpError(400, "INVALID_INITIAL_PAYMENT", "initialPaymentMinor must be a positive whole number");
+    }
+    const initialPayment = BigInt(initialPaymentRaw);
+    if (initialPayment > total) {
+      throw new HttpError(400, "INVALID_INITIAL_PAYMENT", "Initial payment cannot exceed the booking total");
+    }
     const currency = listing.currency;
     const idempotencyKey =
       typeof req.body.idempotencyKey === "string"
@@ -588,17 +600,27 @@ paymentsRouter.post(
     const result = await prisma.$transaction(async (tx) => {
       const existingLedger = await tx.ledgerEntry.findUnique({ where: { idempotencyKey } });
       if (existingLedger) {
-        throw new HttpError(409, "DUPLICATE", "Booking already processed for this key");
+        const existingBooking = existingLedger.refType === "BOOKING" && existingLedger.refId
+          ? await tx.booking.findFirst({
+              where: { id: existingLedger.refId, buyerId: req.user!.id, eventId, items: { some: { listingId } } },
+              include: { items: true },
+            })
+          : null;
+        if (existingBooking) {
+          if (existingBooking.totalMinor === total && existingBooking.paidMinor === initialPayment) return existingBooking;
+          throw new HttpError(409, "IDEMPOTENCY_CONFLICT", "This booking key was reused with different payment details");
+        }
+        throw new HttpError(409, "IDEMPOTENCY_CONFLICT", "This booking key was already used for another operation");
       }
 
       const wallet = await tx.wallet.findUnique({
         where: { userId_currency: { userId: req.user!.id, currency } },
       });
-      if (!wallet || wallet.availableMinor < total) {
+      if (!wallet || wallet.availableMinor < initialPayment) {
         throw new HttpError(
           400,
           "INSUFFICIENT_FUNDS",
-          `Need ${total.toString()} ${currency} available. Deposit via /payments/intents first.`,
+          `Need ${initialPayment.toString()} ${currency} available for the initial payment. Deposit via /payments/intents first.`,
         );
       }
 
@@ -607,11 +629,12 @@ paymentsRouter.post(
           buyerId: req.user!.id,
           vendorId: listing.vendorId,
           eventId,
-          status: BookingStatus.PAID,
+          status: initialPayment === total ? BookingStatus.PAID : BookingStatus.PENDING,
           currency,
           subtotalMinor: subtotal,
           commissionMinor: commission,
           totalMinor: total,
+          paidMinor: initialPayment,
           notes: typeof req.body.notes === "string" ? req.body.notes : null,
           items: {
             create: {
@@ -624,13 +647,13 @@ paymentsRouter.post(
         include: { items: true },
       });
 
-      const newAvailable = wallet.availableMinor - total;
-      const newEscrow = wallet.escrowMinor + total;
+      const newAvailable = wallet.availableMinor - initialPayment;
+      const newEscrow = wallet.escrowMinor + initialPayment;
       await tx.ledgerEntry.create({
         data: {
           walletId: wallet.id,
           type: LedgerType.ESCROW_HOLD,
-          amountMinor: total,
+          amountMinor: initialPayment,
           balanceAfterMinor: newAvailable,
           refType: "BOOKING",
           refId: booking.id,
@@ -645,8 +668,8 @@ paymentsRouter.post(
       return booking;
     });
 
-    // Auto-create readiness checks so verifier board is fresh (no demo data required)
-    if (eventId) {
+    // Only fully funded bookings enter the service-verification and completion workflow.
+    if (eventId && initialPayment === total) {
       try {
         for (const item of result.items) {
           const listing = await prisma.listing.findUnique({ where: { id: item.listingId } });
@@ -716,14 +739,237 @@ paymentsRouter.post(
         subtotalMinor: result.subtotalMinor.toString(),
         commissionMinor: result.commissionMinor.toString(),
         totalMinor: result.totalMinor.toString(),
+        paidMinor: result.paidMinor.toString(),
         items: result.items.map((i) => ({
           ...i,
           unitPriceMinor: i.unitPriceMinor.toString(),
         })),
       },
       message:
-        "Payment held in platform-controlled escrow. The assigned lead verifier can authorize release only after the event ends and all service checks are green.",
+        initialPayment === total
+          ? "Full booking payment held in platform-controlled escrow. The assigned lead verifier can authorize release only after the event ends and all service checks are green."
+          : "Initial payment held in escrow. Vendors may request further milestone payments for planner approval; service verification begins when the booking is fully paid.",
     });
+  }),
+);
+
+
+/** Vendor requests a milestone/essentials payment; planner must approve it. */
+paymentsRouter.post(
+  "/bookings/:id/payment-requests",
+  requireAuth,
+  requireRole("VENDOR"),
+  asyncHandler(async (req, res) => {
+    const amountRaw = String(req.body.amountMinor ?? "");
+    const reason = String(req.body.reason ?? "").trim();
+    if (!/^[1-9]\d*$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive whole number");
+    if (reason.length < 8 || reason.length > 500) throw new HttpError(400, "INVALID_REASON", "Explain the requested essentials or milestone (8–500 characters)");
+    const amountMinor = BigInt(amountRaw);
+    const suppliedKey = req.body.idempotencyKey;
+    if (typeof suppliedKey !== "string" || suppliedKey.length < 8 || suppliedKey.length > 100) {
+      throw new HttpError(400, "INVALID_IDEMPOTENCY_KEY", "A unique idempotencyKey of 8–100 characters is required");
+    }
+    const idempotencyKey = `booking-payment-request:${req.user!.id}:${req.params.id}:${suppliedKey}`;
+    const replay = (existing: BookingPaymentRequest) => {
+      if (
+        existing.bookingId !== req.params.id ||
+        existing.requestedById !== req.user!.id ||
+        existing.amountMinor !== amountMinor ||
+        existing.reason !== reason
+      ) {
+        throw new HttpError(409, "IDEMPOTENCY_CONFLICT", "This request key was already used with different payment details");
+      }
+      return { request: existing, alreadyProcessed: true };
+    };
+
+    let outcome: { request: BookingPaymentRequest; alreadyProcessed: boolean };
+    try {
+      outcome = await prisma.$transaction(async (tx) => {
+        const existing = await tx.bookingPaymentRequest.findUnique({ where: { idempotencyKey } });
+        if (existing) return replay(existing);
+        const booking = await tx.booking.findUnique({
+          where: { id: req.params.id },
+          include: { vendor: { select: { userId: true } } },
+        });
+        if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
+        if (booking.vendor.userId !== req.user!.id) throw new HttpError(403, "FORBIDDEN", "Only the assigned vendor can request a booking payment");
+        if (!booking.eventId || ["CANCELLED", "REFUNDED", "FULFILLED"].includes(booking.status)) {
+          throw new HttpError(409, "BOOKING_NOT_PAYABLE", "This booking cannot accept further payment requests");
+        }
+        const pending = await tx.bookingPaymentRequest.aggregate({
+          where: { bookingId: booking.id, status: "PENDING" },
+          _sum: { amountMinor: true },
+        });
+        const remaining = booking.totalMinor - booking.paidMinor - (pending._sum.amountMinor ?? 0n);
+        if (amountMinor > remaining) throw new HttpError(409, "AMOUNT_EXCEEDS_REMAINING", "Requested amount exceeds the unpaid booking balance");
+        const request = await tx.bookingPaymentRequest.create({
+          data: { bookingId: booking.id, requestedById: req.user!.id, amountMinor, reason, idempotencyKey },
+        });
+        return { request, alreadyProcessed: false };
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    } catch (error) {
+      const code = typeof error === "object" && error !== null && "code" in error ? error.code : null;
+      if (code === "P2002" || code === "P2034") {
+        const existing = await prisma.bookingPaymentRequest.findUnique({ where: { idempotencyKey } });
+        if (existing) {
+          const result = replay(existing);
+          return res.status(200).json({
+            request: { ...result.request, amountMinor: result.request.amountMinor.toString() },
+            alreadyProcessed: true,
+          });
+        }
+        if (code === "P2034") {
+          throw new HttpError(409, "BOOKING_BALANCE_CHANGED", "Another payment request was submitted at the same time. Refresh the booking and try again.");
+        }
+      }
+      throw error;
+    }
+    res.status(outcome.alreadyProcessed ? 200 : 201).json({
+      request: { ...outcome.request, amountMinor: outcome.request.amountMinor.toString() },
+      alreadyProcessed: outcome.alreadyProcessed,
+    });
+  }),
+);
+
+
+/** Planner and vendor can view requests for a booking they participate in. */
+paymentsRouter.get(
+  "/bookings/:id/payment-requests",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const booking = await prisma.booking.findUnique({
+      where: { id: req.params.id },
+      include: { vendor: { select: { userId: true } } },
+    });
+    if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
+    if (booking.buyerId !== req.user!.id && booking.vendor.userId !== req.user!.id) {
+      throw new HttpError(403, "FORBIDDEN", "You are not a participant in this booking");
+    }
+    const items = await prisma.bookingPaymentRequest.findMany({
+      where: { bookingId: booking.id }, orderBy: { createdAt: "asc" },
+      include: { requestedBy: { select: { id: true, name: true } } },
+    });
+    res.json({ items: items.map((item) => ({ ...item, amountMinor: item.amountMinor.toString() })) });
+  }),
+);
+
+/** Planner approval transfers wallet funds into the booking escrow atomically. */
+paymentsRouter.post(
+  "/bookings/:id/payment-requests/:requestId/approve",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const booking = await prisma.booking.findUnique({
+      where: { id: req.params.id },
+      include: { vendor: { select: { userId: true } }, items: { include: { listing: { select: { title: true, type: true } } } } },
+    });
+    if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
+    if (booking.buyerId !== req.user!.id) throw new HttpError(403, "FORBIDDEN", "Only the event planner can approve this payment");
+    const paymentRequest = await prisma.bookingPaymentRequest.findFirst({
+      where: { id: req.params.requestId, bookingId: booking.id },
+    });
+    if (!paymentRequest) throw new HttpError(404, "PAYMENT_REQUEST_NOT_FOUND", "Payment request not found");
+    if (paymentRequest.status === "PAID") return res.json({ status: "already_paid", requestId: paymentRequest.id });
+    if (paymentRequest.status !== "PENDING") throw new HttpError(409, "REQUEST_NOT_PENDING", "This payment request is no longer pending");
+    if (booking.paidMinor + paymentRequest.amountMinor > booking.totalMinor) {
+      throw new HttpError(409, "AMOUNT_EXCEEDS_REMAINING", "Payment request exceeds the unpaid booking balance");
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const claimed = await tx.bookingPaymentRequest.updateMany({
+        where: { id: paymentRequest.id, bookingId: booking.id, status: "PENDING" },
+        data: { status: "PROCESSING" },
+      });
+      if (claimed.count !== 1) throw new HttpError(409, "REQUEST_NOT_PENDING", "This payment request was already processed");
+      const wallet = await tx.wallet.findUnique({
+        where: { userId_currency: { userId: req.user!.id, currency: booking.currency } },
+      });
+      if (!wallet) throw new HttpError(400, "WALLET_NOT_FOUND", "Fund your wallet before approving this payment");
+      const debit = await tx.wallet.updateMany({
+        where: { id: wallet.id, availableMinor: { gte: paymentRequest.amountMinor } },
+        data: { availableMinor: { decrement: paymentRequest.amountMinor }, escrowMinor: { increment: paymentRequest.amountMinor } },
+      });
+      if (debit.count !== 1) throw new HttpError(400, "INSUFFICIENT_FUNDS", "Your available wallet balance is too low");
+      const paidUpdate = await tx.booking.updateMany({
+        where: { id: booking.id, paidMinor: booking.paidMinor },
+        data: {
+          paidMinor: { increment: paymentRequest.amountMinor },
+          ...(booking.paidMinor + paymentRequest.amountMinor === booking.totalMinor ? { status: BookingStatus.PAID } : {}),
+        },
+      });
+      if (paidUpdate.count !== 1) throw new HttpError(409, "BOOKING_BALANCE_CHANGED", "The booking balance changed. Refresh and try again.");
+      const updatedWallet = await tx.wallet.findUniqueOrThrow({ where: { id: wallet.id } });
+      await tx.ledgerEntry.create({
+        data: {
+          walletId: wallet.id, type: LedgerType.ESCROW_HOLD,
+          amountMinor: paymentRequest.amountMinor,
+          balanceAfterMinor: updatedWallet.availableMinor,
+          refType: "BOOKING_PAYMENT_REQUEST", refId: paymentRequest.id,
+          idempotencyKey: `booking-payment-request:${paymentRequest.id}`,
+        },
+      });
+      await tx.bookingPaymentRequest.update({
+        where: { id: paymentRequest.id },
+        data: { status: "PAID", paidAt: new Date() },
+      });
+      if (booking.eventId && booking.paidMinor + paymentRequest.amountMinor === booking.totalMinor) {
+        for (const item of booking.items) {
+          const existingCheck = await tx.eventServiceCheck.findFirst({
+            where: { eventId: booking.eventId, bookingId: booking.id, listingId: item.listingId },
+          });
+          if (!existingCheck) {
+            await tx.eventServiceCheck.create({
+              data: {
+                eventId: booking.eventId,
+                bookingId: booking.id,
+                listingId: item.listingId,
+                label: item.listing.title,
+                category: item.listing.type,
+                status: "PENDING",
+              },
+            });
+          }
+        }
+        const checks = await tx.eventServiceCheck.findMany({ where: { eventId: booking.eventId } });
+        await tx.eventReadiness.upsert({
+          where: { eventId: booking.eventId },
+          create: {
+            eventId: booking.eventId,
+            status: "IN_PROGRESS",
+            totalChecks: checks.length,
+            greenCount: checks.filter((check) => check.status === "GREEN").length,
+            amberCount: checks.filter((check) => check.status === "AMBER").length,
+            redCount: checks.filter((check) => check.status === "RED").length,
+            pendingCount: checks.filter((check) => check.status === "PENDING").length,
+          },
+          update: {
+            status: "IN_PROGRESS",
+            totalChecks: checks.length,
+            greenCount: checks.filter((check) => check.status === "GREEN").length,
+            amberCount: checks.filter((check) => check.status === "AMBER").length,
+            redCount: checks.filter((check) => check.status === "RED").length,
+            pendingCount: checks.filter((check) => check.status === "PENDING").length,
+          },
+        });
+      }
+    });
+    res.json({ status: "paid_into_escrow", requestId: paymentRequest.id, amountMinor: paymentRequest.amountMinor.toString() });
+  }),
+);
+
+/** Planner can decline a vendor's pending payment request. */
+paymentsRouter.post(
+  "/bookings/:id/payment-requests/:requestId/reject",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const booking = await prisma.booking.findUnique({ where: { id: req.params.id } });
+    if (!booking) throw new HttpError(404, "NOT_FOUND", "Booking not found");
+    if (booking.buyerId !== req.user!.id) throw new HttpError(403, "FORBIDDEN", "Only the event planner can reject this payment");
+    const result = await prisma.bookingPaymentRequest.updateMany({
+      where: { id: req.params.requestId, bookingId: booking.id, status: "PENDING" },
+      data: { status: "REJECTED" },
+    });
+    if (result.count !== 1) throw new HttpError(409, "REQUEST_NOT_PENDING", "This payment request is no longer pending");
+    res.json({ status: "rejected", requestId: req.params.requestId });
   }),
 );
 
@@ -782,6 +1028,7 @@ paymentsRouter.get(
         subtotalMinor: b.subtotalMinor.toString(),
         commissionMinor: b.commissionMinor.toString(),
         totalMinor: b.totalMinor.toString(),
+        paidMinor: b.paidMinor.toString(),
         items: b.items.map((i) => ({
           ...i,
           unitPriceMinor: i.unitPriceMinor.toString(),

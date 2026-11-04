@@ -209,11 +209,7 @@ export default function WalletPanel({
               onChange={(e) => setDepositCurrency(e.target.value as CurrencyCode)}
             >
               <option value="NGN">NGN</option>
-              <option value="USD">USD</option>
-              <option value="GBP">GBP</option>
-              <option value="EUR">EUR</option>
               <option value="GHS">GHS</option>
-              <option value="KES">KES</option>
             </select>
           </label>
         </div>

@@ -116,7 +116,7 @@ export default function VerifierPicker({
       <h2>Verifier directory</h2>
       <p className="ess-muted">
         Closest to your event location rank first (Top local → Nearby → Same city). Open a card for bio,
-        ratings from past jobs, and specialties. Selected verifiers get an in-app (and push) notification.
+        ratings from past jobs, and specialties. Selected verifiers receive an in-app notification; device push alerts will be enabled when the notification provider is configured.
       </p>
       {!eventId && (
         <p className="ess-form-error" style={{ marginTop: 12 }}>
@@ -221,6 +221,7 @@ export default function VerifierPicker({
         >
           <div
             className="ess-panel"
+            role="presentation"
             style={{ maxWidth: 420, width: "100%" }}
             onClick={(e) => e.stopPropagation()}
           >

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { apiUrl } from '../lib/api';
+import { checkPassword, PASSWORD_HELPER, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../lib/passwordRule';
 import { applyEphintaTheme } from '../lib/ephintaTheme';
 
 
@@ -54,34 +55,50 @@ const vibes = ['Modern', 'Classic', 'Traditional', 'Garden', 'Luxury', 'Intimate
 
 const serviceOptions = ['Venue', 'Catering', 'Photography', 'Decor', 'Music', 'Cake', 'AV & staging', 'Security'];
 
-async function sendAuth(path: string, body: Record<string, unknown>) {
-
-  const response = await fetch(apiUrl(`/auth/${path}`), {
-
-    method: 'POST',
-
-    headers: { 'Content-Type': 'application/json' },
-
-    credentials: 'include',
-
-    body: JSON.stringify(body),
-
-  });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-
-    const fieldErrors = data?.error?.details?.fieldErrors;
-
-    const firstFieldError = fieldErrors ? Object.values(fieldErrors).flat()[0] : undefined;
-
-    throw new Error(String(firstFieldError || data?.error?.message || data?.message || 'Request failed. Please try again.'));
-
+function friendlyAuthError(path: string, status: number, error: unknown): string {
+  const payload = error && typeof error === 'object' ? error as Record<string, unknown> : {};
+  const code = typeof payload.code === 'string' ? payload.code : '';
+  const mode = path === 'register' ? 'signup' : path === 'forgot-password' ? 'forgot' : 'signin';
+  if (code === 'INVALID_CREDENTIALS' || (status === 401 && mode === 'signin')) {
+    return 'That email and password do not match. Check your details or use Forgot password to reset your password.';
   }
+  if (code === 'ALREADY_EXISTS' || status === 409) {
+    return 'An account with this email or phone number already exists. Sign in with that account, or use a different email or phone number.';
+  }
+  if (code === 'ACCOUNT_DISABLED') return 'This account is currently unavailable. Please contact support for help.';
+  if (status === 429) return 'Too many attempts. Please wait a few minutes before trying again.';
+  if (status >= 500) return 'We could not complete your request because of a server problem. Please try again shortly.';
+  if (code === 'VALIDATION_ERROR' || status === 400 || status === 422) {
+    const fieldErrors = payload.details && typeof payload.details === 'object'
+      ? (payload.details as Record<string, unknown>).fieldErrors
+      : undefined;
+    const firstFieldError = fieldErrors && typeof fieldErrors === 'object'
+      ? Object.values(fieldErrors as Record<string, unknown>).flat().find((value) => typeof value === 'string')
+      : undefined;
+    if (typeof firstFieldError === 'string' && !/internal|exception|prisma|stack|undefined|null/i.test(firstFieldError)) {
+      return firstFieldError;
+    }
+    if (mode === 'signup') return 'Some registration details are missing or invalid. Review the fields and try again.';
+    if (mode === 'forgot') return 'Enter a valid email address and try again.';
+    return 'Please check your email address and password, then try again.';
+  }
+  return mode === 'signup'
+    ? 'We could not create your account. Check your details and connection, then try again.'
+    : mode === 'forgot'
+      ? 'We could not send the reset instructions. Check your connection and try again.'
+      : 'We could not sign you in. Check your connection and try again.';
+}
 
+async function sendAuth(path: string, body: Record<string, unknown>) {
+  const response = await fetch(apiUrl(`/auth/${path}`), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(friendlyAuthError(path, response.status, data?.error));
   return data;
-
 }
 
 
@@ -304,6 +321,11 @@ export default function PublicLanding({
   }, [draft]);
 
   useEffect(() => {
+    const passwordInput = document.getElementById('eph-password') as HTMLInputElement | null;
+    passwordInput?.setCustomValidity('');
+  }, [authMode]);
+
+  useEffect(() => {
     applyEphintaTheme(themeMode);
   }, [themeMode]);
 
@@ -332,9 +354,10 @@ export default function PublicLanding({
     setNotice('');
 
     setRole(requestedRole);
-
+    setPassword('');
+    setName('');
+    setBusinessName('');
     setRegistrationStep(0);
-
     setAuthMode(mode);
 
     setMenuOpen(false);
@@ -373,10 +396,13 @@ export default function PublicLanding({
   async function submitAuth(event: React.FormEvent) {
 
     event.preventDefault();
+    if (busy) return;
+    if (authMode === 'signup' && !checkPassword(password).ok) {
+      setError(PASSWORD_HELPER);
+      return;
+    }
 
-    setBusy(true);
-
-    setError('');
+    setBusy(true);    setError('');
 
     setNotice('');
 
@@ -397,7 +423,6 @@ export default function PublicLanding({
         const body: Record<string, unknown> = { name: name.trim(), email: email.trim().toLowerCase(), password, role };
 
         if (role === 'VENDOR') body.businessName = businessName.trim();
-
         if (role === 'ORGANIZATION') {
 
           body.organizationMode = 'EVENT_PLANNING';
@@ -436,9 +461,11 @@ export default function PublicLanding({
       }
 
     } catch (e) {
-
-      setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.');
-
+      setError(e instanceof TypeError
+        ? 'We could not reach EPHINTA. Check your internet connection and try again.'
+        : e instanceof Error
+          ? e.message
+          : 'We could not complete your request. Please try again.');
     } finally {
 
       setBusy(false);
@@ -774,9 +801,7 @@ export default function PublicLanding({
 
         <label className="eph-theme-select" aria-label="Colour theme"><select value={themeMode} onChange={e => setThemeMode(e.target.value as ThemeMode)} aria-label="Colour theme">
 
-              <option value="dark">Dark</option><option value="light">Light</option><option value="colorful">Multicolor</option>
-
-            </select>
+              <option value="dark">Dark</option><option value="light">Light</option><option value="colorful">Multicolor</option>            </select>
 
           </label>
 
@@ -797,7 +822,6 @@ export default function PublicLanding({
               <option value="colorful">Multicolour</option>
 
             </select>
-
           </div>
 
 
@@ -1054,7 +1078,7 @@ export default function PublicLanding({
           <div className="eph-modal-brand"><img src="/brand/ephinta_logo2.png" alt="" /><span>EPHINTA</span></div>
           <div className="eph-modal-top"><div><h2 id="eph-auth-title">{authMode === 'signin' ? 'Welcome back' : authMode === 'forgot' ? 'Reset your password' : ['Create your EPHINTA account', 'Choose your account type', 'Confirm your details'][registrationStep]}</h2><p>{authMode === 'signin' ? 'Sign in to continue planning.' : authMode === 'forgot' ? 'Enter your email and we\'ll send reset instructions if an account exists.' : ['Start with your contact details.', 'Choose how you will use EPHINTA.', 'Check your information before creating your account.'][registrationStep]}</p></div><button className="eph-close" onClick={() => setAuthMode(null)} aria-label="Close dialog">&times;</button></div>
 
-          {error && <div className="eph-auth-error" role="alert">{error}</div>}
+          {error && <div className="eph-auth-error" role="alert" aria-live="assertive">{error}</div>}
 
           {notice && <div className="eph-auth-notice" role="status">{notice}</div>}
 
@@ -1086,10 +1110,10 @@ export default function PublicLanding({
                   <div className="eph-field">
                     <label htmlFor="eph-password">Password</label>
                     <div className="eph-password-wrap">
-                      <input id="eph-password" className="eph-control" type={showPassword ? 'text' : 'password'} autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'} required minLength={authMode === 'signup' ? 12 : 1} value={password} onChange={e => setPassword(e.target.value)} />
+                      <input id="eph-password" className="eph-control" type={showPassword ? 'text' : 'password'} autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'} required minLength={authMode === 'signup' ? PASSWORD_MIN_LENGTH : undefined} maxLength={PASSWORD_MAX_LENGTH} value={password} onChange={e => { setPassword(e.target.value); e.currentTarget.setCustomValidity(authMode === 'signup' && e.target.value && !checkPassword(e.target.value).ok ? PASSWORD_HELPER : ''); }} />
                       <button className="eph-text-btn" type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
                     </div>
-                    {authMode === 'signup' && <small style={{ color: '#77788d' }}>Use at least 12 characters and meet the password rules shown by the application.</small>}
+                    {authMode === 'signup' && <small style={{ color: '#77788d' }}>{PASSWORD_HELPER}</small>}
                   </div>
                 )}
               </>
@@ -1150,7 +1174,7 @@ export default function PublicLanding({
             )}
           </form>
 
-          <div className="eph-auth-switch">{authMode === 'signin' ? <>Forgot password? <button onClick={() => { setAuthMode('forgot'); setRegistrationStep(0); setError(''); setNotice(''); }}>Reset it</button><br />New to EPHINTA? <button onClick={() => { setAuthMode('signup'); setRegistrationStep(0); setError(''); setNotice(''); }}>Create an account</button></> : <>Already have an account? <button onClick={() => { setAuthMode('signin'); setRegistrationStep(0); setError(''); setNotice(''); }}>Sign in</button></>}</div>
+          <div className="eph-auth-switch">{authMode === 'signin' ? <>Forgot password? <button onClick={() => { setAuthMode('forgot'); setRegistrationStep(0); setPassword(''); setError(''); setNotice(''); }}>Reset it</button><br />New to EPHINTA? <button onClick={() => { setAuthMode('signup'); setRegistrationStep(0); setPassword(''); setError(''); setNotice(''); }}>Create an account</button></> : <>Already have an account? <button onClick={() => { setAuthMode('signin'); setRegistrationStep(0); setPassword(''); setError(''); setNotice(''); }}>Sign in</button></>}</div>
 
         </section>
 

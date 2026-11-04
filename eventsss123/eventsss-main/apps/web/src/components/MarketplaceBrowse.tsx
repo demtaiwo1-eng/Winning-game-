@@ -4,6 +4,7 @@ import {
   api,
   checkoutApi,
   marketplaceApi,
+  paymentsApi,
   type ApiCart,
   type ApiCheckoutSession,
   type ApiListing,
@@ -69,6 +70,9 @@ export default function MarketplaceBrowse({
   const [enquiryListing, setEnquiryListing] = useState<MarketListing | null>(null);
   const [enquiryMessage, setEnquiryMessage] = useState("");
   const [enquiryNotice, setEnquiryNotice] = useState("");
+  const [depositListing, setDepositListing] = useState<MarketListing | null>(null);
+  const [initialDepositAmount, setInitialDepositAmount] = useState("");
+  const [depositBookingKey, setDepositBookingKey] = useState("");
 
   useEffect(() => {
     api<{ items?: Array<{ id: string; title: string; startsAt?: string | null }> }>("/events")
@@ -153,6 +157,38 @@ export default function MarketplaceBrowse({
     }
   };
 
+
+  const submitInitialBooking = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!depositListing || !eventId) {
+      setBookingMsg("Select an event before booking a service with an initial payment.");
+      return;
+    }
+    const major = Number(initialDepositAmount);
+    if (!Number.isFinite(major) || major <= 0 || major > Number.MAX_SAFE_INTEGER / 100) {
+      setBookingMsg("Enter a valid positive initial payment amount.");
+      return;
+    }
+    setCheckoutBusy(true); setBookingMsg("");
+    try {
+      const result = await paymentsApi.book({
+        listingId: depositListing.id,
+        quantity: 1,
+        eventId,
+        initialPaymentMinor: String(Math.round(major * 100)),
+        idempotencyKey: depositBookingKey || `booking-${depositListing.id}-${Date.now()}`,
+      }) as { booking?: { id: string; paidMinor: string; totalMinor: string } };
+      const booking = result.booking;
+      setBookingMsg(booking
+        ? `Booking ${booking.id} created. ${formatMoney(booking.paidMinor, depositListing.currency, locale)} is protected in escrow; the remaining balance can be requested by the vendor in milestones.`
+        : "Booking created with the initial payment held in escrow.");
+      setDepositListing(null);
+      setInitialDepositAmount("");
+      setDepositBookingKey("");
+    } catch (cause) {
+      setBookingMsg(cause instanceof Error ? cause.message : "Unable to create booking with an initial payment.");
+    } finally { setCheckoutBusy(false); }
+  };
   const submitEnquiry = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!enquiryListing) return;
@@ -505,6 +541,7 @@ export default function MarketplaceBrowse({
                   </div>
                   <div className="ess-listing-actions">
                     <button className="ess-primary" type="button" onClick={() => handleBook(l)}>Add to cart</button>
+                    <button className="ess-outline-button" type="button" disabled={!eventId} onClick={() => { setDepositListing(l); setInitialDepositAmount((Number(l.priceMinor) * 0.25 / 100).toFixed(2)); setDepositBookingKey(typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `booking-${l.id}-${Date.now()}`); }}>Book with deposit</button>
                     <button className="ess-outline-button" type="button" onClick={() => { setEnquiryListing(l); setEnquiryNotice(""); }}>Enquire</button>
                   </div>
                 </div>
@@ -513,6 +550,13 @@ export default function MarketplaceBrowse({
           ))}
         </div>
       )}
+      {depositListing && <div className="ess-modal-backdrop"><form className="ess-modal" onSubmit={submitInitialBooking}>
+        <div className="ess-modal-header"><div><p className="ess-eyebrow">Protected booking</p><h2>{depositListing.title}</h2></div><button type="button" className="ess-close" onClick={() => setDepositListing(null)}>×</button></div>
+        <p className="ess-muted">Full price: {formatMoney(depositListing.priceMinor,depositListing.currency,locale)}. Choose the initial amount to place in escrow. The vendor may request remaining milestone payments for your approval.</p>
+        <label>Initial payment ({depositListing.currency})<input type="number" min="0.01" max={(Number(depositListing.priceMinor)/100).toFixed(2)} step="0.01" value={initialDepositAmount} onChange={(e) => setInitialDepositAmount(e.target.value)} required /></label>
+        {bookingMsg && <p className="ess-form-error" role="alert">{bookingMsg}</p>}
+        <button className="ess-primary" type="submit" disabled={checkoutBusy}>{checkoutBusy ? "Creating booking…" : "Confirm initial payment"}</button>
+      </form></div>}
       {enquiryListing && <div className="ess-modal-backdrop"><form className="ess-modal" onSubmit={submitEnquiry}>
         <div className="ess-modal-header"><div><p className="ess-eyebrow">Contact vendor</p><h2>{enquiryListing.title}</h2></div><button type="button" className="ess-close" onClick={() => setEnquiryListing(null)}>×</button></div>
         <label>Your message<textarea required minLength={10} maxLength={4000} rows={5} value={enquiryMessage} onChange={event => setEnquiryMessage(event.target.value)} placeholder="Ask about availability, custom packages, or service details…" /></label>

@@ -197,6 +197,8 @@ model User {
   receivedMessages Message[]             @relation("ReceivedMessages")
   reviews          Review[]
   payments         PaymentIntent[]
+  eventDeposits    EventDeposit[]
+  bookingPaymentRequests BookingPaymentRequest[]
   carts            Cart[]
   checkoutSessions  CheckoutSession[]
   verifications    VerificationRequest[]
@@ -378,6 +380,7 @@ model Event {
   planAnswers EventPlanAnswer[]
   budgetItems BudgetItem[]
   bookings      Booking[]
+  deposits      EventDeposit[]
   messages      Message[]
   serviceChecks EventServiceCheck[]
   readiness     EventReadiness?
@@ -473,6 +476,7 @@ model Booking {
   subtotalMinor   BigInt
   commissionMinor BigInt        @default(0)
   totalMinor      BigInt
+  paidMinor       BigInt         @default(0)
   notes           String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -481,11 +485,47 @@ model Booking {
   vendor       VendorProfile @relation("VendorBookings", fields: [vendorId], references: [id])
   event        Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
   items        BookingItem[]
+  paymentRequests BookingPaymentRequest[]
   review       Review?
   dispatchJobs DispatchJob[]
 
   @@index([buyerId])
   @@index([vendorId, status])
+}
+
+
+model EventDeposit {
+  id             String   @id @default(uuid())
+  eventId        String
+  payerId        String
+  amountMinor    BigInt
+  currency       String
+  status         String   @default("HELD")
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  payer          User     @relation(fields: [payerId], references: [id], onDelete: Restrict)
+
+  @@index([eventId, createdAt])
+  @@index([payerId, createdAt])
+}
+
+model BookingPaymentRequest {
+  id             String   @id @default(uuid())
+  bookingId      String
+  requestedById  String
+  amountMinor    BigInt
+  reason         String
+  status         String   @default("PENDING")
+  idempotencyKey String?  @unique
+  paidAt         DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  requestedBy    User     @relation(fields: [requestedById], references: [id], onDelete: Restrict)
+
+  @@index([bookingId, status])
+  @@index([requestedById, createdAt])
 }
 
 model BookingItem {

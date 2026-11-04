@@ -212,7 +212,7 @@ jobs:
           y
           y
           ANDROID_SDK_LICENSES
-          "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          "$SDKMANAGER" --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Install dependencies
         run: npm ci
@@ -278,22 +278,22 @@ jobs:
           sed -i -E 's/versionCode [0-9]+/versionCode ${{ github.run_number }}/' "$GRADLE_FILE"
           grep -n 'versionCode' "$GRADLE_FILE"
 
-      - name: Build and verify debug APK
-        working-directory: ${{ github.workspace }}/eventsss123/eventsss-main/${{ steps.android-path.outputs.dir }}
+      - name: Build and verify Android 16 launch candidate
+        working-directory: ${{ github.workspace }}/eventsss123/eventsss-main
         shell: bash
-        run: |
-          set -euo pipefail
-          chmod +x ./gradlew
-          ./gradlew --no-daemon clean assembleDebug
-          APK="$(find app/build/outputs/apk -type f -name '*.apk' -print -quit)"
-          test -n "$APK" && test -s "$APK"
-          BT="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
-          test -x "$BT/apksigner"
-          test -x "$BT/aapt"
-          "$BT/apksigner" verify --verbose "$APK"
-          "$BT/aapt" dump badging "$APK" | grep -E "^(package:|sdkVersion:|targetSdkVersion:)"
-          unzip -t "$APK" >/dev/null
-          sha256sum "$APK"
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
+          ANDROID_ARTIFACT_DIR: artifacts/android-launch-candidate
+        run: bash scripts/android-launch-candidate.sh
+
+
+      - name: Upload verified Android 16 device-test candidate and checklist
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-android-api36-device-test
+          path: eventsss123/eventsss-main/artifacts/android-launch-candidate/*
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Collect APK
         shell: bash

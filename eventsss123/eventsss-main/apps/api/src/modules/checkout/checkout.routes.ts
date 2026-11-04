@@ -328,6 +328,7 @@ checkoutRouter.post("/checkout-sessions/:id/pay-with-wallet", requireAuth, async
           subtotalMinor: subtotal,
           commissionMinor: commission,
           totalMinor: subtotal,
+          paidMinor: subtotal,
           items: { create: { listingId: listing.id, quantity: item.quantity, unitPriceMinor: item.unitPriceMinor } },
         },
       });

@@ -67,6 +67,36 @@ jobs:
           curl --fail --silent --show-error --retry 6 --retry-delay 10 --max-time 60 "$API_ORIGIN/health"
           curl --fail --silent --show-error --retry 6 --retry-delay 10 --max-time 60 "$API_ORIGIN/ready"
 
+      - name: Install Android API 36 SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -1)"
+          test -x "$SDKMANAGER"
+          "$SDKMANAGER" --licenses <<'ANDROID_SDK_LICENSES'
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          ANDROID_SDK_LICENSES
+          "$SDKMANAGER" --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
       - name: Install locked dependencies
         run: npm ci
 
@@ -137,11 +167,14 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x ./gradlew
-          ./gradlew --no-daemon clean assembleRelease
+          ./gradlew --no-daemon clean assembleRelease bundleRelease
           APK="app/build/outputs/apk/release/app-release.apk"
+          AAB="app/build/outputs/bundle/release/app-release.aab"
           test -s "$APK"
+          test -s "$AAB"
           mkdir -p "$RUNNER_TEMP/ephinta-production"
           cp "$APK" "$RUNNER_TEMP/ephinta-production/ephinta-production.apk"
+          cp "$AAB" "$RUNNER_TEMP/ephinta-production/ephinta-production.aab"
 
       - name: Verify APK signature, certificate and checksum
         shell: bash
@@ -161,7 +194,9 @@ jobs:
             echo "::error::APK signing certificate does not match ANDROID_CERT_SHA256. Refusing to publish."
             exit 1
           fi
-          (cd "$RUNNER_TEMP/ephinta-production" && sha256sum ephinta-production.apk > SHA256SUMS.txt)
+          "$APKSIGNER" verify --verbose "$APK" >/dev/null
+          jarsigner -verify -verbose -certs "$AAB" >/dev/null
+          (cd "$RUNNER_TEMP/ephinta-production" && sha256sum ephinta-production.apk ephinta-production.aab > SHA256SUMS.txt)
           unzip -t "$APK" >/dev/null
 
       - name: Upload signed production APK artifact
@@ -184,6 +219,7 @@ jobs:
             SHA-256 checksum is included. The production API health and readiness checks passed.
           files: |
             ${{ runner.temp }}/ephinta-production/ephinta-production.apk
+            ${{ runner.temp }}/ephinta-production/ephinta-production.aab
             ${{ runner.temp }}/ephinta-production/SHA256SUMS.txt
             ${{ runner.temp }}/ephinta-production/ephinta-web-bundle.zip
             ${{ runner.temp }}/ephinta-production/version.json

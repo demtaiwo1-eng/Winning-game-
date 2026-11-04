@@ -96,7 +96,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
         <button className="pl-burger" aria-label="Open menu" aria-expanded={menu} onClick={() => setMenu(true)}><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M3 5h14M3 10h14M3 15h14" /></svg></button>
       </div></header>
 
-      {menu && <div className="pl-dr" onClick={() => setMenu(false)}><nav aria-label="Menu" onClick={(e) => e.stopPropagation()}>
+      {menu && <div className="pl-dr" role="presentation" onClick={() => setMenu(false)}><nav aria-label="Menu" onClick={(e) => e.stopPropagation()}>
         <button className="pl-t" style={{ alignSelf: 'flex-end', fontSize: 28 }} aria-label="Close menu" onClick={() => setMenu(false)}>×</button>
         {([['how', 'How it works'], ['vendors', 'Vendors'], ['trust', 'Safety'], ['faq', 'FAQ']] as const).map(([id, l]) => <a key={id} href={`#${id}`} onClick={(e) => { e.preventDefault(); go(id); }}>{l}</a>)}
         <div style={{ display: 'grid', gap: 10, marginTop: 14 }}><button className="pl-b" onClick={() => open('signin')}>Sign in</button><button className="pl-b p" onClick={() => open('register')}>Create account</button><button className="pl-b" onClick={() => open('register', 'vendor')}>Offer your services</button></div>
@@ -138,7 +138,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
 
       <footer className="pl-ft">&copy; {new Date().getFullYear()} EPHINTA. All rights reserved.</footer>
 
-      {modal && <div className="pl-md" onClick={() => setModal(null)}><div className="pl-dl" role="dialog" aria-modal="true" aria-label={modal === 'signin' ? 'Sign in' : 'Create account'} onClick={(e) => e.stopPropagation()}>
+      {modal && <div className="pl-md" role="presentation" onClick={() => setModal(null)}><div className="pl-dl" role="dialog" aria-modal="true" aria-label={modal === 'signin' ? 'Sign in' : 'Create account'} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><h2 style={{ fontSize: 26 }}>{modal === 'signin' ? 'Sign in' : 'Create your account'}</h2><button className="pl-t" aria-label="Close" style={{ fontSize: 26 }} onClick={() => setModal(null)}>×</button></div>
         {modal === 'register' && <><label>Who are you registering as?<div className="pl-ch">{([['customer', 'Customer'], ['vendor', 'Service provider'], ['organization', 'Organization']] as const).map(([k, l]) => <button key={k} aria-pressed={role === k} onClick={() => setRole(k)}>{l}</button>)}</div></label><label>Full name<input className="pl-in" autoComplete="name" value={form.name} onChange={f('name')} /></label></>}
         <label>Email<input className="pl-in" type="email" autoComplete="email" value={form.email} onChange={f('email')} /></label>

@@ -5,3 +5,28 @@
 .ess-availability-manager{display:grid;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.2);font-size:12px}.ess-availability-manager .ess-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ess-availability-manager label{display:grid;gap:4px;color:var(--ess-muted,#94a3b8)}.ess-availability-manager input{min-width:0;width:100%;padding:8px;border:1px solid rgba(148,163,184,.3);border-radius:8px;background:rgba(15,23,42,.45);color:inherit}.ess-availability-slot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid rgba(148,163,184,.12)}.ess-availability-slot span{overflow-wrap:anywhere}@media(max-width:680px){.ess-availability-manager .ess-form-grid{grid-template-columns:1fr}.ess-availability-slot{align-items:flex-start;flex-direction:column}}
 
 .ess-enquiry-card{display:grid;gap:8px;padding:14px 0;border-bottom:1px solid rgba(148,163,184,.18)}.ess-enquiry-card small{color:var(--ess-muted,#94a3b8)}.ess-enquiry-card textarea{width:100%;min-height:72px;padding:10px;border:1px solid rgba(148,163,184,.3);border-radius:8px;background:rgba(15,23,42,.35);color:inherit}.ess-listing-actions{display:flex;gap:8px;flex-wrap:wrap}.ess-listing-actions>*{flex:1 1 auto}
+
+
+/* Keep the shared brand mark inside the header's flex box. The source image
+   previously retained intrinsic dimensions and intercepted taps on workspace
+   controls beneath the sticky header. */
+.ess-topbar { min-width: 0; }
+.ess-brand { min-width: 0; flex: 0 1 auto; position: relative; z-index: 2; }
+.ess-brand .ess-app-brand-logo {
+  display: block;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  max-width: 34px;
+  max-height: 34px;
+  flex: 0 0 34px;
+  object-fit: contain;
+  pointer-events: none;
+}
+.ess-brand .ess-brand-mark { flex: 0 0 auto; }
+.ess-topbar > :not(.ess-brand) { min-width: 0; position: relative; z-index: 1; }
+@media (max-width: 760px) {
+  .ess-topbar { align-items: center; }
+  .ess-brand { max-width: 100%; }
+  .ess-brand > span:last-child { min-width: 0; }
+}

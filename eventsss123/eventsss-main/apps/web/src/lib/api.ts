@@ -181,8 +181,18 @@ export const paymentsApi = {
     }),
   demoCheckout: (intentId: string) =>
     api(`/payments/demo-checkout/${intentId}`, { method: "POST", body: "{}" }),
-  book: (body: { listingId: string; quantity?: number; eventId?: string; notes?: string }) =>
+  book: (body: { listingId: string; quantity?: number; eventId?: string; notes?: string; initialPaymentMinor?: string; idempotencyKey?: string }) =>
     api("/payments/book", { method: "POST", body: JSON.stringify(body) }),
+  eventDeposit: (eventId: string, body: { amountMinor: string; idempotencyKey: string }) =>
+    api<{ alreadyProcessed: boolean; deposit: { id: string; amountMinor: string; currency: string; status: string } }>(`/events/${eventId}/deposits`, { method: "POST", body: JSON.stringify(body) }),
+  requestBookingPayment: (bookingId: string, body: { amountMinor: string; reason: string; idempotencyKey: string }) =>
+    api(`/payments/bookings/${bookingId}/payment-requests`, { method: "POST", body: JSON.stringify(body) }),
+  bookingPaymentRequests: (bookingId: string) =>
+    api<{ items: Array<{ id: string; amountMinor: string; reason: string; status: string; requestedBy: { id: string; name: string } }> }>(`/payments/bookings/${bookingId}/payment-requests`),
+  approveBookingPayment: (bookingId: string, requestId: string) =>
+    api(`/payments/bookings/${bookingId}/payment-requests/${requestId}/approve`, { method: "POST", body: "{}" }),
+  rejectBookingPayment: (bookingId: string, requestId: string) =>
+    api(`/payments/bookings/${bookingId}/payment-requests/${requestId}/reject`, { method: "POST", body: "{}" }),
   release: (bookingId: string) =>
     api(`/payments/bookings/${bookingId}/release`, { method: "POST", body: "{}" }),
   payout: (body: { currency: string; amountMinor: string; destination?: string }) =>

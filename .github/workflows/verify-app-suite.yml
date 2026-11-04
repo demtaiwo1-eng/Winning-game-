@@ -1,0 +1,35 @@
+name: App verification suite
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'eventsss123/eventsss-main/**'
+      - '.github/workflows/verify-app-suite.yml'
+  push:
+    branches: [chore/android-launch-readiness]
+    paths:
+      - 'eventsss123/eventsss-main/**'
+      - '.github/workflows/verify-app-suite.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - run: chmod +x scripts/verify-all.sh
+      - run: scripts/verify-all.sh

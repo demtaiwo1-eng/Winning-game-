@@ -31,6 +31,7 @@ import "./event-builder.css";
 import "./public-landing.css";
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
+const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
 const PromotionsPanel = lazy(() => import("./components/PromotionsPanel"));
 const MarketplaceBrowse = lazy(() => import("./components/MarketplaceBrowse"));
 const FeedbackPanel = lazy(() => import("./components/FeedbackPanel"));
@@ -88,6 +89,26 @@ type KycCase = {
 };
 
 type UserSession = { name: string; email: string; role: Role; organizationMode?: OrganizationMode | null };
+
+function getAuthErrorMessage(status: number, error: unknown, mode: "signin" | "signup" | "forgot"): string {
+  const payload = error && typeof error === "object" ? error as Record<string, unknown> : {};
+  const code = typeof payload.code === "string" ? payload.code : "";
+  if (code === "INVALID_CREDENTIALS" || (status === 401 && mode === "signin")) return "That email and password do not match. Check your details and try again, or use Forgot password to reset it.";
+  if (code === "ALREADY_EXISTS" || status === 409) return "An account with this email or phone number already exists. Sign in with that account, or use a different email or phone number.";
+  if (code === "VALIDATION_ERROR" || status === 400 || status === 422) return mode === "signup"
+    ? "Some registration details are missing or invalid. Review the highlighted fields and try again."
+    : mode === "forgot"
+      ? "Enter a valid email address and try again."
+      : "Please check your email address and password, then try again.";
+  if (code === "ACCOUNT_DISABLED") return "This account is currently unavailable. Please contact support for help.";
+  if (status === 429) return "Too many attempts. Please wait a few minutes before trying again.";
+  if (status >= 500) return "We could not complete your request because of a server problem. Please try again shortly.";
+  return mode === "signup"
+    ? "We could not create your account. Check your details and connection, then try again."
+    : mode === "forgot"
+      ? "We could not send the reset link. Check your connection and try again."
+      : "We could not sign you in. Check your connection and try again.";
+}
 
 const roleMeta: Record<
   Role,
@@ -814,7 +835,7 @@ function VendorPortal({
     }
   };
   const [vendorTab, setVendorTab] = useDashboardTab(
-    ["catalog", "wallet", "plans", "kyc", "messages", "notifications", "promotions"] as const,
+    ["catalog", "wallet", "payments", "plans", "kyc", "messages", "notifications", "promotions"] as const,
     "catalog",
   );
   return (
@@ -841,6 +862,7 @@ function VendorPortal({
       <div className="ess-filter-row" style={{ marginBottom: 12 }}>
         <button type="button" className={vendorTab === "catalog" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("catalog")}>Catalog & demand</button>
         <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
+        <button type="button" className={vendorTab === "payments" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("payments")}>Booking payments</button>
         <button type="button" className={vendorTab === "plans" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("plans")}>Plans & promos</button>
         <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
         <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
@@ -851,6 +873,8 @@ function VendorPortal({
         <PromotionsPanel mode="vendor" />
       ) : vendorTab === "wallet" ? (
         <WalletPanel role="VENDOR" />
+      ) : vendorTab === "payments" ? (
+        <VendorPaymentRequestsPanel />
       ) : vendorTab === "plans" ? (
         <SubscriptionsPanel audience="VENDOR" />
       ) : vendorTab === "kyc" ? (
@@ -1886,8 +1910,10 @@ export default function EnterpriseApp() {
         body: JSON.stringify(body),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok)
-        throw new Error(result?.error?.message || "Unable to authenticate.");
+      if (!response.ok) {
+        setAuthError(getAuthErrorMessage(response.status, result?.error, authMode));
+        return;
+      }
       if (authMode === "forgot") {
         setAuthError("");
         navigate("/auth/signin?role=CLIENT", { replace: true });
@@ -1913,7 +1939,9 @@ export default function EnterpriseApp() {
       } catch { /* */ }
     } catch (error) {
       setAuthError(
-        error instanceof Error ? error.message : "Unable to authenticate.",
+        error instanceof TypeError
+          ? "We could not reach EPHINTA. Check your internet connection and try again."
+          : "We could not complete your request. Please try again.",
       );
     }
   };
@@ -3019,7 +3047,7 @@ function AuthModal({
                       onBlur={() => touch("password")}
                       placeholder={PASSWORD_HELPER}
                       required
-                      minLength={PASSWORD_MIN_LENGTH}
+                      minLength={mode === "signup" ? PASSWORD_MIN_LENGTH : undefined}
                       maxLength={PASSWORD_MAX_LENGTH}
                       style={{ flex: 1, minWidth: 0 }}
                       aria-invalid={Boolean(fieldError("password", password))}
@@ -3107,7 +3135,7 @@ function AuthModal({
               <span>✓ Role-based workspace</span>
             </div>
           )}
-          {error && <div className="ess-form-error">{error}</div>}
+          {error && <div className="ess-form-error" role="alert" aria-live="assertive">{error}</div>}
           {mode === "signup" ? (
             <div className="ess-registration-navigation">
               <button className="ess-outline-button" type="button" onClick={() => registrationStep > 0 ? setRegistrationStep((step) => Math.max(0, step - 1)) : onClose()}>
