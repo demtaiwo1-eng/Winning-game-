@@ -17,7 +17,8 @@ command -v openssl >/dev/null || fail "OpenSSL is required for the encrypted key
 gh auth status >/dev/null 2>&1 || fail "Sign in to GitHub CLI in this Codespace, then rerun."
 gh repo view "$REPO" >/dev/null 2>&1 || fail "Cannot access $REPO with the current GitHub account."
 
-if gh secret list --repo "$REPO" 2>/dev/null | awk '{print $1}' | grep -qx 'ANDROID_KEYSTORE_BASE64'; then
+SECRET_LIST="$(gh secret list --repo "$REPO" 2>/dev/null)" || fail "This GitHub account cannot manage repository Actions secrets. Ask a repository admin to run this setup from their Codespace."
+if printf '%s\\n' "$SECRET_LIST" | awk '{print $1}' | grep -qx 'ANDROID_KEYSTORE_BASE64'; then
   fail "ANDROID_KEYSTORE_BASE64 already exists. Refusing to replace an existing release key."
 fi
 if [[ -e "$KEYSTORE" || -e "$BACKUP" ]]; then
@@ -30,9 +31,9 @@ chmod 700 "$ROOT"
 printf 'Create a strong keystore password (save it in your password manager).\n'
 read -rsp 'Keystore password: ' STORE_PASSWORD; printf '\n'
 read -rsp 'Confirm keystore password: ' STORE_CONFIRM; printf '\n'
-[[ -n "$STORE_PASSWORD" && "$STORE_PASSWORD" == "$STORE_CONFIRM" ]] || fail "Keystore passwords were empty or did not match."
+[[ ${#STORE_PASSWORD} -ge 12 && "$STORE_PASSWORD" == "$STORE_CONFIRM" ]] || fail "Use a keystore password of at least 12 characters and enter it identically twice."
 read -rsp 'Private-key password: ' KEY_PASSWORD; printf '\n'
-[[ -n "$KEY_PASSWORD" ]] || fail "Private-key password cannot be empty."
+[[ ${#KEY_PASSWORD} -ge 12 ]] || fail "Use a private-key password of at least 12 characters."
 export EPHINTA_STORE_PASSWORD="$STORE_PASSWORD" EPHINTA_KEY_PASSWORD="$KEY_PASSWORD"
 
 keytool -genkeypair -v \
