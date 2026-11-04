@@ -163,10 +163,15 @@ jobs:
             adb shell am force-stop com.ephinta.app
             timeout 180s adb shell am start -n com.ephinta.app/.MainActivity
             launched=0
-            for attempt in $(seq 1 36); do
+            attempt=1
+            while [ "$attempt" -le 36 ]; do
               pid="$(adb shell pidof com.ephinta.app 2>/dev/null | tr -d '\\r' || true)"
               resumed="$(adb shell dumpsys activity activities 2>/dev/null | grep -F 'com.ephinta.app/.MainActivity' || true)"
-              if [ -n "$pid" ] && [ -n "$resumed" ]; then launched=1; break; fi
+              if [ -n "$pid" ] && [ -n "$resumed" ]; then
+                launched=1
+                break
+              fi
+              attempt=$((attempt + 1))
               sleep 5
             done
             if [ "$launched" -ne 1 ]; then
