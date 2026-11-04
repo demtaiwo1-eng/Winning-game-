@@ -220,9 +220,11 @@ jobs:
           files: |
             ${{ runner.temp }}/ephinta-production/ephinta-web-bundle.zip
             ${{ runner.temp }}/ephinta-production/version.json
+          overwrite_files: true
           make_latest: false
-          prerelease: false
+          prerelease: true
           fail_on_unmatched_files: true
+          generate_release_notes: false
 
       - name: Publish production GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
