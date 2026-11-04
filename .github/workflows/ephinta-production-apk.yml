@@ -158,7 +158,15 @@ jobs:
           set -euo pipefail
           GRADLE_FILE="apps/mobile/android/app/build.gradle"
           test -f "$GRADLE_FILE"
-          sed -i -E "s/versionCode [0-9]+/versionCode $GITHUB_RUN_ID/" "$GRADLE_FILE"
+          # Android versionCode is a signed 32-bit integer capped at 2,100,000,000.
+          # GitHub run IDs exceed that limit; the per-workflow run number is monotonic
+          # and safely remains within Android's supported range.
+          VERSION_CODE="$((GITHUB_RUN_NUMBER + 2))"
+          if (( VERSION_CODE > 2100000000 )); then
+            echo "::error::Calculated Android versionCode exceeds the Play Store limit."
+            exit 1
+          fi
+          sed -i -E "s/versionCode [0-9]+/versionCode $VERSION_CODE/" "$GRADLE_FILE"
           grep -n 'versionCode' "$GRADLE_FILE"
 
       - name: Build signed release APK
@@ -207,6 +215,25 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Publish stable web OTA release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ephinta-web-latest
+          target_commitish: ${{ github.sha }}
+          name: EPHINTA Web OTA
+          body: |
+            Stable EPHINTA web bundle for installed Android applications.
+            This release is consumed by the production app-updates API.
+          files: |
+            ${{ runner.temp }}/ephinta-production/ephinta-web-bundle.zip
+            ${{ runner.temp }}/ephinta-production/version.json
+          overwrite_files: true
+          make_latest: false
+          prerelease: true
+          fail_on_unmatched_files: true
+          generate_release_notes: false
+
       - name: Publish production GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
@@ -226,3 +253,25 @@ jobs:
           make_latest: true
           prerelease: false
           fail_on_unmatched_files: true
+
+      - name: Verify published OTA update through production API
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          set -euo pipefail
+          MANIFEST_URL="${VITE_UPDATE_URL}/version.json"
+          BUNDLE_URL="${VITE_UPDATE_URL}/ephinta-web-bundle.zip"
+          MANIFEST="$RUNNER_TEMP/ephinta-ota-version.json"
+          BUNDLE="$RUNNER_TEMP/ephinta-ota-bundle.zip"
+
+          # Allow the release asset and Render API cache/deploy path to settle.
+          curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 10 --max-time 60 "$MANIFEST_URL" -o "$MANIFEST"
+          jq -e '.version | type == "string" and length > 0' "$MANIFEST" >/dev/null
+          jq -e '.url | type == "string" and startswith("ephinta-web-bundle.zip?")' "$MANIFEST" >/dev/null
+
+          BUNDLE_PATH="$(jq -r '.url' "$MANIFEST")"
+          BUNDLE_URL="$(node -e 'const [base, path] = process.argv.slice(1); const root = new URL(base.endsWith("/") ? base : base + "/"); const target = new URL(path, root); if (target.origin !== root.origin || !target.pathname.startsWith(root.pathname)) process.exit(2); process.stdout.write(target.toString())' "$VITE_UPDATE_URL" "$BUNDLE_PATH")"
+          curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 10 --max-time 120 "$BUNDLE_URL" -o "$BUNDLE"
+          test -s "$BUNDLE"
+          unzip -t "$BUNDLE" >/dev/null
+          echo "Production OTA manifest and web bundle are reachable through the live API."
