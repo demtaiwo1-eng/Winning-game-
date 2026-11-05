@@ -55,8 +55,10 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const currency = event?.currency || "NGN";
+  const firstEventId = events[0]?.id;
 
   useEffect(() => { if (initialEventId) setEventId(initialEventId); }, [initialEventId]);
+  useEffect(() => { if (!eventId && firstEventId) setEventId(firstEventId); }, [eventId, firstEventId]);
   useEffect(() => { if (!eventId) { setEvent(null); return; } }, [eventId]);
 
   const refresh = async () => {
