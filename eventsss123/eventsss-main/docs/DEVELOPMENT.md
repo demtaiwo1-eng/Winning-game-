@@ -6,8 +6,9 @@ From the repository root, run:
 npm run dev
 ```
 
-The command runs API and web checks, builds the API and production web assets,
-then starts the API and Vite development server. Startup waits for database
+This starts the API and Vite development server directly. The API binds to
+port 5000 and the web app binds to port 5173; startup fails rather than silently
+choosing alternate ports if either port is occupied. Startup waits for database
 readiness before showing the app URL:
 
 - App: <http://localhost:5173/>
@@ -18,6 +19,6 @@ Set up the ignored local API environment file before the first run. The API
 needs a valid `DATABASE_URL` (or `DATABASE_URL_ONLINE`) and a `JWT_SECRET` of
 at least 32 characters. Keep credentials out of tracked files.
 
-For a faster edit/reload loop after checks and builds have passed, use
-`npm run dev:quick`. This starts the same API and web servers without repeating
-the full verification and production builds.
+Run `npm run dev:verify` when you want to run the checks and production builds
+before starting development servers. `npm run dev:quick` is an alias for
+`npm run dev`.

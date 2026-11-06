@@ -2,33 +2,26 @@ import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 import net from "node:net";
 
-async function findFreePort(startPort, maxAttempts = 25) {
-  for (let port = startPort; port < startPort + maxAttempts; port += 1) {
-    const isFree = await new Promise((resolve) => {
-      const server = net.createServer();
-      server.once("error", () => resolve(false));
-      server.listen(port, "127.0.0.1", () => {
-        server.close(() => resolve(true));
-      });
-    });
-    if (isFree) return port;
-  }
-  throw new Error(`No free port found starting at ${startPort}`);
-}
+const API_PORT = 5000;
+const WEB_PORT = 5173;
 
 const services = [
   {
     name: "API",
-    url: "http://127.0.0.1:5000/ready",
+    port: API_PORT,
+    url: `http://127.0.0.1:${API_PORT}/ready`,
     command: "npm",
     args: ["run", "dev", "-w", "apps/api"],
+    env: { PORT: String(API_PORT) },
     log: "/tmp/ephinta-api-dev.log",
   },
   {
     name: "WEB",
-    url: "http://127.0.0.1:5173/",
+    port: WEB_PORT,
+    url: `http://127.0.0.1:${WEB_PORT}/`,
     command: "npm",
     args: ["run", "dev", "-w", "apps/web"],
+    env: {},
     log: "/tmp/ephinta-web-dev.log",
   },
 ];
@@ -38,19 +31,6 @@ async function healthy(url) {
     const response = await fetch(url, { signal: AbortSignal.timeout(1500) });
     return response.ok;
   } catch {
-    return false;
-  }
-}
-
-async function portOccupied(port) {
-  try {
-    const response = await fetch(`http://127.0.0.1:${port}/`, {
-      signal: AbortSignal.timeout(700),
-    });
-    return response.status > 0;
-  } catch (error) {
-    // A TCP listener that is not HTTP will generally return a fetch connection
-    // error too, so use the OS socket probe below when available.
     return false;
   }
 }
@@ -84,7 +64,7 @@ function start(service) {
   const stream = fs.createWriteStream(service.log, { flags: "a" });
   const child = spawn(service.command, service.args, {
     cwd: process.cwd(),
-    env: process.env,
+    env: { ...process.env, ...service.env },
     stdio: ["ignore", "pipe", "pipe"],
   });
   child.stdout.pipe(stream);
@@ -113,23 +93,24 @@ for (const service of services) {
     continue;
   }
 
-  const port = service.name === "API" ? 5000 : await findFreePort(5173);
-  if (service.name === "WEB") {
-    service.url = `http://127.0.0.1:${port}/`;
-    service.args = ["run", "dev", "-w", "apps/web", "--", "--host", "127.0.0.1", "--port", String(port), "--strictPort", "false"];
-  }
-
   const listening = await new Promise((resolve) => {
     const server = net.createServer();
     server.once("error", () => resolve(true));
-    server.listen(port, "127.0.0.1", () => server.close(() => resolve(false)));
+    server.listen(service.port, "127.0.0.1", () => server.close(() => resolve(false)));
   });
 
   if (listening) {
-    console.error(`[${service.name}] Port ${port} is occupied but ${service.url} is not healthy.`);
-    console.error("Not terminating an unknown process. Inspect with: lsof -i :" + port);
+    console.error(`[${service.name}] Port ${service.port} is occupied but ${service.url} is not healthy.`);
+    console.error("Not terminating an unknown process. Inspect with: lsof -i :" + service.port);
     stopChildren();
     process.exit(1);
+  }
+
+  if (service.name === "WEB") {
+    service.args = [
+      "run", "dev", "-w", "apps/web", "--",
+      "--host", "0.0.0.0", "--port", String(WEB_PORT), "--strictPort",
+    ];
   }
 
   const child = start(service);
