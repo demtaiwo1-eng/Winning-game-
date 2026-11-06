@@ -100,6 +100,21 @@ test("the menu planner action opens the guided event planner", async ({ page }) 
 
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.locator(".eph-modal")).toHaveCount(0);
+
+  await page.getByLabel("Event name").fill("Header Planner Flow");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("City or venue area").fill("Ibadan");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Expected guests").fill("80");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Build my event brief/ }).click();
+  await page.getByRole("button", { name: /Save brief and create account/ }).click();
+
+  await expect(page).toHaveURL(/\/auth\/signup\?role=CLIENT$/);
+  await expect(page.locator("#eph-auth-dialog")).toBeVisible();
+  await expect(page.locator(".eph-modal")).toHaveCount(0);
 });
 
 test("public signup choices open role-specific introductions before account creation", async ({ page }) => {

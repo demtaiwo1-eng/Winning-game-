@@ -365,6 +365,10 @@ export default function PublicLanding({
       onOpenAuth(mode, requestedRole);
       return;
     }
+    if (mode === 'signup') {
+      window.location.assign(requestedRole === 'CLIENT' ? '/plan' : `/join/${requestedRole.toLowerCase()}`);
+      return;
+    }
     setAuthMode(mode);
 
     setMenuOpen(false);
@@ -495,14 +499,7 @@ export default function PublicLanding({
       return;
     }
 
-    openAuth('signup', 'CLIENT');
-
-    requestAnimationFrame(() => {
-      const apiModal = document.getElementById('eph-auth-dialog');
-      if (apiModal) {
-        apiModal.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    });
+    window.location.assign('/plan');
 
   }
 
