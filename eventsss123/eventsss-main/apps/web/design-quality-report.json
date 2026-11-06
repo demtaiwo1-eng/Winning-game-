@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-11-06T16:11:53.344Z",
+  "inspectedFiles": 108,
+  "passed": [
+    "src/EnterpriseApp.tsx: image alt attributes found",
+    "src/components/LandingPageFunctional.tsx: image alt attributes found",
+    "src/components/PublicLanding.tsx: image alt attributes found",
+    "src/components/branding/EphintaIntro.tsx: image alt attributes found",
+    "src/components/ess-bright-orange-theme.css: focus styling present",
+    "src/ephinta-accessible-contrast.css: focus styling present",
+    "src/ephinta-product-excellence.css: focus styling present",
+    "src/ephinta-sample3-menu.css: focus styling present",
+    "src/ephinta-screen-refinement.css: focus styling present",
+    "src/ess-bright-orange-theme.css: focus styling present",
+    "src/event-builder.css: focus styling present",
+    "src/styles/ephinta-audio.css: focus styling present",
+    "src/styles/ephinta-bright-copy-refinement.css: focus styling present",
+    "src/styles/ephinta-design4-enforced.css: focus styling present",
+    "src/styles/ephinta-design4.css: focus styling present",
+    "src/styles/ephinta-polish.css: focus styling present",
+    "src/styles/ephinta-responsive-polish.css: focus styling present",
+    "src/styles/ephinta-tokens.css: focus styling present",
+    "src/styles/event-planner-registration.css: focus styling present",
+    "src/theme/tokens.css: focus styling present",
+    "Production build script configured.",
+    "Frontend test script configured.",
+    "Product excellence stylesheet is imported."
+  ],
+  "warnings": [],
+  "failures": []
+}
