@@ -305,6 +305,223 @@
   font-size: 13px;
 }
 
+.ess-auth-backdrop {
+  background:
+    radial-gradient(ellipse at 18% 16%, rgba(124, 92, 246, .2), transparent 38%),
+    rgba(18, 19, 34, .68);
+  backdrop-filter: blur(16px);
+}
+.ess-auth-backdrop > .ess-auth-modal {
+  width: min(520px, 100%);
+  border: 1px solid #e8e7f2;
+  border-radius: 24px;
+  background: linear-gradient(155deg, #fff 0%, #fbfaff 100%);
+  box-shadow: 0 32px 90px rgba(20, 17, 49, .24);
+  color: #24233a;
+}
+.ess-auth-modal .ess-auth-brand {
+  color: #30265d;
+  letter-spacing: .14em;
+}
+.ess-auth-modal .ess-eyebrow {
+  color: #7555d9;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.ess-auth-modal h2 {
+  color: #211d37;
+  font-size: clamp(24px, 5vw, 30px);
+  letter-spacing: -.04em;
+}
+.ess-auth-modal > .ess-muted {
+  color: #77758b;
+  font-size: 14px;
+}
+.ess-auth-modal label,
+.ess-auth-modal form > label {
+  color: #49475e;
+  font-size: 13px;
+  font-weight: 650;
+}
+.ess-auth-modal input:not([type="radio"]):not([type="checkbox"]),
+.ess-auth-modal select,
+.ess-auth-modal textarea {
+  border: 1px solid #e3e1ed;
+  border-radius: 12px;
+  background: #f8f7fb;
+  color: #29263d;
+  font: inherit;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.ess-auth-modal input:not([type="radio"]):not([type="checkbox"]):focus,
+.ess-auth-modal select:focus,
+.ess-auth-modal textarea:focus {
+  border-color: #8969e8;
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(137, 105, 232, .15);
+}
+.ess-auth-modal input::placeholder,
+.ess-auth-modal textarea::placeholder {
+  color: #a4a1b3;
+}
+.ess-auth-modal .ess-close {
+  border-radius: 10px;
+  color: #77758b;
+  transition: background .18s ease, color .18s ease;
+}
+.ess-auth-modal .ess-close:hover {
+  background: #f1eff8;
+  color: #30265d;
+}
+.ess-auth-modal .ess-auth-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  border-color: #eeedf4;
+  border-radius: 13px;
+  background: #f7f6fa;
+}
+.ess-auth-modal .ess-auth-roles button {
+  flex: 1 1 28%;
+  min-height: 38px;
+  border-radius: 10px;
+  color: #77758b;
+  font-size: 12px;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.ess-auth-modal .ess-auth-roles button.active {
+  background: #fff;
+  color: #6848ca;
+  box-shadow: 0 2px 8px rgba(35, 29, 66, .1);
+}
+.ess-auth-modal .ess-primary {
+  min-height: 48px;
+  border: 1px solid #7352d2;
+  border-radius: 12px;
+  background: linear-gradient(105deg, #7959dc, #6046c0);
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 7px 18px rgba(101, 73, 198, .2);
+}
+.ess-auth-modal .ess-primary:hover {
+  background: linear-gradient(105deg, #6848ca, #5037ab);
+  box-shadow: 0 9px 22px rgba(101, 73, 198, .28);
+}
+.ess-auth-modal .ess-primary:focus-visible,
+.ess-auth-modal .ess-close:focus-visible,
+.ess-auth-modal .ess-modal-switch:focus-visible,
+.ess-auth-modal .ess-registration-navigation button:focus-visible {
+  outline: 3px solid rgba(121, 89, 220, .45);
+  outline-offset: 3px;
+}
+.ess-auth-modal .ess-outline-button {
+  border: 1px solid #e2dfed;
+  border-radius: 12px;
+  background: #fff;
+  color: #514d69;
+}
+.ess-auth-modal .ess-outline-button:hover {
+  background: #f7f5fc;
+}
+.ess-auth-modal .ess-modal-switch {
+  color: #6848ca;
+  font-size: 13px;
+  font-weight: 650;
+}
+.ess-auth-modal .ess-auth-mode-switch {
+  margin: 14px 0 0;
+  color: #77758b;
+  font-size: 13px;
+  text-align: center;
+}
+.ess-auth-modal .ess-auth-mode-switch button {
+  border: 0;
+  padding: 2px 3px;
+  background: transparent;
+  color: var(--auth-accent, #6848ca);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.ess-auth-modal .ess-auth-mode-switch button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ess-auth-modal .ess-auth-notice {
+  padding: 12px;
+  border: 1px solid #d5eddf;
+  border-radius: 10px;
+  background: #f1fbf4;
+  color: #28643c;
+  font-size: 13px;
+}
+.ess-auth-modal .ess-registration-progress-copy {
+  color: #77758b;
+}
+.ess-auth-modal .ess-registration-progress-copy strong {
+  color: #514d69;
+}
+.ess-auth-modal .ess-registration-progress-track {
+  background: #ebe8f4;
+}
+.ess-auth-modal .ess-registration-progress-track span {
+  background: linear-gradient(90deg, #9276ee, #6848ca);
+}
+.ess-auth-modal .ess-registration-note {
+  border-color: #e8e2f8;
+  background: #f8f6fd;
+  color: #39344e;
+}
+.ess-auth-modal .ess-registration-note span {
+  color: #77758b;
+}
+.ess-auth-modal .ess-auth-trust,
+.ess-auth-modal .ess-choice-group {
+  color: #5e5a72;
+}
+.ess-auth-modal .ess-form-error {
+  border: 1px solid #f4d5d9;
+  background: #fff5f5;
+  color: #a33d4b;
+}
+.ess-auth-modal[data-role="client"] { --auth-accent: #6848ca; --auth-tint: #f8f6fd; --auth-focus: rgba(137, 105, 232, .15); }
+.ess-auth-modal[data-role="organization"] { --auth-accent: #2869b2; --auth-tint: #f1f7fd; --auth-focus: rgba(56, 125, 196, .16); }
+.ess-auth-modal[data-role="vendor"] { --auth-accent: #287c65; --auth-tint: #f1f9f6; --auth-focus: rgba(54, 145, 117, .16); }
+.ess-auth-modal[data-role="affiliate"] { --auth-accent: #9a6a18; --auth-tint: #fffaf0; --auth-focus: rgba(189, 142, 49, .17); }
+.ess-auth-modal[data-role="verifier"] { --auth-accent: #267781; --auth-tint: #f0f9fa; --auth-focus: rgba(46, 143, 154, .16); }
+.ess-auth-modal[data-role="consultant"] { --auth-accent: #a34f70; --auth-tint: #fdf4f7; --auth-focus: rgba(177, 82, 120, .15); }
+.ess-auth-modal[data-role="admin"] { --auth-accent: #514d69; --auth-tint: #f5f4f8; --auth-focus: rgba(93, 88, 125, .15); }
+.ess-auth-modal[data-role] .ess-eyebrow,
+.ess-auth-modal[data-role] .ess-auth-mode-switch button {
+  color: var(--auth-accent);
+}
+.ess-auth-modal[data-role] input:not([type="radio"]):not([type="checkbox"]):focus,
+.ess-auth-modal[data-role] select:focus,
+.ess-auth-modal[data-role] textarea:focus {
+  border-color: var(--auth-accent);
+  box-shadow: 0 0 0 4px var(--auth-focus);
+}
+.ess-auth-modal[data-role] .ess-auth-roles button.active {
+  color: var(--auth-accent);
+}
+.ess-auth-modal[data-role] .ess-primary {
+  border-color: var(--auth-accent);
+  background: var(--auth-accent);
+}
+.ess-auth-modal[data-role] .ess-primary:hover {
+  background: color-mix(in srgb, var(--auth-accent), #000 12%);
+}
+.ess-auth-modal[data-role] .ess-registration-progress-track span {
+  background: var(--auth-accent);
+}
+.ess-auth-modal[data-role] .ess-registration-note {
+  border-color: color-mix(in srgb, var(--auth-accent), #fff 78%);
+  background: var(--auth-tint);
+}
+
 
 /* Public registration dialog: compact logo, readable stages and phone-safe controls. */
 .eph-modal .eph-modal-brand {

@@ -2,7 +2,7 @@
  * Startup guard helpers for EPHINTA.
  * Call markEphintaAppReady() once the application shell has mounted.
  * The watchdog is a final safety net for splash/intro overlays that opt into
- * [data-ephinta-intro-overlay]; it never clears auth state or changes routes.
+ * [data-ephinta-intro-overlay] if startup never completes.
  */
 const READY_EVENT = "ephinta:app-ready";
 
@@ -15,10 +15,7 @@ export function markEphintaAppReady(): void {
 
 export function installEphintaIntroWatchdog(maxWaitMs = 6500): () => void {
   if (typeof window === "undefined" || typeof document === "undefined") return () => {};
-  let finished = false;
-  const finish = () => {
-    if (finished) return;
-    finished = true;
+  const expire = () => {
     document.documentElement.dataset.ephintaIntroExpired = "true";
     document.documentElement.classList.add("ephinta-intro-expired");
     document.querySelectorAll<HTMLElement>("[data-ephinta-intro-overlay]").forEach((node) => {
@@ -28,10 +25,11 @@ export function installEphintaIntroWatchdog(maxWaitMs = 6500): () => void {
       node.style.visibility = "hidden";
     });
   };
-  const timer = window.setTimeout(finish, Math.max(1500, maxWaitMs));
-  window.addEventListener(READY_EVENT, finish, { once: true });
+  const timer = window.setTimeout(expire, Math.max(1500, maxWaitMs));
+  const handleAppReady = () => window.clearTimeout(timer);
+  window.addEventListener(READY_EVENT, handleAppReady, { once: true });
   return () => {
     window.clearTimeout(timer);
-    window.removeEventListener(READY_EVENT, finish);
+    window.removeEventListener(READY_EVENT, handleAppReady);
   };
 }

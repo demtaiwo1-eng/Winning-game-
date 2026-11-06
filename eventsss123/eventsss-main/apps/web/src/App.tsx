@@ -636,7 +636,18 @@ export default function App() {
       <Workspace payload={auth} onLogout={handleLogout} />
     )
   ) : (
-    <SplashLogo><PublicLanding onLoginSuccess={handleLoginSuccess} /></SplashLogo>
+    <SplashLogo>
+      <PublicLanding
+        onLoginSuccess={handleLoginSuccess}
+        onOpenAuth={(mode, role) => {
+          const path = mode === "signup"
+            ? role === "CLIENT" ? "/plan" : `/join/${role.toLowerCase()}`
+            : `/auth/${mode}?role=${encodeURIComponent(role)}`;
+          window.location.assign(path);
+        }}
+        onStartBuilder={() => window.location.assign("/plan")}
+      />
+    </SplashLogo>
   );
 
   return (

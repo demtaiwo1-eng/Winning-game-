@@ -22,6 +22,7 @@ import {
   type EventBuilderProgress,
 } from "./lib/eventDraft";
 import { registrationFieldError, type RegistrationField } from "./lib/registrationValidation";
+import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from "./lib/roleLabels";
 import NotificationsPanel from "./components/NotificationsPanel";
 import "./enterprise.css";
 import "./styles/event-planner-registration.css";
@@ -149,6 +150,24 @@ const roleMeta: Record<
     short: "Admin",
     description: "Operate the global marketplace, users and economics.",
   },
+};
+
+const registrationProfileLabel: Record<SelfRegisterRole, string> = {
+  CLIENT: "Planning profile",
+  ORGANIZATION: "Organization profile",
+  VENDOR: "Business profile",
+  AFFILIATE: "Referral profile",
+  VERIFIER: "Readiness profile",
+  CONSULTANT: "Consulting profile",
+};
+
+const registrationBenefits: Record<SelfRegisterRole, string[]> = {
+  CLIENT: ["Plan and budget events", "Discover trusted services", "Keep event tasks together"],
+  ORGANIZATION: ["Coordinate your organization", "Manage team event work", "Choose planning or service delivery"],
+  VENDOR: ["Manage service listings", "Receive booking requests", "Track payments and verification"],
+  AFFILIATE: ["Share trusted referrals", "Track referral activity", "View commission progress"],
+  VERIFIER: ["Review assigned services", "Record readiness checks", "Track event milestones"],
+  CONSULTANT: ["Access assigned workspaces", "Coordinate event operations", "Track your assigned work"],
 };
 
 const isRole = (role: string): role is Role =>
@@ -1787,6 +1806,7 @@ export default function EnterpriseApp() {
 
 
   const [authError, setAuthError] = useState("");
+  const [authNotice, setAuthNotice] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -1816,6 +1836,7 @@ export default function EnterpriseApp() {
     setSelectedRole(role);
     if (role !== "ORGANIZATION") setOrganizationMode("");
     setAuthError("");
+    setAuthNotice("");
     navigate(`/auth/${mode}?role=${encodeURIComponent(role)}`);
   };
   const closeAuth = () =>
@@ -1824,11 +1845,42 @@ export default function EnterpriseApp() {
     setMenuOpen(false);
     navigate("/plan");
   };
-  const changeAuthMode = (mode: "signin" | "signup" | "forgot") =>
+  const startRoleQuestionnaire = (role: SelfRegisterRole) => {
+    setMenuOpen(false);
+    navigate(role === "CLIENT" ? "/plan" : `/join/${role.toLowerCase()}`);
+  };
+  const continueRoleQuestionnaire = (role: SelfRegisterRole, answers: Record<string, string>) => {
+    setSelectedRole(role);
+    setOrganizationMode("");
+    setBusiness(answers.businessName ?? "");
+    setVendorCity(answers.businessCity ?? "");
+    setVendorDescription(answers.businessDescription ?? "");
+    setRegistrationCategory(answers.registrationCategory ?? "");
+    setReferralCode(answers.referralCode ?? "");
+    setAuthError("");
+    setAuthNotice("");
+    navigate(`/auth/signup?role=${encodeURIComponent(role)}`);
+  };
+  const changeAuthMode = (mode: "signin" | "signup" | "forgot") => {
+    setAuthError("");
+    setAuthNotice("");
+    setPassword("");
     navigate(`/auth/${mode}?role=${encodeURIComponent(selectedRole)}`);
+  };
   const changeAuthRole = (role: Role) => {
     setSelectedRole(role);
     if (role !== "ORGANIZATION") setOrganizationMode("");
+    setAuthError("");
+    setAuthNotice("");
+    setName("");
+    setBusiness("");
+    setVendorPhone("");
+    setVendorCity("");
+    setVendorDescription("");
+    setVendorKycUrl("");
+    setRegistrationCategory("");
+    setReferralCode("");
+    setPassword("");
     navigate(`/auth/${routeAuthMode ?? "signin"}?role=${encodeURIComponent(role)}`, {
       replace: true,
     });
@@ -1847,13 +1899,18 @@ export default function EnterpriseApp() {
     if (routeAuthMode) {
       const role = new URLSearchParams(location.search).get("role");
       if (role && Object.prototype.hasOwnProperty.call(roleMeta, role)) {
+        if (routeAuthMode === "signup" && role === "ADMIN") {
+          navigate("/auth/signin?role=ADMIN", { replace: true });
+          return;
+        }
         setSelectedRole(role as Role);
       }
     }
-  }, [routeAuthMode, location.search]);
+  }, [routeAuthMode, location.search, navigate]);
   const submitAuth = async (event: React.FormEvent) => {
     event.preventDefault();
     setAuthError("");
+    setAuthNotice("");
     if (
       !email ||
       (authMode !== "forgot" && !password) ||
@@ -1915,8 +1972,7 @@ export default function EnterpriseApp() {
         return;
       }
       if (authMode === "forgot") {
-        setAuthError("");
-        navigate("/auth/signin?role=CLIENT", { replace: true });
+        setAuthNotice("If an account exists for that email, a reset link has been sent.");
         return;
       }
       const user = result.user;
@@ -1980,6 +2036,10 @@ export default function EnterpriseApp() {
     ) : null;
   const publicLandingContent = (
     <PublicLanding
+      onOpenAuth={(mode, role) => {
+        if (mode === "signup") startRoleQuestionnaire(role);
+        else openAuth(role, mode);
+      }}
       onLoginSuccess={(payload) => {
         const user = payload.user;
         if (!isRole(user?.role)) {
@@ -2028,6 +2088,15 @@ export default function EnterpriseApp() {
             element={<EventBuilder onBack={() => navigate("/")} onComplete={() => openAuth("CLIENT", "signup")} />}
           />
           <Route
+            path="/join/:role"
+            element={
+              <RoleQuestionnaireRoute
+                onBack={() => navigate("/")}
+                onContinue={continueRoleQuestionnaire}
+              />
+            }
+          />
+          <Route
             path={APP_ROUTE_PATHS.auth}
             element={authOpen ? publicLandingContent : <Navigate to="/" replace />}
           />
@@ -2055,6 +2124,7 @@ export default function EnterpriseApp() {
             registrationCategory={registrationCategory}
             referralCode={referralCode}
             error={authError}
+            notice={authNotice}
             onClose={closeAuth}
             onSubmit={submitAuth}
             onRole={changeAuthRole}
@@ -2322,6 +2392,7 @@ export default function EnterpriseApp() {
           registrationCategory={registrationCategory}
           referralCode={referralCode}
           error={authError}
+          notice={authNotice}
           onClose={closeAuth}
           onSubmit={submitAuth}
           onRole={changeAuthRole}
@@ -2374,9 +2445,9 @@ function ResetPasswordPage({ token }: { token: string }) {
   return (
     <div className="ess-app">
       <main className="ess-content">
-        <div className="ess-auth-modal">
+        <div className="ess-auth-modal" role="dialog" aria-modal="true" aria-labelledby="reset-password-title">
           <p className="ess-eyebrow">Secure recovery</p>
-          <h2>Create a new password</h2>
+          <h2 id="reset-password-title">Create a new password</h2>
           <p className="ess-muted">{PASSWORD_HELPER}</p>
           <form onSubmit={submit}>
             <div>
@@ -2609,6 +2680,176 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
   return <main className="ess-builder"><button className="ess-quiet-button" onClick={onBack}>← Back to home</button><div className="ess-builder-progress" role="group" aria-label="Event planner progress"><span>Step {step + 1} of {questions.length}: {current.title}</span><b>{step + 1} / {questions.length}</b></div><div className="ess-builder-card"><p className="ess-eyebrow">Guided setup</p><h1>{current.title}</h1><p className="ess-builder-lead">{current.prompt}</p>{saveError ? <p className="ess-form-error" role="alert">{saveError}</p> : <p className="ess-muted" role="status">Your progress is saved on this device.</p>}<form onSubmit={(event) => { event.preventDefault(); step === questions.length - 1 ? setComplete(true) : setStep(step + 1); }}>{current.fields}<div className="ess-builder-actions">{step > 0 && <button type="button" className="ess-outline-button" onClick={() => setStep(step - 1)}>Back</button>}<button type="submit" className="ess-primary">{step === questions.length - 1 ? 'Build my event brief' : 'Next question →'}</button></div></form></div></main>;
 }
 
+type RoleQuestionnaireField = {
+  key: string;
+  label: string;
+  type: "text" | "select" | "textarea";
+  required?: boolean;
+  placeholder?: string;
+  options?: string[];
+  maxLength?: number;
+};
+
+const roleQuestionnaires: Record<
+  Exclude<SelfRegisterRole, "CLIENT">,
+  { title: string; intro: string; fields: RoleQuestionnaireField[] }
+> = {
+  VENDOR: {
+    title: "Tell us about your services",
+    intro: "A few details help us prepare a useful vendor workspace. You can refine your profile later.",
+    fields: [
+      { key: "businessName", label: "Business name", type: "text", required: true, placeholder: "e.g. Northstar Events", maxLength: 120 },
+      { key: "registrationCategory", label: "Primary service", type: "select", required: true, options: ["Venue", "Catering", "Photography", "Decor", "Music and entertainment", "Event rentals", "Other"] },
+      { key: "businessCity", label: "Main service city", type: "text", required: true, placeholder: "e.g. Lagos", maxLength: 120 },
+      { key: "businessDescription", label: "What do you provide?", type: "textarea", placeholder: "Share a short description of your services.", maxLength: 1000 },
+    ],
+  },
+  ORGANIZATION: {
+    title: "Tell us about your organization",
+    intro: "Help us tailor the workspace to your team and the events you support.",
+    fields: [
+      { key: "registrationCategory", label: "Organization type", type: "select", required: true, options: ["Business or company", "Non-profit", "School or university", "Community group", "Public organization", "Other"] },
+      { key: "teamSize", label: "How many people will plan or deliver events?", type: "select", required: true, options: ["Just me", "2–5 people", "6–20 people", "More than 20"] },
+      { key: "organizationFocus", label: "What would you like to coordinate?", type: "textarea", placeholder: "For example, team events, community programs, or event services.", maxLength: 1000 },
+    ],
+  },
+  AFFILIATE: {
+    title: "Tell us about your community",
+    intro: "A few details help us set up the right referral tools for your audience.",
+    fields: [
+      { key: "registrationCategory", label: "What is your primary referral channel?", type: "select", required: true, options: ["Social media", "Community", "Agency network", "Content publication"] },
+      { key: "audienceFocus", label: "Who do you expect to refer?", type: "select", required: true, options: ["Event planners", "Event professionals", "Organizations", "A mix of planners and professionals"] },
+      { key: "audienceSize", label: "How would you describe your reach?", type: "select", options: ["Starting out", "Small community", "Growing audience", "Established network"] },
+      { key: "referralChannel", label: "Where do you connect with them?", type: "textarea", placeholder: "For example, a community group, newsletter, or social channel.", maxLength: 1000 },
+    ],
+  },
+  VERIFIER: {
+    title: "Tell us about your verification experience",
+    intro: "These introductory details help us understand the checks you can support.",
+    fields: [
+      { key: "registrationCategory", label: "What do you have experience checking?", type: "select", required: true, options: ["Venue readiness", "Catering and food safety", "Equipment and production", "Event operations", "General service readiness"] },
+      { key: "verificationArea", label: "Primary city or service area", type: "text", required: true, placeholder: "e.g. Lagos and nearby areas", maxLength: 120 },
+      { key: "verificationExperience", label: "Briefly describe your experience", type: "textarea", placeholder: "Share relevant experience or qualifications.", maxLength: 1000 },
+    ],
+  },
+  CONSULTANT: {
+    title: "Tell us about your event expertise",
+    intro: "We’ll use this to shape the consulting workspaces and opportunities shown to you.",
+    fields: [
+      { key: "registrationCategory", label: "Primary area of expertise", type: "select", required: true, options: ["Event strategy", "Production and operations", "Budgeting and finance", "Guest experience", "Marketing and communications", "Other"] },
+      { key: "consultingArea", label: "Where do you work?", type: "text", placeholder: "City, region, or remote", maxLength: 120 },
+      { key: "consultingExperience", label: "What kind of event work do you support?", type: "textarea", placeholder: "A short introduction to your experience.", maxLength: 1000 },
+    ],
+  },
+};
+
+function RoleQuestionnaireRoute({
+  onBack,
+  onContinue,
+}: {
+  onBack: () => void;
+  onContinue: (role: SelfRegisterRole, answers: Record<string, string>) => void;
+}) {
+  const { role: roleParam = "" } = useParams();
+  const role = SELF_REGISTER_ROLES.find((candidate) => candidate.toLowerCase() === roleParam.toLowerCase());
+  if (!role || role === "CLIENT") return <Navigate to="/" replace />;
+  return <RoleQuestionnaire role={role} onBack={onBack} onContinue={onContinue} />;
+}
+
+function RoleQuestionnaire({
+  role,
+  onBack,
+  onContinue,
+}: {
+  role: Exclude<SelfRegisterRole, "CLIENT">;
+  onBack: () => void;
+  onContinue: (role: SelfRegisterRole, answers: Record<string, string>) => void;
+}) {
+  const questionnaire = roleQuestionnaires[role];
+  const storageKey = `ess_registration_questionnaire_${role.toLowerCase()}`;
+  const [answers, setAnswers] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (!saved) return {};
+      const parsed: unknown = JSON.parse(saved);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+      return Object.fromEntries(
+        Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+      );
+    } catch {
+      return {};
+    }
+  });
+  const [saveError, setSaveError] = useState("");
+
+  const updateAnswer = (key: string, value: string) => {
+    setAnswers((current) => ({ ...current, [key]: value }));
+  };
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(answers));
+      setSaveError("");
+      onContinue(role, answers);
+    } catch {
+      setSaveError("Your answers could not be saved on this device. Check your browser storage and try again.");
+    }
+  };
+
+  return (
+    <main className="ess-builder ess-role-questionnaire">
+      <button className="ess-quiet-button" type="button" onClick={onBack}>← Back to home</button>
+      <div className="ess-builder-progress" role="group" aria-label="Registration introduction">
+        <span>{roleLabel(role)} · Quick introduction</span>
+        <b>Before signup</b>
+      </div>
+      <section className="ess-builder-card" aria-labelledby="role-questionnaire-title">
+        <p className="ess-eyebrow">A few quick questions</p>
+        <h1 id="role-questionnaire-title">{questionnaire.title}</h1>
+        <p className="ess-builder-lead">{questionnaire.intro}</p>
+        <form onSubmit={submit}>
+          {questionnaire.fields.map((field) => (
+            <label key={field.key}>
+              {field.label}
+              {field.type === "select" ? (
+                <select
+                  value={answers[field.key] ?? ""}
+                  required={field.required}
+                  onChange={(event) => updateAnswer(field.key, event.target.value)}
+                >
+                  <option value="">Choose one</option>
+                  {field.options?.map((option) => <option key={option} value={option}>{option}</option>)}
+                </select>
+              ) : field.type === "textarea" ? (
+                <textarea
+                  value={answers[field.key] ?? ""}
+                  placeholder={field.placeholder}
+                  maxLength={field.maxLength}
+                  rows={3}
+                  onChange={(event) => updateAnswer(field.key, event.target.value)}
+                />
+              ) : (
+                <input
+                  value={answers[field.key] ?? ""}
+                  placeholder={field.placeholder}
+                  maxLength={field.maxLength}
+                  required={field.required}
+                  onChange={(event) => updateAnswer(field.key, event.target.value)}
+                />
+              )}
+            </label>
+          ))}
+          {saveError && <p className="ess-form-error" role="alert">{saveError}</p>}
+          <div className="ess-builder-actions">
+            <button type="button" className="ess-outline-button" onClick={onBack}>Not now</button>
+            <button type="submit" className="ess-primary">Continue to signup →</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  );
+}
+
 function PublicHome({
   onRole,
   onSignup,
@@ -2720,6 +2961,7 @@ function AuthModal({
   registrationCategory,
   referralCode,
   error,
+  notice,
   onClose,
   onSubmit,
   onRole,
@@ -2756,6 +2998,7 @@ function AuthModal({
   registrationCategory: string;
   referralCode: string;
   error: string;
+  notice: string;
   onClose: () => void;
   onSubmit: (event: React.FormEvent) => void;
   onRole: (role: Role) => void;
@@ -2793,8 +3036,8 @@ function AuthModal({
   const suggestPassword = () =>
     setPassword(`Ess-${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}!`);
   return (
-    <div className="ess-modal-backdrop">
-      <div className="ess-auth-modal">
+    <div className="ess-modal-backdrop ess-auth-backdrop">
+      <div id="eph-auth-dialog" className="ess-auth-modal" data-role={role.toLowerCase()} role="dialog" aria-modal="true" aria-labelledby="ess-auth-title">
         <button className="ess-close" onClick={onClose}>
           ×
         </button>
@@ -2802,10 +3045,14 @@ function AuthModal({
           <img src="/brand/ephinta_logo2.png" alt="" />
           <span>EPHINTA</span>
         </div>
-        <p className="ess-eyebrow">Secure access</p>
-        <h2>
+        <p className="ess-eyebrow">{mode === "signup" ? `${roleMeta[role].short} registration` : "Secure access"}</p>
+        <h2 id="ess-auth-title">
           {mode === "signup"
-            ? ["Create your account", "Set up your profile", "Choose your preferences"][registrationStep]
+            ? [
+                `Create your ${roleLabel(role).toLowerCase()} account`,
+                `Set up your ${registrationProfileLabel[role as SelfRegisterRole]}`,
+                "Choose your preferences",
+              ][registrationStep]
             : mode === "forgot"
               ? "Reset your password"
               : `${roleMeta[role].short} sign in`}
@@ -2813,20 +3060,20 @@ function AuthModal({
         <p className="ess-muted">
           {mode === "forgot"
             ? "Enter your email and we will send a secure reset link if the account exists."
-            : internal
+            : mode === "signin" && internal
               ? "Use the operations preview only for authorized internal roles."
               : roleMeta[role].description}
         </p>
         {mode !== "forgot" && (
-          <div className="ess-auth-roles">
-            {(["CLIENT", "ORGANIZATION", "VENDOR"] as Role[]).map((item) => (
+          <div className="ess-auth-roles" aria-label="Account type">
+            {(mode === "signup" ? SELF_REGISTER_ROLES : Object.keys(roleMeta) as Role[]).map((item) => (
               <button
                 className={role === item ? "active" : ""}
                 key={item}
                 type="button"
                 onClick={() => onRole(item)}
               >
-                {roleMeta[item].short}
+                {roleLabel(item)}
               </button>
             ))}
           </div>
@@ -2836,7 +3083,7 @@ function AuthModal({
             <div className="ess-registration-progress" aria-label={`Registration step ${registrationStep + 1} of 3`}>
               <div className="ess-registration-progress-copy">
                 <strong>Step {registrationStep + 1} of 3</strong>
-                <span>{["Account details", "Your profile", "Preferences"][registrationStep]}</span>
+                <span>{["Account details", registrationProfileLabel[role as SelfRegisterRole], "Preferences"][registrationStep]}</span>
               </div>
               <div className="ess-registration-progress-track"><span style={{ width: `${((registrationStep + 1) / 3) * 100}%` }} /></div>
             </div>
@@ -2846,6 +3093,7 @@ function AuthModal({
               Full name
               <input
                 value={name}
+                autoComplete="name"
                 onChange={(event) => {
                   setName(event.target.value);
                   touch("name");
@@ -2863,8 +3111,8 @@ function AuthModal({
           )}
           {mode === "signup" && registrationStep === 1 && role === "CLIENT" && (
             <div className="ess-registration-note">
-              <strong>Your account is ready to plan.</strong>
-              <span>No business details are needed for an event-planner account. Continue to set your country and preferred currency.</span>
+              <strong>Your event-planning workspace is next.</strong>
+              <span>No business details are needed. Continue to choose the country and currency for your events.</span>
             </div>
           )}
           {mode === "signup" && registrationStep === 1 && role === "ORGANIZATION" && (
@@ -3014,11 +3262,24 @@ function AuthModal({
               </label>
             </>
           )}
+          {mode === "signup" && registrationStep === 1 && role === "VERIFIER" && (
+            <div className="ess-registration-note">
+              <strong>For event readiness professionals.</strong>
+              <span>Your account is set up for assigned service checks, readiness updates, and event milestones.</span>
+            </div>
+          )}
+          {mode === "signup" && registrationStep === 1 && role === "CONSULTANT" && (
+            <div className="ess-registration-note">
+              <strong>For event operations consultants.</strong>
+              <span>Your workspace will help you coordinate assigned events and keep operational work moving.</span>
+            </div>
+          )}
           {(mode !== "signup" || registrationStep === 0) && <>
               <label>
-                Email
+                Email address
                 <input
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(event) => {
                     setEmail(event.target.value);
@@ -3039,10 +3300,16 @@ function AuthModal({
                     <input
                       id="auth-password-input"
                       type={passwordVisible ? "text" : "password"}
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
                       value={password}
                       onChange={(event) => {
                         setPassword(event.target.value);
                         touch("password");
+                        event.currentTarget.setCustomValidity(
+                          mode === "signup" && event.target.value && !checkPassword(event.target.value).ok
+                            ? PASSWORD_HELPER
+                            : "",
+                        );
                       }}
                       onBlur={() => touch("password")}
                       placeholder={PASSWORD_HELPER}
@@ -3090,51 +3357,52 @@ function AuthModal({
                   )}
                 </div>
               )}
-              {mode === "signup" && registrationStep === 2 && (
-                <div className="ess-locale-row">
-                  <label>
-                    Country
-                    <select
-                      value={country}
-                      onChange={(e) => {
-                        setCountry(e.target.value);
-                        const match = COUNTRIES.find((c) => c.code === e.target.value);
-                        if (match) {
-                          setCurrency(match.currency);
-                          setLocalePref(match.locale);
-                        }
-                      }}
-                    >
-                      {COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Currency
-                    <select
-                      value={currency}
-                      onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-                    >
-                      {CURRENCIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.code} — {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              )}
           </>}
           {mode === "signup" && registrationStep === 2 && (
-            <div className="ess-auth-trust">
-              <span>✓ Escrow-protected bookings</span>
-              <span>✓ Multi-currency wallet</span>
-              <span>✓ Role-based workspace</span>
+            <div className="ess-locale-row">
+              <label>
+                Country
+                <select
+                  value={country}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    const match = COUNTRIES.find((c) => c.code === e.target.value);
+                    if (match) {
+                      setCurrency(match.currency);
+                      setLocalePref(match.locale);
+                    }
+                  }}
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Currency
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} — {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           )}
+          {mode === "signup" && registrationStep === 2 && (
+            <div className="ess-auth-trust">
+              {registrationBenefits[role as SelfRegisterRole].map((benefit) => (
+                <span key={benefit}>✓ {benefit}</span>
+              ))}
+            </div>
+          )}
+          {notice && <div className="ess-auth-notice" role="status">{notice}</div>}
           {error && <div className="ess-form-error" role="alert" aria-live="assertive">{error}</div>}
           {mode === "signup" ? (
             <div className="ess-registration-navigation">
@@ -3166,13 +3434,19 @@ function AuthModal({
           )}
         </form>
         {mode === "signin" && (
-          <button
-            className="ess-modal-switch"
-            onClick={() => setMode("forgot")}
-          >
+          <button className="ess-modal-switch" type="button" onClick={() => setMode("forgot")}>
             Forgot password?
           </button>
         )}
+        <p className="ess-auth-mode-switch">
+          {mode === "signin" ? (
+            <>New to EPHINTA? <button type="button" onClick={() => setMode("signup")}>Create an account</button></>
+          ) : mode === "signup" ? (
+            <>Already have an account? <button type="button" onClick={() => setMode("signin")}>Sign in</button></>
+          ) : (
+            <>Remembered your password? <button type="button" onClick={() => setMode("signin")}>Back to sign in</button></>
+          )}
+        </p>
       </div>
     </div>
   );

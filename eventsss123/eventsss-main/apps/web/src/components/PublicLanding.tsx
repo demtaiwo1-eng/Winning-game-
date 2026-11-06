@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { apiUrl } from '../lib/api';
 import { checkPassword, PASSWORD_HELPER, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../lib/passwordRule';
 import { applyEphintaTheme } from '../lib/ephintaTheme';
+import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from '../lib/roleLabels';
 
 
 type AuthPayload = {
@@ -20,6 +21,7 @@ interface LandingPageProps {
 
   onLoginSuccess?: (payload: AuthPayload) => void;
 
+  onOpenAuth?: (mode: AuthMode, role: AccountRole) => void;
 
   onStartBuilder?: () => void;
 
@@ -31,7 +33,7 @@ type AuthMode = 'signin' | 'signup' | 'forgot';
 
 type ThemeMode = 'dark' | 'light' | 'colorful';
 
-type AccountRole = 'CLIENT' | 'VENDOR' | 'ORGANIZATION';
+type AccountRole = SelfRegisterRole;
 
 type EventDraft = {
 
@@ -139,6 +141,7 @@ export default function PublicLanding({
 
   onLoginSuccess,
 
+  onOpenAuth,
 
   onStartBuilder,
 
@@ -358,6 +361,10 @@ export default function PublicLanding({
     setName('');
     setBusinessName('');
     setRegistrationStep(0);
+    if (onOpenAuth) {
+      onOpenAuth(mode, requestedRole);
+      return;
+    }
     setAuthMode(mode);
 
     setMenuOpen(false);
@@ -846,9 +853,15 @@ export default function PublicLanding({
 
             <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'CLIENT'); }}>Create customer account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'VENDOR'); }}>Vendor portal</button>
+            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'VENDOR'); }}>Create vendor account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'ORGANIZATION'); }}>Organizer portal</button>
+            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'ORGANIZATION'); }}>Create organizer account</button>
+
+            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'AFFILIATE'); }}>Create affiliate account</button>
+
+            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'VERIFIER'); }}>Create verifier account</button>
+
+            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'CONSULTANT'); }}>Create consultant account</button>
 
           </div>
 
@@ -1124,9 +1137,9 @@ export default function PublicLanding({
                 <div className="eph-field">
                   <label htmlFor="eph-role">Account type</label>
                   <select id="eph-role" className="eph-control" value={role} onChange={e => setRole(e.target.value as AccountRole)}>
-                    <option value="CLIENT">Event planner / customer</option>
-                    <option value="VENDOR">Vendor / service provider</option>
-                    <option value="ORGANIZATION">Event organization</option>
+                  {SELF_REGISTER_ROLES.map((accountRole) => (
+                    <option key={accountRole} value={accountRole}>{roleLabel(accountRole)}</option>
+                  ))}
                   </select>
                 </div>
                 {(role === 'VENDOR' || role === 'ORGANIZATION') ? (
@@ -1136,8 +1149,14 @@ export default function PublicLanding({
                   </div>
                 ) : (
                   <div className="eph-registration-note">
-                    <strong>Event planner account</strong>
-                    <span>No business details are required. Your account will open the event-planning workspace.</span>
+                    <strong>{roleLabel(role)} account</strong>
+                    <span>{role === 'CLIENT'
+                      ? 'No business details are required. Your account will open the event-planning workspace.'
+                      : role === 'AFFILIATE'
+                        ? 'Your account will open referral tools for sharing services and following referral activity.'
+                        : role === 'VERIFIER'
+                          ? 'Your account will open readiness tools for assigned service checks and event milestones.'
+                          : 'Your account will open your event operations workspace.'}</span>
                   </div>
                 )}
               </>
@@ -1150,7 +1169,7 @@ export default function PublicLanding({
                 <dl>
                   <div><dt>Name</dt><dd>{name || '—'}</dd></div>
                   <div><dt>Email</dt><dd>{email || '—'}</dd></div>
-                  <div><dt>Account type</dt><dd>{role === 'CLIENT' ? 'Event planner / customer' : role === 'VENDOR' ? 'Vendor / service provider' : 'Event organization'}</dd></div>
+                  <div><dt>Account type</dt><dd>{roleLabel(role)}</dd></div>
                   {(role === 'VENDOR' || role === 'ORGANIZATION') && <div><dt>Business</dt><dd>{businessName || '—'}</dd></div>}
                 </dl>
                 <p className="eph-registration-review-note">Your details will be used to create your EPHINTA account. You can complete additional profile and verification details after signing in.</p>

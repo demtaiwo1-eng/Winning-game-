@@ -1,33 +1,51 @@
 import { useEffect, useState } from "react";
 import "./ephinta-intro.css";
 
-const INTRO_MS = 2600;
-const SESSION_KEY = "ephinta.intro.seen";
+const logoUrl = `${import.meta.env.BASE_URL}brand/ephinta_logo2.png`;
+const APP_READY_EVENT = "ephinta:app-ready";
 
 export default function EphintaIntro() {
-  const [visible, setVisible] = useState(() => {
-    try { return sessionStorage.getItem(SESSION_KEY) !== "1"; }
-    catch { return true; }
-  });
+  const [visible, setVisible] = useState(true);
+  const [appReady, setAppReady] = useState(false);
+  const [logoLoaded, setLogoLoaded] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
-    if (!visible) return;
-    const timer = window.setTimeout(() => {
-      setVisible(false);
-      try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* optional storage */ }
-    }, INTRO_MS);
+    const handleAppReady = () => setAppReady(true);
+    if (document.documentElement.dataset.ephintaAppReady === "true") {
+      handleAppReady();
+    }
+    window.addEventListener(APP_READY_EVENT, handleAppReady, { once: true });
+    return () => window.removeEventListener(APP_READY_EVENT, handleAppReady);
+  }, []);
+
+  useEffect(() => {
+    if (!visible || !appReady || !logoLoaded) return;
+    setClosing(true);
+    const timer = window.setTimeout(() => setVisible(false), 350);
     return () => window.clearTimeout(timer);
-  }, [visible]);
+  }, [appReady, logoLoaded, visible]);
 
   if (!visible) return null;
   return (
-    <div className="ephinta-intro" role="status" aria-label="Opening EPHINTA" data-ephinta-intro-overlay="true">
-      <div className="ephinta-intro__lockup">
-        <img src="/brand/ephinta_logo2.png?v=20261010-092247" alt="" className="ephinta-intro__logo" />
-        <span className="ephinta-intro__wordmark">EPHINTA</span>
-        <span className="ephinta-intro__tagline">EPHINTA</span>
-      </div>
-      <span className="ephinta-intro__progress" aria-hidden="true"><i /></span>
+    <div
+      className={`ephinta-intro${closing ? " ephinta-intro--closing" : ""}`}
+      role="status"
+      aria-label="Opening EPHINTA"
+      data-ephinta-intro-splash="true"
+      data-ephinta-intro-overlay="true"
+    >
+      <img
+        src={logoUrl}
+        alt="EPHINTA logo"
+        className="ephinta-intro__logo"
+        fetchPriority="high"
+        onLoad={() => setLogoLoaded(true)}
+        onError={() => {
+          console.error(`Unable to load the EPHINTA startup logo: ${logoUrl}`);
+          setLogoLoaded(true);
+        }}
+      />
     </div>
   );
 }
