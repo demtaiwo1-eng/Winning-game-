@@ -92,6 +92,23 @@ test("event builder saves a brief and opens registration", async ({ page }) => {
 
 });
 
+test("signed-in event planners can open the modern planner route", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "planner-route-e2e",
+      email: "planner-route@example.test",
+      name: "Planner Route Test",
+      role: "CLIENT",
+    }));
+    localStorage.setItem("ess_access_token", "e2e-access-token");
+  });
+
+  await page.goto("/plan");
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.locator(".eph-modal")).toHaveCount(0);
+});
+
 test("the menu planner action opens the guided event planner", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).click();

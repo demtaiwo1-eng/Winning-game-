@@ -2034,6 +2034,9 @@ export default function EnterpriseApp() {
     ) : session && activeRole === "ADMIN" ? (
       <AdminPortal />
     ) : null;
+  const canPlanEvents =
+    session?.role === "CLIENT" ||
+    (session?.role === "ORGANIZATION" && session.organizationMode === "EVENT_PLANNING");
   const publicLandingContent = (
     <PublicLanding
       onOpenAuth={(mode, role) => {
@@ -2343,6 +2346,19 @@ export default function EnterpriseApp() {
       </header>
       <Routes>
         <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
+        <Route
+          path={APP_ROUTE_PATHS.plan}
+          element={
+            canPlanEvents ? (
+              <EventBuilder
+                onBack={() => navigate(`/dashboard/${session.role.toLowerCase()}`)}
+                onComplete={() => navigate(`/dashboard/${session.role.toLowerCase()}`)}
+              />
+            ) : (
+              <Navigate to={`/dashboard/${session.role.toLowerCase()}`} replace />
+            )
+          }
+        />
         <Route element={<DashboardRouteGuard session={session} />}>
           <Route
             path={APP_ROUTE_PATHS.dashboard}
