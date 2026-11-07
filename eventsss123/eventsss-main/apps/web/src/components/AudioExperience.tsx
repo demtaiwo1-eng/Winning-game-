@@ -22,6 +22,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [consent, setConsent] = useState<boolean | null>(null);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [status, setStatus] = useState("");
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const skipNextAutoPlay = useRef(false);
 
@@ -36,6 +37,16 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       if (savedSound === "on") setConsent(true);
     } catch { /* Storage may be unavailable in private browsing. */ }
     finally { setPreferencesLoaded(true); }
+  }, []);
+
+  useEffect(() => {
+    const syncAuthDialogState = () => {
+      setAuthDialogOpen(Boolean(document.querySelector(".ess-auth-modal, .eph-modal")));
+    };
+    syncAuthDialogState();
+    const observer = new MutationObserver(syncAuthDialogState);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -104,7 +115,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         }}
       />
       <p className="eph-audio__status" role="status" aria-live="polite">{status}</p>
-      {showPrompt && preferencesLoaded && consent === null && (
+      {showPrompt && preferencesLoaded && consent === null && !authDialogOpen && (
         <div className="eph-audio__backdrop">
           <section className="eph-audio__prompt" role="dialog" aria-labelledby="eph-audio-title">
             <span className="eph-audio__prompt-icon" aria-hidden="true">♫</span>
