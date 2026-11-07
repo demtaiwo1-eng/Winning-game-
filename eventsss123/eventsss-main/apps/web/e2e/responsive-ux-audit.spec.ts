@@ -78,6 +78,7 @@ test("registration dialogs remain usable on phone, tablet and desktop", async ({
         await page.goto(`/auth/signup?role=${role}`, { waitUntil: "networkidle" });
         const dialog = page.locator(".ess-auth-modal");
         await expect(dialog).toBeVisible();
+        await expect(page.locator(".eph-audio__prompt")).toHaveCount(0);
 
         const metrics = await dialog.evaluate(element => {
           const rect = element.getBoundingClientRect();
