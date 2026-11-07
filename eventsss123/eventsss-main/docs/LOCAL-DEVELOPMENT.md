@@ -10,6 +10,8 @@ npm ci
 npm run dev
 ```
 
+To verify that all three services start and respond, run `npm run dev:smoke` from the same directory. It starts the stack, checks the web/API/database readiness endpoints, and stops the local development database afterwards.
+
 The root `npm run dev` launcher prepares the development database, applies pending Prisma migrations, seeds reference categories and plans, then starts the API and Vite web client.
 
 - Web client: http://localhost:5173
