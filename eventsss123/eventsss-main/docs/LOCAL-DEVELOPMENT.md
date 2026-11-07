@@ -34,7 +34,7 @@ DATABASE_URL_ONLINE=postgresql://<user>:<password>@<host>/<database>?sslmode=req
 
 Use a private connection string only from a trusted network that can reach the database. Never commit `.env`, paste database credentials into source files, or use the production database for destructive development resets.
 
-With `DATABASE_MODE=auto` (the default), EPHINTA prefers local PostgreSQL, starts the local Docker database if necessary, and falls back to a reachable configured online database only when local startup is unavailable.
+With `DATABASE_MODE=auto` (the default), EPHINTA uses local PostgreSQL and starts the local Docker database if necessary. It never falls back to the live database automatically. Set `DATABASE_MODE=online` explicitly when you intentionally want to use the hosted database.
 
 ## Database commands
 
