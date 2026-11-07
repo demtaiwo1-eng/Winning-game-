@@ -100,6 +100,22 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
       expect(theme.fieldBackground, "Planner inputs must use the shared muted surface").toBe("rgb(249, 248, 252)");
       expect(theme.fieldColor, "Planner input text must use the shared parent ink").toBe("rgb(33, 29, 55)");
 
+      const prompt = page.locator('.eph-audio__prompt[role="dialog"]');
+      if (await prompt.isVisible()) {
+        const overlay = await prompt.evaluate(element => {
+          const promptStyle = getComputedStyle(element);
+          const promptRect = element.getBoundingClientRect();
+          const action = document.querySelector(".ess-builder-card .ess-primary");
+          const actionRect = action?.getBoundingClientRect();
+          const overlapsAction = actionRect
+            ? !(promptRect.right <= actionRect.left || promptRect.left >= actionRect.right || promptRect.bottom <= actionRect.top || promptRect.top >= actionRect.bottom)
+            : false;
+          return { backgroundImage: promptStyle.backgroundImage, overlapsAction };
+        });
+        expect(overlay.backgroundImage, "Audio consent must inherit the parent dialog surface").toContain("linear-gradient");
+        expect(overlay.overlapsAction, "Audio consent must not obscure the planner's next action").toBe(false);
+      }
+
       const metrics = await page.evaluate(() => ({
         viewportWidth: innerWidth,
         documentWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
