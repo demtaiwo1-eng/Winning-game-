@@ -1986,7 +1986,7 @@ export default function EnterpriseApp() {
       setSession({ name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
       setActiveRole(user.role);
       navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
-      if (authMode === "signup" || !hasCompletedOnboard()) {
+      if (authMode === "signup" || !hasCompletedOnboard(user.role, user.organizationMode)) {
         setShowOnboard(true);
       }
       try {
@@ -2011,7 +2011,7 @@ export default function EnterpriseApp() {
   };
   if (session && showOnboard) {
     return (
-      <OnboardingOverlay name={session.name} onDone={() => setShowOnboard(false)} />
+      <OnboardingOverlay name={session.name} role={session.role} organizationMode={session.organizationMode} onDone={() => setShowOnboard(false)} />
     );
   }
 
@@ -2071,7 +2071,7 @@ export default function EnterpriseApp() {
           hasPendingEventBrief = Boolean(localStorage.getItem("ess_event_draft"));
         } catch { /* storage may be disabled */ }
         navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
-        if (!hasCompletedOnboard()) setShowOnboard(true);
+        if (!hasCompletedOnboard(user.role, user.organizationMode)) setShowOnboard(true);
         try {
           const pending = localStorage.getItem("ess_resume_event");
           if (pending) setResumeLabel(pending);

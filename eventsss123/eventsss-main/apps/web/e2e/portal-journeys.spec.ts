@@ -18,8 +18,12 @@ const portals: PortalCase[] = [
   { role: "ADMIN", email: "qa-admin@example.com", heading: /Platform operations/ },
 ];
 
-async function installRoleApiFixtures(page: Page, portal: PortalCase) {
-  await page.addInitScript(() => localStorage.setItem("ess_onboard_v1", "1"));
+async function installRoleApiFixtures(page: Page, portal: PortalCase, options: { firstRun?: boolean } = {}) {
+  const onboardingKey = `ess_onboard_v2_${portal.role.toLowerCase()}_${portal.organizationMode ?? "default"}`;
+  await page.addInitScript(({ key, completed }) => {
+    if (completed) localStorage.setItem(key, "1");
+    else localStorage.removeItem(key);
+  }, { key: onboardingKey, completed: !options.firstRun });
   await page.route("**/api/v1/**", async (route: Route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -144,6 +148,23 @@ for (const portal of portals) {
   });
 }
 
+
+test("new vendor accounts see vendor-specific onboarding before their workspace", async ({ page }) => {
+  const vendor = portals.find((portal) => portal.role === "VENDOR")!;
+  await installRoleApiFixtures(page, vendor, { firstRun: true });
+  await page.goto("/auth/signin?role=VENDOR");
+  await page.getByLabel("Email").fill(vendor.email);
+  await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
+  const loginRequest = page.waitForRequest((request) => request.method() === "POST" && request.url().includes("/auth/login"), { timeout: 15_000 });
+  await page.getByRole("textbox", { name: "Password" }).press("Enter");
+  await loginRequest;
+
+  const onboarding = page.getByRole("dialog", { name: "vendor onboarding" });
+  await expect(onboarding).toBeVisible();
+  await expect(onboarding.getByRole("heading", { name: "Complete your business profile" })).toBeVisible();
+  await onboarding.getByRole("button", { name: "Skip intro" }).click();
+  await expect(page.getByRole("heading", { name: vendor.heading }).first()).toBeVisible();
+});
 
 test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", async ({ page }) => {
   const client = portals.find((portal) => portal.role === "CLIENT")!;
