@@ -61,8 +61,16 @@ async function startLocalPostgres() {
   const started = await run("docker", ["compose", "-f", composeFile, "up", "-d", "postgres"]);
   if (!started) return false;
 
-  for (let attempt = 0; attempt < 45; attempt += 1) {
-    if (await reachable(localUrl, 1000)) return true;
+  const readyArgs = ["compose", "-f", composeFile, "exec", "-T", "postgres", "pg_isready", "-U", "ess", "-d", "ess"];
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    // A TCP socket can open before PostgreSQL has finished initializing.
+    // Wait for PostgreSQL itself to report readiness before Prisma connects.
+    if (await run("docker", readyArgs, { stdio: "ignore" })) {
+      for (let hostAttempt = 0; hostAttempt < 10; hostAttempt += 1) {
+        if (await reachable(localUrl, 1000)) return true;
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   return false;
