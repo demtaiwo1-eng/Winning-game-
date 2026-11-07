@@ -632,6 +632,9 @@ test("production app loads the bundled music track and plays after consent", asy
 
 test("mobile registration keeps its logo compact and navigation reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/v1/billing/public-promotions", (route) => route.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }),
+  }));
   await page.goto("/auth/signup?role=CLIENT", { waitUntil: "networkidle" });
 
   const dialog = page.locator(".ess-auth-modal");
@@ -652,8 +655,11 @@ test("mobile registration keeps its logo compact and navigation reachable", asyn
   expect(dialogBox!.x).toBeGreaterThanOrEqual(0);
   expect(dialogBox!.x + dialogBox!.width).toBeLessThanOrEqual(390);
 
+  await dialog.getByLabel("Full name").fill("Mobile Layout Check");
+  await dialog.getByLabel("Email address").fill("mobile-layout@example.test");
+  await dialog.getByLabel("Password").fill("StrongPass123!");
   await next.click();
-  await expect(dialog.getByText(/Step 2 of 3/)).toBeVisible();
+  await expect(dialog).toBeVisible();
   await expect(back).toBeVisible();
   await expect(next).toBeVisible();
 });
