@@ -44,8 +44,21 @@ test("public landing page explains the event-planning service and its menu", asy
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
 });
-test("event builder saves a brief and opens registration", async ({ page }) => {
+test("event builder inherits the global parent theme and saves a brief", async ({ page }) => {
   await page.goto("/plan");
+
+  const builderCard = page.locator(".ess-builder-card");
+  await expect(builderCard).toBeVisible();
+  await expect(builderCard).toHaveCSS("color", "rgb(33, 29, 55)");
+  const cardBackground = await builderCard.evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(cardBackground).toContain("linear-gradient");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileCard = await builderCard.boundingBox();
+  expect(mobileCard).not.toBeNull();
+  expect(mobileCard!.x).toBeGreaterThanOrEqual(0);
+  expect(mobileCard!.x + mobileCard!.width).toBeLessThanOrEqual(390);
+  await page.setViewportSize({ width: 1280, height: 900 });
 
   await page.getByLabel("Event name").fill("ESS E2E Test Event");
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ess_event_builder_progress")))
