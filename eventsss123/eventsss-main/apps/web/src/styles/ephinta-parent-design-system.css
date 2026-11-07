@@ -242,3 +242,42 @@
 @media (prefers-reduced-motion: reduce) {
   .ess-builder *, .ess-auth-modal *, .eph-modal * { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+/* Enforce the parent surface on every semantic dialog, including reset flows
+   rendered inside the app shell rather than through a modal backdrop portal. */
+.ess-auth-modal,
+.eph-modal,
+[role="dialog"],
+[aria-modal="true"],
+dialog[open] {
+  box-sizing: border-box;
+  border: 1px solid var(--eph-parent-border);
+  border-radius: var(--eph-parent-radius);
+  background: linear-gradient(155deg, #fff 0%, #fbfaff 100%);
+  color: var(--eph-parent-ink);
+  box-shadow: var(--eph-parent-shadow);
+  font-family: var(--eph-parent-font);
+}
+[role="dialog"] :is(h1, h2, h3, h4, p, label),
+[aria-modal="true"] :is(h1, h2, h3, h4, p, label),
+dialog[open] :is(h1, h2, h3, h4, p, label) {
+  font-family: var(--eph-parent-font);
+}
+[role="dialog"] :is(input, select, textarea),
+[aria-modal="true"] :is(input, select, textarea),
+dialog[open] :is(input, select, textarea) {
+  box-sizing: border-box;
+  max-width: 100%;
+  border: 1px solid var(--eph-parent-border);
+  border-radius: 11px;
+  background: var(--eph-parent-surface-muted);
+  color: var(--eph-parent-ink);
+  font-family: var(--eph-parent-font);
+}
+[role="dialog"] :is(input, select, textarea):focus,
+[aria-modal="true"] :is(input, select, textarea):focus,
+dialog[open] :is(input, select, textarea):focus {
+  border-color: var(--eph-parent-secondary);
+  outline: 3px solid var(--eph-parent-focus);
+  background: var(--eph-parent-surface);
+}
