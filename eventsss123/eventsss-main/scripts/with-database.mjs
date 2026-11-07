@@ -81,9 +81,6 @@ let selectedUrl;
 const useOnline = mode === "online" || (mode === "auto" && process.env.NODE_ENV === "production");
 if (useOnline) {
   selectedUrl = onlineUrl;
-  if (!selectedUrl && configuredDatabaseUrl && endpoint(configuredDatabaseUrl)?.host !== "127.0.0.1" && endpoint(configuredDatabaseUrl)?.host !== "localhost") {
-    selectedUrl = configuredDatabaseUrl;
-  }
 } else if (await reachable(localUrl)) {
   selectedUrl = localUrl;
 } else if ((mode === "auto" || mode === "local") && await startLocalPostgres()) {
