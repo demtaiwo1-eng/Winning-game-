@@ -9,8 +9,8 @@ The repository is currently public. **Never commit a keystore, password, base64 
 ## One-time setup from a browser (phone or computer)
 
 1. Open [EPHINTA on GitHub](https://github.com/demtaiwo1-eng/Winning-game-).
-2. Open the branch selector and choose `fix/ephinta-release-ota-smoke-check`.
-3. Select **Code → Codespaces → Create codespace on fix/ephinta-release-ota-smoke-check**. This runs the terminal in GitHub's cloud, not on your device. If Codespaces is unavailable on your account, stop here; do not put the key in a public Actions artifact or commit it to the repository.
+2. Open the branch selector and choose `integration/android-production-signing`.
+3. Select **Code → Codespaces → Create codespace on integration/android-production-signing**. This runs the terminal in GitHub's cloud, not on your device. If Codespaces is unavailable on your account, stop here; do not put the key in a public Actions artifact or commit it to the repository.
 4. In the Codespaces terminal, run:
 
    ```bash
