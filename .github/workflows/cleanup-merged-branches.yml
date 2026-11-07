@@ -1,0 +1,59 @@
+name: Clean up merged branches
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: cleanup-merged-branches
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Delete branches with no unique commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove fully merged stale branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Protected branch: main"
+          open_pr_branches="$(gh api "repos/$REPOSITORY/pulls?state=open&per_page=100" --paginate --jq '.[] | select(.head.repo.full_name == env.REPOSITORY) | .head.ref')"
+
+          while IFS=$'\t' read -r branch protected; do
+            [[ -z "$branch" || "$branch" == "main" ]] && continue
+            if [[ "$protected" == "true" ]]; then
+              echo "SKIP protected branch: $branch"
+              continue
+            fi
+            if grep -Fxq -- "$branch" <<<"$open_pr_branches"; then
+              echo "SKIP branch with an open pull request: $branch"
+              continue
+            fi
+
+            encoded_branch="$(jq -rn --arg value "$branch" '$value | @uri')"
+            compare_json="$(gh api "repos/$REPOSITORY/compare/main...$encoded_branch" 2>/dev/null || true)"
+            if [[ -z "$compare_json" ]]; then
+              echo "SKIP branch because its comparison could not be verified: $branch"
+              continue
+            fi
+
+            ahead_by="$(jq -r '.ahead_by // -1' <<<"$compare_json")"
+            if [[ "$ahead_by" == "0" ]]; then
+              echo "DELETE fully merged/stale branch: $branch"
+              gh api --method DELETE "repos/$REPOSITORY/git/refs/heads/$branch"
+            else
+              echo "KEEP branch with $ahead_by unique commit(s): $branch"
+            fi
+          done < <(gh api "repos/$REPOSITORY/branches?per_page=100" --paginate --jq '.[] | [.name, (.protected | tostring)] | @tsv')
+
+          echo "Branch cleanup finished. Branches with unique commits or open PRs were preserved."
