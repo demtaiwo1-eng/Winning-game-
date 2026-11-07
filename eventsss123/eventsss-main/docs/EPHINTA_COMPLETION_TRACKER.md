@@ -133,3 +133,30 @@ These are implementation/CI completion claims, not production activation claims.
 | 2026-10-31 | Full Phase 8 quality gate passed on main. | [GitHub Actions run 41197878072](https://github.com/demtaiwo1-eng/Winning-game-/actions/runs/41197878072): disposable PostgreSQL 16 migration, API checks/tests, web tests, database integration tests, Playwright browser journeys (11 passed), web production build and API build. |
 | 2026-10-31 | Corrected workflow placement and added the Phase 9 smoke-test entry point. | Canonical workflows are now at repository root `.github/workflows/ephinta-phase8-quality-gate.yml` and `.github/workflows/ephinta-phase9-staging-smoke.yml`; Phase 9 HTTPS smoke script is `scripts/phase9-production-smoke-test.sh`. Staging URL variables and a manual staging run are still required. |
 | 2026-10-31 | Confirmed latest API/web Render deployments for the E2E test fix are live. | API deploy `dep-dbit7mbm8hqs73f61qhg`; web deploy `dep-dbit7mbm8hqs73f61r40`. |
+
+## Verification follow-up (2026-11-07)
+
+This section supersedes no historical evidence above. It records the latest checks and keeps unresolved acceptance gates visible.
+
+### Confirmed in this follow-up
+
+- Parent EPHINTA design tokens are now imported by the active web entry point, `apps/web/src/main.tsx`, after the older global stylesheets. Commit: `bfbbc01844cad8a0481f2e85308a74fddda8dc86`.
+- The shared design stylesheet now covers the guided event builder, authentication modal classes, and semantic dialogs using `role="dialog"`, `aria-modal="true"`, and native open dialogs. Commit: `56999617148d6bbde7f7a78796ed6dd010104f4c`.
+- The frontend design audit now checks that the parent stylesheet is imported last and that required parent tokens and shared dialog selectors exist.
+- A root-level GitHub Actions browser-journey workflow was added at `.github/workflows/ess-phase12-e2e.yml`. The earlier copy under the application directory is not a GitHub-discovered workflow path; the root-level workflow is the active one.
+- Render frontend and API deployments for commit `233448e03790b116a68c961b78dcd93408ecdeba` completed successfully. The next commit `56999617148d6bbde7f7a78796ed6dd010104f4c` was deploying at the time of this update; do not mark that deployment complete until Render confirms it.
+- Read-only Render API request logs recorded `/health` HTTP 200 and repeated `/ready` HTTP 200 responses. The API startup migration step reported 24 migrations found and no pending migrations.
+- Read-only PostgreSQL verification reported 24 migration records, 24 finished migrations, and 0 unfinished migrations. No application rows were modified.
+
+### Remaining acceptance gates — do not mark complete yet
+
+- GitHub Actions results for the current main head must be checked: API/web tests, strict design audit, Playwright journeys, disposable PostgreSQL integration tests, web build, and Android debug APK build.
+- Authenticated client/planner/vendor journeys, role-isolation negatives, event creation/resume, vendor enquiries, messaging/notifications, cart/checkout, and payment/ledger settlement still require seeded isolated test fixtures and successful E2E evidence.
+- Payment adapter source currently exposes Paystack, Flutterwave, Stripe-ready, OPay, and demo provider names. Cleva and Eversend adapters are not present in the inspected payment provider registry. Do not claim either integration is complete or enable real payment traffic without provider specifications, sandbox credentials, webhook verification, and settlement tests.
+- The production database backup has not completed a disposable restore rehearsal. Preserve the production database; no destructive restore or reset is authorized.
+- The Render Free PostgreSQL instance is reported to expire on 2026-11-26. Establish an owner-approved no-cost continuity path before that date; do not create a paid resource or move production data without approval.
+- Render install logs still report dependency audit findings (13 in the API install and 2 in the web install at the time inspected). Do not run `npm audit fix --force`; triage exact advisories and apply compatible updates with regression tests.
+- Android physical-device installation, permissions, offline/NFC/Bluetooth journeys, iOS build/device verification, Firebase push delivery, and production-signed Android release remain open. The signed release workflow requires the owner-controlled keystore secrets and certificate fingerprint; those secret values cannot be read or generated in this chat.
+- The Android debug APK workflow produces a device-test artifact only; it is not a production-signed release.
+- Live provider settlement, real payouts/refunds, push delivery, restore rehearsal, and physical-device acceptance must be evidenced before production sign-off.
+
