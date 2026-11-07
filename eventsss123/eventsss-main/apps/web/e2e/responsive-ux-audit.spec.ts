@@ -65,3 +65,54 @@ test("EPHINTA landing page responsive UX audit and screenshots", async ({ page }
   });
   expect(pageErrors, "No uncaught browser page errors").toEqual([]);
 });
+
+test("registration dialogs remain usable on phone, tablet and desktop", async ({ page }, testInfo) => {
+  const registrationRoles = ["CLIENT", "ORGANIZATION", "VENDOR"];
+  const pageErrors: string[] = [];
+  page.on("pageerror", error => pageErrors.push(error.message));
+
+  for (const viewport of viewports) {
+    for (const role of registrationRoles) {
+      await test.step(`${role} registration at ${viewport.name}`, async () => {
+        await page.setViewportSize({ width: viewport.width, height: viewport.height });
+        await page.goto(`/auth/signup?role=${role}`, { waitUntil: "networkidle" });
+        const dialog = page.locator(".ess-auth-modal");
+        await expect(dialog).toBeVisible();
+
+        const metrics = await dialog.evaluate(element => {
+          const rect = element.getBoundingClientRect();
+          const visibleControls = [...element.querySelectorAll("button,input,select,textarea")]
+            .filter(control => {
+              const box = control.getBoundingClientRect();
+              const style = getComputedStyle(control);
+              return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+            }).length;
+          const oversizedImages = [...element.querySelectorAll("img")]
+            .filter(image => image.getBoundingClientRect().width > element.clientWidth * 0.9)
+            .map(image => image.currentSrc || image.src);
+          return {
+            left: rect.left,
+            right: rect.right,
+            width: rect.width,
+            clientWidth: element.clientWidth,
+            scrollWidth: element.scrollWidth,
+            visibleControls,
+            oversizedImages,
+          };
+        });
+
+        expect(metrics.left, `${role} dialog should stay inside the viewport`).toBeGreaterThanOrEqual(-1);
+        expect(metrics.right, `${role} dialog should not exceed the viewport`).toBeLessThanOrEqual(viewport.width + 1);
+        expect(metrics.scrollWidth, `${role} dialog should not have horizontal overflow`).toBeLessThanOrEqual(metrics.clientWidth + 1);
+        expect(metrics.visibleControls, `${role} registration should expose usable controls`).toBeGreaterThan(0);
+        expect(metrics.oversizedImages, `${role} registration should not contain an oversized logo/image`).toEqual([]);
+
+        const screenshot = testInfo.outputPath(`registration-${role.toLowerCase()}-${viewport.name}.png`);
+        await page.screenshot({ path: screenshot, fullPage: true, animations: "disabled" });
+        await testInfo.attach(`registration-${role.toLowerCase()}-${viewport.name}`, { path: screenshot, contentType: "image/png" });
+      });
+    }
+  }
+
+  expect(pageErrors, "Registration dialogs should not produce uncaught browser errors").toEqual([]);
+});
