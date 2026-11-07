@@ -78,11 +78,9 @@ if (mode === "online") {
   selectedUrl = localUrl;
 } else if (mode === "auto" && await startLocalPostgres()) {
   selectedUrl = localUrl;
-} else if (mode === "auto" && onlineUrl && await reachable(onlineUrl)) {
-  selectedUrl = onlineUrl;
-} else if (mode === "local") {
+} else if (mode === "local" || mode === "auto") {
   console.error(`[database] Local PostgreSQL is not reachable at ${endpoint(localUrl)?.host ?? "127.0.0.1"}:${endpoint(localUrl)?.port ?? 5432}.`);
-  console.error("Start Docker Desktop / Docker Engine, or set DATABASE_MODE=online with DATABASE_URL_ONLINE.");
+  console.error("Start Docker Desktop / Docker Engine, or explicitly set DATABASE_MODE=online with DATABASE_URL_ONLINE.");
   process.exit(1);
 }
 
