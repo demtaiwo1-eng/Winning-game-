@@ -65,3 +65,63 @@ test("EPHINTA landing page responsive UX audit and screenshots", async ({ page }
   });
   expect(pageErrors, "No uncaught browser page errors").toEqual([]);
 });
+
+test("EPHINTA event planner inherits the parent design system on every viewport", async ({ page }, testInfo) => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", error => pageErrors.push(error.message));
+  const report: Array<Record<string, unknown>> = [];
+
+  for (const viewport of viewports) {
+    await test.step(`/plan ${viewport.name}`, async () => {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto("/plan", { waitUntil: "networkidle" });
+      const card = page.locator(".ess-builder-card").first();
+      await expect(card, "Event planner parent card should render").toBeVisible();
+
+      const theme = await card.evaluate(element => {
+        const cardStyle = getComputedStyle(element);
+        const field = element.querySelector("input, select, textarea");
+        const fieldStyle = field ? getComputedStyle(field) : null;
+        return {
+          backgroundImage: cardStyle.backgroundImage,
+          color: cardStyle.color,
+          borderColor: cardStyle.borderColor,
+          borderRadius: Number.parseFloat(cardStyle.borderRadius),
+          fontFamily: cardStyle.fontFamily,
+          fieldBackground: fieldStyle?.backgroundColor ?? null,
+          fieldBorderColor: fieldStyle?.borderColor ?? null,
+          fieldColor: fieldStyle?.color ?? null,
+        };
+      });
+
+      expect(theme.backgroundImage, "Planner card must use the shared light parent surface").toContain("linear-gradient");
+      expect(theme.color, "Planner card text must use the shared dark parent ink").toBe("rgb(33, 29, 55)");
+      expect(theme.borderRadius, "Planner card must use the parent rounded surface").toBeGreaterThanOrEqual(16);
+      expect(theme.fieldBackground, "Planner inputs must use the shared muted surface").toBe("rgb(249, 248, 252)");
+      expect(theme.fieldColor, "Planner input text must use the shared parent ink").toBe("rgb(33, 29, 55)");
+
+      const metrics = await page.evaluate(() => ({
+        viewportWidth: innerWidth,
+        documentWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+      }));
+      expect(metrics.documentWidth, `No horizontal overflow at ${viewport.name}`).toBeLessThanOrEqual(metrics.viewportWidth + 1);
+
+      const screenshot = testInfo.outputPath(`plan-${viewport.name}.png`);
+      await page.screenshot({ path: screenshot, fullPage: true, animations: "disabled" });
+      await testInfo.attach(`plan-${viewport.name}`, { path: screenshot, contentType: "image/png" });
+      report.push({ route: "/plan", viewport: viewport.name, ...metrics, ...theme, screenshot: path.basename(screenshot) });
+    });
+  }
+
+  fs.mkdirSync(testInfo.outputDir, { recursive: true });
+  fs.writeFileSync(path.join(testInfo.outputDir, "plan-theme-audit.json"), JSON.stringify({
+    generatedAt: new Date().toISOString(),
+    pageErrors,
+    viewports: report
+  }, null, 2));
+  await testInfo.attach("plan-theme-audit-report", {
+    path: path.join(testInfo.outputDir, "plan-theme-audit.json"),
+    contentType: "application/json"
+  });
+  expect(pageErrors, "No uncaught event-planner browser errors").toEqual([]);
+});
