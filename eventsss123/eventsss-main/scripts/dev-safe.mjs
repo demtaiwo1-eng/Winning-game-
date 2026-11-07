@@ -119,6 +119,12 @@ function start(service) {
 
 const apiService = services[0];
 if (!(await healthy(apiService.url))) {
+  console.log("[setup] Generating Prisma Client...");
+  const generated = await runCommand("npm", ["run", "prisma:generate"]);
+  if (!generated) {
+    console.error("[setup] Prisma Client generation failed. Run npm ci and inspect the output above.");
+    process.exit(1);
+  }
   console.log("[setup] Preparing PostgreSQL and applying pending Prisma migrations...");
   const migrated = await runCommand("npm", ["run", "db:deploy", "-w", "apps/api"]);
   if (!migrated) {
