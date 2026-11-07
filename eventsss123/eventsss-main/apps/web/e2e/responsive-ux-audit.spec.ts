@@ -67,7 +67,7 @@ test("EPHINTA landing page responsive UX audit and screenshots", async ({ page }
 });
 
 test("registration dialogs remain usable on phone, tablet and desktop", async ({ page }, testInfo) => {
-  const registrationRoles = ["CLIENT", "ORGANIZATION", "VENDOR"];
+  const registrationRoles = ["CLIENT", "ORGANIZATION", "VENDOR", "AFFILIATE", "VERIFIER", "CONSULTANT"];
   const pageErrors: string[] = [];
   page.on("pageerror", error => pageErrors.push(error.message));
 
