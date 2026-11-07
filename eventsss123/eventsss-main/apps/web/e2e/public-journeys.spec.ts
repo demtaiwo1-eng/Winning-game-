@@ -628,3 +628,37 @@ test("production app loads the bundled music track and plays after consent", asy
   await expect(prompt).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("on");
 });
+
+
+test("mobile registration keeps its logo compact and navigation reachable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("button", { name: "Create customer account" }).click();
+
+  const dialog = page.locator("#eph-auth-dialog");
+  await expect(dialog).toBeVisible();
+  const logo = dialog.locator(".eph-modal-brand img");
+  const logoBox = await logo.boundingBox();
+  expect(logoBox).not.toBeNull();
+  expect(logoBox!.width).toBeLessThanOrEqual(36);
+  expect(logoBox!.height).toBeLessThanOrEqual(36);
+
+  const back = dialog.getByRole("button", { name: "Back" });
+  const next = dialog.getByRole("button", { name: "Next" });
+  await expect(back).toBeVisible();
+  await expect(next).toBeVisible();
+  const navigationBox = await dialog.locator(".eph-registration-navigation").boundingBox();
+  expect(navigationBox).not.toBeNull();
+  expect(navigationBox!.x).toBeGreaterThanOrEqual(0);
+  expect(navigationBox!.x + navigationBox!.width).toBeLessThanOrEqual(390);
+
+  await dialog.getByLabel("Full name").fill("Mobile Layout Check");
+  await dialog.getByLabel("Email address").fill("mobile-layout@example.test");
+  await dialog.getByLabel("Password").fill("StrongPass123!");
+  await next.click();
+  await expect(dialog.getByText("Step 2 of 3")).toBeVisible();
+  await expect(back).toBeVisible();
+  await expect(next).toBeVisible();
+});
