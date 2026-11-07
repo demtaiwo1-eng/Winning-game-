@@ -1,0 +1,670 @@
+/*
+ * EPHINTA Unified Design System
+ * Premium hybrid: midnight surfaces, violet identity, warm orange actions,
+ * and clean light content surfaces. Loaded last so shared tokens win without
+ * replacing component behavior or page-specific layout.
+ */
+:root {
+  color-scheme: light;
+  --eph-brand-ink: #101329;
+  --eph-brand-navy: #11152f;
+  --eph-brand-navy-2: #1b2042;
+  --eph-brand-violet: #7046e8;
+  --eph-brand-violet-strong: #5932cf;
+  --eph-brand-orange: #ffad32;
+  --eph-brand-orange-strong: #f39216;
+  --eph-page: #f5f6fb;
+  --eph-surface: #ffffff;
+  --eph-surface-muted: #f0f1f8;
+  --eph-text: #171a31;
+  --eph-muted: #68708a;
+  --eph-border: #e1e4ef;
+  --eph-success: #16865d;
+  --eph-warning: #a96708;
+  --eph-danger: #c43f50;
+  --eph-radius-sm: 10px;
+  --eph-radius-md: 16px;
+  --eph-radius-lg: 22px;
+  --eph-shadow-card: 0 8px 28px rgba(23, 26, 49, .07);
+  --eph-shadow-float: 0 20px 60px rgba(16, 19, 41, .18);
+  --eph-motion-fast: 150ms;
+  --eph-motion: 200ms;
+  --eph-tap-size: 44px;
+}
+html { min-width: 320px; scroll-behavior: smooth; }
+body { min-width: 320px; color: var(--eph-text); background: var(--eph-page); }
+button, input, select, textarea { font: inherit; }
+:where(button, a, input, select, textarea, [role="button"]):focus-visible {
+  outline: 3px solid rgba(112, 70, 232, .48);
+  outline-offset: 3px;
+}
+:where(button, input[type="button"], input[type="submit"], [role="button"]) {
+  min-height: var(--eph-tap-size);
+}
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+  border-radius: var(--eph-radius-sm);
+}
+:where(img, video, canvas, svg) { max-width: 100%; }
+:where(main, section, article, aside, header, footer, nav, form) { min-width: 0; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Signed-in product shell: keep the premium dark frame and simplify accents. */
+.ess-app {
+  color: #f5f6ff;
+  background:
+    radial-gradient(ellipse at 92% 0%, rgba(112,70,232,.16), transparent 34rem),
+    var(--eph-brand-ink);
+}
+.ess-topbar {
+  min-height: 68px;
+  border-bottom-color: rgba(255,255,255,.09);
+  background: rgba(16,19,41,.94);
+}
+.ess-brand-mark {
+  background: linear-gradient(135deg, var(--eph-brand-violet), #9a7cff);
+  color: #fff;
+}
+.ess-role-nav button.active,
+.ess-role-nav button:hover,
+.ess-auth-roles button.active {
+  background: rgba(112,70,232,.22);
+  color: #c9baff;
+}
+.ess-eyebrow, .ess-kicker { color: #b49cff; }
+.ess-metric, .ess-panel {
+  border-color: rgba(255,255,255,.09);
+  border-radius: var(--eph-radius-md);
+  box-shadow: 0 16px 48px rgba(0,0,0,.14);
+}
+.ess-metric-accent {
+  border-color: rgba(255,173,50,.32);
+  background: linear-gradient(145deg, rgba(255,173,50,.12), rgba(27,32,66,.78));
+}
+.ess-primary {
+  border-color: var(--eph-brand-orange);
+  background: var(--eph-brand-orange);
+  color: #241a09;
+  border-radius: 11px;
+}
+.ess-primary:hover { background: #ffc15d; border-color: #ffc15d; }
+.ess-secondary, .ess-outline-button {
+  border-radius: 11px;
+}
+.ess-status-confirmed, .ess-status-completed, .ess-status-live, .ess-status-active {
+  background: rgba(22,134,93,.17); color: #8ce0bc;
+}
+.ess-status-pending, .ess-status-requested, .ess-status-review {
+  background: rgba(255,173,50,.16); color: #ffd18a;
+}
+.ess-status-revision, .ess-status-draft {
+  background: rgba(196,63,80,.16); color: #ffabb4;
+}
+
+/* Authentication and registration: compact identity, clear form rhythm. */
+.ess-modal-backdrop {
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+.ess-modal, .ess-auth-modal {
+  border-radius: 20px;
+  box-shadow: var(--eph-shadow-float);
+}
+.ess-auth-modal .ess-auth-brand img,
+.eph-modal .eph-modal-brand img {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  flex: 0 0 34px !important;
+  object-fit: contain !important;
+}
+.ess-registration-progress-track span,
+.eph-registration-progress-track span {
+  background: linear-gradient(90deg, var(--eph-brand-violet), var(--eph-brand-orange));
+}
+.ess-registration-navigation, .eph-registration-navigation {
+  gap: 10px;
+}
+.ess-registration-navigation > *, .eph-registration-navigation > * {
+  min-height: 46px;
+}
+.ess-registration-navigation .ess-primary,
+.eph-registration-navigation .eph-planner-submit {
+  flex: 1 1 auto;
+}
+@media (max-width: 680px) {
+  .ess-modal-backdrop, .eph-modal-backdrop {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+  }
+  .ess-auth-modal, .eph-modal {
+    width: 100% !important;
+    max-width: 480px !important;
+    max-height: calc(100dvh - max(20px, env(safe-area-inset-top) + env(safe-area-inset-bottom))) !important;
+    margin: 0 auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  .ess-registration-navigation, .eph-registration-navigation {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    padding: 10px 0 max(4px, env(safe-area-inset-bottom));
+    background: #111927;
+  }
+  .eph-registration-navigation { background: #fff; }
+}
+
+/* Public landing palette: retain its composition, align the brand and controls. */
+.esg {
+  --ink: var(--eph-text);
+  --mute: var(--eph-muted);
+  --line: var(--eph-border);
+  --cyan: var(--eph-brand-violet);
+  --blue: var(--eph-brand-violet);
+  --card: var(--eph-surface);
+}
+.esg-nav { background: rgba(17,21,47,.97); }
+.esg-mark { background: linear-gradient(135deg, var(--eph-brand-violet), var(--eph-brand-orange)); }
+.esg-btn.p {
+  background: linear-gradient(135deg, #ffc45f, var(--eph-brand-orange));
+  color: #241a09;
+  box-shadow: 0 8px 24px rgba(255,173,50,.22);
+}
+.esg-card { border-radius: var(--eph-radius-md); box-shadow: var(--eph-shadow-card); }
+.esg-card:hover { border-color: rgba(112,70,232,.42); box-shadow: 0 14px 34px rgba(23,26,49,.10); }
+
+/* General responsive safeguards. */
+@media (max-width: 767px) {
+  html, body, #root { max-width: 100%; }
+  .ess-content { padding-top: 28px; padding-bottom: max(84px, env(safe-area-inset-bottom)); }
+  .ess-page-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .ess-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ess-grid-main, .ess-grid-review { grid-template-columns: minmax(0, 1fr); }
+  .ess-panel { padding: 18px; }
+  .ess-catalog-grid, .listing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .ess-metrics, .ess-catalog-grid, .listing-grid { grid-template-columns: minmax(0, 1fr); }
+  .ess-content { padding-left: 16px; padding-right: 16px; }
+}
+
+
+/* Phase 2: public registration and landing-page responsive finish. */
+.eph-landing .eph-modal-backdrop {
+  z-index: 120;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.eph-landing .eph-modal {
+  width: min(100%, 520px);
+  max-height: min(760px, calc(100dvh - 32px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.eph-landing .eph-modal-brand {
+  min-height: 40px;
+  gap: 10px;
+}
+.eph-landing .eph-modal-brand img {
+  display: block;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  flex: 0 0 36px;
+  object-fit: contain;
+}
+.eph-landing .eph-modal form {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.eph-landing .eph-modal .eph-field {
+  min-width: 0;
+  margin: 0;
+}
+.eph-landing .eph-modal .eph-control {
+  min-height: 48px;
+  width: 100%;
+}
+.eph-landing .eph-modal .eph-registration-navigation {
+  position: sticky;
+  bottom: -1px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(104px, .65fr) minmax(0, 1.35fr);
+  gap: 10px;
+  padding: 12px 0 max(4px, env(safe-area-inset-bottom));
+  margin-top: 6px;
+  background: var(--surface, #fff);
+}
+.eph-landing .eph-modal .eph-registration-navigation button {
+  min-width: 0;
+  min-height: 48px;
+  margin: 0;
+}
+.eph-landing .eph-registration-progress {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.eph-landing .eph-registration-progress-copy {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted, #716078);
+  font-size: 12px;
+}
+.eph-landing .eph-registration-progress-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border, #e8e5f1);
+}
+.eph-landing .eph-registration-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6d42d8, #f97316);
+  transition: width .2s ease;
+}
+.eph-landing .eph-registration-review dl {
+  overflow-wrap: anywhere;
+}
+.eph-landing .eph-modal :focus-visible {
+  outline: 3px solid #f97316;
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .eph-landing .eph-modal-backdrop {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+  }
+  .eph-landing .eph-modal {
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100dvh - 20px);
+    padding: 18px 16px;
+    margin: 0 auto;
+    border-radius: 18px;
+  }
+  .eph-landing .eph-modal-brand img {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    flex-basis: 32px;
+  }
+  .eph-landing .eph-modal h2 {
+    font-size: clamp(21px, 6vw, 25px);
+  }
+  .eph-landing .eph-modal .eph-registration-navigation {
+    grid-template-columns: minmax(92px, .7fr) minmax(0, 1.3fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eph-landing .eph-registration-progress-track span {
+    transition: none;
+  }
+}
+
+
+/* Phase 3: signed-in workspace navigation and commerce surfaces. */
+.ess-portal-stack { min-width: 0; }
+.ess-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  padding: 5px 2px 10px;
+  scroll-padding-inline: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+.ess-filter-row > button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: rgba(255,255,255,.045);
+  color: #b8c1d3;
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+  transition: background var(--eph-motion-fast), border-color var(--eph-motion-fast), color var(--eph-motion-fast);
+}
+.ess-filter-row > button:hover {
+  border-color: rgba(154,124,255,.55);
+  background: rgba(112,70,232,.13);
+  color: #fff;
+}
+.ess-filter-row > button.ess-chip-active {
+  border-color: rgba(154,124,255,.68);
+  background: linear-gradient(135deg, rgba(112,70,232,.28), rgba(255,173,50,.12));
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(154,124,255,.12);
+}
+.ess-topbar {
+  gap: 14px;
+  padding-inline: clamp(16px, 4vw, 56px);
+}
+.ess-content {
+  width: min(100%, 1460px);
+  padding-inline: clamp(16px, 4vw, 56px);
+}
+.ess-panel, .ess-metric, .ess-wallet-card, .ess-catalog-card, .listing-card {
+  border-radius: var(--eph-radius-md);
+}
+.ess-wallet-panel, .ess-marketplace { min-width: 0; }
+.ess-wallet-head, .ess-marketplace-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.ess-wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 12px;
+}
+.ess-wallet-card {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,.1);
+  background: linear-gradient(145deg, rgba(255,255,255,.065), rgba(255,255,255,.025));
+  padding: 18px;
+}
+.ess-wallet-rows { display: grid; gap: 11px; margin-top: 14px; }
+.ess-wallet-rows > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgba(255,255,255,.075);
+  padding-top: 10px;
+}
+.ess-wallet-rows > div span { color: #aab4c6; font-size: 12px; }
+.ess-wallet-rows > div strong { text-align: right; overflow-wrap: anywhere; }
+.ess-marketplace .ess-marketplace-head p { max-width: 720px; }
+.ess-marketplace input, .ess-marketplace select, .ess-wallet-panel input, .ess-wallet-panel select {
+  min-height: 46px;
+  max-width: 100%;
+}
+.ess-wallet-panel button, .ess-marketplace button { min-height: 44px; }
+.ess-wallet-badge {
+  max-width: 100%;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.ess-table-wrap { max-width: 100%; overscroll-behavior-inline: contain; }
+@media (max-width: 767px) {
+  .ess-topbar {
+    min-height: 62px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 10px 16px;
+  }
+  .ess-content { padding-top: 22px; }
+  .ess-page-heading h1 { font-size: clamp(2rem, 9vw, 3rem); line-height: 1.04; }
+  .ess-filter-row {
+    position: sticky;
+    top: 62px;
+    z-index: 20;
+    margin-inline: -2px;
+    padding: 9px 2px 12px;
+    background: linear-gradient(180deg, rgba(16,19,41,.98), rgba(16,19,41,.94));
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .ess-filter-row > button { min-height: 44px; padding-inline: 13px; }
+  .ess-panel { padding: 16px; }
+  .ess-wallet-head, .ess-marketplace-head { display: grid; grid-template-columns: minmax(0,1fr); }
+  .ess-wallet-grid { grid-template-columns: minmax(0,1fr); }
+  .ess-wallet-rows > div { align-items: flex-start; }
+}
+@media (max-width: 380px) {
+  .ess-filter-row > button { font-size: 11px; padding-inline: 11px; }
+  .ess-topbar { padding-inline: 12px; }
+}
+
+
+/* Phase 4: role workspace consistency across vendor, partner, verifier,
+   consultant, organization and platform-operations screens. */
+.ess-shell {
+  width: min(100%, 1460px);
+  min-width: 0;
+  margin-inline: auto;
+  padding: clamp(18px, 3vw, 40px) clamp(16px, 4vw, 56px);
+}
+.ess-shell > .ess-page-heading,
+.ess-shell > header.ess-page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 0 0 22px;
+}
+.ess-shell .ess-page-heading h1,
+.ess-shell > header h1 {
+  max-width: 900px;
+  margin: 4px 0 10px;
+  color: #fff;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+.ess-shell .ess-page-heading p:not(.ess-eyebrow),
+.ess-shell > header p:not(.ess-eyebrow) {
+  max-width: 760px;
+  color: #aeb8cb;
+  line-height: 1.65;
+}
+.ess-shell > .ess-panel,
+.ess-shell > section.ess-panel {
+  min-width: 0;
+  margin-block: 16px;
+  padding: clamp(16px, 2.5vw, 26px);
+  background: linear-gradient(145deg, rgba(29,35,67,.96), rgba(20,25,50,.96));
+}
+.ess-shell .ess-wallet-card,
+.ess-shell .ess-card,
+.ess-shell .ess-enquiry-card,
+.ess-shell .ess-availability-slot {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  background: rgba(255,255,255,.045);
+  padding: 15px;
+  overflow-wrap: anywhere;
+}
+.ess-shell .ess-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-block: 14px;
+}
+.ess-shell .ess-form-grid label,
+.ess-shell label {
+  min-width: 0;
+  color: #dce2ef;
+  font-size: 13px;
+  font-weight: 650;
+}
+.ess-shell input:not([type="checkbox"]):not([type="radio"]),
+.ess-shell select,
+.ess-shell textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  margin-top: 7px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 10px;
+  background: rgba(10,14,32,.72);
+  color: #f7f8ff;
+}
+.ess-shell textarea { min-height: 88px; resize: vertical; }
+.ess-shell input::placeholder,
+.ess-shell textarea::placeholder { color: #8490a8; }
+.ess-shell .ess-table-wrap,
+.ess-shell [style*="overflowX"] { max-width: 100%; overflow-x: auto; }
+.ess-shell table { width: 100%; border-collapse: collapse; }
+.ess-shell th {
+  color: #bfc8dc;
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ess-shell td { color: #e5e9f3; vertical-align: top; }
+.ess-shell th, .ess-shell td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.ess-shell .ess-muted { color: #aeb8cb; line-height: 1.6; }
+.ess-shell .ess-status { display: inline-flex; align-items: center; min-height: 26px; padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 750; }
+.ess-shell button { max-width: 100%; }
+@media (max-width: 767px) {
+  .ess-shell { padding: 20px 16px max(88px, env(safe-area-inset-bottom)); }
+  .ess-shell > .ess-page-heading,
+  .ess-shell > header.ess-page-heading { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; }
+  .ess-shell .ess-form-grid { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .ess-shell > .ess-panel,
+  .ess-shell > section.ess-panel { margin-block: 12px; padding: 16px; }
+  .ess-shell .ess-page-heading h1,
+  .ess-shell > header h1 { font-size: clamp(1.7rem, 8vw, 2.35rem); }
+}
+
+
+/* Phase 4b: portal fragments (vendor, affiliate and admin) render directly
+   inside .ess-content rather than all sharing the client .ess-shell wrapper. */
+.ess-content > .ess-page-heading,
+.ess-content .ess-page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 0 0 22px;
+}
+.ess-content .ess-page-heading h1 {
+  max-width: 900px;
+  margin: 4px 0 10px;
+  color: #fff;
+  font-size: clamp(1.8rem, 4vw, 2.65rem);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+.ess-content .ess-page-heading p:not(.ess-eyebrow) {
+  max-width: 760px;
+  color: #aeb8cb;
+  line-height: 1.65;
+}
+.ess-content > .ess-panel,
+.ess-content > section.ess-panel,
+.ess-content .ess-page-heading + .ess-panel {
+  min-width: 0;
+  margin-block: 16px;
+  padding: clamp(16px, 2.5vw, 26px);
+}
+.ess-content .ess-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.ess-content .ess-note-label,
+.ess-content .ess-form-grid label {
+  min-width: 0;
+}
+.ess-content .ess-form-grid input,
+.ess-content .ess-form-grid select,
+.ess-content .ess-form-grid textarea,
+.ess-content .ess-note-label input,
+.ess-content .ess-note-label select {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  box-sizing: border-box;
+}
+.ess-content .ess-catalog-grid,
+.ess-content .ess-listing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+}
+.ess-content .ess-catalog-card,
+.ess-content .ess-enquiry-card,
+.ess-content .ess-availability-manager,
+.ess-content .ess-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ess-content .ess-enquiry-card {
+  padding: 16px;
+  margin-block: 12px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  background: rgba(255,255,255,.045);
+}
+.ess-content .ess-enquiry-card textarea { width: 100%; box-sizing: border-box; }
+.ess-content .ess-availability-manager {
+  padding: 16px;
+  margin-block: 16px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+}
+.ess-content .ess-availability-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-block: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.ess-content .ess-toast { overflow-wrap: anywhere; }
+@media (max-width: 767px) {
+  .ess-content .ess-page-heading { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .ess-content .ess-page-heading > div,
+  .ess-content .ess-page-heading > button { min-width: 0; }
+  .ess-content .ess-form-grid { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .ess-content > .ess-panel,
+  .ess-content > section.ess-panel,
+  .ess-content .ess-page-heading + .ess-panel { padding: 16px; }
+  .ess-content .ess-metrics { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+}
+@media (max-width: 380px) {
+  .ess-content .ess-metrics { grid-template-columns: minmax(0,1fr); }
+}
+
+
+/* Keep sticky workspace chrome from covering controls brought into view. */
+.ess-content button,
+.ess-content a,
+.ess-content input,
+.ess-content select,
+.ess-content textarea {
+  scroll-margin-top: 100px;
+}
