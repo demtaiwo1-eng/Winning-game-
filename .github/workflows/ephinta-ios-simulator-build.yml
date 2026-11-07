@@ -1,0 +1,69 @@
+name: EPHINTA iOS Simulator Build
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - "eventsss123/eventsss-main/apps/web/**"
+      - "eventsss123/eventsss-main/apps/mobile/**"
+      - "eventsss123/eventsss-main/package*.json"
+      - ".github/workflows/ephinta-ios-simulator-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ephinta-ios-simulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios-simulator:
+    name: Build iOS Simulator app (unsigned)
+    runs-on: macos-15
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build:web
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
+          VITE_UPDATE_URL: ${{ format('{0}/app-updates', vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1') }}
+
+      - name: Sync Capacitor iOS project and CocoaPods
+        run: npm run ios:sync -w apps/mobile
+
+      - name: Inspect Xcode project
+        run: xcodebuild -list -project apps/mobile/ios/App/App.xcodeproj
+
+      - name: Build unsigned iOS Simulator target
+        run: >-
+          xcodebuild
+          -project apps/mobile/ios/App/App.xcodeproj
+          -scheme App
+          -sdk iphonesimulator
+          -configuration Debug
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build
+
+      - name: Record simulator build output
+        if: success()
+        run: echo "Unsigned iOS Simulator build completed. App Store distribution still requires Apple signing credentials and provisioning."
