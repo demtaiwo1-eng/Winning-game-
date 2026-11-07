@@ -4,7 +4,7 @@
 set -euo pipefail
 set +x
 
-REPO="${EPHINTA_REPO:-demtaiwo1-eng/Winning-game-}"
+REPO="${EPHINTA_REPO:-demtaiwo1-eng/winning-game-}"
 ALIAS="ephinta-release"
 ROOT="$HOME/.ephinta-android-signing"
 KEYSTORE="$ROOT/ephinta-release.jks"
