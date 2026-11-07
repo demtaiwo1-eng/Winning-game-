@@ -641,3 +641,32 @@ test("production app loads the bundled music track and plays after consent", asy
   await expect(prompt).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("on");
 });
+
+test("mobile registration keeps compact branding and reachable navigation without audio prompt overlap", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/v1/billing/public-promotions", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ items: [] }),
+  }));
+  await page.goto("/auth/signup?role=CLIENT", { waitUntil: "networkidle" });
+
+  const dialog = page.locator(".ess-auth-modal");
+  await expect(dialog).toBeVisible();
+  await expect(page.locator(".eph-audio__prompt")).toHaveCount(0);
+
+  const logo = dialog.locator("img").first();
+  const logoBox = await logo.boundingBox();
+  expect(logoBox).not.toBeNull();
+  expect(logoBox!.width).toBeLessThanOrEqual(72);
+  expect(logoBox!.height).toBeLessThanOrEqual(72);
+
+  const back = dialog.getByRole("button", { name: /Back/ });
+  const next = dialog.getByRole("button", { name: /Next/ });
+  await expect(back).toBeVisible();
+  await expect(next).toBeVisible();
+  const dialogBox = await dialog.boundingBox();
+  expect(dialogBox).not.toBeNull();
+  expect(dialogBox!.x).toBeGreaterThanOrEqual(0);
+  expect(dialogBox!.x + dialogBox!.width).toBeLessThanOrEqual(390);
+});
