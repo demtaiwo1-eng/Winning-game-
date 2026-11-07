@@ -103,7 +103,7 @@ function main() {
       for (const token of ["--eph-parent-bg", "--eph-parent-surface", "--eph-parent-ink", "--eph-parent-primary", "--eph-parent-accent", "--eph-parent-radius", "--eph-parent-shadow", "--eph-parent-font"]) {
         if (!parentTheme.includes(token)) fail("Parent design-system token is missing: " + token);
       }
-      for (const selector of [".ess-builder-card", ".ess-auth-modal", ".eph-modal", '[role="dialog"]', ".eph-audio__prompt[role=\"dialog\"]", ".eph-audio__choices", "@media (max-width: 680px)"]) {
+      for (const selector of [".ess-builder-card", ".ess-auth-modal", ".eph-modal", '[role="dialog"]', ".eph-audio__prompt[role=\"dialog\"]", ".eph-audio__accept", "@media (max-width: 680px)"]) {
         if (!parentTheme.includes(selector)) fail("Parent design-system coverage is missing: " + selector);
       }
       if (parentTheme.includes("--eph-parent-primary") && parentTheme.includes(".ess-builder-card") && parentTheme.includes(".ess-auth-modal")) {
