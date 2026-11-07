@@ -4,7 +4,7 @@
 set -euo pipefail
 set +x
 
-REPO="${EPHINTA_REPO:-demtaiwo1-eng/Winning-game-}"
+REPO="${EPHINTA_REPO:-demtaiwo1-eng/winning-game-}"
 ALIAS="ephinta-release"
 ROOT="$HOME/.ephinta-android-signing"
 KEYSTORE="$ROOT/ephinta-release.jks"
@@ -18,8 +18,22 @@ gh auth status >/dev/null 2>&1 || fail "Sign in to GitHub CLI in this Codespace,
 gh repo view "$REPO" >/dev/null 2>&1 || fail "Cannot access $REPO with the current GitHub account."
 
 SECRET_LIST="$(gh secret list --repo "$REPO" 2>/dev/null)" || fail "This GitHub account cannot manage repository Actions secrets. Ask a repository admin to run this setup from their Codespace."
-if printf '%s\n' "$SECRET_LIST" | awk '{print $1}' | grep -qx 'ANDROID_KEYSTORE_BASE64'; then
-  fail "ANDROID_KEYSTORE_BASE64 already exists. Refusing to replace an existing release key."
+VARIABLE_LIST="$(gh variable list --repo "$REPO" 2>/dev/null)" || fail "This GitHub account cannot inspect repository Actions variables. Ask a repository admin to run this setup from their Codespace."
+
+# Never create a second signing identity when any part of an earlier setup
+# exists. A partial secret set may belong to the permanent release key.
+SIGNING_NAMES=(ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_PASSWORD ANDROID_KEY_ALIAS)
+EXISTING_SIGNING_NAMES=()
+for name in "${SIGNING_NAMES[@]}"; do
+  if printf '%s\n' "$SECRET_LIST" | awk 'NR > 1 {print $1}' | grep -Fxq "$name"; then
+    EXISTING_SIGNING_NAMES+=("$name")
+  fi
+done
+if (("${#EXISTING_SIGNING_NAMES[@]}" > 0)); then
+  fail "Existing Android signing configuration detected (${EXISTING_SIGNING_NAMES[*]}). Refusing to create or rotate the release key. Recover or complete the existing configuration instead."
+fi
+if printf '%s\n' "$VARIABLE_LIST" | awk 'NR > 1 {print $1}' | grep -Fxq 'ANDROID_CERT_SHA256'; then
+  fail "ANDROID_CERT_SHA256 already exists. Refusing to replace a potentially paired release certificate."
 fi
 if [[ -e "$KEYSTORE" || -e "$BACKUP" ]]; then
   fail "A signing key or backup already exists at $ROOT. Refusing to overwrite it."
