@@ -125,6 +125,11 @@ if (!(await healthy(apiService.url))) {
     console.error("[setup] Database setup failed. Install/start Docker Desktop, or configure DATABASE_MODE=online and DATABASE_URL_ONLINE in apps/api/.env.");
     process.exit(1);
   }
+  const seeded = await runCommand("npm", ["run", "db:seed", "-w", "apps/api"]);
+  if (!seeded) {
+    console.error("[setup] Database migrations succeeded, but reference-data seeding failed.");
+    process.exit(1);
+  }
 }
 
 for (const service of services) {
