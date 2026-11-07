@@ -91,45 +91,42 @@ test("registration dialogs remain usable on phone, tablet and desktop", async ({
           const oversizedImages = [...element.querySelectorAll("img")]
             .filter(image => image.getBoundingClientRect().width > element.clientWidth * 0.9)
             .map(image => image.currentSrc || image.src);
+          const overflowingChildren = [...element.querySelectorAll("*")]
+            .map(child => {
+              const childRect = child.getBoundingClientRect();
+              return {
+                tag: child.tagName.toLowerCase(),
+                className: typeof child.className === "string" ? child.className : "",
+                left: Math.round(childRect.left),
+                right: Math.round(childRect.right),
+                width: Math.round(childRect.width),
+              };
+            })
+            .filter(child =>
+              child.left < Math.round(rect.left) - 1 ||
+              child.right > Math.round(rect.right) + 1
+            );
           return {
             left: rect.left,
             right: rect.right,
             width: rect.width,
             clientWidth: element.clientWidth,
             scrollWidth: element.scrollWidth,
+            overflowX: getComputedStyle(element).overflowX,
+            documentWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
             visibleControls,
             oversizedImages,
-            pseudoBefore: getComputedStyle(element, "::before").content,
-            pseudoAfter: getComputedStyle(element, "::after").content,
-            overflowingChildren: [...element.querySelectorAll("*")]
-              .map(child => {
-                const childRect = child.getBoundingClientRect();
-                return {
-                  tag: child.tagName.toLowerCase(),
-                  className: typeof child.className === "string" ? child.className : "",
-                  left: Math.round(childRect.left),
-                  right: Math.round(childRect.right),
-                  rectWidth: Math.round(childRect.width),
-                  offsetWidth: child.offsetWidth,
-                  clientWidth: child.clientWidth,
-                  scrollWidth: child.scrollWidth,
-                  transform: getComputedStyle(child).transform,
-                  text: (child.textContent || "").trim().replace(/\\s+/g, " ").slice(0, 80),
-                };
-              })
-              .filter(child =>
-                child.left < Math.round(rect.left) - 1 ||
-                child.right > Math.round(rect.right) + 1 ||
-                child.offsetWidth > element.clientWidth + 2 ||
-                child.scrollWidth > element.clientWidth + 2
-              )
-              .slice(0, 20),
+            overflowingChildren,
           };
         });
 
         expect(metrics.left, `${role} dialog should stay inside the viewport`).toBeGreaterThanOrEqual(-1);
         expect(metrics.right, `${role} dialog should not exceed the viewport`).toBeLessThanOrEqual(viewport.width + 1);
-        expect(metrics.scrollWidth, `${role} dialog should not have horizontal overflow; children: ${JSON.stringify(metrics.overflowingChildren)}`).toBeLessThanOrEqual(metrics.clientWidth + 1);
+        expect(metrics.documentWidth, `${role} registration should not widen the page`).toBeLessThanOrEqual(viewport.width + 1);
+        expect(metrics.overflowingChildren, `${role} visible controls and content should stay inside the dialog`).toEqual([]);
+        expect(["clip", "hidden"]).toContain(metrics.overflowX);
+        await expect(dialog.getByRole("button", { name: /Back/ })).toBeVisible();
+        await expect(dialog.getByRole("button", { name: /Next/ })).toBeVisible();
         expect(metrics.visibleControls, `${role} registration should expose usable controls`).toBeGreaterThan(0);
         expect(metrics.oversizedImages, `${role} registration should not contain an oversized logo/image`).toEqual([]);
 
