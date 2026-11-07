@@ -78,7 +78,8 @@ async function startLocalPostgres() {
 }
 
 let selectedUrl;
-if (mode === "online") {
+const useOnline = mode === "online" || (mode === "auto" && process.env.NODE_ENV === "production");
+if (useOnline) {
   selectedUrl = onlineUrl;
   if (!selectedUrl && configuredDatabaseUrl && endpoint(configuredDatabaseUrl)?.host !== "127.0.0.1" && endpoint(configuredDatabaseUrl)?.host !== "localhost") {
     selectedUrl = configuredDatabaseUrl;
@@ -100,7 +101,7 @@ if (!selectedUrl) {
   process.exit(1);
 }
 
-if (mode === "online" && !(await reachable(selectedUrl))) {
+if (useOnline && !(await reachable(selectedUrl))) {
   console.error("[database] The configured online PostgreSQL endpoint is not reachable.");
   process.exit(1);
 }
