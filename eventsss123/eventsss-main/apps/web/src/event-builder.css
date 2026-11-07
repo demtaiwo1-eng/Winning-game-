@@ -182,3 +182,99 @@
   .ess-builder-card input, .ess-builder-card select, .ess-builder-card textarea,
   .ess-builder .ess-primary { transition: none; }
 }
+
+
+/* Match the existing EPHINTA registration dialog theme: lavender, violet and gold. */
+.ess-builder {
+  background:
+    radial-gradient(ellipse at 18% 16%, rgba(124, 92, 246, .10), transparent 38%),
+    radial-gradient(ellipse at 88% 88%, rgba(255, 189, 67, .12), transparent 32%),
+    linear-gradient(145deg, #fbfaff 0%, #f5f1ff 58%, #fffaf1 100%);
+}
+.ess-builder > .ess-quiet-button { color: #6d42d8; }
+.ess-builder > .ess-quiet-button:hover { color: #4f2caf; }
+.ess-builder-progress {
+  border-color: #e8e1f4;
+  background: rgba(255,255,255,.78);
+  color: #6d42d8;
+}
+.ess-builder-progress b {
+  background: linear-gradient(90deg, #6d42d8, #ffbd43);
+  color: #fff;
+}
+.ess-builder-card {
+  border-color: #e8e7f2;
+  border-radius: 24px;
+  background: linear-gradient(155deg, #fff 0%, #fbfaff 100%);
+  color: #24233a;
+  box-shadow: 0 32px 90px rgba(20, 17, 49, .12);
+}
+.ess-builder-card::before {
+  height: 5px;
+  background: linear-gradient(90deg, #6d42d8, #9276ee 68%, #ffbd43);
+}
+.ess-builder-card .ess-eyebrow { color: #6d42d8; }
+.ess-builder-card .ess-eyebrow::before { color: #ffbd43; }
+.ess-builder-card h1,
+.ess-builder-card h2 { color: #211d37; }
+.ess-builder-lead { color: #77758b; }
+.ess-builder-card label { color: #49475e; }
+.ess-builder-card input,
+.ess-builder-card select,
+.ess-builder-card textarea {
+  border-color: #e3e1ed;
+  border-radius: 12px;
+  background: #f8f7fb;
+  color: #29263d;
+  box-shadow: none;
+}
+.ess-builder-card input:hover,
+.ess-builder-card select:hover,
+.ess-builder-card textarea:hover { border-color: #c9bee9; }
+.ess-builder-card input:focus,
+.ess-builder-card select:focus,
+.ess-builder-card textarea:focus {
+  border-color: #8969e8;
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(137, 105, 232, .15);
+}
+.ess-builder .ess-primary {
+  border: 1px solid #6d42d8;
+  border-radius: 12px;
+  background: linear-gradient(105deg, #6d42d8, #7959dc 72%, #8a69df);
+  box-shadow: 0 7px 18px rgba(101, 73, 198, .20);
+}
+.ess-builder .ess-primary:hover {
+  background: linear-gradient(105deg, #5b35c2, #6848ca 72%, #7959dc);
+  box-shadow: 0 9px 22px rgba(101, 73, 198, .28);
+}
+.ess-builder .ess-outline-button {
+  border-color: #e2dfed;
+  border-radius: 12px;
+  color: #514d69;
+}
+.ess-builder .ess-outline-button:hover { background: #f7f5fc; }
+.ess-builder-summary div {
+  border-color: #eeedf4;
+  background: #f8f7fb;
+}
+.ess-builder-summary span { color: #77758b; }
+.ess-builder-summary strong { color: #29263d; }
+.ess-builder-checklist li { border-color: #eeedf4; }
+.ess-builder-checklist span {
+  background: #f0ecfb;
+  color: #6d42d8;
+}
+.ess-builder .ess-form-error {
+  border-color: #f4d5d9;
+  background: #fff5f5;
+  color: #a33d4b;
+}
+@media (max-width: 680px) {
+  .ess-builder-card { border-radius: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ess-builder > .ess-quiet-button,
+  .ess-builder .ess-primary { transition: none; }
+}
