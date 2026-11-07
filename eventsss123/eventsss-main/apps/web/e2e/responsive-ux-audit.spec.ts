@@ -98,12 +98,22 @@ test("registration dialogs remain usable on phone, tablet and desktop", async ({
             scrollWidth: element.scrollWidth,
             visibleControls,
             oversizedImages,
+            overflowingChildren: [...element.querySelectorAll("*")]
+              .map(child => ({
+                tag: child.tagName.toLowerCase(),
+                className: typeof child.className === "string" ? child.className : "",
+                clientWidth: child.clientWidth,
+                scrollWidth: child.scrollWidth,
+                text: (child.textContent || "").trim().replace(/\\s+/g, " ").slice(0, 80),
+              }))
+              .filter(child => child.scrollWidth > child.clientWidth + 2)
+              .slice(0, 12),
           };
         });
 
         expect(metrics.left, `${role} dialog should stay inside the viewport`).toBeGreaterThanOrEqual(-1);
         expect(metrics.right, `${role} dialog should not exceed the viewport`).toBeLessThanOrEqual(viewport.width + 1);
-        expect(metrics.scrollWidth, `${role} dialog should not have horizontal overflow`).toBeLessThanOrEqual(metrics.clientWidth + 1);
+        expect(metrics.scrollWidth, `${role} dialog should not have horizontal overflow; children: ${JSON.stringify(metrics.overflowingChildren)}`).toBeLessThanOrEqual(metrics.clientWidth + 1);
         expect(metrics.visibleControls, `${role} registration should expose usable controls`).toBeGreaterThan(0);
         expect(metrics.oversizedImages, `${role} registration should not contain an oversized logo/image`).toEqual([]);
 
