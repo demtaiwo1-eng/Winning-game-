@@ -1,4 +1,7 @@
 import { spawn } from "node:child_process";
+import { createWriteStream } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import net from "node:net";
 
@@ -13,7 +16,7 @@ const services = [
     command: "npm",
     args: ["run", "dev", "-w", "apps/api"],
     env: { PORT: String(API_PORT) },
-    log: "/tmp/ephinta-api-dev.log",
+    log: join(tmpdir(), "ephinta-api-dev.log"),
   },
   {
     name: "WEB",
@@ -22,7 +25,7 @@ const services = [
     command: "npm",
     args: ["run", "dev", "-w", "apps/web"],
     env: {},
-    log: "/tmp/ephinta-web-dev.log",
+    log: join(tmpdir(), "ephinta-web-dev.log"),
   },
 ];
 
@@ -60,8 +63,7 @@ async function waitHealthy(service, child, seconds = 35) {
 
 function start(service) {
   console.log(`[${service.name}] Starting service; logs: ${service.log}`);
-  const fs = awaitlessFs();
-  const stream = fs.createWriteStream(service.log, { flags: "a" });
+  const stream = createWriteStream(service.log, { flags: "a" });
   const child = spawn(service.command, service.args, {
     cwd: process.cwd(),
     env: { ...process.env, ...service.env },
@@ -81,11 +83,6 @@ function start(service) {
   return child;
 }
 
-// Import fs synchronously via Node's built-in module.
-function awaitlessFs() {
-  return requireFs;
-}
-import * as requireFs from "node:fs";
 
 for (const service of services) {
   if (await healthy(service.url)) {

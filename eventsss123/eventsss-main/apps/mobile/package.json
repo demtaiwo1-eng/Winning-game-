@@ -10,8 +10,8 @@
     "apk:debug": "cd android && ./gradlew assembleDebug",
     "apk:release": "cd android && ./gradlew assembleRelease",
     "verify:android": "test -x android/gradlew && test -d android/app && cd android && ./gradlew lint testDebugUnitTest assembleDebug",
-    "ios:add": "npx cap add ios --config capacitor.config.ts",
-    "ios:sync": "npx cap sync ios --config capacitor.config.ts"
+    "ios:add": "npx cap add ios",
+    "ios:sync": "npx cap sync ios"
   },
   "dependencies": {
     "@capacitor/android": "^6.1.2",

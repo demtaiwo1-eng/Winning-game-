@@ -1083,10 +1083,10 @@ export default function PublicLanding({
 
       {authMode && <div className="eph-modal-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setAuthMode(null); }}>
 
-        <section id="eph-auth-dialog" className="eph-modal" role="dialog" aria-modal="true" aria-labelledby="eph-auth-title">
+        <section id="eph-auth-dialog" className="eph-modal" role="dialog" aria-modal="true" aria-label={authMode === 'signin' ? 'Sign in' : authMode === 'forgot' ? 'Reset your password' : 'Create your account'}>
 
           <div className="eph-modal-brand"><img src="/brand/ephinta_logo2.png" alt="" /><span>EPHINTA</span></div>
-          <div className="eph-modal-top"><div><h2 id="eph-auth-title">{authMode === 'signin' ? 'Welcome back' : authMode === 'forgot' ? 'Reset your password' : ['Create your EPHINTA account', 'Choose your account type', 'Confirm your details'][registrationStep]}</h2><p>{authMode === 'signin' ? 'Sign in to continue planning.' : authMode === 'forgot' ? 'Enter your email and we\'ll send reset instructions if an account exists.' : ['Start with your contact details.', 'Choose how you will use EPHINTA.', 'Check your information before creating your account.'][registrationStep]}</p></div><button className="eph-close" onClick={() => setAuthMode(null)} aria-label="Close dialog">&times;</button></div>
+          <div className="eph-modal-top"><div><h2 id="eph-auth-title">{authMode === 'signin' ? 'Sign in' : authMode === 'forgot' ? 'Reset your password' : ['Create your EPHINTA account', 'Choose your account type', 'Confirm your details'][registrationStep]}</h2><p>{authMode === 'signin' ? 'Sign in to continue planning.' : authMode === 'forgot' ? 'Enter your email and we\'ll send reset instructions if an account exists.' : ['Start with your contact details.', 'Choose how you will use EPHINTA.', 'Check your information before creating your account.'][registrationStep]}</p></div><button className="eph-close" onClick={() => setAuthMode(null)} aria-label="Close dialog">&times;</button></div>
 
           {error && <div className="eph-auth-error" role="alert" aria-live="assertive">{error}</div>}
 
