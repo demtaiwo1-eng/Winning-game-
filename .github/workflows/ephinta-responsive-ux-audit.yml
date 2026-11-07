@@ -53,6 +53,8 @@ jobs:
           cache: npm
           cache-dependency-path: eventsss123/eventsss-main/package-lock.json
       - run: npm ci
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
       - name: Apply test database schema
         run: npm run db:deploy -w apps/api
       - name: Install Playwright Chromium
