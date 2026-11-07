@@ -51,12 +51,12 @@ jobs:
         run: npm run ios:sync -w apps/mobile
 
       - name: Inspect Xcode project
-        run: xcodebuild -list -project apps/mobile/ios/App/App.xcodeproj
+        run: xcodebuild -list -workspace apps/mobile/ios/App/App.xcworkspace
 
       - name: Build unsigned iOS Simulator target
         run: >-
           xcodebuild
-          -project apps/mobile/ios/App/App.xcodeproj
+          -workspace apps/mobile/ios/App/App.xcworkspace
           -scheme App
           -sdk iphonesimulator
           -configuration Debug
