@@ -66,11 +66,7 @@ try {
   console.error(output.join(""));
   process.exitCode = 1;
 } finally {
+  // Stop only the API/Vite process tree started by this smoke test.
+  // Keep PostgreSQL available if it was already running or was started for development.
   await stop();
-  const stopDb = spawn(command, ["run", "dev:db:stop"], {
-    cwd: root,
-    stdio: "ignore",
-    shell: process.platform === "win32",
-  });
-  await new Promise((resolve) => stopDb.once("exit", resolve));
 }
