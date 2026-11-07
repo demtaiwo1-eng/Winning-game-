@@ -99,6 +99,8 @@ test("registration dialogs remain usable on phone, tablet and desktop", async ({
             scrollWidth: element.scrollWidth,
             visibleControls,
             oversizedImages,
+            pseudoBefore: getComputedStyle(element, "::before").content,
+            pseudoAfter: getComputedStyle(element, "::after").content,
             overflowingChildren: [...element.querySelectorAll("*")]
               .map(child => {
                 const childRect = child.getBoundingClientRect();
@@ -107,14 +109,21 @@ test("registration dialogs remain usable on phone, tablet and desktop", async ({
                   className: typeof child.className === "string" ? child.className : "",
                   left: Math.round(childRect.left),
                   right: Math.round(childRect.right),
-                  width: Math.round(childRect.width),
+                  rectWidth: Math.round(childRect.width),
+                  offsetWidth: child.offsetWidth,
                   clientWidth: child.clientWidth,
                   scrollWidth: child.scrollWidth,
+                  transform: getComputedStyle(child).transform,
                   text: (child.textContent || "").trim().replace(/\\s+/g, " ").slice(0, 80),
                 };
               })
-              .filter(child => child.left < Math.round(rect.left) - 1 || child.right > Math.round(rect.right) + 1)
-              .slice(0, 12),
+              .filter(child =>
+                child.left < Math.round(rect.left) - 1 ||
+                child.right > Math.round(rect.right) + 1 ||
+                child.offsetWidth > element.clientWidth + 2 ||
+                child.scrollWidth > element.clientWidth + 2
+              )
+              .slice(0, 20),
           };
         });
 
