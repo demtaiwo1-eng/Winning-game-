@@ -91,7 +91,7 @@ function main() {
     else fail("Product excellence stylesheet is not imported.");
 
     const parentThemeImport = 'import "./styles/ephinta-parent-design-system.css";';
-    const cssImports = [...entrySource.matchAll(/^import\\s+["'][^"']+\\.css["'];?\\s*$/gm)].map((match) => match[0]);
+    const cssImports = [...entrySource.matchAll(/^import\s+["'][^"']+\.css["'];?\s*$/gm)].map((match) => match[0]);
     if (!entrySource.includes(parentThemeImport)) fail("Parent design system is not imported by the active application entry point.");
     else if (!cssImports.at(-1)?.includes("ephinta-parent-design-system.css")) fail("Parent design system must load after all legacy global stylesheets.");
     else pass("Parent design system is loaded last by the active application entry point.");
