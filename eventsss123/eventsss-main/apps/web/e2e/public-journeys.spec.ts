@@ -633,9 +633,15 @@ test("production app loads the bundled music track and plays after consent", asy
 test("mobile registration keeps its logo compact and navigation reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  await expect(page.locator("[data-ephinta-intro-splash]")).toBeHidden({ timeout: 7000 });
+  const musicPrompt = page.getByRole("dialog", { name: "Enjoy background music?" });
+  if (await musicPrompt.isVisible().catch(() => false)) {
+    await musicPrompt.getByRole("button", { name: "No, thanks" }).click();
+  }
   await page.getByRole("button", { name: "Open menu" }).click();
-  await page.getByRole("navigation", { name: "Main navigation" })
-    .getByRole("button", { name: "Create customer account" }).click();
+  const navigation = page.getByRole("navigation", { name: "Main navigation" });
+  await expect(navigation.getByRole("button", { name: "Create customer account" })).toBeVisible();
+  await navigation.getByRole("button", { name: "Create customer account" }).click();
 
   const dialog = page.locator("#eph-auth-dialog");
   await expect(dialog).toBeVisible();
