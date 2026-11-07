@@ -657,7 +657,7 @@ test("mobile registration keeps its logo compact and navigation reachable", asyn
 
   await dialog.getByLabel("Full name").fill("Mobile Layout Check");
   await dialog.getByLabel("Email address").fill("mobile-layout@example.test");
-  await dialog.getByLabel("Password").fill("StrongPass123!");
+  await dialog.getByLabel("Password", { exact: true }).fill("StrongPass123!");
   await next.click();
   await expect(dialog).toBeVisible();
   await expect(back).toBeVisible();
