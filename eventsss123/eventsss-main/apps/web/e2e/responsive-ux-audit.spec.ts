@@ -100,14 +100,20 @@ test("registration dialogs remain usable on phone, tablet and desktop", async ({
             visibleControls,
             oversizedImages,
             overflowingChildren: [...element.querySelectorAll("*")]
-              .map(child => ({
-                tag: child.tagName.toLowerCase(),
-                className: typeof child.className === "string" ? child.className : "",
-                clientWidth: child.clientWidth,
-                scrollWidth: child.scrollWidth,
-                text: (child.textContent || "").trim().replace(/\\s+/g, " ").slice(0, 80),
-              }))
-              .filter(child => child.scrollWidth > child.clientWidth + 2)
+              .map(child => {
+                const childRect = child.getBoundingClientRect();
+                return {
+                  tag: child.tagName.toLowerCase(),
+                  className: typeof child.className === "string" ? child.className : "",
+                  left: Math.round(childRect.left),
+                  right: Math.round(childRect.right),
+                  width: Math.round(childRect.width),
+                  clientWidth: child.clientWidth,
+                  scrollWidth: child.scrollWidth,
+                  text: (child.textContent || "").trim().replace(/\\s+/g, " ").slice(0, 80),
+                };
+              })
+              .filter(child => child.left < Math.round(rect.left) - 1 || child.right > Math.round(rect.right) + 1)
               .slice(0, 12),
           };
         });
