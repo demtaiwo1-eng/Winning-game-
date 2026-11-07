@@ -281,3 +281,38 @@ dialog[open] :is(input, select, textarea):focus {
   outline: 3px solid var(--eph-parent-focus);
   background: var(--eph-parent-surface);
 }
+
+/* Audio-consent is a semantic dialog too; keep it inside the same parent theme. */
+.eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
+  border: 1px solid var(--eph-parent-border);
+  border-radius: var(--eph-parent-radius);
+  background: linear-gradient(155deg, #fff 0%, #fbfaff 100%);
+  color: var(--eph-parent-ink);
+  box-shadow: var(--eph-parent-shadow);
+  font-family: var(--eph-parent-font);
+}
+.eph-audio__backdrop > .eph-audio__prompt[role="dialog"] h2 {
+  color: var(--eph-parent-ink);
+  font-family: var(--eph-parent-font);
+}
+.eph-audio__backdrop > .eph-audio__prompt[role="dialog"] > p:not(.eph-audio__eyebrow) {
+  color: var(--eph-parent-muted);
+}
+.eph-audio__backdrop > .eph-audio__prompt[role="dialog"] .eph-audio__prompt-icon {
+  color: var(--eph-parent-primary);
+  background: var(--eph-parent-bg);
+}
+.eph-audio__backdrop > .eph-audio__prompt[role="dialog"] .eph-audio__accept {
+  border-color: var(--eph-parent-primary);
+  background: linear-gradient(105deg, var(--eph-parent-primary), var(--eph-parent-secondary));
+  color: #fff;
+}
+.eph-audio__backdrop > .eph-audio__prompt[role="dialog"] .eph-audio__decline {
+  border-color: var(--eph-parent-border) !important;
+  background: var(--eph-parent-surface) !important;
+  color: var(--eph-parent-muted) !important;
+}
+.eph-audio__backdrop > .eph-audio__prompt[role="dialog"] :is(button):focus-visible {
+  outline: 3px solid var(--eph-parent-focus);
+  outline-offset: 2px;
+}
