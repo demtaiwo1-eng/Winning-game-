@@ -316,3 +316,29 @@ dialog[open] :is(input, select, textarea):focus {
   outline: 3px solid var(--eph-parent-focus);
   outline-offset: 2px;
 }
+
+@media (max-width: 480px) {
+  .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
+    padding: 10px;
+  }
+  .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] .eph-audio__prompt-icon {
+    display: none;
+  }
+  .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] .eph-audio__eyebrow {
+    margin: 0 0 2px;
+    font-size: 9px;
+  }
+  .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] h2 {
+    font-size: 14px;
+  }
+  .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] > p:not(.eph-audio__eyebrow) {
+    margin: 4px 0 7px;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+  .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] .eph-audio__choices button {
+    min-height: 30px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+}
