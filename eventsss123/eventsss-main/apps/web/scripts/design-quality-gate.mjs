@@ -85,8 +85,32 @@ function main() {
 
   const entry = path.join(SOURCE, "main.tsx");
   if (!fs.existsSync(entry)) fail("Missing src/main.tsx.");
-  else if (fs.readFileSync(entry, "utf8").includes("ephinta-product-excellence.css")) pass("Product excellence stylesheet is imported.");
-  else fail("Product excellence stylesheet is not imported.");
+  else {
+    const entrySource = fs.readFileSync(entry, "utf8");
+    if (entrySource.includes("ephinta-product-excellence.css")) pass("Product excellence stylesheet is imported.");
+    else fail("Product excellence stylesheet is not imported.");
+
+    const parentThemeImport = 'import "./styles/ephinta-parent-design-system.css";';
+    const cssImports = [...entrySource.matchAll(/^import\\s+["'][^"']+\\.css["'];?\\s*$/gm)].map((match) => match[0]);
+    if (!entrySource.includes(parentThemeImport)) fail("Parent design system is not imported by the active application entry point.");
+    else if (!cssImports.at(-1)?.includes("ephinta-parent-design-system.css")) fail("Parent design system must load after all legacy global stylesheets.");
+    else pass("Parent design system is loaded last by the active application entry point.");
+
+    const parentThemePath = path.join(SOURCE, "styles", "ephinta-parent-design-system.css");
+    if (!fs.existsSync(parentThemePath)) fail("Parent design-system stylesheet is missing.");
+    else {
+      const parentTheme = fs.readFileSync(parentThemePath, "utf8");
+      for (const token of ["--eph-parent-bg", "--eph-parent-surface", "--eph-parent-ink", "--eph-parent-primary", "--eph-parent-accent", "--eph-parent-radius", "--eph-parent-shadow", "--eph-parent-font"]) {
+        if (!parentTheme.includes(token)) fail("Parent design-system token is missing: " + token);
+      }
+      for (const selector of [".ess-builder-card", ".ess-auth-modal", ".eph-modal", '[role="dialog"]', "@media (max-width: 680px)"]) {
+        if (!parentTheme.includes(selector)) fail("Parent design-system coverage is missing: " + selector);
+      }
+      if (parentTheme.includes("--eph-parent-primary") && parentTheme.includes(".ess-builder-card") && parentTheme.includes(".ess-auth-modal")) {
+        pass("Parent design tokens cover guided forms and shared authentication/dialog surfaces.");
+      }
+    }
+  }
 
   const reportPath = path.join(APP_ROOT, "design-quality-report.json");
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n");
