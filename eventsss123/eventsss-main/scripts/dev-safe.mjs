@@ -17,6 +17,7 @@ const WEB_PORT = Number(process.env.WEB_PORT || 5173);
 process.env.PORT = String(API_PORT);
 process.env.JWT_SECRET ||= randomBytes(48).toString("hex");
 process.env.DATABASE_MODE ||= "auto";
+process.env.DATABASE_URL ||= process.env.DATABASE_URL_LOCAL || "postgresql://ess:ess@127.0.0.1:5432/ess?schema=public";
 
 const services = [
   {
