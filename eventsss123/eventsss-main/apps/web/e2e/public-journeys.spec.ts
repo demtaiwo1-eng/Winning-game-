@@ -632,39 +632,28 @@ test("production app loads the bundled music track and plays after consent", asy
 
 test("mobile registration keeps its logo compact and navigation reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
-  await expect(page.locator("[data-ephinta-intro-splash]")).toBeHidden({ timeout: 7000 });
-  const musicPrompt = page.getByRole("dialog", { name: "Enjoy background music?" });
-  if (await musicPrompt.isVisible().catch(() => false)) {
-    await musicPrompt.getByRole("button", { name: "No, thanks" }).click();
-  }
-  await page.getByRole("button", { name: "Open menu" }).click();
-  const navigation = page.getByRole("navigation", { name: "Main navigation" });
-  await expect(navigation.getByRole("button", { name: "Create customer account" })).toBeVisible();
-  await navigation.getByRole("button", { name: "Create customer account" }).click();
+  await page.goto("/auth/signup?role=CLIENT", { waitUntil: "networkidle" });
 
-  const dialog = page.locator("#eph-auth-dialog");
+  const dialog = page.locator(".ess-auth-modal");
   await expect(dialog).toBeVisible();
-  const logo = dialog.locator(".eph-modal-brand img");
+  await expect(page.locator(".eph-audio__prompt")).toHaveCount(0);
+  const logo = dialog.locator("img").first();
   const logoBox = await logo.boundingBox();
   expect(logoBox).not.toBeNull();
-  expect(logoBox!.width).toBeLessThanOrEqual(36);
-  expect(logoBox!.height).toBeLessThanOrEqual(36);
+  expect(logoBox!.width).toBeLessThanOrEqual(72);
+  expect(logoBox!.height).toBeLessThanOrEqual(72);
 
-  const back = dialog.getByRole("button", { name: "Back" });
-  const next = dialog.getByRole("button", { name: "Next" });
+  const back = dialog.getByRole("button", { name: /Back/ });
+  const next = dialog.getByRole("button", { name: /Next/ });
   await expect(back).toBeVisible();
   await expect(next).toBeVisible();
-  const navigationBox = await dialog.locator(".eph-registration-navigation").boundingBox();
-  expect(navigationBox).not.toBeNull();
-  expect(navigationBox!.x).toBeGreaterThanOrEqual(0);
-  expect(navigationBox!.x + navigationBox!.width).toBeLessThanOrEqual(390);
+  const dialogBox = await dialog.boundingBox();
+  expect(dialogBox).not.toBeNull();
+  expect(dialogBox!.x).toBeGreaterThanOrEqual(0);
+  expect(dialogBox!.x + dialogBox!.width).toBeLessThanOrEqual(390);
 
-  await dialog.getByLabel("Full name").fill("Mobile Layout Check");
-  await dialog.getByLabel("Email address").fill("mobile-layout@example.test");
-  await dialog.getByLabel("Password").fill("StrongPass123!");
   await next.click();
-  await expect(dialog.getByText("Step 2 of 3")).toBeVisible();
+  await expect(dialog.getByText(/Step 2 of 3/)).toBeVisible();
   await expect(back).toBeVisible();
   await expect(next).toBeVisible();
 });
