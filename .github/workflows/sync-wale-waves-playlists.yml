@@ -24,6 +24,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Validate YouTube sync scripts
+        run: |
+          node --check eventsss123/eventsss-main/scripts/authorize-youtube-account.mjs
+          node --check eventsss123/eventsss-main/scripts/sync-wale-waves-playlists.mjs
       - name: Discover playlists owned by the authorised account
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
