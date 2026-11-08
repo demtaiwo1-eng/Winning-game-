@@ -208,3 +208,8 @@ textarea::placeholder {
 .ess-builder-card :where(p, small, li, .muted, .text-muted, .helper-text) {
   color: #514d65 !important;
 }
+
+/* Keep planner form values aligned with the parent design-system ink. */
+.ess-builder-card :where(input, select, textarea) {
+  color: #211d37 !important;
+}
