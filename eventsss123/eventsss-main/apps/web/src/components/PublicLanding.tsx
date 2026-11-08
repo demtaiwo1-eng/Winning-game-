@@ -517,6 +517,18 @@ export default function PublicLanding({
     window.location.assign('/plan');
   }
 
+  function startNamingPlanning() {
+    selectMusicCategory('naming');
+    try { localStorage.setItem('ess:eventDraft', JSON.stringify({ ...draft, type: 'Naming ceremony' })); } catch { /* storage may be disabled */ }
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (onStartBuilder) {
+      onStartBuilder();
+      return;
+    }
+    window.location.assign('/plan');
+  }
+
 
 
   return (
@@ -936,6 +948,8 @@ export default function PublicLanding({
               <div className="eph-hero-cta">
 
                 <button className="eph-btn eph-btn-purple" onClick={startPlanning}>Start planning <span aria-hidden="true">→</span></button>
+
+                <button className="eph-btn eph-btn-outline" onClick={startNamingPlanning}>Plan a Naming Ceremony</button>
 
                 <button className="eph-btn eph-btn-outline" onClick={startBurialPlanning}>Plan a Burial</button>
 
