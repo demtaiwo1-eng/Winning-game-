@@ -41,7 +41,7 @@ Local example:
 ```bash
 export YOUTUBE_CLIENT_ID="your-oauth-client-id"
 export YOUTUBE_CLIENT_SECRET="your-oauth-client-secret"
-export YOUTUBE_OAUTH_REDIRECT_URI="http://127.0.0.1:53682/"
+export YOUTUBE_OAUTH_REDIRECT_URI="http://127.0.0.1:53682"
 node eventsss123/eventsss-main/scripts/authorize-youtube-account.mjs
 ```
 
