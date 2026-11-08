@@ -51,7 +51,7 @@ type EventDraft = {
 
 
 
-const eventTypes = ['Wedding', 'Birthday', 'Naming ceremony', 'Corporate event', 'Graduation', 'Remembrance'];
+const eventTypes = ['Wedding', 'Birthday', 'Naming ceremony', 'Corporate event', 'Graduation', 'Remembrance', 'Burial'];
 
 const vibes = ['Modern', 'Classic', 'Traditional', 'Garden', 'Luxury', 'Intimate'];
 
@@ -487,20 +487,34 @@ export default function PublicLanding({
 
 
 
+  function selectMusicCategory(category: 'wedding' | 'naming' | 'burial') {
+    try { localStorage.setItem('ephinta:music-category', category); } catch { /* category is an optional preference */ }
+    window.dispatchEvent(new CustomEvent('ephinta:music-category-change', { detail: category }));
+  }
+
   function startPlanning() {
-
+    const category = draft.type === 'Naming ceremony' ? 'naming' : draft.type === 'Remembrance' || draft.type === 'Burial' ? 'burial' : 'wedding';
+    selectMusicCategory(category);
     try { localStorage.setItem('ess:eventDraft', JSON.stringify(draft)); } catch { /* storage may be disabled */ }
-
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
     if (onStartBuilder) {
       onStartBuilder();
       return;
     }
-
     window.location.assign('/plan');
+  }
 
+  function startBurialPlanning() {
+    selectMusicCategory('burial');
+    try { localStorage.setItem('ess:eventDraft', JSON.stringify({ ...draft, type: 'Burial' })); } catch { /* storage may be disabled */ }
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (onStartBuilder) {
+      onStartBuilder();
+      return;
+    }
+    window.location.assign('/plan');
   }
 
 
@@ -922,6 +936,8 @@ export default function PublicLanding({
               <div className="eph-hero-cta">
 
                 <button className="eph-btn eph-btn-purple" onClick={startPlanning}>Start planning <span aria-hidden="true">→</span></button>
+
+                <button className="eph-btn eph-btn-outline" onClick={startBurialPlanning}>Plan a Burial</button>
 
                 <button className="eph-btn eph-btn-outline" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>Explore how it works</button>
 
