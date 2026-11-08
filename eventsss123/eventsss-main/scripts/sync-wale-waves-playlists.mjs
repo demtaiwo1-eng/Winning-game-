@@ -20,7 +20,7 @@ import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
 const API = "https://www.googleapis.com/youtube/v3";
-const OUTPUT = resolve(process.env.EPHINTA_PLAYLIST_OUTPUT || "apps/web/public/data/wale-waves-playlists.json");
+const OUTPUT = resolve(process.env.EPHINTA_PLAYLIST_OUTPUT || "eventsss123/eventsss-main/apps/web/public/data/wale-waves-playlists.json");
 const CLIENT_ID = process.env.YOUTUBE_CLIENT_ID?.trim();
 const CLIENT_SECRET = process.env.YOUTUBE_CLIENT_SECRET?.trim();
 const REFRESH_TOKEN = process.env.YOUTUBE_REFRESH_TOKEN?.trim();
