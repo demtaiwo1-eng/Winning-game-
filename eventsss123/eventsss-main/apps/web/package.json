@@ -10,7 +10,8 @@
     "test": "vitest run src",
     "test:e2e": "playwright test",
     "design:audit": "node scripts/design-quality-gate.mjs",
-    "design:audit:strict": "node scripts/design-quality-gate.mjs --strict"
+    "design:audit:strict": "node scripts/design-quality-gate.mjs --strict",
+    "music:playlist:update": "node scripts/update-youtube-playlist.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^6.0.3",
