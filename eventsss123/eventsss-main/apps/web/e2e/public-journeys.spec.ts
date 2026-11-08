@@ -792,7 +792,7 @@ test("Plan a Naming Ceremony selects the naming soundtrack", async ({ page }) =>
   });
   await page.goto("/");
   await page.getByRole("button", { name: "Plan a Naming Ceremony" }).click();
-  await expect(page).toHaveURL(/\\/plan$/);
+  await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Naming ceremony celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("PERSONAL");
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:music-category"))).toBe("naming");
