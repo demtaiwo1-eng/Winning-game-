@@ -18,7 +18,7 @@ exec > >(tee -a "$LOG") 2>&1
 step() { printf '\n========== %s ==========\n' "$1"; }
 die() { echo "STOP: $*" >&2; exit 1; }
 has_script() {
-  node -e 'const p=require(process.argv[1]); process.exit(p.scripts?.[process.argv[2]] ? 0 : 1)' "$1" "$2"
+  node -e 'const p=require(require("node:path").resolve(process.argv[1])); process.exit(p.scripts?.[process.argv[2]] ? 0 : 1)' "$1" "$2"
 }
 
 command -v git >/dev/null || die "Git is required."
@@ -149,7 +149,7 @@ gh run list --repo "$REPO" --branch main --limit 15
 step "10. Safe branch audit (report only; no deletion)"
 main_tree="$(git rev-parse 'origin/main^{tree}')"
 while IFS= read -r branch; do
-  [[ -z "$branch" || "$branch" == "origin/main" ]] && continue
+  [[ -z "$branch" || "$branch" == "origin/main" || "$branch" == "origin/HEAD" ]] && continue
   local_branch="${branch#origin/}"
   if git show-ref --verify --quiet "refs/remotes/$branch"; then
     tree="$(git rev-parse "$branch^{tree}")"
