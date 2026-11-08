@@ -196,3 +196,38 @@ This section supersedes older point-in-time workflow and deployment statements a
 ### Safety decision
 
 Do not label EPHINTA production-ready until all owner/provider/device/database gates above have evidence. Keep payment collection in sandbox/test mode, paid entitlements fail-closed, and advertising disabled until their required approvals and configuration exist.
+
+## Release-readiness follow-up — 2026-11-08
+
+This section records the work completed after the 2026-11-07 acceptance snapshot. It does not waive owner/provider/device gates.
+
+### Merged to main
+
+- PR #75 merged as `181525b463a0eda7ab5bb584490c5f96b084a907`. Its final PR head passed the parent-theme, responsive UX, API/database, browser journey, Android compatibility, iOS Simulator and application verification workflows.
+- PR #76 merged as `d31670c54779a7cb30f8ca839618c1095c624f32`. It adds a manual owner-controlled Android signed APK/AAB workflow and gives the full-stack verification job a disposable PostgreSQL 16 service. All five PR verification workflows passed, including the full-stack startup smoke, web/Android build and unsigned iOS Simulator build.
+- Render API service `ephinta_wss` and static site `ephinta-web` have live deployments for main commit `cf3fd323e6356c963103f4bcf9a401437a89598c` (verified 2026-11-08). The API reports `/health` and `/ready` HTTP 200; 24 migrations are applied and baseline categories/plans initialize. This is deployment evidence, not a physical-device or live-payment sign-off.
+
+### Prepared and under review
+
+- PR #83 merged as `cf3fd323e6356c963103f4bcf9a401437a89598c`. All six verification workflows passed, including a dedicated PostgreSQL 16 custom-format dump/restore into an empty disposable DB and refusal of a non-empty target. This validates the restore script against a synthetic fixture, not the owner's actual archive.
+- PR #80 merged as `7c7df407e752e42da230a4033e4d466af2b53643`; it documents OPay and Eversend merchant onboarding and the Cleva product/API documentation gap.
+- PR #81 merged as `926b05d2ff3df4c76172b0e69e056efda3b0883d`; it prepares an owner-controlled App Store Connect signed IPA workflow for bundle ID `com.eventselfsolutions.app`. The pull-request YAML validation and all five application verification workflows passed; actual signing still requires Apple owner secrets.
+- PR #82 prepares a Codespaces helper that creates an Android upload key in the owner's home directory and writes its four values directly to protected GitHub Actions secrets through GitHub CLI stdin. It refuses to overwrite existing keys/secrets.
+- The Android signed-release workflow is merged, but no production-signed APK/AAB exists until the owner runs the Codespaces helper (or configures the four secrets manually) and dispatches the workflow.
+
+### Still open — actual evidence required
+
+1. **Android signing:** generate and securely back up the owner upload keystore, configure the four repository secrets, run the signed release workflow, verify the certificate fingerprint, and install the resulting signed APK on a physical device.
+2. **Database backup:** the historical owner archive `ephinta_db_20261030.dump` was reported as uploaded to the owner's Google Drive, but its exact bytes and full checksum are not available in this workspace. The backup register workbook still has blank filename/size/checksum/verification fields. The archive itself is not available in this repository or current ChatGPT file library; its exact bytes must be supplied from the owner's secure Google Drive copy before a full restore rehearsal can be performed. Synthetic CI fixtures do not validate the owner archive.
+3. **Cleva:** confirm whether the intended product is Cleva Global merchant payments or the separate GetCleva wallet product. Cleva Global's public integration page currently marks API documentation as coming soon. Obtain the account-specific official API contract and sandbox access before coding an adapter.
+4. **Eversend:** complete business verification, request Merchant API access, obtain credentials and whitelist the required outbound IP. Then implement and test only the approved endpoints.
+5. **OPay:** existing Nigeria cashier integration remains sandbox. Obtain live merchant approval and complete OPay joint testing, webhook verification, reconciliation and separately approved refund/payout/FX tests before live mode.
+6. **iOS:** configure Apple Distribution P12, App Store provisioning profile and Team ID secrets; run the signed IPA workflow, submit to TestFlight, and test on a physical iPhone.
+7. **Physical-device acceptance:** complete the real-device checklist for install, registration/sign-in, navigation, permissions, offline, NFC/Bluetooth where supported, notifications and sandbox payments.
+8. **Database continuity:** the Render Free database's previously reported expiry of 2026-11-26 remains a time-sensitive continuity risk. No paid resource or production database change has been made.
+
+### Safety status
+
+- No production database reset, restore, destructive migration, or credential rotation was performed.
+- No signing key, Apple certificate, provisioning profile, merchant secret or live payment credential was generated or committed.
+- Payment traffic remains sandbox/test and live provider operations remain blocked pending explicit provider and owner acceptance.

@@ -1,6 +1,11 @@
 name: EPHINTA signed Android release
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/ephinta-android-signed-release.yml"
+      - "eventsss123/eventsss-main/docs/ANDROID_SIGNED_RELEASE.md"
+      - "eventsss123/eventsss-main/scripts/setup-android-signing.sh"
   workflow_dispatch:
     inputs:
       release_label:
@@ -17,7 +22,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate-release-config:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate workflow YAML and required secret references
+        run: |
+          ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ephinta-android-signed-release.yml", aliases: true)'
+          grep -q 'secrets.ANDROID_KEYSTORE_BASE64' .github/workflows/ephinta-android-signed-release.yml
+          grep -q 'secrets.ANDROID_KEYSTORE_PASSWORD' .github/workflows/ephinta-android-signed-release.yml
+          grep -q 'secrets.ANDROID_KEY_ALIAS' .github/workflows/ephinta-android-signed-release.yml
+          grep -q 'secrets.ANDROID_KEY_PASSWORD' .github/workflows/ephinta-android-signed-release.yml
+
   signed-release:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     name: Build and verify signed APK and AAB
     runs-on: ubuntu-latest
     timeout-minutes: 45
