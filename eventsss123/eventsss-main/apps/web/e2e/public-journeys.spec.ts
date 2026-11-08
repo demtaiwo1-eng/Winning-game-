@@ -771,6 +771,23 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   await expect(page.getByRole("heading", { name: "Stay in control" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Explore the marketplace" })).toBeVisible();
 
+  // The planner workspace uses the shared global responsive dashboard styles:
+  // full-width content, a real horizontal tab bar, and no phone-width page overflow.
+  const plannerShell = page.locator(".ess-content > .ess-portal-stack");
+  await expect(plannerShell).toHaveCSS("display", "grid");
+  const plannerTabs = plannerShell.locator(".ess-filter-row");
+  await expect(plannerTabs).toBeVisible();
+  await expect(plannerTabs).toHaveCSS("display", "flex");
+  await expect(plannerTabs).toHaveCSS("overflow-x", "auto");
+  await expect(plannerTabs.locator(".ess-chip-active")).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(plannerTabs).toBeVisible();
+  const mobileLayoutFits = await page.evaluate(
+    () => document.documentElement.scrollWidth <= window.innerWidth,
+  );
+  expect(mobileLayoutFits).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 900 });
+
   // The saved follow-up questionnaire remains available in Overview.
   await page.getByRole("button", { name: "Overview", exact: true }).click();
   await expect(
