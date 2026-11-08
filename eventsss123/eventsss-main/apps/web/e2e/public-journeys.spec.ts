@@ -766,3 +766,19 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   ).toBeVisible();
   await expect(page.getByText("What would make this event a success for you?")).toBeVisible();
 });
+
+test("Plan a Burial opens the burial planner and selects the burial soundtrack", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ephinta:sound", "off");
+  });
+  await page.route("**/data/wale-waves-playlists.json", async (route) => {
+    await route.fulfill({ status: 404, body: "not synced yet" });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Plan a Burial" }).click();
+  await expect(page).toHaveURL(/\\/plan$/);
+  await expect(page.getByLabel("Event name")).toHaveValue("Burial celebration");
+  await expect(page.getByLabel("Event format")).toHaveValue("CULTURAL");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:music-category"))).toBe("burial");
+  await expect(page.locator("audio")).toHaveAttribute("src", /Burials/);
+});
