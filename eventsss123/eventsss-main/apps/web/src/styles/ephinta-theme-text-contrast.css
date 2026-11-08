@@ -137,7 +137,7 @@ textarea::placeholder {
        .ess-auth-modal, .eph-modal, [role="dialog"], [aria-modal="true"],
        dialog[open]) {
   color: var(--ephinta-theme-ink) !important;
-  background: linear-gradient(155deg, var(--ephinta-theme-surface) 0%, var(--ephinta-theme-surface-soft) 100%) !important;
+  background: var(--ephinta-theme-surface) !important;
   border-color: var(--ephinta-theme-border) !important;
 }
 :where(.workspace-card, .dashboard-card, .stat-card, .panel-card, .surface-card,
@@ -214,4 +214,16 @@ textarea::placeholder {
 .ess-builder-card select,
 .ess-builder-card textarea {
   color: #211d37 !important;
+}
+
+
+/* The music-consent prompt follows the selected parent theme while retaining
+   the gradient surface required by the shared dialog design. */
+.eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
+  background-image: linear-gradient(
+    155deg,
+    var(--ephinta-theme-surface) 0%,
+    var(--ephinta-theme-surface-soft) 100%
+  ) !important;
+  color: var(--ephinta-theme-ink) !important;
 }
