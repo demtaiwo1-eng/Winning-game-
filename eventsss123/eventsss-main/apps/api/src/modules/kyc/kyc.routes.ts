@@ -13,6 +13,9 @@ export const kycRouter = Router();
 type BytidKycData = {
   id: string;
   reference: string;
+  url?: string;
+  environment?: string;
+  expires_at?: string;
   status?: string;
   outcome?: string | null;
   require_document?: boolean;
@@ -89,6 +92,9 @@ kycRouter.use(requireAuth);
 
 /** Start hosted BVN/NIN + liveness + face-match verification for the signed-in user. */
 kycRouter.post("/bytid/requests", asyncHandler(async (req, res) => {
+  if (req.body?.consent !== true) {
+    throw new HttpError(400, "KYC_CONSENT_REQUIRED", "You must consent to identity verification before continuing.");
+  }
   if (!process.env.BYTID_API_KEY?.trim()) {
     throw new HttpError(503, "KYC_PROVIDER_NOT_CONFIGURED", "Identity verification is not configured yet.");
   }
@@ -99,6 +105,13 @@ kycRouter.post("/bytid/requests", asyncHandler(async (req, res) => {
     throw new HttpError(503, "KYC_REDIRECT_MISCONFIGURED", "The application return URL must use HTTPS.");
   }
 
+  const existingPending = await prisma.verificationRequest.findFirst({
+    where: { userId: user.id, kind: VerificationKind.IDENTITY, status: VerificationStatus.PENDING, notes: { startsWith: "Identity verification initiated with Bytid." } },
+    select: { id: true },
+  });
+  if (existingPending) {
+    throw new HttpError(409, "KYC_ALREADY_PENDING", "You already have an identity verification in progress. Check its status before starting another.");
+  }
   const request = await prisma.verificationRequest.create({
     data: { userId: user.id, kind: VerificationKind.IDENTITY, status: VerificationStatus.PENDING, notes: "Identity verification initiated with Bytid." },
   });
