@@ -342,3 +342,11 @@ dialog[open] :is(input, select, textarea):focus {
     font-size: 11px;
   }
 }
+
+
+/* Keep the consent dialog on the shared parent surface even when legacy audio
+   component styles are emitted later by the bundler. */
+.eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
+  background: linear-gradient(155deg, #fff 0%, #fbfaff 100%) !important;
+  color: var(--eph-parent-ink) !important;
+}
