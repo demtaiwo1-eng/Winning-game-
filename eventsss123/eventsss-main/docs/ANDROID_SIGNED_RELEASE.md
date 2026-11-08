@@ -4,6 +4,7 @@ The production release workflow is prepared, but it cannot produce a signed APK 
 
 ## Canonical production workflow
 
+- Android application ID: `com.ephinta.app`
 - Workflow: `.github/workflows/ephinta-production-apk.yml`
 - Manual run: builds and verifies a signed APK and AAB, then uploads the artifacts.
 - Version tag (`v*`): also publishes the production GitHub Release and the stable web OTA bundle, then verifies that the OTA manifest and bundle are reachable through the production API.
@@ -36,6 +37,8 @@ You will be prompted for a strong keystore password and a separate private-key p
 
 If GitHub reports that your account cannot manage repository Actions secrets or variables, stop and have a repository administrator perform this one-time setup. Do not paste signing credentials into chat or workflow inputs.
 
+If the owner configures secrets manually instead, use the exact same owner-generated JKS identity and configure all four secret names plus the `ANDROID_CERT_SHA256` variable. Do not mix an existing key with a newly generated keystore. The helper deliberately refuses to rotate or overwrite an existing or partially configured signing identity.
+
 ## Build and verify the production APK
 
 After the secrets and encrypted backup are configured and the backup has been downloaded safely, run from the repository root:
@@ -63,7 +66,9 @@ Optional Firebase push notification configuration:
 
 ## Production release and OTA
 
-A manual workflow run produces signed APK/AAB artifacts for review. A reviewed version tag such as `v1.0.0` triggers the release path that publishes:
+A manual workflow run produces signed APK/AAB artifacts for review. Confirm the Android application ID is `com.ephinta.app` and that the generated `versionCode` is greater than the last Play Console upload. Enable Play App Signing and use the AAB for internal testing before any public rollout.
+
+A reviewed version tag such as `v1.0.0` triggers the release path that publishes:
 
 - `ephinta-production.apk`
 - `ephinta-production.aab`
@@ -75,4 +80,4 @@ The OTA assets are published under the stable `ephinta-web-latest` release tag. 
 
 ## Remaining acceptance requirements
 
-A successful GitHub build is not a substitute for owner acceptance. Before distributing, install the signed APK on a physical Android device and verify registration/sign-in, planner and vendor dashboards, navigation, permissions, API connectivity, and sandbox payment flows. The AAB is intended for Play Console internal testing; it does not mean the app has been published to Google Play.
+A successful GitHub build is not a substitute for owner acceptance. Before distributing, install the signed APK on a physical Android device and verify registration/sign-in, planner and vendor dashboards, navigation, permissions, API connectivity, and sandbox payment flows. The AAB is intended for Play Console internal testing; it does not mean the app has been published to Google Play. Keep the Android package ID distinct from the iOS bundle ID (`com.eventselfsolutions.app`).
