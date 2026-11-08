@@ -58,7 +58,7 @@ async function youtubeList(resource, params, token) {
     url.searchParams.set("maxResults", "50");
     if (pageToken) url.searchParams.set("pageToken", pageToken);
     const response = await fetch(url, {
-      headers: { Authorization: "Bearer " + token, Accept: "application/json },
+      headers: { "Authorization": "Bearer " + token, "Accept": "application/json" },
       signal: AbortSignal.timeout(30_000),
     });
     const payload = await response.json().catch(() => ({}));
