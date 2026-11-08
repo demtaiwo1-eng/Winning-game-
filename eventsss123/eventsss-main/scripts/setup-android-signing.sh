@@ -35,30 +35,33 @@ The private key remains in your Codespace home directory; copy it to two secure
 owner-controlled backups after this script completes. Never commit it.
 NOTICE
 
+read -rsp "Choose a strong new keystore password: " STORE_PASSWORD
+printf '\n'
+read -rsp "Confirm the keystore password: " CONFIRM_PASSWORD
+printf '\n'
+[[ "$STORE_PASSWORD" == "$CONFIRM_PASSWORD" ]] || fail "Passwords did not match. No key was generated."
+
+export EPHINTA_KEYSTORE_PASSWORD="$STORE_PASSWORD"
 keytool -genkeypair -v \
   -keystore "$KEYSTORE" \
   -storetype JKS \
   -alias "$ALIAS" \
   -keyalg RSA \
   -keysize 4096 \
-  -validity 10000
+  -validity 10000 \
+  -storepass:env EPHINTA_KEYSTORE_PASSWORD \
+  -keypass:env EPHINTA_KEYSTORE_PASSWORD
 
 chmod 600 "$KEYSTORE"
 base64 -w0 "$KEYSTORE" > "$BASE64_FILE"
 chmod 600 "$BASE64_FILE"
-
-read -rsp "Enter the keystore password you just created: " STORE_PASSWORD
-printf '\n'
-read -rsp "Confirm the keystore password: " CONFIRM_PASSWORD
-printf '\n'
-[[ "$STORE_PASSWORD" == "$CONFIRM_PASSWORD" ]] || fail "Passwords did not match. No GitHub secrets were written."
 
 # gh secret set reads each secret from stdin; values never appear in shell args or logs.
 gh secret set ANDROID_KEYSTORE_BASE64 --repo "$REPO" < "$BASE64_FILE"
 printf '%s' "$STORE_PASSWORD" | gh secret set ANDROID_KEYSTORE_PASSWORD --repo "$REPO"
 printf '%s' "$ALIAS" | gh secret set ANDROID_KEY_ALIAS --repo "$REPO"
 printf '%s' "$STORE_PASSWORD" | gh secret set ANDROID_KEY_PASSWORD --repo "$REPO"
-unset STORE_PASSWORD CONFIRM_PASSWORD
+unset STORE_PASSWORD CONFIRM_PASSWORD EPHINTA_KEYSTORE_PASSWORD
 
 printf '\nConfigured secret names (values are never readable):\n'
 gh secret list --repo "$REPO" --json name --jq '.[] | select(.name | startswith("ANDROID_KEY")) | .name'
