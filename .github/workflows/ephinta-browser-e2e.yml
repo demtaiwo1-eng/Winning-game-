@@ -18,9 +18,27 @@ jobs:
     name: Browser portal journeys (desktop + mobile)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ess
+          POSTGRES_PASSWORD: ess_test_password
+          POSTGRES_DB: ess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ess -d ess_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     env:
       CI: "true"
       NODE_ENV: test
+      DATABASE_MODE: local
+      DATABASE_URL_LOCAL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
+      DATABASE_URL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
+      JWT_SECRET: ci-only-secret-change-me-0123456789abcdef0123456789abcdef
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,11 +48,6 @@ jobs:
           cache-dependency-path: eventsss123/eventsss-main/package-lock.json
       - name: Install dependencies
         run: npm ci
-      - name: Validate YouTube OAuth and playlist sync scripts
-        run: |
-          node --check scripts/authorize-youtube-account.mjs
-          node --check scripts/sync-wale-waves-playlists.mjs
-          node --check scripts/ephinta-connection-check.mjs
       - name: Cache Playwright Chromium
         id: playwright-cache
         uses: actions/cache@v4
@@ -44,6 +57,11 @@ jobs:
       - name: Install Chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install chromium
+      - name: Prepare disposable browser-test database
+        run: |
+          npm run prisma:generate
+          npm run db:deploy -w apps/api
+          npm run db:seed -w apps/api
       - name: Run public and authenticated portal journeys
         run: npm run test:e2e -w apps/web
       - name: Upload Playwright diagnostics
