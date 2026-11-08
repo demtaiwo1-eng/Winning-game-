@@ -21,7 +21,8 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [isMuted, setIsMuted] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const skipNextAutoPlay = useRef(false);\n  const shouldResumeTrack = useRef(true);
+  const skipNextAutoPlay = useRef(false);
+  const shouldResumeTrack = useRef(true);
   const currentTrack = TRACKS[trackIndex];
 
   useEffect(() => {
@@ -84,7 +85,10 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     if (audioRef.current) { shouldResumeTrack.current = false; skipNextAutoPlay.current = true; void startPlayback(audioRef.current); }
   }
 
-  function changeTrack(direction: -1 | 1, resume = isPlaying) {\n    shouldResumeTrack.current = resume;\n    setTrackIndex((current) => (current + direction + TRACKS.length) % TRACKS.length);\n  }
+  function changeTrack(direction: -1 | 1, resume = isPlaying) {
+    shouldResumeTrack.current = resume;
+    setTrackIndex((current) => (current + direction + TRACKS.length) % TRACKS.length);
+  }
 
   async function togglePlayback() {
     const audio = audioRef.current;
@@ -111,7 +115,11 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
           </div>
         </section></div>
       )}
-      {preferencesLoaded && consent === false && (\n        <button type="button" className="eph-audio__restore" onClick={() => chooseConsent(true)}>♫ Turn music on</button>\n      )}\n\n      {preferencesLoaded && consent === true && (
+      {preferencesLoaded && consent === false && (
+        <button type="button" className="eph-audio__restore" onClick={() => chooseConsent(true)}>♫ Turn music on</button>
+      )}
+
+      {preferencesLoaded && consent === true && (
         <section className="eph-audio__player" aria-label="EPHINTA music player">
           <div className="eph-audio__player-heading">
             <span className="eph-audio__player-art" aria-hidden="true">♫</span>
