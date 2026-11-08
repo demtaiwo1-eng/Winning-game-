@@ -43,6 +43,20 @@ function bytidOutcomeIsVerified(data: BytidKycData, requireDocument = data.requi
     && (!requireDocument || data.document?.status === "verified");
 }
 
+function bytidOutcomeIsRejected(data: BytidKycData, requireDocument = data.require_document === true) {
+  if (["face_mismatch", "liveness_failed", "not_found", "document_rejected", "document_mismatch"].includes(data.outcome || "")) return true;
+  if (data.status !== "completed" || data.outcome !== "verified") return false;
+  // A webhook may contain a summary outcome before all nested detail fields.
+  // Do not reject an otherwise verified session until an explicit failed check
+  // is present; the authenticated status endpoint can fetch the full result.
+  if (data.verification?.status && data.verification.status !== "verified") return true;
+  if (data.verification?.face_match?.status && data.verification.face_match.status !== "matched") return true;
+  if (data.verification?.face_match?.liveness && data.verification.face_match.liveness !== "passed") return true;
+  if (data.liveness?.status && data.liveness.status !== "passed") return true;
+  if (requireDocument && data.document?.status && data.document.status !== "verified") return true;
+  return false;
+}
+
 /** Public provider webhook. Raw-body HMAC validation is mandatory. */
 kycRouter.post("/bytid/webhook", asyncHandler(async (req, res) => {
   const rawBody = (req as typeof req & { rawBody?: Buffer }).rawBody;
@@ -65,7 +79,7 @@ kycRouter.post("/bytid/webhook", asyncHandler(async (req, res) => {
         const consentMeta = consentAudit?.meta as { requireDocument?: boolean } | null;
         if (bytidOutcomeIsVerified(data, consentMeta?.requireDocument === true)) {
           await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.VERIFIED, notes: "Identity verified by Bytid hosted KYC." } });
-        } else if (data.status === "completed" && data.outcome && data.outcome !== "error") {
+        } else if (bytidOutcomeIsRejected(data, consentMeta?.requireDocument === true)) {
           await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.REJECTED, notes: `Bytid KYC outcome: ${data.outcome.slice(0, 100)}` } });
         }
       }
@@ -176,7 +190,7 @@ kycRouter.get("/bytid/requests/:id", asyncHandler(async (req, res) => {
   const consentMeta = consentAudit?.meta as { requireDocument?: boolean } | null;
   if (request.status === VerificationStatus.PENDING && bytidOutcomeIsVerified(result, consentMeta?.requireDocument === true)) {
     await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.VERIFIED, notes: "Identity verified by Bytid hosted KYC." } });
-  } else if (request.status === VerificationStatus.PENDING && result.status === "completed" && result.outcome && result.outcome !== "error") {
+  } else if (request.status === VerificationStatus.PENDING && bytidOutcomeIsRejected(result, consentMeta?.requireDocument === true)) {
     await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.REJECTED, notes: `Bytid KYC outcome: ${result.outcome.slice(0, 100)}` } });
   }
   const latest = await prisma.verificationRequest.findUnique({ where: { id: request.id }, select: { id: true, status: true, createdAt: true, reviewedAt: true } });
