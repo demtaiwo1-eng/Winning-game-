@@ -123,7 +123,6 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   useEffect(() => {
     try {
       localStorage.setItem("ephinta:sound-volume", String(volume));
-      localStorage.setItem("ephinta:music-track", String(trackIndex));
     } catch { /* Optional preference only. */ }
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume, trackIndex]);
