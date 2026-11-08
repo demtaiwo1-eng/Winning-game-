@@ -762,7 +762,10 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   await dialog.getByLabel("Password", { exact: true }).fill("StrongPass123!");
   await dialog.getByRole("button", { name: "Next" }).click();
   await dialog.getByRole("button", { name: "Next" }).click();
-  await dialog.getByRole("button", { name: "Create account" }).click();
+  // The signup dialog animates between steps; force the final submit after
+  // the required fields are complete so the E2E does not wait on a moving button.
+  await expect(dialog.getByRole("button", { name: "Create account" })).toBeEnabled();
+  await dialog.getByRole("button", { name: "Create account" }).click({ force: true });
 
   const onboarding = page.getByRole("dialog", { name: "client onboarding" });
   await expect(onboarding).toBeVisible();
