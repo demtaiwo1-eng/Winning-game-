@@ -33,14 +33,14 @@ type BytidKycData = {
   document?: { status?: string } | null;
 };
 
-function bytidOutcomeIsVerified(data: BytidKycData) {
+function bytidOutcomeIsVerified(data: BytidKycData, requireDocument = data.require_document === true) {
   return data.status === "completed"
     && data.outcome === "verified"
     && data.verification?.status === "verified"
     && data.verification.face_match?.status === "matched"
     && data.verification.face_match.liveness === "passed"
     && data.liveness?.status === "passed"
-    && (!data.require_document || data.document?.status === "verified");
+    && (!requireDocument || data.document?.status === "verified");
 }
 
 /** Public provider webhook. Raw-body HMAC validation is mandatory. */
@@ -61,7 +61,9 @@ kycRouter.post("/bytid/webhook", asyncHandler(async (req, res) => {
     if (match) {
       const request = await prisma.verificationRequest.findUnique({ where: { id: match[1] } });
       if (request && request.status === VerificationStatus.PENDING) {
-        if (bytidOutcomeIsVerified(data)) {
+        const consentAudit = await prisma.auditLog.findFirst({ where: { entity: "VerificationRequest", entityId: request.id, action: "BYTID_KYC_CONSENT" } });
+        const consentMeta = consentAudit?.meta as { requireDocument?: boolean } | null;
+        if (bytidOutcomeIsVerified(data, consentMeta?.requireDocument === true)) {
           await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.VERIFIED, notes: "Identity verified by Bytid hosted KYC." } });
         } else if (data.status === "completed" && data.outcome && data.outcome !== "error") {
           await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.REJECTED, notes: `Bytid KYC outcome: ${data.outcome.slice(0, 100)}` } });
@@ -153,7 +155,7 @@ kycRouter.post("/bytid/requests", asyncHandler(async (req, res) => {
       action: "BYTID_KYC_STARTED",
       entity: "VerificationRequest",
       entityId: request.id,
-      meta: { provider: "BYTID", providerRequestId: providerRequest.id, reference, environment: providerRequest.environment || "unknown", consent: true, consentVersion: "2026-11-08" },
+      meta: { provider: "BYTID", providerRequestId: providerRequest.id, reference, environment: providerRequest.environment || "unknown", requireDocument: process.env.BYTID_REQUIRE_DOCUMENT === "true" },
     } });
     return res.status(201).json({ requestId: request.id, provider: "BYTID", status: providerRequest.status || "pending", verificationUrl: providerRequest.url, expiresAt: providerRequest.expires_at || null });
   } catch (error) {
@@ -170,7 +172,9 @@ kycRouter.get("/bytid/requests/:id", asyncHandler(async (req, res) => {
   const meta = started?.meta as { providerRequestId?: string } | null;
   if (!meta?.providerRequestId) throw new HttpError(409, "KYC_PROVIDER_SESSION_MISSING", "No active provider session is linked to this request.");
   const result = await bytidRequest<BytidKycData>(`kyc/requests/${encodeURIComponent(meta.providerRequestId)}`, "GET");
-  if (request.status === VerificationStatus.PENDING && bytidOutcomeIsVerified(result)) {
+  const consentAudit = await prisma.auditLog.findFirst({ where: { entity: "VerificationRequest", entityId: request.id, action: "BYTID_KYC_CONSENT" } });
+  const consentMeta = consentAudit?.meta as { requireDocument?: boolean } | null;
+  if (request.status === VerificationStatus.PENDING && bytidOutcomeIsVerified(result, consentMeta?.requireDocument === true)) {
     await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.VERIFIED, notes: "Identity verified by Bytid hosted KYC." } });
   } else if (request.status === VerificationStatus.PENDING && result.status === "completed" && result.outcome && result.outcome !== "error") {
     await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.REJECTED, notes: `Bytid KYC outcome: ${result.outcome.slice(0, 100)}` } });
