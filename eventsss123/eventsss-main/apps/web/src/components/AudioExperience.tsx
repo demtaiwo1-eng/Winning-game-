@@ -53,6 +53,8 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     try {
       const savedVolume = Number(localStorage.getItem("ephinta:sound-volume"));
       if (Number.isFinite(savedVolume) && savedVolume >= 0 && savedVolume <= 0.7) setVolume(savedVolume);
+      const savedTrack = Number(localStorage.getItem("ephinta:music-track"));
+      if (Number.isInteger(savedTrack) && savedTrack >= 0 && savedTrack < categoryTracks.length) setTrackIndex(savedTrack);
       const savedSound = localStorage.getItem("ephinta:sound");
       if (savedSound === "off") setConsent(false);
       if (savedSound === "on") setConsent(true);
@@ -123,6 +125,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   useEffect(() => {
     try {
       localStorage.setItem("ephinta:sound-volume", String(volume));
+      localStorage.setItem("ephinta:music-track", String(trackIndex));
     } catch { /* Optional preference only. */ }
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume, trackIndex]);
