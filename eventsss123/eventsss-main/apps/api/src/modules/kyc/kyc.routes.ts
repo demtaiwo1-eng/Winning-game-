@@ -128,6 +128,14 @@ kycRouter.post("/bytid/requests", asyncHandler(async (req, res) => {
   });
   redirect.searchParams.set("requestId", request.id);
   const reference = `ephinta-${request.id}`;
+  await prisma.auditLog.create({ data: {
+    actorId: user.id,
+    action: "BYTID_KYC_CONSENT",
+    entity: "VerificationRequest",
+    entityId: request.id,
+    ip: req.ip,
+    meta: { provider: "BYTID", consent: true, consentVersion: "2026-11-08", requireDocument: process.env.BYTID_REQUIRE_DOCUMENT === "true" },
+  } });
   try {
     const providerRequest = await bytidRequest<BytidKycData & { url?: string }>("kyc/requests", "POST", {
       reference,
