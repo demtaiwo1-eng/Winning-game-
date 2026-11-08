@@ -59,7 +59,7 @@ keytool -genkeypair -v \
   -storepass:env EPHINTA_STORE_PASSWORD -keypass:env EPHINTA_KEY_PASSWORD
 chmod 600 "$KEYSTORE"
 
-FINGERPRINT="$(keytool -list -v -keystore "$KEYSTORE" -storepass:env EPHINTA_STORE_PASSWORD -alias "$ALIAS" 2>/dev/null | awk -F': *' '/SHA256:/{print $NF; exit}')"
+FINGERPRINT="$(keytool -list -v -keystore "$KEYSTORE" -storepass:env EPHINTA_STORE_PASSWORD -alias "$ALIAS" 2>/dev/null | awk '/SHA256:/ {sub(/^.*SHA256:[[:space:]]*/, ""); print; exit}')"
 [[ -n "$FINGERPRINT" ]] || fail "Could not read the signing certificate SHA-256 fingerprint."
 
 printf 'Saving signing credentials to GitHub Actions secrets...\n'
