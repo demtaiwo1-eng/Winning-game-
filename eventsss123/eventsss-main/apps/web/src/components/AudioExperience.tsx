@@ -93,7 +93,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   async function togglePlayback() {
     const audio = audioRef.current;
     if (!audio) return;
-    if (!audio.paused) { audio.pause(); setIsPlaying(false); setStatus("Background music paused."); return; }
+    if (!audio.paused) { shouldResumeTrack.current = false; audio.pause(); setIsPlaying(false); setStatus("Background music paused."); return; }
     await startPlayback(audio);
   }
 
