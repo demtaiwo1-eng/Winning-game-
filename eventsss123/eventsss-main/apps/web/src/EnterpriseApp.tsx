@@ -284,7 +284,7 @@ function ClientPortal({
 }) {
   const [tab, setTab] = useDashboardTab(
     ["overview", "checklist", "planner", "checkin", "marketplace", "wallet", "readiness", "messages", "notifications", "verifiers", "plans", "kyc", "feedback"] as const,
-    "marketplace",
+    "overview",
   );
   const [bookingNotice, setBookingNotice] = useState("");
   const [readinessEvents, setReadinessEvents] = useState<Array<{ id: string; title: string; startsAt?: string | null }>>([]);
@@ -3058,9 +3058,19 @@ function AuthModal({
         <button className="ess-close" onClick={onClose}>
           ×
         </button>
-        <div className="ess-auth-brand">
-          <img src="/brand/ephinta_logo2.png" alt="" />
-          <span>EPHINTA</span>
+        <div className="ess-auth-brand" aria-label="EPHINTA registration">
+          <span className="ess-auth-brand-mark">
+            <img
+              src="/brand/ephinta_logo2.png"
+              alt="EPHINTA logo"
+              onError={(event) => {
+                event.currentTarget.hidden = true;
+                event.currentTarget.parentElement?.classList.add("logo-fallback");
+              }}
+            />
+            <span aria-hidden="true">EP</span>
+          </span>
+          <span className="ess-auth-brand-name">EPHINTA</span>
         </div>
         <p className="ess-eyebrow">{mode === "signup" ? `${roleMeta[role].short} registration` : "Secure access"}</p>
         <h2 id="ess-auth-title">
