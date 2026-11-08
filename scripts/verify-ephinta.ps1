@@ -8,6 +8,7 @@ the single authorized device connected through adb.
 #>
 param(
   [switch]$SkipAndroid,
+  [switch]$SkipBrowser,
   [switch]$InstallOnConnectedDevice
 )
 
@@ -74,8 +75,12 @@ try {
   Invoke-Npm "API, web unit, and KYC checks" @("run", "check")
   Invoke-Npm "Production web build" @("run", "build:web")
   Invoke-Npm "Production API build" @("run", "build", "-w", "apps/api")
-  Invoke-Npm "Install Playwright Chromium" @("exec", "--workspace", "@ess/web", "--", "playwright", "install", "chromium")
-  Invoke-Npm "Desktop and mobile browser journeys" @("run", "test:e2e", "-w", "apps/web")
+  if ($SkipBrowser) {
+    Write-Host "NOT VERIFIED: browser E2E was explicitly skipped; the Linux browser workflow owns database-backed journeys." -ForegroundColor Yellow
+  } else {
+    Invoke-Npm "Install Playwright Chromium" @("exec", "--workspace", "@ess/web", "--", "playwright", "install", "chromium")
+    Invoke-Npm "Desktop and mobile browser journeys" @("run", "test:e2e", "-w", "apps/web")
+  }
   Invoke-Npm "Strict design quality audit" @("run", "design:audit:strict", "-w", "apps/web")
 
   if ($SkipAndroid) {
