@@ -673,3 +673,199 @@ test("mobile registration keeps compact branding and reachable navigation withou
   expect(dialogBox!.x).toBeGreaterThanOrEqual(0);
   expect(dialogBox!.x + dialogBox!.width).toBeLessThanOrEqual(390);
 });
+
+test("planner registration keeps the logo visible and opens the saved follow-up questionnaire", async ({ page }) => {
+  // Keep unrelated background API calls deterministic in browser CI. Specific
+  // route fixtures registered below take precedence over this fallback.
+  await page.route("**/api/v1/billing/public-promotions**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ promotions: [], items: [], data: [] }),
+    });
+  });
+  await page.route("**/api/v1/**", async (route) => {
+    const request = route.request();
+    if (request.method() === "GET") {
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [], data: [], unreadCount: 0 }) });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ success: true, items: [] }) });
+  });
+  await page.route("**/api/v1/auth/register", async (route) => {
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        accessToken: "planner-e2e-access",
+        refreshToken: "planner-e2e-refresh",
+        user: {
+          id: "planner-followup-e2e",
+          email: "planner-followup@example.test",
+          name: "Planner Followup",
+          role: "CLIENT",
+        },
+      }),
+    });
+  });
+
+  await page.route("**/api/v1/events**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname.endsWith("/plan-answers")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ answers: {}, complete: false }),
+      });
+      return;
+    }
+    if (request.method() === "POST") {
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          event: {
+            id: "planner-followup-event",
+            title: "Planner Follow-up Event",
+            city: "Ibadan",
+          },
+        }),
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [] }),
+    });
+  });
+  await page.route("**/api/v1/readiness/mine", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [] }),
+    });
+  });
+
+  await page.goto("/plan");
+  await page.getByLabel("Event name").fill("Planner Follow-up Event");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("City or venue area").fill("Ibadan");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Expected guests").fill("90");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Build my event brief/ }).click();
+  await page.getByRole("button", { name: /Save brief and create account/ }).click();
+
+  const dialog = page.locator("#eph-auth-dialog");
+  await expect(dialog).toBeVisible();
+  const brand = dialog.locator(".ess-auth-brand");
+  await expect(brand).toBeVisible();
+  await expect(brand).toHaveCSS("justify-content", "flex-start");
+  await expect(brand.locator(".ess-auth-brand-mark")).toBeVisible();
+  await expect(brand.locator(".ess-auth-brand-name")).toHaveText("EPHINTA");
+
+  await dialog.getByLabel("Full name").fill("Planner Followup");
+  await dialog.getByLabel("Email address").fill("planner-followup@example.test");
+  await dialog.getByLabel("Password", { exact: true }).fill("StrongPass123!");
+  await dialog.getByRole("button", { name: /Next/ }).click();
+  await expect(dialog.locator(".ess-registration-progress")).toContainText("Step 2 of 3");
+  await dialog.getByRole("button", { name: /Next/ }).click();
+  await expect(dialog.locator(".ess-registration-progress")).toContainText("Step 3 of 3");
+  const createAccount = dialog.getByRole("button", { name: /Create account/ });
+  await expect(createAccount).toBeVisible();
+  await expect(createAccount).toBeEnabled();
+  // Submit through the native button activation after the step transition.
+  // This avoids Playwright waiting indefinitely on the animated dialog layout.
+  await createAccount.evaluate((button) => (button as HTMLButtonElement).click());
+
+  const onboarding = page.getByRole("dialog", { name: "client onboarding" });
+  await expect(onboarding).toBeVisible();
+  await onboarding.getByRole("button", { name: "Continue" }).click();
+  await onboarding.getByRole("button", { name: "Continue" }).click();
+  await onboarding.getByRole("button", { name: "Continue" }).click();
+  await onboarding.getByRole("button", { name: "Open my planner" }).click();
+
+  // The first planner workspace should be a full marketplace welcome session,
+  // not a blank-looking overview or a tiny block of text in the page corner.
+  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+  await expect(page.getByRole("region", { name: "What you can do with EPHINTA" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Plan with confidence" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Find the right people" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Book with clarity" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Stay in control" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Explore the marketplace" })).toBeVisible();
+
+  // The planner workspace uses the shared global responsive dashboard styles:
+  // full-width content, a real horizontal tab bar, and no phone-width page overflow.
+  const plannerShell = page.locator(".ess-content > .ess-portal-stack");
+  await expect(plannerShell).toHaveCSS("display", "grid");
+  // Scope to the direct-child row containing the portal navigation tabs;
+  // nested event panels also use .ess-filter-row for their own actions.
+  const plannerTabs = plannerShell.locator(":scope > .ess-filter-row").first();
+  await expect(plannerTabs).toBeVisible();
+  await expect(plannerTabs).toHaveCSS("display", "flex");
+  await expect(plannerTabs).toHaveCSS("overflow-x", "auto");
+  await expect(plannerTabs.locator(".ess-chip-active")).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(plannerTabs).toBeVisible();
+  const mobileLayoutFits = await page.evaluate(
+    () => document.documentElement.scrollWidth <= window.innerWidth,
+  );
+  expect(mobileLayoutFits).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  // The saved follow-up questionnaire remains available in Overview.
+  await page.getByRole("button", { name: "Overview", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Plan the details for Planner Follow-up Event" }),
+  ).toBeVisible();
+  await expect(page.getByText("What would make this event a success for you?")).toBeVisible();
+});
+
+test("Plan a Burial opens the burial planner and selects the burial soundtrack", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ephinta:sound", "off");
+    localStorage.setItem("ess_event_builder_progress", JSON.stringify({
+      title: "Old wedding draft",
+      type: "PERSONAL",
+      goal: "Celebrate",
+      date: "",
+      city: "Ibadan",
+      guests: "120",
+      budget: "",
+      atmosphere: "Warm and social",
+      food: "Mixed menu",
+      venue: "Still deciding",
+      priorities: "Guest experience",
+    }));
+  });
+  await page.route("**/data/wale-waves-playlists.json", async (route) => {
+    await route.fulfill({ status: 404, body: "not synced yet" });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Plan a Burial" }).click();
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(page.getByLabel("Event name")).toHaveValue("Burial celebration");
+  await expect(page.getByLabel("Event format")).toHaveValue("CULTURAL");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:music-category"))).toBe("burial");
+  await expect(page.locator("audio")).toHaveAttribute("src", /Burials/);
+});
+
+test("Plan a Naming Ceremony selects the naming soundtrack", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ephinta:sound", "off");
+  });
+  await page.route("**/data/wale-waves-playlists.json", async (route) => {
+    await route.fulfill({ status: 404, body: "not synced yet" });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Plan a Naming Ceremony" }).click();
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(page.getByLabel("Event name")).toHaveValue("Naming ceremony celebration");
+  await expect(page.getByLabel("Event format")).toHaveValue("PERSONAL");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:music-category"))).toBe("naming");
+  await expect(page.locator("audio")).toHaveAttribute("src", /Naming/);
+});
