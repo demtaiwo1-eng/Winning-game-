@@ -44,7 +44,7 @@ function bytidOutcomeIsVerified(data: BytidKycData, requireDocument = data.requi
 }
 
 function bytidOutcomeIsRejected(data: BytidKycData, requireDocument = data.require_document === true) {
-  if (["face_mismatch", "liveness_failed", "not_found", "document_rejected", "document_mismatch"].includes(data.outcome || "")) return true;
+  if (["face_mismatch", "face_unavailable", "liveness_failed", "not_found", "error", "document_rejected", "document_mismatch"].includes(data.outcome || "")) return true;
   if (data.status !== "completed" || data.outcome !== "verified") return false;
   // A webhook may contain a summary outcome before all nested detail fields.
   // Do not reject an otherwise verified session until an explicit failed check
