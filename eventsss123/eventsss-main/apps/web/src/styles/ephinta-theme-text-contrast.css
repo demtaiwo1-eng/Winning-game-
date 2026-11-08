@@ -137,7 +137,7 @@ textarea::placeholder {
        .ess-auth-modal, .eph-modal, [role="dialog"], [aria-modal="true"],
        dialog[open]) {
   color: var(--ephinta-theme-ink) !important;
-  background: var(--ephinta-theme-surface) !important;
+  background: linear-gradient(155deg, var(--ephinta-theme-surface) 0%, var(--ephinta-theme-surface-soft) 100%) !important;
   border-color: var(--ephinta-theme-border) !important;
 }
 :where(.workspace-card, .dashboard-card, .stat-card, .panel-card, .surface-card,
