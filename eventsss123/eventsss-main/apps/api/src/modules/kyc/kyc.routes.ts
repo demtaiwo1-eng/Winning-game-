@@ -155,7 +155,7 @@ kycRouter.post("/bytid/requests", asyncHandler(async (req, res) => {
   try {
     const providerRequest = await bytidRequest<BytidKycData & { url?: string }>("kyc/requests", "POST", {
       reference,
-      id_types: ["bvn", "nin"],
+      id_types: ["bvn", "nin", "drivers_license", "voters_card", "bvn_igree"],
       customer_name: user.name,
       customer_email: user.email,
       redirect_url: redirect.toString(),
