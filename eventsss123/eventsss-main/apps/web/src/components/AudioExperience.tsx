@@ -111,7 +111,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
           </div>
         </section></div>
       )}
-      {preferencesLoaded && consent === true && (
+      {preferencesLoaded && consent === false && (\n        <button type="button" className="eph-audio__restore" onClick={() => chooseConsent(true)}>♫ Turn music on</button>\n      )}\n\n      {preferencesLoaded && consent === true && (
         <section className="eph-audio__player" aria-label="EPHINTA music player">
           <div className="eph-audio__player-heading">
             <span className="eph-audio__player-art" aria-hidden="true">♫</span>
