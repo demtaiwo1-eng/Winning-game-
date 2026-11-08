@@ -39,7 +39,7 @@ type Props = {
 export default function DeviceSecurityGate({ userId, onSignOut, children }: Props) {
   const storageKey = useMemo(() => `ephinta:device-pin:v1:${userId}`, [userId]);
   const [configured, setConfigured] = useState(() => Boolean(localStorage.getItem(`ephinta:device-pin:v1:${userId}`)));
-  const [locked, setLocked] = useState(() => Boolean(localStorage.getItem(`ephinta:device-pin:v1:${userId}`)));
+  const [locked, setLocked] = useState(true);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState("");
