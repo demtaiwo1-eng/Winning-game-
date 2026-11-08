@@ -101,3 +101,20 @@
     border-radius: 14px;
   }
 }
+
+
+/* Keep the consent dialog and its actions within narrow phone viewports. */
+.eph-audio__prompt {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.eph-audio__choices {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.eph-audio__choices button {
+  min-width: 0;
+  max-width: 100%;
+}
