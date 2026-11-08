@@ -32,6 +32,11 @@ const schema = z.object({
   AWS_ENDPOINT_URL_S3: z.string().url().optional(),
   AWS_REGION: z.string().optional(),
   KYC_STORAGE_BUCKET: z.string().optional(),
+  BYTID_API_KEY: z.string().optional(),
+  BYTID_API_URL: z.string().url().default("https://api.bytid.com/v1"),
+  BYTID_WEBHOOK_SECRET: z.string().optional(),
+  BYTID_ALLOW_LIVE: z.enum(["true", "false"]).default("false"),
+  BYTID_REQUIRE_DOCUMENT: z.enum(["true", "false"]).default("false"),
 });
 
 const rawEnv: NodeJS.ProcessEnv = {};
