@@ -155,6 +155,7 @@ export const billingApi = {
 
 export const kycApi = {
   me: () => api<{ items: unknown[] }>("/kyc/me"),
+  bytidConfig: () => api<{ enabled: boolean; mode: "sandbox" | "live"; requireDocument: boolean }>("/kyc/bytid/config"),
   startBytid: (consent: boolean) => api<{ requestId: string; verificationUrl: string; status: string; expiresAt: string | null }>("/kyc/bytid/requests", { method: "POST", body: JSON.stringify({ consent }) }),
   bytidStatus: (id: string) => api<{ request: { id: string; status: string }; providerStatus: string; outcome: string | null; faceMatch: string | null; liveness: string | null }>(`/kyc/bytid/requests/${encodeURIComponent(id)}`),
   submit: (body: {
