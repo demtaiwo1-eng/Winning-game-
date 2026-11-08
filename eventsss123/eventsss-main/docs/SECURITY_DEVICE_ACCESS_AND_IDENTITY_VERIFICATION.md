@@ -7,11 +7,11 @@
 - PIN material is derived with Web Crypto PBKDF2-HMAC-SHA-256 (310,000 iterations) and a per-device random salt. The raw PIN is never persisted.
 - Five minutes without pointer, keyboard, touch, wheel or scroll activity locks the app. Returning to a hidden tab after the inactivity threshold also locks it.
 - Five failed PIN attempts sign the user out. Users can always choose to sign out from the lock screen.
-- The lock is a device privacy feature, not a replacement for server authentication, a native secure enclave, or biometric identity verification.
+- The Capacitor 6-compatible native biometric plugin is included and wired to the lock screen. Supported Android/iOS devices can use OS fingerprint/Face ID/other supported biometrics, with the device credential and EPHINTA PIN as fallbacks. The lock is a device privacy feature, not a replacement for server authentication, a native secure enclave, or biometric identity verification.
 
-## Required native biometric implementation
+## Native biometric integration and acceptance criteria
 
-EPHINTA currently wraps the web app in Capacitor 6. Fingerprint and Face ID must use the operating system's biometric prompt (Android BiometricPrompt / iOS LocalAuthentication) through a Capacitor plugin compatible with Capacitor 6. Do not request, capture, upload or store fingerprint images, face templates, or biometric sensor data. The OS should return only an authentication result; a device-keystore-protected key should be used to unlock the local session secret.
+EPHINTA uses `@aparajita/capacitor-biometric-auth` 8.0.2, which targets Capacitor 6, to invoke Android BiometricPrompt and iOS LocalAuthentication. The app checks whether biometrics or a device credential are available and offers native authentication on supported devices. The Android biometric permission and iOS Face ID usage description are declared. Do not request, capture, upload or store fingerprint images, face templates, or biometric sensor data. The OS returns only an authentication result.
 
 Required acceptance criteria:
 1. Check device capability and enrollment before showing the biometric option.
