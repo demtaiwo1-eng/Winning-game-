@@ -78,54 +78,61 @@ async function main() {
   const token = await getAccessToken();
   const channels = await youtubeList("channels", { part: "snippet,contentDetails", mine: "true" }, token);
   if (!channels.length) throw new Error("The authorised Google account has no accessible YouTube channel.");
-  const channel = channels[0];
-  const accountTitle = safeText(channel.snippet?.title);
-  const ownedPlaylists = await youtubeList("playlists", { part: "snippet,contentDetails,status", mine: "true" }, token);
   const playlists = [];
   const categories = Object.fromEntries(CATEGORIES.map((category) => [category, []]));
-  for (const playlist of ownedPlaylists) {
-    const playlistId = playlist.id;
-    if (!playlistId) continue;
-    const title = safeText(playlist.snippet?.title);
-    const playlistCategory = categoryFromTitle(title);
-    const playlistItems = await youtubeList("playlistItems", {
+  for (const channel of channels) {
+    const channelTitle = safeText(channel.snippet?.title);
+    const ownedPlaylists = await youtubeList("playlists", {
       part: "snippet,contentDetails,status",
-      playlistId,
+      channelId: channel.id,
     }, token);
-    const items = playlistItems.flatMap((entry, index) => {
-      const videoId = entry.contentDetails?.videoId || entry.snippet?.resourceId?.videoId;
-      if (!videoId) return [];
-      const videoTitle = safeText(entry.snippet?.title) || "Untitled video";
-      const category = categoryFromTitle(videoTitle) || playlistCategory || "unclassified";
-      const item = {
-        videoId,
-        title: videoTitle,
-        category,
-        categorySource: categoryFromTitle(videoTitle) ? "video-title-tag" : playlistCategory ? "playlist-title-tag" : "unclassified",
-        channelTitle: safeText(entry.snippet?.videoOwnerChannelTitle || entry.snippet?.channelTitle),
-        position: Number.isInteger(entry.snippet?.position) ? entry.snippet.position : index,
-        publishedAt: entry.contentDetails?.videoPublishedAt || null,
-        watchUrl: "https://www.youtube.com/watch?v=" + encodeURIComponent(videoId),
-      };
-      if (category !== "unclassified") categories[category].push({ ...item, playlistId, playlistTitle: title });
-      return [item];
-    });
-    playlists.push({
-      playlistId,
-      title,
-      description: safeText(playlist.snippet?.description),
-      category: playlistCategory || "mixed",
-      privacyStatus: safeText(playlist.status?.privacyStatus),
-      itemCount: items.length,
-      playlistUrl: "https://www.youtube.com/playlist?list=" + encodeURIComponent(playlistId),
-      embedUrl: "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlistId),
-      items,
-    });
+    for (const playlist of ownedPlaylists) {
+      const playlistId = playlist.id;
+      if (!playlistId) continue;
+      const title = safeText(playlist.snippet?.title);
+      const playlistCategory = categoryFromTitle(title);
+      const playlistItems = await youtubeList("playlistItems", {
+        part: "snippet,contentDetails,status",
+        playlistId,
+      }, token);
+      const items = playlistItems.flatMap((entry, index) => {
+        const videoId = entry.contentDetails?.videoId || entry.snippet?.resourceId?.videoId;
+        if (!videoId) return [];
+        const videoTitle = safeText(entry.snippet?.title) || "Untitled video";
+        const taggedCategory = categoryFromTitle(videoTitle);
+        const category = taggedCategory || playlistCategory || "unclassified";
+        const item = {
+          videoId,
+          title: videoTitle,
+          category,
+          categorySource: taggedCategory ? "video-title-tag" : playlistCategory ? "playlist-title-tag" : "unclassified",
+          channelTitle: safeText(entry.snippet?.videoOwnerChannelTitle || entry.snippet?.channelTitle),
+          position: Number.isInteger(entry.snippet?.position) ? entry.snippet.position : index,
+          publishedAt: entry.contentDetails?.videoPublishedAt || null,
+          watchUrl: "https://www.youtube.com/watch?v=" + encodeURIComponent(videoId),
+        };
+        if (category !== "unclassified") categories[category].push({ ...item, playlistId, playlistTitle: title });
+        return [item];
+      });
+      playlists.push({
+        playlistId,
+        channelId: channel.id,
+        channelTitle,
+        title,
+        description: safeText(playlist.snippet?.description),
+        category: playlistCategory || "mixed",
+        privacyStatus: safeText(playlist.status?.privacyStatus),
+        itemCount: items.length,
+        playlistUrl: "https://www.youtube.com/playlist?list=" + encodeURIComponent(playlistId),
+        embedUrl: "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlistId),
+        items,
+      });
+    }
   }
   const result = {
     schemaVersion: 2,
     provider: "YouTube",
-    account: { channelId: channel.id, channelTitle: accountTitle },
+    account: { channels: channels.map((channel) => ({ channelId: channel.id, channelTitle: safeText(channel.snippet?.title) })) },
     updatedAt: new Date().toISOString(),
     discoveredPlaylistCount: playlists.length,
     playlists,
@@ -146,7 +153,7 @@ async function main() {
     }
   }
   await rename(temporary, OUTPUT);
-  console.log("Discovered " + playlists.length + " owned playlists from " + accountTitle + ".");
+  console.log("Discovered " + playlists.length + " owned playlists across " + channels.length + " authorised channel(s).");
   for (const category of CATEGORIES) console.log(category + ": " + categories[category].length + " classified tracks");
   console.log("Updated " + OUTPUT);
 }
