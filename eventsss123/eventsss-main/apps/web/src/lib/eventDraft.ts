@@ -177,6 +177,7 @@ export function eventBuilderProgressFromLandingDraft(raw: string | null): EventB
       "Corporate event": "CORPORATE",
       Graduation: "PERSONAL",
       Remembrance: "CULTURAL",
+      Burial: "CULTURAL",
     };
     const atmospheres: Record<string, EventBuilderProgress["atmosphere"]> = {
       Modern: "Premium and editorial",
