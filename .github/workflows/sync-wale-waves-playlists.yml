@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: ephinta-youtube-account-playlist-sync
@@ -15,33 +16,43 @@ concurrency:
 jobs:
   refresh-playlists:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out main
         uses: actions/checkout@v4
         with:
           ref: main
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Validate YouTube sync scripts
         run: |
           node --check eventsss123/eventsss-main/scripts/authorize-youtube-account.mjs
           node --check eventsss123/eventsss-main/scripts/sync-wale-waves-playlists.mjs
+
       - name: Discover playlists owned by the authorised account
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
         run: node eventsss123/eventsss-main/scripts/sync-wale-waves-playlists.mjs
-      - name: Commit changed playlist catalogue
-        run: |
-          if git diff --quiet -- eventsss123/eventsss-main/apps/web/public/data/wale-waves-playlists.json; then
-            echo "No playlist changes detected."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add eventsss123/eventsss-main/apps/web/public/data/wale-waves-playlists.json
-          git commit -m "chore: refresh EPHINTA YouTube account playlists"
-          git push origin HEAD:main
+
+      - name: Open a reviewable catalogue update pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/wale-waves-playlist-catalog
+          delete-branch: true
+          commit-message: "chore: refresh EPHINTA YouTube account playlists"
+          title: "Refresh EPHINTA YouTube playlist catalogue"
+          body: |
+            Automated playlist metadata refresh using the authorised Wale Waves account.
+
+            - Reads playlist metadata and video IDs only.
+            - Does not download or rehost audio.
+            - Keeps catalogue changes reviewable and never pushes generated data directly to main.
+          add-paths: |
+            eventsss123/eventsss-main/apps/web/public/data/wale-waves-playlists.json
