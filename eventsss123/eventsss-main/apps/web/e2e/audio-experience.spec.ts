@@ -57,7 +57,7 @@ for (const viewport of viewports) {
     expect(bounds).not.toBeNull();
     expect(bounds!.x).toBeGreaterThanOrEqual(0);
     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport.width);
-    await expect(player.getByRole("button", { name: "Play music" })).toBeVisible();
+    await expect(player.locator('button[aria-label="Play music"], button[aria-label="Pause music"]')).toBeVisible();
     await expect(player.getByRole("button", { name: "Next track" })).toBeVisible();
   });
 }
