@@ -39,7 +39,7 @@ If working in GitHub Codespaces, the repository includes a helper that generates
 bash scripts/setup-android-signing.sh
 ```
 
-The helper refuses to overwrite an existing keystore or any of the four existing Android signing secrets. At the key-password prompt, press Enter to reuse the keystore password. After it finishes, copy both files from `~/.ephinta-signing/` to two secure owner-controlled backups. Do not commit them and do not delete the only keystore copy.
+The helper refuses to overwrite an existing keystore or any of the four existing Android signing secrets. The helper uses the confirmed password for both the keystore and private key. After it finishes, copy both files from `~/.ephinta-signing/` to two secure owner-controlled backups. Do not commit them and do not delete the only keystore copy.
 
 If you prefer to configure the secrets manually, use the steps below.
 
