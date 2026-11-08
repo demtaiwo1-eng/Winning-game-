@@ -1,0 +1,82 @@
+name: Safe non-main branch cleanup
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type DELETE_ALL_NON_MAIN_BRANCHES to confirm the cleanup
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    if: inputs.confirm == 'DELETE_ALL_NON_MAIN_BRANCHES'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all integration PRs are merged and no PR remains open
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          open_count="$(gh pr list --state open --json number --jq 'length')"
+          if [ "$open_count" -ne 0 ]; then
+            echo "Refusing cleanup: $open_count pull request(s) are still open."
+            gh pr list --state open
+            exit 1
+          fi
+
+          required_prs=(68 76 81 83 84 90 108 109 114 115 116 117 118)
+          for pr in "${required_prs[@]}"; do
+            merged_at="$(gh pr view "$pr" --json mergedAt --jq '.mergedAt // ""')"
+            if [ -z "$merged_at" ]; then
+              echo "Refusing cleanup: required integration PR #$pr is not merged."
+              exit 1
+            fi
+          done
+          echo "All required integration PRs are merged and no PR is open."
+
+      - name: Delete only the reviewed non-main branches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branches=(
+            "feature/ephinta-device-security-20261108"
+            "feature/ephinta-bytid-kyc-20261108"
+            "fix/ephinta-production-signing"
+            "fix/ephinta-registration-planner-and-youtube-oauth"
+            "integration/android-signed-release-fingerprint-20261108"
+            "integration/recover-verified-feature-fixes-20261108"
+            "recovery/ephinta-planner-budget-format-20261108"
+            "recovery/ephinta-responsive-music-player-20261108"
+            "recovery/ephinta-theme-text-contrast-20261108"
+            "release/android-production-ota-main-20261108"
+            "release/android-production-signing-main-20261108"
+            "release/android-signed-ci-20261108"
+            "release/android-signing-helper-20261108"
+            "release/android-signing-helper-current-20261108"
+            "release/ios-signed-ci-20261108"
+            "release/ios-signed-distribution-main-20261108"
+            "release/ios-signed-distribution-main-port-20261108"
+            "test/database-restore-rehearsal-current-20261108"
+            "test/database-restore-rehearsal-main-20261108"
+            "verify/ephinta-main-acceptance-20261107"
+          )
+
+          for branch in "${branches[@]}"; do
+            encoded="$(jq -rn --arg value "$branch" '$value | @uri')"
+            if gh api "repos/$GITHUB_REPOSITORY/branches/$encoded" >/dev/null 2>&1; then
+              gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$encoded"
+              echo "Deleted $branch"
+            else
+              echo "Already absent: $branch"
+            fi
+          done
+
+          echo "Cleanup complete. The main branch was not touched."
