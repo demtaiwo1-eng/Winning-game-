@@ -1,5 +1,4 @@
 export const EPHINTA_MUSIC = {
-  playlistUrl: "https://music.youtube.com/playlist?list=PLe4WlRqdWW-k&si=DNWMxQ7ihoktMwno",
   priorityTracks: [
     "/audio/Here%20we%20are-1%20-Wale%20Waves_ESS_Wedding.mp3",
     "/audio/Here%20we%20are-2%20-Wale%20Waves_ESS_Wedding.mp3",
