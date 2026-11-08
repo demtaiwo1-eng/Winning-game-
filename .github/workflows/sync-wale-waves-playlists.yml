@@ -33,7 +33,21 @@ jobs:
           node --check eventsss123/eventsss-main/scripts/authorize-youtube-account.mjs
           node --check eventsss123/eventsss-main/scripts/sync-wale-waves-playlists.mjs
 
+      - name: Check whether YouTube account credentials are configured
+        id: youtube-credentials
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+        run: |
+          if [ -n "$YOUTUBE_CLIENT_ID" ] && [ -n "$YOUTUBE_CLIENT_SECRET" ] && [ -n "$YOUTUBE_REFRESH_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::YouTube playlist sync skipped: owner OAuth secrets are not configured yet."
+          fi
       - name: Discover playlists owned by the authorised account
+        if: steps.youtube-credentials.outputs.available == 'true'
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
@@ -41,6 +55,7 @@ jobs:
         run: node eventsss123/eventsss-main/scripts/sync-wale-waves-playlists.mjs
 
       - name: Open a reviewable catalogue update pull request
+        if: steps.youtube-credentials.outputs.available == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
