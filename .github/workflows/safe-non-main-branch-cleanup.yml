@@ -76,11 +76,14 @@ jobs:
               # Never delete work that is not reachable from main. The branch
               # inventory can contain unique commits even after a PR is merged.
               comparison="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$encoded" --jq '.status')"
-              if [ "$comparison" = "behind" ] || [ "$comparison" = "identical" ]; then
+              changed_files="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$encoded" --jq '.files | length')"
+              # A branch may have different commit ancestry but an identical
+              # final tree after equivalent work was integrated elsewhere.
+              if [ "$comparison" = "behind" ] || [ "$comparison" = "identical" ] || [ "$changed_files" = "0" ]; then
                 gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$encoded"
-                echo "Deleted merged branch $branch"
+                echo "Deleted fully integrated branch $branch (tree has no unmerged file changes)"
               else
-                echo "Preserved $branch: comparison with main is $comparison (unmerged commits may remain)."
+                echo "Preserved $branch: $comparison with $changed_files changed file(s) versus main."
               fi
             else
               echo "Already absent: $branch"
