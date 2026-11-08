@@ -73,8 +73,15 @@ jobs:
           for branch in "${branches[@]}"; do
             encoded="$(jq -rn --arg value "$branch" '$value | @uri')"
             if gh api "repos/$GITHUB_REPOSITORY/branches/$encoded" >/dev/null 2>&1; then
-              gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$encoded"
-              echo "Deleted $branch"
+              # Never delete work that is not reachable from main. The branch
+              # inventory can contain unique commits even after a PR is merged.
+              comparison="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$encoded" --jq '.status')"
+              if [ "$comparison" = "behind" ] || [ "$comparison" = "identical" ]; then
+                gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$encoded"
+                echo "Deleted merged branch $branch"
+              else
+                echo "Preserved $branch: comparison with main is $comparison (unmerged commits may remain)."
+              fi
             else
               echo "Already absent: $branch"
             fi
