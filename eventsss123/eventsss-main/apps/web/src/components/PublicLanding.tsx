@@ -239,9 +239,12 @@ export default function PublicLanding({
 
   const [isPromotionFocused, setIsPromotionFocused] = useState(false);
 
-
-
-
+  // The public homepage always starts with the wedding soundtrack. A selected
+  // naming or burial category is carried into /plan by its dedicated CTA.
+  useEffect(() => {
+    try { localStorage.setItem('ephinta:music-category', 'wedding'); } catch { /* optional */ }
+    window.dispatchEvent(new CustomEvent('ephinta:music-category-change', { detail: 'wedding' }));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
