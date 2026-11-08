@@ -1,0 +1,48 @@
+name: Sync Wale Waves YouTube playlists
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ephinta-wale-waves-playlist-sync
+  cancel-in-progress: false
+
+jobs:
+  refresh-playlists:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Refresh playlist metadata
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          EPHINTA_WALEWAVES1_PLAYLIST_URL: ${{ vars.EPHINTA_WALEWAVES1_PLAYLIST_URL }}
+          EPHINTA_WEDDING_PLAYLIST_URL: ${{ vars.EPHINTA_WEDDING_PLAYLIST_URL }}
+          EPHINTA_NAMING_PLAYLIST_URL: ${{ vars.EPHINTA_NAMING_PLAYLIST_URL }}
+          EPHINTA_BURIAL_PLAYLIST_URL: ${{ vars.EPHINTA_BURIAL_PLAYLIST_URL }}
+        run: node eventsss123/eventsss-main/scripts/sync-wale-waves-playlists.mjs
+
+      - name: Commit refreshed playlist list
+        run: |
+          if git diff --quiet -- eventsss123/eventsss-main/apps/web/public/data/wale-waves-playlists.json; then
+            echo "Playlist metadata has not changed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add eventsss123/eventsss-main/apps/web/public/data/wale-waves-playlists.json
+          git commit -m "chore: refresh Wale Waves playlist metadata"
+          git push origin HEAD:main
