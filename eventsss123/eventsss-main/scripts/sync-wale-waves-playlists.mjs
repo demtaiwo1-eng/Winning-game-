@@ -105,7 +105,7 @@ async function main() {
           videoId,
           title: videoTitle,
           category,
-          categorySource: taggedCategory ? "video-title-tag" : playlistCategory ? "playlist-title-tag" : "unclassified",
+          categorySource: playlistCategory === category ? "playlist-title-tag" : taggedCategory ? "video-title-tag" : "unclassified",
           channelTitle: safeText(entry.snippet?.videoOwnerChannelTitle || entry.snippet?.channelTitle),
           position: Number.isInteger(entry.snippet?.position) ? entry.snippet.position : index,
           publishedAt: entry.contentDetails?.videoPublishedAt || null,
