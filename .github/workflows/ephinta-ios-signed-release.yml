@@ -27,6 +27,7 @@ jobs:
           grep -q 'secrets.IOS_CERTIFICATE_PASSWORD' .github/workflows/ephinta-ios-signed-release.yml
           grep -q 'secrets.IOS_PROVISIONING_PROFILE_BASE64' .github/workflows/ephinta-ios-signed-release.yml
           grep -q 'secrets.IOS_TEAM_ID' .github/workflows/ephinta-ios-signed-release.yml
+          grep -q 'vars.IOS_CERT_SHA256' .github/workflows/ephinta-ios-signed-release.yml
 
   signed-ios:
     if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -57,9 +58,10 @@ jobs:
           P12_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
           TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          EXPECTED_CERT: ${{ vars.IOS_CERT_SHA256 }}
         run: |
           set -euo pipefail
-          for name in P12_BASE64 P12_PASSWORD PROFILE_BASE64 TEAM_ID; do
+          for name in P12_BASE64 P12_PASSWORD PROFILE_BASE64 TEAM_ID EXPECTED_CERT; do
             if [[ -z "${!name}" ]]; then
               echo "::error::Required GitHub Actions secret is missing: $name"
               exit 1
@@ -81,6 +83,7 @@ jobs:
           P12_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
           TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          EXPECTED_CERT: ${{ vars.IOS_CERT_SHA256 }}
         run: |
           set -euo pipefail
           SIGN_DIR="$RUNNER_TEMP/ephinta-ios-signing"
@@ -89,14 +92,33 @@ jobs:
           printf '%s' "$P12_BASE64" | base64 --decode > "$SIGN_DIR/distribution.p12"
           printf '%s' "$PROFILE_BASE64" | base64 --decode > "$SIGN_DIR/profile.mobileprovision"
           chmod 600 "$SIGN_DIR/distribution.p12" "$SIGN_DIR/profile.mobileprovision"
+          ACTUAL_CERT="$(openssl pkcs12 -in "$SIGN_DIR/distribution.p12" -passin "pass:$P12_PASSWORD" -clcerts -nokeys 2>/dev/null | openssl x509 -noout -fingerprint -sha256 | awk -F= '/Fingerprint/ {print $2}')"
+          ACTUAL_NORMALIZED="$(printf '%s' "$ACTUAL_CERT" | tr -d ': ' | tr 'A-Z' 'a-z')"
+          EXPECTED_NORMALIZED="$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr 'A-Z' 'a-z')"
+          if [[ -z "$ACTUAL_NORMALIZED" || "$ACTUAL_NORMALIZED" != "$EXPECTED_NORMALIZED" ]]; then
+            echo "::error::Apple distribution certificate does not match IOS_CERT_SHA256."
+            exit 1
+          fi
           security cms -D -i "$SIGN_DIR/profile.mobileprovision" > "$SIGN_DIR/profile.plist"
+          python3 - "$SIGN_DIR/profile.plist" <<'PY'
+          import datetime, plistlib, sys
+          with open(sys.argv[1], "rb") as stream:
+              profile = plistlib.load(stream)
+          expiry = profile.get("ExpirationDate")
+          if not isinstance(expiry, datetime.datetime):
+              raise SystemExit("Provisioning profile has no valid expiry date.")
+          if expiry.tzinfo is None:
+              expiry = expiry.replace(tzinfo=datetime.timezone.utc)
+          if expiry <= datetime.datetime.now(datetime.timezone.utc):
+              raise SystemExit("Provisioning profile has expired.")
+          PY
           PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$SIGN_DIR/profile.plist")
           PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$SIGN_DIR/profile.plist")
           PROFILE_TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$SIGN_DIR/profile.plist")
           PROFILE_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$SIGN_DIR/profile.plist")
           GET_TASK_ALLOW=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:get-task-allow' "$SIGN_DIR/profile.plist")
           [[ "$PROFILE_TEAM" == "$TEAM_ID" ]] || { echo "::error::Provisioning profile Team ID does not match IOS_TEAM_ID."; exit 1; }
-          [[ "$PROFILE_APP_ID" == *".com.eventselfsolutions.app" ]] || { echo "::error::Provisioning profile does not match com.eventselfsolutions.app."; exit 1; }
+          [[ "$PROFILE_APP_ID" == "$TEAM_ID.$IOS_BUNDLE_ID" ]] || { echo "::error::Provisioning profile application identifier does not match the configured app bundle ID."; exit 1; }
           [[ "$GET_TASK_ALLOW" == "false" ]] || { echo "::error::A distribution profile is required; development profiles are not accepted."; exit 1; }
           if /usr/libexec/PlistBuddy -c 'Print :ProvisionedDevices' "$SIGN_DIR/profile.plist" >/dev/null 2>&1; then
             echo "::error::Use an App Store Connect distribution profile, not an Ad Hoc profile."
@@ -139,6 +161,7 @@ jobs:
       - name: Export and verify signed IPA
         env:
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          IOS_BUNDLE_ID: com.eventselfsolutions.app
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -167,7 +190,9 @@ jobs:
           APP="$RUNNER_TEMP/ephinta-ipa-check/Payload/App.app"
           test -d "$APP"
           codesign --verify --deep --strict --verbose=2 "$APP"
-          codesign -dv --verbose=4 "$APP" 2>&1 | grep -E '^(Identifier|Authority|TeamIdentifier)='
+          SIGNATURE_INFO="$(codesign -dv --verbose=4 "$APP" 2>&1)"
+          printf '%s\\n' "$SIGNATURE_INFO" | grep -Fx "Identifier=$IOS_BUNDLE_ID"
+          printf '%s\\n' "$SIGNATURE_INFO" | grep -Fx "TeamIdentifier=$IOS_TEAM_ID"
           shasum -a 256 "$IPA"
 
       - name: Upload signed iOS IPA
