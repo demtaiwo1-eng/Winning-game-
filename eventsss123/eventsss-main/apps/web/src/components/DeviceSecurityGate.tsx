@@ -16,8 +16,12 @@ function base64ToBytes(value: string) {
 }
 
 async function derivePinHash(pin: string, salt: Uint8Array) {
-  const material = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: PBKDF2_ITERATIONS }, material, 256);
+  // DOM BufferSource types require an ArrayBuffer-backed view. Copying also
+  // prevents passing a SharedArrayBuffer-backed view into Web Crypto.
+  const pinBytes = new TextEncoder().encode(pin);
+  const saltBytes = new Uint8Array(salt);
+  const material = await crypto.subtle.importKey("raw", pinBytes.buffer as ArrayBuffer, "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: saltBytes.buffer as ArrayBuffer, iterations: PBKDF2_ITERATIONS }, material, 256);
   return bytesToBase64(new Uint8Array(bits));
 }
 
