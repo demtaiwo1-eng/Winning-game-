@@ -24,13 +24,6 @@ import {
 import { registrationFieldError, type RegistrationField } from "./lib/registrationValidation";
 import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from "./lib/roleLabels";
 import NotificationsPanel from "./components/NotificationsPanel";
-import "./enterprise.css";
-import "./styles/event-planner-registration.css";
-import "./portal-menu.css";
-import "./public-menu.css";
-import "./event-builder.css";
-import "./public-landing.css";
-import "./styles/ephinta-parent-design-system.css"; // Must load last: parent theme overrides component-level palettes.
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
