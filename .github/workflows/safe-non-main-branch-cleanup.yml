@@ -23,16 +23,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          open_count="$(gh pr list --state open --json number --jq 'length')"
+          open_count="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number --jq 'length')"
           if [ "$open_count" -ne 0 ]; then
             echo "Refusing cleanup: $open_count pull request(s) are still open."
-            gh pr list --state open
+            gh pr list --repo "$GITHUB_REPOSITORY" --state open
             exit 1
           fi
 
           required_prs=(68 76 81 83 84 90 108 109 114 115 116 117 118)
           for pr in "${required_prs[@]}"; do
-            merged_at="$(gh pr view "$pr" --json mergedAt --jq '.mergedAt // ""')"
+            merged_at="$(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json mergedAt --jq '.mergedAt // ""')"
             if [ -z "$merged_at" ]; then
               echo "Refusing cleanup: required integration PR #$pr is not merged."
               exit 1
