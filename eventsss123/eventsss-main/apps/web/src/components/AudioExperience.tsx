@@ -115,7 +115,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         <section className="eph-audio__player" aria-label="EPHINTA music player">
           <div className="eph-audio__player-heading">
             <span className="eph-audio__player-art" aria-hidden="true">♫</span>
-            <div className="eph-audio__track-copy"><span className="eph-audio__player-label">NOW PLAYING · {currentTrack.category}</span><strong title={currentTrack.title}>{currentTrack.title}</strong></div>
+            <div className="eph-audio__track-copy"><span className="eph-audio__player-label">{"NOW PLAYING · " + currentTrack.category}</span><strong title={currentTrack.title}>{currentTrack.title}</strong></div>
             <span className={"eph-audio__playing-indicator" + (isPlaying ? " is-playing" : "")} aria-label={isPlaying ? "Playing" : "Paused"} />
           </div>
           <div className="eph-audio__player-controls">
