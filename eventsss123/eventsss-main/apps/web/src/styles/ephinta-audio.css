@@ -101,3 +101,39 @@
     border-radius: 14px;
   }
 }
+
+/* Visible, policy-compliant YouTube player for account-synchronised playlists. */
+.eph-audio__youtube {
+  position: fixed;
+  z-index: 1100;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: min(360px, calc(100vw - 28px));
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 16px;
+  color: #f6f7fb;
+  background: rgb(20 27 46 / 97%);
+  box-shadow: 0 12px 36px rgb(0 0 0 / 28%);
+}
+.eph-audio__youtube .eph-audio__eyebrow {
+  margin: 0 0 8px;
+}
+.eph-audio__youtube iframe {
+  max-width: 100%;
+  background: #080b12;
+}
+.eph-audio__youtube .eph-audio__status {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 7px 0 0;
+  overflow: visible;
+  color: #c1c9da;
+  font-size: 11px;
+  line-height: 1.4;
+  clip: auto;
+  white-space: normal;
+  clip-path: none;
+}
