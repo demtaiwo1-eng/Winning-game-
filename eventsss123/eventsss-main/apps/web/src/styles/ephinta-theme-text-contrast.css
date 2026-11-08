@@ -210,6 +210,8 @@ textarea::placeholder {
 }
 
 /* Keep planner form values aligned with the parent design-system ink. */
-.ess-builder-card :where(input, select, textarea) {
+.ess-builder-card input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.ess-builder-card select,
+.ess-builder-card textarea {
   color: #211d37 !important;
 }
