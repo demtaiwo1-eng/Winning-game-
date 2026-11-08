@@ -30,7 +30,7 @@ jobs:
             exit 1
           fi
 
-          required_prs=(68 76 81 83 84 90 108 109 114 115 116 117 118)
+          required_prs=(68 76 81 83 84 108 109 114 115 116 117 118 119)
           for pr in "${required_prs[@]}"; do
             merged_at="$(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json mergedAt --jq '.mergedAt // ""')"
             if [ -z "$merged_at" ]; then
@@ -51,6 +51,7 @@ jobs:
             "feature/ephinta-bytid-kyc-20261108"
             "fix/ephinta-production-signing"
             "fix/ephinta-registration-planner-and-youtube-oauth"
+            "integration/ephinta-planner-music-rebased-20261108"
             "integration/android-signed-release-fingerprint-20261108"
             "integration/recover-verified-feature-fixes-20261108"
             "recovery/ephinta-planner-budget-format-20261108"
