@@ -229,7 +229,6 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
             ) : (
               <>
                 <p className="ess-muted">Provider mode: {bytidMode}. Use Bytid's hosted BVN/NIN verification. The provider handles ID capture, live-face checks and face matching. EPHINTA receives the verification result, not your raw ID number or selfie.</p>
-            <p className="ess-muted">Use Bytid's hosted BVN/NIN verification. The provider handles ID capture, live-face checks and face matching. EPHINTA receives the verification result, not your raw ID number or selfie.</p>
             <label style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
               <input type="checkbox" checked={bytidConsent} onChange={(e) => setBytidConsent(e.target.checked)} />
               <span>I consent to EPHINTA sending my name and email to Bytid and to Bytid collecting and checking my selected identity document and live face for identity verification. I understand this is a third-party verification service.</span>
