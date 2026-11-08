@@ -38,7 +38,7 @@ export default defineConfig({
     {
       // Start the real API against the disposable CI PostgreSQL service. This
       // prevents dashboard requests from being sent to an unavailable proxy.
-      command: "cd ../.. && npm run dev -w apps/api",
+      command: "cd ../.. && npm run prisma:generate -w apps/api && npm run dev -w apps/api",
       url: "http://127.0.0.1:5000/health",
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
