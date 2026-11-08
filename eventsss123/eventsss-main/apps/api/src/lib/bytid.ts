@@ -21,7 +21,7 @@ function apiUrl(path: string) {
   if (base.protocol !== "https:" && base.hostname !== "localhost") {
     throw new HttpError(503, "KYC_PROVIDER_MISCONFIGURED", "Identity verification endpoint must use HTTPS.");
   }
-  base.pathname = `${base.pathname.replace(/\\/+$/, "")}/${path.replace(/^\\/+/, "")}`;
+  base.pathname = base.pathname.replace(new RegExp("/+$"), "") + "/" + path.replace(new RegExp("^/+"), "");
   base.search = "";
   return base;
 }
@@ -66,7 +66,7 @@ export function verifyBytidWebhook(rawBody: Buffer | undefined, signatureHeader:
   }));
   const timestamp = parts.t;
   const signature = parts.v1;
-  if (!timestamp || !/^\\d+$/.test(timestamp) || !signature || !/^[a-f0-9]{64}$/i.test(signature)) return false;
+  if (!timestamp || !Number.isSafeInteger(Number(timestamp)) || !signature || !/^[a-f0-9]{64}$/i.test(signature)) return false;
   if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
   const expected = createHmac("sha256", secret).update(`${timestamp}.`).update(rawBody).digest();
   const supplied = Buffer.from(signature, "hex");
