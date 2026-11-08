@@ -48,7 +48,15 @@ function playlistIdFromUrl(raw, variableName) {
   return id;
 }
 
+const CATEGORIES = new Set(["wedding", "naming", "burial"]);
+
+function categoryFromTitle(title) {
+  const match = title.match(/\\[EPHINTA:(WEDDING|NAMING|BURIAL)\\]/i);
+  return match ? match[1].toLowerCase() : null;
+}
+
 async function fetchPlaylist(name, playlistId) {
+  const defaultCategory = CATEGORIES.has(name) ? name : null;
   const items = [];
   let pageToken;
 
@@ -74,9 +82,12 @@ async function fetchPlaylist(name, playlistId) {
     for (const item of payload.items || []) {
       const videoId = item?.contentDetails?.videoId || item?.snippet?.resourceId?.videoId;
       if (!videoId) continue;
+      const title = item.snippet?.title || "Untitled video";
       items.push({
         videoId,
-        title: item.snippet?.title || "Untitled video",
+        title,
+        category: categoryFromTitle(title) || defaultCategory || "unclassified",
+        categorySource: categoryFromTitle(title) ? "title-tag" : defaultCategory ? "category-playlist" : "unclassified",
         channelTitle: item.snippet?.videoOwnerChannelTitle || item.snippet?.channelTitle || "",
         position: Number.isInteger(item.snippet?.position) ? item.snippet.position : items.length,
         publishedAt: item.contentDetails?.videoPublishedAt || null,
@@ -88,6 +99,7 @@ async function fetchPlaylist(name, playlistId) {
 
   return {
     name,
+    category: defaultCategory || "mixed",
     playlistId,
     playlistUrl: `https://music.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`,
     embedUrl: `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(playlistId)}`,
