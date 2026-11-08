@@ -32,8 +32,15 @@ TARGET_DB="$(psql "$RESTORE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c 'SELECT cu
 TABLE_COUNT="$(psql "$RESTORE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema') AND table_type='BASE TABLE'")"
 [[ "$TABLE_COUNT" == "0" ]] || fail "Target database is not empty (found $TABLE_COUNT base tables). Use a newly created disposable database."
 
-printf '==> Restoring into operator-confirmed empty disposable database: %s\n' "$TARGET_DB"
-pg_restore --exit-on-error --single-transaction --no-owner --no-acl \
+printf '==> Restoring into operator-confirmed empty disposable database: %s\\n' "$TARGET_DB"
+# Every newly created PostgreSQL database already contains the default public schema.
+# Exclude only that schema's TOC entry (and its comment) to avoid a duplicate-schema
+# error; --no-acl and --no-owner intentionally keep the target's safe defaults.
+RESTORE_LIST="$(mktemp)"
+trap 'rm -f "$RESTORE_LIST"' EXIT
+pg_restore --list "$BACKUP" \\
+  | awk '!/ SCHEMA - public / && !/ COMMENT - SCHEMA public /' > "$RESTORE_LIST"
+pg_restore --use-list="$RESTORE_LIST" --exit-on-error --single-transaction --no-owner --no-acl \\
   --dbname "$RESTORE_DATABASE_URL" "$BACKUP"
 
 printf '==> Validating restored schema and Prisma migration history\n'
