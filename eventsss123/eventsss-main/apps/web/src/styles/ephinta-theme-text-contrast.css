@@ -8,7 +8,7 @@ html[data-ephinta-theme="light"] {
   color-scheme: light;
   --ephinta-theme-page: #f7f8fc;
   --ephinta-theme-surface: #ffffff;
-  --ephinta-theme-surface-soft: #f1f3f9;
+  --ephinta-theme-surface-soft: #f9f8fc;
   --ephinta-theme-ink: #172033;
   --ephinta-theme-muted: #46536b;
   --ephinta-theme-placeholder: #66738a;
@@ -121,7 +121,7 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 select,
 textarea {
   color: var(--ephinta-theme-ink) !important;
-  background: var(--ephinta-theme-surface) !important;
+  background: var(--ephinta-theme-surface-soft) !important;
   border-color: var(--ephinta-theme-border) !important;
 }
 input::placeholder,
