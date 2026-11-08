@@ -672,6 +672,16 @@ test("mobile registration keeps compact branding and reachable navigation withou
 });
 
 test("planner registration keeps the logo visible and opens the saved follow-up questionnaire", async ({ page }) => {
+  // Keep unrelated background API calls deterministic in browser CI. Specific
+  // route fixtures registered below take precedence over this fallback.
+  await page.route("**/api/v1/**", async (route) => {
+    const request = route.request();
+    if (request.method() === "GET") {
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [], data: [], unreadCount: 0 }) });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ success: true, items: [] }) });
+  });
   await page.route("**/api/v1/auth/register", async (route) => {
     await route.fulfill({
       status: 201,
