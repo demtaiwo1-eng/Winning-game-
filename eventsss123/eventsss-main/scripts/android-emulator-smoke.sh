@@ -26,7 +26,7 @@ timeout 180s adb wait-for-device || fail "Emulator did not become available to a
 # Emulator-runner performs the boot itself. Confirm Android services are ready.
 booted=0
 for attempt in $(seq 1 60); do
-  value="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+  value="$(timeout 10s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
   if [[ "$value" == "1" ]]; then booted=1; break; fi
   sleep 5
 done
@@ -34,7 +34,7 @@ done
 
 packages_ready=0
 for attempt in $(seq 1 24); do
-  if adb shell pm list packages >/dev/null 2>&1; then packages_ready=1; break; fi
+  if timeout 10s adb shell pm list packages >/dev/null 2>&1; then packages_ready=1; break; fi
   sleep 5
 done
 [[ "$packages_ready" == "1" ]] || fail "Android package manager did not become ready"
@@ -45,16 +45,16 @@ for attempt in 1 2 3; do
   sleep 5
 done
 [[ "$installed" == "1" ]] || fail "APK installation failed after three attempts"
-adb shell pm path "$PACKAGE" | grep -q '^package:' || fail "Installed package $PACKAGE was not found"
+timeout 10s adb shell pm path "$PACKAGE" | grep -q '^package:' || fail "Installed package $PACKAGE was not found"
 
-adb shell am force-stop "$PACKAGE" || true
+timeout 10s adb shell am force-stop "$PACKAGE" || true
 timeout 120s adb shell am start -W -n "$ACTIVITY" || fail "Android could not start $ACTIVITY"
 
 # Require both a live process and the app as the resumed foreground activity.
 launched=0
 for attempt in $(seq 1 36); do
-  pid="$(adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' || true)"
-  foreground="$(adb shell dumpsys activity activities 2>/dev/null | grep -E 'mResumedActivity|topResumedActivity' | grep -F "$PACKAGE" || true)"
+  pid="$(timeout 10s adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' || true)"
+  foreground="$(timeout 10s adb shell dumpsys activity activities 2>/dev/null | grep -E 'mResumedActivity|topResumedActivity' | grep -F "$PACKAGE" || true)"
   if [[ -n "$pid" && -n "$foreground" ]]; then launched=1; break; fi
   sleep 5
 done
