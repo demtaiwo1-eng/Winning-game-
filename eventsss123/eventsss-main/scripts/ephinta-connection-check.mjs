@@ -9,7 +9,7 @@
  */
 const webUrl = (process.env.EPHINTA_WEB_URL || "").replace(/\/+$/, "");
 const apiUrl = (process.env.EPHINTA_API_URL || "https://ephinta-wss.onrender.com").replace(/\/+$/, "");
-const timeoutMs = Number(process.env.EPHINTA_CHECK_TIMEOUT_MS || 15000);
+const timeoutMs = Number(process.env.EPHINTA_CHECK_TIMEOUT_MS || 60000);
 const results = [];
 
 if (!webUrl) {
