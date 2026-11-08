@@ -29,7 +29,7 @@ cd "$ROOT"
 
 step "1/5 — Check repository and branch"
 CURRENT_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
-[[ "$CURRENT_REPO" == "$REPO" ]] || fail "Wrong repository. Expected $REPO, found $CURRENT_REPO."
+[[ "${CURRENT_REPO,,}" == "${REPO,,}" ]] || fail "Wrong repository. Expected $REPO, found $CURRENT_REPO."
 CURRENT_BRANCH="$(git branch --show-current)"
 [[ -n "$CURRENT_BRANCH" ]] || fail "Could not determine the current Git branch."
 [[ -f "$WORKFLOW" ]] || fail "Production workflow is missing: $WORKFLOW"
