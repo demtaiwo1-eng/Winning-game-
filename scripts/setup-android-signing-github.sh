@@ -4,11 +4,13 @@
 set -euo pipefail
 set +x
 
-REPO="${EPHINTA_REPO:-demtaiwo1-eng/winning-game-}"
+REPO="${EPHINTA_REPO:-demtaiwo1-eng/Winning-game-}"
 ALIAS="ephinta-release"
 ROOT="$HOME/.ephinta-android-signing"
 KEYSTORE="$ROOT/ephinta-release.jks"
 BACKUP="$ROOT/ephinta-release.jks.enc"
+BACKUP_SHA256="$BACKUP.sha256"
+VERIFY_KEYSTORE="$ROOT/ephinta-release.verify.jks"
 
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 command -v gh >/dev/null || fail "GitHub CLI (gh) is required. Run this inside GitHub Codespaces."
@@ -35,7 +37,7 @@ fi
 if printf '%s\n' "$VARIABLE_LIST" | awk 'NR > 1 {print $1}' | grep -Fxq 'ANDROID_CERT_SHA256'; then
   fail "ANDROID_CERT_SHA256 already exists. Refusing to replace a potentially paired release certificate."
 fi
-if [[ -e "$KEYSTORE" || -e "$BACKUP" ]]; then
+if [[ -e "$KEYSTORE" || -e "$BACKUP" || -e "$BACKUP_SHA256" ]]; then
   fail "A signing key or backup already exists at $ROOT. Refusing to overwrite it."
 fi
 
@@ -72,11 +74,18 @@ gh variable set ANDROID_CERT_SHA256 --repo "$REPO" --body "$FINGERPRINT"
 openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 \
   -in "$KEYSTORE" -out "$BACKUP" -pass env:EPHINTA_STORE_PASSWORD
 chmod 600 "$BACKUP"
+sha256sum "$BACKUP" > "$BACKUP_SHA256"
+chmod 600 "$BACKUP_SHA256"
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+  -in "$BACKUP" -out "$VERIFY_KEYSTORE" -pass env:EPHINTA_STORE_PASSWORD
+cmp -s "$KEYSTORE" "$VERIFY_KEYSTORE" || fail "Encrypted backup verification failed."
+rm -f "$VERIFY_KEYSTORE" "$KEYSTORE"
 
 unset STORE_PASSWORD STORE_CONFIRM KEY_PASSWORD EPHINTA_STORE_PASSWORD EPHINTA_KEY_PASSWORD
 printf '\nSUCCESS: GitHub Actions signing secrets and certificate variable are configured.\n'
 printf 'Certificate SHA-256: %s\n' "$FINGERPRINT"
 printf 'Encrypted recovery copy: %s\n' "$BACKUP"
-printf 'Download that .enc file using the Codespaces file explorer and keep it private.\n'
+printf 'Backup checksum: %s\n' "$BACKUP_SHA256"
+printf 'Download both files using the Codespaces file explorer and keep them private.\n'
 printf 'Do not delete this Codespace or the backup until you have safely stored the encrypted copy.\n'
 printf 'No signing key, password, or base64 data was written into the repository.\n'
