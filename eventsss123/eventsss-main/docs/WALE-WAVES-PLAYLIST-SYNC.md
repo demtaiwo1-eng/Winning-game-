@@ -81,7 +81,7 @@ The workflow `.github/workflows/sync-wale-waves-playlists.yml` runs every six
 hours and can also be started manually from GitHub Actions. It:
 
 1. Refreshes the OAuth access token using the stored refresh token.
-2. Calls YouTube `channels.list(mine=true)` and `playlists.list(mine=true)`.
+2. Calls YouTube `channels.list(mine=true)`, then `playlists.list(channelId=...)` for each accessible channel.
 3. Reads every playlist's entries, following pagination.
 4. Writes `eventsss123/eventsss-main/apps/web/public/data/wale-waves-playlists.json`.
 5. Commits changed metadata to `main`.
