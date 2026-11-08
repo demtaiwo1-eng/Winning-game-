@@ -30,6 +30,10 @@ jobs:
           cache-dependency-path: eventsss123/eventsss-main/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Validate YouTube OAuth and playlist sync scripts
+        run: |
+          node --check scripts/authorize-youtube-account.mjs
+          node --check scripts/sync-wale-waves-playlists.mjs
       - name: Cache Playwright Chromium
         id: playwright-cache
         uses: actions/cache@v4
