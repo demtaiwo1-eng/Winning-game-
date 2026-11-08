@@ -98,3 +98,20 @@ embedded player for YouTube-hosted tracks, or use audio files EPHINTA is license
 to serve. YouTube embeds are visible players; browsers may block autoplay until
 the visitor has granted music permission or interacted with the page. Respect
 saved music-off preferences.
+
+## 7. Check the deployed web/API connections
+
+After deployment, run from the application directory:
+
+```bash
+EPHINTA_WEB_URL="https://YOUR-WEB-DOMAIN" \
+EPHINTA_API_URL="https://ephinta-wss.onrender.com" \
+npm run connection:check
+```
+
+The report checks the web homepage, API health, database readiness, the logo
+asset, the first wedding audio asset, and the API CORS preflight. It reports
+which connection failed rather than treating every network error as a generic
+registration failure. A failing `/ready` check points to API/database
+availability; a failing CORS check points to the configured allowed origins;
+a failed asset check points to the deployed static files or web build.
