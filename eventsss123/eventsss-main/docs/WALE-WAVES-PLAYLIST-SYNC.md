@@ -16,7 +16,7 @@ In Google Cloud Console:
 5. Keep the client ID and client secret private.
 
 The only requested permission is `https://www.googleapis.com/auth/youtube.readonly`.
-EPHINTA never asks for your Google password. Google handles sign-in and consent.
+EPHINTA never asks for your Google password. Google handles sign-in and consent.\nThe bootstrap uses a random OAuth state value and PKCE (S256) for the\nauthorisation-code exchange.
 
 ## 2. Authorise the YouTube account once
 
