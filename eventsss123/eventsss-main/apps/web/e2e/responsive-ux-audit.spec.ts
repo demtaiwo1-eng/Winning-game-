@@ -143,6 +143,8 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
 });
 
 test("registration dialogs remain usable on phone, tablet and desktop", async ({ page }, testInfo) => {
+  // This audit visits six role-specific dialogs at three viewport sizes.
+  test.setTimeout(180_000);
   const registrationRoles = ["CLIENT", "ORGANIZATION", "VENDOR", "AFFILIATE", "VERIFIER", "CONSULTANT"];
   const pageErrors: string[] = [];
   page.on("pageerror", error => pageErrors.push(error.message));
