@@ -42,6 +42,8 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
   const [bytidRequestId, setBytidRequestId] = useState("");
   const [bytidStatus, setBytidStatus] = useState("");
   const [bytidBusy, setBytidBusy] = useState(false);
+  const [bytidEnabled, setBytidEnabled] = useState(false);
+  const [bytidMode, setBytidMode] = useState<"sandbox" | "live">("sandbox");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -60,6 +62,7 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
       })
       .catch(() => setCountries([]));
     kycApi.me().then((res) => setItems((res.items as KycItem[]) || [])).catch(() => setItems([]));
+    kycApi.bytidConfig().then((res) => { setBytidEnabled(res.enabled); setBytidMode(res.mode); }).catch(() => setBytidEnabled(false));
   }, []);
 
   useEffect(() => {
@@ -221,6 +224,11 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
         {kind === "IDENTITY" && country === "NG" && (
           <div className="ess-wallet-card" style={{ display: "grid", gap: 10 }}>
             <strong>Secure Nigerian identity verification</strong>
+            {!bytidEnabled ? (
+              <p className="ess-muted">Bytid hosted verification is awaiting the API service's sandbox key. You can still submit documents for manual review below.</p>
+            ) : (
+              <>
+                <p className="ess-muted">Provider mode: {bytidMode}. Use Bytid's hosted BVN/NIN verification. The provider handles ID capture, live-face checks and face matching. EPHINTA receives the verification result, not your raw ID number or selfie.</p>
             <p className="ess-muted">Use Bytid's hosted BVN/NIN verification. The provider handles ID capture, live-face checks and face matching. EPHINTA receives the verification result, not your raw ID number or selfie.</p>
             <label style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
               <input type="checkbox" checked={bytidConsent} onChange={(e) => setBytidConsent(e.target.checked)} />
@@ -234,6 +242,8 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
                 <button type="button" disabled={bytidBusy} onClick={refreshBytid}>Refresh verification status</button>
                 {bytidStatus && <p className="ess-muted" role="status">{bytidStatus}</p>}
               </div>
+            )}
+              </>
             )}
           </div>
         )}
