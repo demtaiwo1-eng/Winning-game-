@@ -33,6 +33,16 @@ On Linux without a clipboard utility, redirect the output to a protected local t
 
 ## Configure GitHub Actions secrets
 
+If working in GitHub Codespaces, the repository includes a helper that generates the key in your Codespace home directory and sends the four values directly to protected GitHub Actions secrets without printing them:
+
+```bash
+bash scripts/setup-android-signing.sh
+```
+
+The helper refuses to overwrite an existing keystore or any of the four existing Android signing secrets. The helper uses the confirmed password for both the keystore and private key. After it finishes, copy both files from `~/.ephinta-signing/` to two secure owner-controlled backups. Do not commit them and do not delete the only keystore copy.
+
+If you prefer to configure the secrets manually, use the steps below.
+
 In the canonical repository, open Settings → Secrets and variables → Actions → New repository secret. Add:
 
 | Secret | Value |
