@@ -34,9 +34,28 @@ export default defineConfig({
       use: { ...devices["Pixel 7"] },
     },
   ],
-  webServer: {
-    command: `npm run dev -- --host 127.0.0.1 --port ${port} --strictPort`,
-    url: baseURL,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      // Start the real API against the disposable CI PostgreSQL service. This
+      // prevents dashboard requests from being sent to an unavailable proxy.
+      command: "cd ../.. && npm run prisma:generate -w apps/api && npm run dev -w apps/api",
+      url: "http://127.0.0.1:5000/health",
+      timeout: 120_000,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        NODE_ENV: "test",
+        DATABASE_MODE: "local",
+        PORT: "5000",
+        DATABASE_URL_LOCAL: process.env.DATABASE_URL_LOCAL || "postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public",
+        DATABASE_URL: process.env.DATABASE_URL || process.env.DATABASE_URL_LOCAL || "postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public",
+        JWT_SECRET: process.env.JWT_SECRET || "e2e-only-secret-change-me-0123456789abcdef",
+      },
+    },
+    {
+      command: `npm run dev -- --host 127.0.0.1 --port ${port} --strictPort`,
+      url: baseURL,
+      timeout: 120_000,
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });
