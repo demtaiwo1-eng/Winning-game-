@@ -760,12 +760,15 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   await dialog.getByLabel("Full name").fill("Planner Followup");
   await dialog.getByLabel("Email address").fill("planner-followup@example.test");
   await dialog.getByLabel("Password", { exact: true }).fill("StrongPass123!");
-  await dialog.getByRole("button", { name: "Next" }).click();
-  await dialog.getByRole("button", { name: "Next" }).click();
-  // The signup dialog animates between steps; force the final submit after
-  // the required fields are complete so the E2E does not wait on a moving button.
-  await expect(dialog.getByRole("button", { name: "Create account" })).toBeEnabled();
-  await dialog.getByRole("button", { name: "Create account" }).click({ force: true });
+  await dialog.getByRole("button", { name: /Next/ }).click();
+  await expect(dialog.locator(".ess-registration-progress")).toContainText("Step 2 of 3");
+  await dialog.getByRole("button", { name: /Next/ }).click();
+  await expect(dialog.locator(".ess-registration-progress")).toContainText("Step 3 of 3");
+  const createAccount = dialog.getByRole("button", { name: /Create account/ });
+  await expect(createAccount).toBeVisible();
+  await expect(createAccount).toBeEnabled();
+  // Wait for the step transition to settle before submitting the signup form.
+  await createAccount.click();
 
   const onboarding = page.getByRole("dialog", { name: "client onboarding" });
   await expect(onboarding).toBeVisible();
@@ -788,7 +791,9 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   // full-width content, a real horizontal tab bar, and no phone-width page overflow.
   const plannerShell = page.locator(".ess-content > .ess-portal-stack");
   await expect(plannerShell).toHaveCSS("display", "grid");
-  const plannerTabs = plannerShell.locator(".ess-filter-row");
+  // Scope to the direct-child row containing the portal navigation tabs;
+  // nested event panels also use .ess-filter-row for their own actions.
+  const plannerTabs = plannerShell.locator(":scope > .ess-filter-row").first();
   await expect(plannerTabs).toBeVisible();
   await expect(plannerTabs).toHaveCSS("display", "flex");
   await expect(plannerTabs).toHaveCSS("overflow-x", "auto");
