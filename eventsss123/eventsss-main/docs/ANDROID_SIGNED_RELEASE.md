@@ -1,67 +1,83 @@
-# EPHINTA Android production signing
+# EPHINTA Android production signing and release
 
-This workflow builds a production-signed APK and Android App Bundle (AAB) only when an authorized repository maintainer manually starts it:
+The production release workflow is prepared, but it cannot produce a signed APK until the owner configures the permanent Android signing key in GitHub Actions. No signing key or password is committed to this repository.
 
-- Workflow: `.github/workflows/ephinta-android-signed-release.yml`
-- Trigger: GitHub Actions → EPHINTA signed Android release → Run workflow
-- Outputs: signed `app-release.apk` and `app-release.aab` as a 30-day workflow artifact
-- It does not publish to Google Play or create a public GitHub release.
+## Canonical production workflow
 
-## Owner-controlled signing key
+- Android application ID: `com.ephinta.app`
+- Workflow: `.github/workflows/ephinta-production-apk.yml`
+- Manual run: builds and verifies a signed APK and AAB, then uploads the artifacts.
+- Version tag (`v*`): also publishes the production GitHub Release and the stable web OTA bundle, then verifies that the OTA manifest and bundle are reachable through the production API.
+- Before signing, it requires the production API health and readiness endpoints to respond successfully.
+- It verifies the APK certificate SHA-256 against the owner-configured `ANDROID_CERT_SHA256` repository variable and refuses to publish if they do not match.
+- It removes the temporary keystore from the hosted runner after the job.
 
-Use a dedicated release/upload key that the app owner controls. Do not reuse debug keys, commit the keystore, paste it into chat, or upload it as a normal repository artifact. Back it up offline in at least two secure owner-controlled locations. Loss of the key can complicate updates unless Play App Signing is enabled and the upload key can be reset.
+The separate `.github/workflows/ephinta-android-signed-release.yml` is a manual signed APK/AAB artifact workflow. It also verifies the certificate fingerprint, but the production workflow above is the release path that includes OTA publication.
 
-Generate a key on a trusted computer with Java's `keytool` (replace the example alias and identity fields; keep the passwords private):
+## One-time owner setup from GitHub Codespaces
 
-```bash
-keytool -genkeypair -v -keystore ephinta-upload.jks -alias ephinta-upload -keyalg RSA -keysize 4096 -validity 10000
-```
-
-For Windows PowerShell, Base64-encode the binary keystore without line breaks:
-
-```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes(".\\ephinta-upload.jks")) | Set-Clipboard
-```
-
-For macOS/Linux:
+Run these commands from the **repository root** in a private GitHub Codespace:
 
 ```bash
-base64 < ephinta-upload.jks | tr -d '\n' | pbcopy
+bash scripts/setup-android-signing-github.sh
 ```
 
-On Linux without a clipboard utility, redirect the output to a protected local text file and remove it securely after entering the secret. Never commit either file.
+The setup script:
 
-## Configure GitHub Actions secrets
+1. Checks that no Android signing secrets or certificate variable already exist. It refuses to create a second key or rotate a partially configured signing identity.
+2. Generates a dedicated RSA-4096 JKS release key inside the Codespace.
+3. Sends the keystore Base64 and passwords directly to GitHub Actions repository secrets using the authenticated GitHub CLI. Secret values are never printed.
+4. Stores the certificate fingerprint as the `ANDROID_CERT_SHA256` repository variable.
+5. Creates an encrypted keystore recovery copy and a SHA-256 checksum in `~/.ephinta-android-signing/`.
+6. Verifies that the encrypted backup decrypts to the original keystore, then removes the plaintext keystore from the Codespace.
 
-If working in GitHub Codespaces, the repository includes a helper that generates the key in your Codespace home directory and sends the four values directly to protected GitHub Actions secrets without printing them:
+You will be prompted for a strong keystore password and a separate private-key password. Save both in a password manager. The encrypted backup uses the keystore password.
+
+**Before closing the Codespace:** download both `ephinta-release.jks.enc` and `ephinta-release.jks.enc.sha256` from `~/.ephinta-android-signing/` and store them in a secure owner-controlled location. Keep the password separately. Do not commit either file or upload it as a normal repository artifact.
+
+If GitHub reports that your account cannot manage repository Actions secrets or variables, stop and have a repository administrator perform this one-time setup. Do not paste signing credentials into chat or workflow inputs.
+
+If the owner configures secrets manually instead, use the exact same owner-generated JKS identity and configure all four secret names plus the `ANDROID_CERT_SHA256` variable. Do not mix an existing key with a newly generated keystore. The helper deliberately refuses to rotate or overwrite an existing or partially configured signing identity.
+
+## Build and verify the production APK
+
+After the secrets and encrypted backup are configured and the backup has been downloaded safely, run from the repository root:
 
 ```bash
-bash scripts/setup-android-signing.sh
+bash scripts/complete-production-apk.sh
 ```
 
-The helper refuses to overwrite an existing keystore or any of the four existing Android signing secrets. The helper uses the confirmed password for both the keystore and private key. After it finishes, copy both files from `~/.ephinta-signing/` to two secure owner-controlled backups. Do not commit them and do not delete the only keystore copy.
+The handoff script checks the repository, current pushed branch, GitHub authentication, presence of all four secret names, the certificate variable, and the encrypted backup checksum. It does not read or display secret values. It requires an explicit `YES` confirmation that the encrypted backup is stored safely before dispatching the production workflow and waiting for its result.
 
-If you prefer to configure the secrets manually, use the steps below.
+The four required GitHub Actions secrets are:
 
-In the canonical repository, open Settings → Secrets and variables → Actions → New repository secret. Add:
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_PASSWORD`
+- `ANDROID_KEY_ALIAS`
 
-| Secret | Value |
-|---|---|
-| `ANDROID_KEYSTORE_BASE64` | Base64 representation of the owner-generated JKS file |
-| `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
-| `ANDROID_KEY_ALIAS` | Exact alias used by keytool |
-| `ANDROID_KEY_PASSWORD` | Private-key password |
+The required repository Actions variable is:
 
-The workflow checks that all four secrets exist without printing their values. It writes the keystore to the ephemeral runner, signs APK/AAB, verifies both signatures, records SHA-256 checksums, uploads artifacts, and removes the temporary keystore.
+- `ANDROID_CERT_SHA256`
 
-## Before distributing
+Optional Firebase push notification configuration:
 
-1. Confirm the application ID is `com.ephinta.app` and versionCode is greater than the last Play upload.
-2. Run the workflow from a reviewed `main` commit after the secrets are configured.
-3. Download the artifact and independently verify its certificate fingerprint and SHA-256.
-4. Install the signed APK on the owner's Android device and test registration/sign-in, navigation, permissions, API connectivity, and sandbox payments.
-5. If publishing through Play, enable Play App Signing and use the AAB in Play Console internal testing first.
+- `GOOGLE_SERVICES_JSON_BASE64`
 
-## Current status
+## Production release and OTA
 
-The unsigned/debug Android APK and emulator compatibility workflows have passed. That is not a production signature. This workflow is prepared but cannot produce a signed artifact until the owner configures the four protected GitHub secrets. Do not mark production signing complete before a successful signed build and independent install test.
+A manual workflow run produces signed APK/AAB artifacts for review. Confirm the Android application ID is `com.ephinta.app` and that the generated `versionCode` is greater than the last Play Console upload. Enable Play App Signing and use the AAB for internal testing before any public rollout.
+
+A reviewed version tag such as `v1.0.0` triggers the release path that publishes:
+
+- `ephinta-production.apk`
+- `ephinta-production.aab`
+- `SHA256SUMS.txt`
+- `ephinta-web-bundle.zip`
+- `version.json`
+
+The OTA assets are published under the stable `ephinta-web-latest` release tag. The workflow then checks the live `/api/v1/app-updates/version.json` and bundle download routes. Do not create the version tag until the signed artifact has been reviewed and the production API health/readiness checks are expected to pass.
+
+## Remaining acceptance requirements
+
+A successful GitHub build is not a substitute for owner acceptance. Before distributing, install the signed APK on a physical Android device and verify registration/sign-in, planner and vendor dashboards, navigation, permissions, API connectivity, and sandbox payment flows. The AAB is intended for Play Console internal testing; it does not mean the app has been published to Google Play. Keep the Android package ID distinct from the iOS bundle ID (`com.eventselfsolutions.app`).
