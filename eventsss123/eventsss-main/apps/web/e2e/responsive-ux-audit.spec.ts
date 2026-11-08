@@ -141,3 +141,77 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
   });
   expect(pageErrors, "No uncaught event-planner browser errors").toEqual([]);
 });
+
+test("registration dialogs remain usable on phone, tablet and desktop", async ({ page }, testInfo) => {
+  const registrationRoles = ["CLIENT", "ORGANIZATION", "VENDOR", "AFFILIATE", "VERIFIER", "CONSULTANT"];
+  const pageErrors: string[] = [];
+  page.on("pageerror", error => pageErrors.push(error.message));
+
+  for (const viewport of viewports) {
+    for (const role of registrationRoles) {
+      await test.step(`${role} registration at ${viewport.name}`, async () => {
+        await page.setViewportSize({ width: viewport.width, height: viewport.height });
+        await page.goto(`/auth/signup?role=${role}`, { waitUntil: "networkidle" });
+        const dialog = page.locator(".ess-auth-modal");
+        await expect(dialog).toBeVisible();
+        await expect(page.locator(".eph-audio__prompt")).toHaveCount(0);
+
+        const metrics = await dialog.evaluate(element => {
+          const rect = element.getBoundingClientRect();
+          const visibleControls = [...element.querySelectorAll("button,input,select,textarea")]
+            .filter(control => {
+              const box = control.getBoundingClientRect();
+              const style = getComputedStyle(control);
+              return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+            }).length;
+          const oversizedImages = [...element.querySelectorAll("img")]
+            .filter(image => image.getBoundingClientRect().width > element.clientWidth * 0.9)
+            .map(image => image.currentSrc || image.src);
+          const overflowingChildren = [...element.querySelectorAll("*")]
+            .map(child => {
+              const childRect = child.getBoundingClientRect();
+              return {
+                tag: child.tagName.toLowerCase(),
+                className: typeof child.className === "string" ? child.className : "",
+                left: Math.round(childRect.left),
+                right: Math.round(childRect.right),
+                width: Math.round(childRect.width),
+              };
+            })
+            .filter(child =>
+              child.left < Math.round(rect.left) - 1 ||
+              child.right > Math.round(rect.right) + 1
+            );
+          return {
+            left: rect.left,
+            right: rect.right,
+            width: rect.width,
+            clientWidth: element.clientWidth,
+            scrollWidth: element.scrollWidth,
+            overflowX: getComputedStyle(element).overflowX,
+            documentWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+            visibleControls,
+            oversizedImages,
+            overflowingChildren,
+          };
+        });
+
+        expect(metrics.left, `${role} dialog should stay inside the viewport`).toBeGreaterThanOrEqual(-1);
+        expect(metrics.right, `${role} dialog should not exceed the viewport`).toBeLessThanOrEqual(viewport.width + 1);
+        expect(metrics.documentWidth, `${role} registration should not widen the page`).toBeLessThanOrEqual(viewport.width + 1);
+        expect(metrics.overflowingChildren, `${role} visible controls and content should stay inside the dialog`).toEqual([]);
+        expect(["clip", "hidden"]).toContain(metrics.overflowX);
+        await expect(dialog.getByRole("button", { name: /Back/ })).toBeVisible();
+        await expect(dialog.getByRole("button", { name: /Next/ })).toBeVisible();
+        expect(metrics.visibleControls, `${role} registration should expose usable controls`).toBeGreaterThan(0);
+        expect(metrics.oversizedImages, `${role} registration should not contain an oversized logo/image`).toEqual([]);
+
+        const screenshot = testInfo.outputPath(`registration-${role.toLowerCase()}-${viewport.name}.png`);
+        await page.screenshot({ path: screenshot, fullPage: true, animations: "disabled" });
+        await testInfo.attach(`registration-${role.toLowerCase()}-${viewport.name}`, { path: screenshot, contentType: "image/png" });
+      });
+    }
+  }
+
+  expect(pageErrors, "Registration dialogs should not produce uncaught browser errors").toEqual([]);
+});
