@@ -1,0 +1,217 @@
+/*
+ * EPHINTA final theme contrast layer.
+ * Imported after every other stylesheet so text and surface colors follow
+ * the user's selected theme instead of being overwritten by legacy CSS.
+ */
+:root,
+html[data-ephinta-theme="light"] {
+  color-scheme: light;
+  --ephinta-theme-page: #f7f8fc;
+  --ephinta-theme-surface: #ffffff;
+  --ephinta-theme-surface-soft: #f9f8fc;
+  --ephinta-theme-ink: #172033;
+  --ephinta-theme-muted: #46536b;
+  --ephinta-theme-placeholder: #66738a;
+  --ephinta-theme-border: #cbd4e2;
+  --ephinta-theme-link: #3730a3;
+  --ephinta-theme-primary-bg: #4338ca;
+  --ephinta-theme-primary-ink: #ffffff;
+  --ephinta-theme-focus: #155eef;
+  --ess-bg: var(--ephinta-theme-page);
+  --ess-bg-2: #edf0f8;
+  --ess-surface: var(--ephinta-theme-surface);
+  --ess-surface-soft: var(--ephinta-theme-surface-soft);
+  --ess-ink: var(--ephinta-theme-ink);
+  --ess-ink-soft: var(--ephinta-theme-muted);
+  --ess-mute: var(--ephinta-theme-muted);
+  --ess-line: var(--ephinta-theme-border);
+  --ess-line-strong: #aebbd0;
+  --eph-parent-bg: var(--ephinta-theme-page);
+  --eph-parent-surface: var(--ephinta-theme-surface);
+  --eph-parent-surface-muted: var(--ephinta-theme-surface-soft);
+  --eph-parent-ink: var(--ephinta-theme-ink);
+  --eph-parent-muted: var(--ephinta-theme-muted);
+  --eph-parent-border: var(--ephinta-theme-border);
+}
+html[data-ephinta-theme="dark"] {
+  color-scheme: dark;
+  --ephinta-theme-page: #090e1b;
+  --ephinta-theme-surface: #151e31;
+  --ephinta-theme-surface-soft: #1c2940;
+  --ephinta-theme-ink: #f4f7ff;
+  --ephinta-theme-muted: #c1cce0;
+  --ephinta-theme-placeholder: #aab7ce;
+  --ephinta-theme-border: #465570;
+  --ephinta-theme-link: #b9c5ff;
+  --ephinta-theme-primary-bg: #c4b5fd;
+  --ephinta-theme-primary-ink: #17112b;
+  --ephinta-theme-focus: #7dd3fc;
+  --ess-bg: var(--ephinta-theme-page);
+  --ess-bg-2: #111a2d;
+  --ess-surface: var(--ephinta-theme-surface);
+  --ess-surface-soft: var(--ephinta-theme-surface-soft);
+  --ess-ink: var(--ephinta-theme-ink);
+  --ess-ink-soft: var(--ephinta-theme-muted);
+  --ess-mute: var(--ephinta-theme-muted);
+  --ess-line: var(--ephinta-theme-border);
+  --ess-line-strong: #596985;
+  --eph-parent-bg: var(--ephinta-theme-page);
+  --eph-parent-bg-soft: #172239;
+  --eph-parent-surface: var(--ephinta-theme-surface);
+  --eph-parent-surface-muted: var(--ephinta-theme-surface-soft);
+  --eph-parent-ink: var(--ephinta-theme-ink);
+  --eph-parent-muted: var(--ephinta-theme-muted);
+  --eph-parent-border: var(--ephinta-theme-border);
+  --eph-parent-primary: #b9a5ff;
+  --eph-parent-primary-hover: #d0c4ff;
+  --eph-parent-secondary: #a5b4fc;
+  --eph-parent-accent: #ffd27a;
+}
+html[data-ephinta-theme="colorful"] {
+  color-scheme: light;
+  --ephinta-theme-page: #f7f2ff;
+  --ephinta-theme-surface: #ffffff;
+  --ephinta-theme-surface-soft: #fff8ed;
+  --ephinta-theme-ink: #21152f;
+  --ephinta-theme-muted: #51445f;
+  --ephinta-theme-placeholder: #71647e;
+  --ephinta-theme-border: #d6c9e5;
+  --ephinta-theme-link: #5424a8;
+  --ephinta-theme-primary-bg: #6d35c8;
+  --ephinta-theme-primary-ink: #ffffff;
+  --ephinta-theme-focus: #285bd4;
+  --ess-bg: var(--ephinta-theme-page);
+  --ess-bg-2: #fff0dc;
+  --ess-surface: var(--ephinta-theme-surface);
+  --ess-surface-soft: var(--ephinta-theme-surface-soft);
+  --ess-ink: var(--ephinta-theme-ink);
+  --ess-ink-soft: var(--ephinta-theme-muted);
+  --ess-mute: var(--ephinta-theme-muted);
+  --ess-line: var(--ephinta-theme-border);
+  --ess-line-strong: #bba9d2;
+  --eph-parent-bg: var(--ephinta-theme-page);
+  --eph-parent-bg-soft: #fff8ed;
+  --eph-parent-surface: var(--ephinta-theme-surface);
+  --eph-parent-surface-muted: var(--ephinta-theme-surface-soft);
+  --eph-parent-ink: var(--ephinta-theme-ink);
+  --eph-parent-muted: var(--ephinta-theme-muted);
+  --eph-parent-border: var(--ephinta-theme-border);
+}
+
+/* Reset the older bright-orange layer's fixed page colors using theme tokens. */
+html,
+body,
+#root {
+  color: var(--ephinta-theme-ink) !important;
+  background: var(--ephinta-theme-page) !important;
+}
+body {
+  -webkit-font-smoothing: antialiased;
+}
+:where(p, li, dt, dd, label, legend, small, summary, figcaption, blockquote,
+       .workspace-subtitle, .section-description, .helper-text, .form-hint,
+       .empty-state, .muted, .text-muted) {
+  color: var(--ephinta-theme-muted);
+}
+:where(h1, h2, h3, h4, h5, h6, strong, b, .page-title, .dashboard-title) {
+  color: var(--ephinta-theme-ink);
+}
+a { color: var(--ephinta-theme-link); }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+select,
+textarea {
+  color: var(--ephinta-theme-ink) !important;
+  background: var(--ephinta-theme-surface-soft) !important;
+  border-color: var(--ephinta-theme-border) !important;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--ephinta-theme-placeholder) !important;
+  opacity: 1 !important;
+}
+
+/* Shared light surfaces stay light in light and colorful themes, dark in dark. */
+:where(.workspace-card, .dashboard-card, .stat-card, .panel-card, .surface-card,
+       .listing-card, .vendor-card, .marketplace-card, .empty-marketplace,
+       .detail-section-card, .cart-summary, .ess-card,
+       .ess-auth-modal, .eph-modal, [role="dialog"], [aria-modal="true"],
+       dialog[open]) {
+  color: var(--ephinta-theme-ink) !important;
+  background: var(--ephinta-theme-surface) !important;
+  border-color: var(--ephinta-theme-border) !important;
+}
+:where(.workspace-card, .dashboard-card, .stat-card, .panel-card, .surface-card,
+       .listing-card, .vendor-card, .marketplace-card, .empty-marketplace,
+       .detail-section-card, .cart-summary, .ess-card,
+       .ess-auth-modal, .eph-modal, [role="dialog"], [aria-modal="true"],
+       dialog[open]) :where(h1,h2,h3,h4,strong,b,label) {
+  color: var(--ephinta-theme-ink) !important;
+}
+:where(.workspace-card, .dashboard-card, .stat-card, .panel-card, .surface-card,
+       .listing-card, .vendor-card, .marketplace-card, .empty-marketplace,
+       .detail-section-card, .cart-summary, .ess-card,
+       .ess-auth-modal, .eph-modal, [role="dialog"], [aria-modal="true"],
+       dialog[open]) :where(p,small,li,.muted,.text-muted,.helper-text) {
+  color: var(--ephinta-theme-muted) !important;
+}
+
+/* Keep deliberately dark/colored feature panels readable in every theme. */
+:where(.workspace-intro, .ess-sidebar, .app-sidebar, .dashboard-sidebar,
+       .sidebar, .pl-footer, .esg-footer, .hero-dark, .dark-panel) {
+  color: #ffffff !important;
+}
+:where(.workspace-intro, .ess-sidebar, .app-sidebar, .dashboard-sidebar,
+       .sidebar, .pl-footer, .esg-footer, .hero-dark, .dark-panel)
+  :where(h1,h2,h3,h4,strong,b,p,span,small,label,a,li) {
+  color: inherit;
+}
+:where(.workspace-intro, .hero-dark, .dark-panel) :where(p,small,.muted) {
+  color: #e4e9f5 !important;
+}
+:where(.ess-sidebar, .app-sidebar, .dashboard-sidebar, .sidebar)
+  a[aria-current="page"],
+:where(.ess-sidebar, .app-sidebar, .dashboard-sidebar, .sidebar) .active {
+  color: #ffffff !important;
+}
+
+/* High-contrast action labels: never put dark text on dark buttons or vice versa. */
+:where(.primary-button, .continue-action, .select-listing,
+       .ess-primary, .pl-btn-primary, .pl-primary, .esg-btn.p) {
+  color: var(--ephinta-theme-primary-ink) !important;
+  background-color: var(--ephinta-theme-primary-bg) !important;
+}
+:where(button, [role="button"], input, select, textarea, a):focus-visible {
+  outline: 3px solid var(--ephinta-theme-focus) !important;
+  outline-offset: 2px;
+}
+::selection {
+  color: #111827;
+  background: #facc75;
+}
+@media (prefers-contrast: more) {
+  :root {
+    --ephinta-theme-muted: var(--ephinta-theme-ink);
+    --ephinta-theme-border: #64748b;
+  }
+}
+
+/* The guided event builder is an intentionally branded feature surface.
+   Preserve its violet-tinted gradient while giving its copy a crisp ink tone. */
+.ess-builder-card {
+  color: #211d37 !important;
+  background-image: linear-gradient(145deg, #ffffff 0%, #f8f6ff 100%) !important;
+  border-color: #d9d2ee !important;
+}
+.ess-builder-card :where(h1, h2, h3, h4, strong, b, label) {
+  color: #211d37 !important;
+}
+.ess-builder-card :where(p, small, li, .muted, .text-muted, .helper-text) {
+  color: #514d65 !important;
+}
+
+/* Keep planner form values aligned with the parent design-system ink. */
+.ess-builder-card input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.ess-builder-card select,
+.ess-builder-card textarea {
+  color: #211d37 !important;
+}
