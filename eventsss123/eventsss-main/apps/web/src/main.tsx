@@ -160,7 +160,6 @@ import "./styles/ephinta-polish.css";
 import "./styles/ephinta-audio.css";
 import "./ephinta-product-excellence.css";
 import "./ephinta-screen-refinement.css";
-import "./styles/ephinta-parent-design-system.css";
-
 import "./styles/ephinta-unified-design-system.css";
 import "./styles/ephinta-theme-text-contrast.css";
+import "./styles/ephinta-parent-design-system.css";
