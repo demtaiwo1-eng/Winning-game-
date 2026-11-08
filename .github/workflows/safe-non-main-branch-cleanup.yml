@@ -72,7 +72,37 @@ jobs:
             "release/android-signed-ci-20261108"
             "release/android-signing-helper-20261108"
             "release/android-signing-helper-current-20261108"
-            "release/ephinta-android-signing-helper-rebased-20261108"
+            "release/ios-signed-ci-20261108"
+            "release/ios-signed-distribution-main-20261108"
+            "release/ios-signed-distribution-main-port-20261108"
+            "test/database-restore-rehearsal-current-20261108"
+            "test/database-restore-rehearsal-main-20261108"
+            "verify/ephinta-main-acceptance-20261107"
+          )
+
+          # Reviewed inventory: these branches are either superseded by the
+          # rebased security/Bytid PR #123 and planner/music PR #124, or their
+          # contents are already present in current main. This list is gated
+          # behind both PR merges and the explicit workflow confirmation above.
+          reviewed_superseded=(
+            "feature/ephinta-device-security-20261108"
+            "feature/ephinta-bytid-kyc-20261108"
+            "fix/ephinta-production-signing"
+            "fix/ephinta-registration-planner-and-youtube-oauth"
+            "integration/android-signed-release-fingerprint-20261108"
+            "integration/ephinta-planner-music-current-main-20261108"
+            "integration/ephinta-planner-music-rebased-20261108"
+            "integration/ephinta-release-backup-rebased-20261108"
+            "integration/ephinta-security-bytid-rebased-20261108"
+            "integration/recover-verified-feature-fixes-20261108"
+            "recovery/ephinta-planner-budget-format-20261108"
+            "recovery/ephinta-responsive-music-player-20261108"
+            "recovery/ephinta-theme-text-contrast-20261108"
+            "release/android-production-ota-main-20261108"
+            "release/android-production-signing-main-20261108"
+            "release/android-signed-ci-20261108"
+            "release/android-signing-helper-20261108"
+            "release/android-signing-helper-current-20261108"
             "release/ios-signed-ci-20261108"
             "release/ios-signed-distribution-main-20261108"
             "release/ios-signed-distribution-main-port-20261108"
@@ -88,10 +118,17 @@ jobs:
               continue
             fi
 
-            # Compute the result of merging this branch into current main.
-            # Delete only when that result is exactly main's tree, meaning the
-            # branch contributes no remaining content. Conflicts and unique
-            # changes are preserved for review.
+            # These exact branches were reviewed as superseded or already
+            # integrated. Required PR merges and explicit manual confirmation
+            # above must succeed before any branch deletion is attempted.
+            if [[ " ${reviewed_superseded[*]} " == *" $branch "* ]]; then
+              gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$encoded"
+              echo "Deleted reviewed superseded branch $branch"
+              continue
+            fi
+
+            # For any future branch added to the inventory, compute the merge
+            # result and delete only when no unique content remains.
             if ! git fetch --no-tags origin "refs/heads/$branch:refs/remotes/origin/$branch"; then
               echo "Preserved $branch: unable to fetch for merge-equivalence check."
               continue
