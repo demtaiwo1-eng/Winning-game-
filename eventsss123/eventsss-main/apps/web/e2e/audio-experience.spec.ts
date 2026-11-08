@@ -46,7 +46,8 @@ const viewports = [
   { name: "small mobile", width: 320, height: 740 },
 ];
 for (const viewport of viewports) {
-  const projectTag = viewport.name.includes("mobile") ? " @mobile" : "";\n  test("music player fits " + viewport.name + " without horizontal overflow" + projectTag, async ({ page }) => {
+  const projectTag = viewport.name.includes("mobile") ? " @mobile" : "";
+  test("music player fits " + viewport.name + " without horizontal overflow" + projectTag, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.addInitScript(() => localStorage.setItem("ephinta:sound", "on"));
     await page.goto("/");
