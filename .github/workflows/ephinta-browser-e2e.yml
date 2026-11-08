@@ -34,6 +34,7 @@ jobs:
         run: |
           node --check scripts/authorize-youtube-account.mjs
           node --check scripts/sync-wale-waves-playlists.mjs
+          node --check scripts/ephinta-connection-check.mjs
       - name: Cache Playwright Chromium
         id: playwright-cache
         uses: actions/cache@v4
