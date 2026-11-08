@@ -100,7 +100,9 @@ kycRouter.post("/bytid/requests", asyncHandler(async (req, res) => {
   }
   const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { id: true, name: true, email: true } });
   if (!user) throw new HttpError(404, "USER_NOT_FOUND", "Account not found.");
-  const redirect = new URL("/kyc/bytid/complete", process.env.APP_BASE_URL || "http://localhost:4173");
+  const redirect = new URL("/", process.env.APP_BASE_URL || "http://localhost:4173");
+  redirect.searchParams.set("kyc", "bytid");
+  redirect.searchParams.set("requestId", "pending");
   if (redirect.protocol !== "https:" && redirect.hostname !== "localhost") {
     throw new HttpError(503, "KYC_REDIRECT_MISCONFIGURED", "The application return URL must use HTTPS.");
   }
@@ -115,6 +117,7 @@ kycRouter.post("/bytid/requests", asyncHandler(async (req, res) => {
   const request = await prisma.verificationRequest.create({
     data: { userId: user.id, kind: VerificationKind.IDENTITY, status: VerificationStatus.PENDING, notes: "Identity verification initiated with Bytid." },
   });
+  redirect.searchParams.set("requestId", request.id);
   const reference = `ephinta-${request.id}`;
   try {
     const providerRequest = await bytidRequest<BytidKycData & { url?: string }>("kyc/requests", "POST", {
@@ -133,7 +136,7 @@ kycRouter.post("/bytid/requests", asyncHandler(async (req, res) => {
       action: "BYTID_KYC_STARTED",
       entity: "VerificationRequest",
       entityId: request.id,
-      meta: { provider: "BYTID", providerRequestId: providerRequest.id, reference, environment: providerRequest.environment || "unknown" },
+      meta: { provider: "BYTID", providerRequestId: providerRequest.id, reference, environment: providerRequest.environment || "unknown", consent: true, consentVersion: "2026-11-08" },
     } });
     return res.status(201).json({ requestId: request.id, provider: "BYTID", status: providerRequest.status || "pending", verificationUrl: providerRequest.url, expiresAt: providerRequest.expires_at || null });
   } catch (error) {
