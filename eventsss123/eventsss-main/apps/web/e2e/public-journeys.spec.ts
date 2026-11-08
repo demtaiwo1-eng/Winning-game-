@@ -674,6 +674,13 @@ test("mobile registration keeps compact branding and reachable navigation withou
 test("planner registration keeps the logo visible and opens the saved follow-up questionnaire", async ({ page }) => {
   // Keep unrelated background API calls deterministic in browser CI. Specific
   // route fixtures registered below take precedence over this fallback.
+  await page.route("**/api/v1/billing/public-promotions**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ promotions: [], items: [], data: [] }),
+    });
+  });
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     if (request.method() === "GET") {
@@ -767,8 +774,9 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   const createAccount = dialog.getByRole("button", { name: /Create account/ });
   await expect(createAccount).toBeVisible();
   await expect(createAccount).toBeEnabled();
-  // Wait for the step transition to settle before submitting the signup form.
-  await createAccount.click();
+  // Submit through the native button activation after the step transition.
+  // This avoids Playwright waiting indefinitely on the animated dialog layout.
+  await createAccount.evaluate((button) => (button as HTMLButtonElement).click());
 
   const onboarding = page.getByRole("dialog", { name: "client onboarding" });
   await expect(onboarding).toBeVisible();
