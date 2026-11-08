@@ -285,6 +285,27 @@ export default function MarketplaceBrowse({
 
   return (
     <section className="ess-panel ess-marketplace">
+      <section className="ess-marketplace-welcome" aria-labelledby="ess-marketplace-welcome-title">
+        <div className="ess-marketplace-welcome-copy">
+          <p className="ess-eyebrow">Your event, beautifully brought together</p>
+          <h1 id="ess-marketplace-welcome-title">Welcome to your event marketplace.</h1>
+          <p>Discover trusted event professionals, bring every detail into one plan, and keep bookings, conversations and payments connected from your first idea to event day.</p>
+          <div className="ess-marketplace-welcome-actions"><a className="ess-primary" href="#ess-marketplace-catalog">Explore services <span aria-hidden="true">→</span></a><span className="ess-marketplace-welcome-note"><span aria-hidden="true">✓</span> One workspace for your whole event</span></div>
+        </div>
+        <div className="ess-marketplace-welcome-art" aria-label="EPHINTA event planning features">
+          <div className="ess-marketplace-orbit ess-marketplace-orbit-one"></div><div className="ess-marketplace-orbit ess-marketplace-orbit-two"></div>
+          <div className="ess-marketplace-feature-tile ess-marketplace-feature-main"><span>✦</span><small>YOUR EVENT, CONNECTED</small><strong>Idea to<br />celebration.</strong><em>Plan · Book · Celebrate</em></div>
+          <div className="ess-marketplace-float ess-marketplace-float-top"><span>✓</span> Verified vendors</div><div className="ess-marketplace-float ess-marketplace-float-bottom"><span>◷</span> One clear timeline</div>
+        </div>
+      </section>
+      <section className="ess-marketplace-capabilities" aria-label="What you can do with EPHINTA">
+        <article className="ess-marketplace-capability"><span className="ess-marketplace-capability-icon">⌁</span><div><h3>Plan with confidence</h3><p>Build your event brief, organise tasks, manage your budget and keep important dates in view.</p></div></article>
+        <article className="ess-marketplace-capability"><span className="ess-marketplace-capability-icon">◇</span><div><h3>Find the right people</h3><p>Explore venues, catering, décor, rentals and event services in one marketplace.</p></div></article>
+        <article className="ess-marketplace-capability"><span className="ess-marketplace-capability-icon">↗</span><div><h3>Book with clarity</h3><p>Send enquiries, connect bookings to your event and follow payment milestones.</p></div></article>
+        <article className="ess-marketplace-capability"><span className="ess-marketplace-capability-icon">◎</span><div><h3>Stay in control</h3><p>Coordinate guests, messages, checklists and service readiness from your workspace.</p></div></article>
+      </section>
+      <div className="ess-marketplace-journey" aria-label="Your EPHINTA journey"><span><b>01</b> Create your event</span><i aria-hidden="true">→</i><span><b>02</b> Discover providers</span><i aria-hidden="true">→</i><span><b>03</b> Manage bookings</span><i aria-hidden="true">→</i><span><b>04</b> Get event-ready</span></div>
+      <div className="ess-marketplace-catalog-heading" id="ess-marketplace-catalog"><div><p className="ess-eyebrow">Make your next move</p><h2>Explore the marketplace</h2><p className="ess-muted">Browse available services or search for something specific to your event.</p></div></div>
       <div className="ess-wallet-badge" style={{ marginBottom: 12 }}>TEST MODE — bookings are for sandbox/demo verification until live payment mode is enabled.</div>
       <div className="ess-marketplace-head">
         <div>
