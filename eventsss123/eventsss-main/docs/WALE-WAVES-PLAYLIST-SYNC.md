@@ -11,28 +11,42 @@ In Google Cloud Console:
 
 1. Select a project and enable **YouTube Data API v3**.
 2. Configure the OAuth consent screen.
-3. Create an OAuth client of type **Web application**.
-4. Add the exact callback URL you will use below to **Authorised redirect URIs**.
-5. Keep the client ID and client secret private.
+3. Create an OAuth client:
+   - **Desktop app** if you run the authorisation script on your own Windows,
+     macOS or Linux computer. Use the loopback callback shown below.
+   - **Web application** if you run it inside Codespaces. Add the exact forwarded
+     callback URL to **Authorised redirect URIs**.
+4. Keep the client ID and client secret private. The script uses PKCE (S256)
+   and validates OAuth state for both flows.
 
 The only requested permission is `https://www.googleapis.com/auth/youtube.readonly`.
 EPHINTA never asks for your Google password. Google handles sign-in and consent.\nThe bootstrap uses a random OAuth state value and PKCE (S256) for the\nauthorisation-code exchange.
 
 ## 2. Authorise the YouTube account once
 
-Run from the repository root in a Codespace. First forward the callback port
-`53682` as **Public** in the Codespaces Ports panel. Set the forwarded URL,
-including `/oauth2callback`, as the callback URL and register that exact URL in
-Google Cloud Console.
+Run from the repository root. Choose one of these two setups:
 
-Example (replace the URL with the forwarded address shown by Codespaces):
+**Local computer (recommended if you have Node.js installed):** use a Desktop
+app OAuth client and a loopback redirect. The script listens only on the local
+loopback interface.
+
+**Codespaces:** forward port `53682` as **Public** in the Ports panel. Use a
+Web application OAuth client, set the forwarded URL including
+`/oauth2callback` as the redirect URI, and register that exact URI in Google
+Cloud Console. If Google rejects the Codespaces domain as a redirect URI, use
+the local Desktop app flow instead.
+
+Local example:
 
 ```bash
 export YOUTUBE_CLIENT_ID="your-oauth-client-id"
 export YOUTUBE_CLIENT_SECRET="your-oauth-client-secret"
-export YOUTUBE_OAUTH_REDIRECT_URI="https://YOUR-CODESPACE-53682.app.github.dev/oauth2callback"
+export YOUTUBE_OAUTH_REDIRECT_URI="http://127.0.0.1:53682/"
 node eventsss123/eventsss-main/scripts/authorize-youtube-account.mjs
 ```
+
+For Codespaces, change the redirect variable to
+`https://YOUR-CODESPACE-53682.app.github.dev/oauth2callback`.
 
 Open the printed Google authorisation URL, choose the YouTube account that owns
 the EPHINTA music playlists, and approve read-only access. The callback saves a
