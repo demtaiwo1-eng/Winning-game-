@@ -72,6 +72,7 @@ jobs:
             "release/android-signed-ci-20261108"
             "release/android-signing-helper-20261108"
             "release/android-signing-helper-current-20261108"
+            "release/ephinta-android-signing-helper-rebased-20261108"
             "release/ios-signed-ci-20261108"
             "release/ios-signed-distribution-main-20261108"
             "release/ios-signed-distribution-main-port-20261108"
