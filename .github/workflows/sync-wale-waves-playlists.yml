@@ -1,0 +1,73 @@
+name: Sync EPHINTA YouTube account playlists
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ephinta-youtube-account-playlist-sync
+  cancel-in-progress: false
+
+jobs:
+  refresh-playlists:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate YouTube sync scripts
+        run: |
+          node --check eventsss123/eventsss-main/scripts/authorize-youtube-account.mjs
+          node --check eventsss123/eventsss-main/scripts/sync-wale-waves-playlists.mjs
+
+      - name: Check whether YouTube account credentials are configured
+        id: youtube-credentials
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+        run: |
+          if [ -n "$YOUTUBE_CLIENT_ID" ] && [ -n "$YOUTUBE_CLIENT_SECRET" ] && [ -n "$YOUTUBE_REFRESH_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::YouTube playlist sync skipped: owner OAuth secrets are not configured yet."
+          fi
+      - name: Discover playlists owned by the authorised account
+        if: steps.youtube-credentials.outputs.available == 'true'
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+        run: node eventsss123/eventsss-main/scripts/sync-wale-waves-playlists.mjs
+
+      - name: Open a reviewable catalogue update pull request
+        if: steps.youtube-credentials.outputs.available == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/wale-waves-playlist-catalog
+          delete-branch: true
+          commit-message: "chore: refresh EPHINTA YouTube account playlists"
+          title: "Refresh EPHINTA YouTube playlist catalogue"
+          body: |
+            Automated playlist metadata refresh using the authorised Wale Waves account.
+
+            - Reads playlist metadata and video IDs only.
+            - Does not download or rehost audio.
+            - Keeps catalogue changes reviewable and never pushes generated data directly to main.
+          add-paths: |
+            eventsss123/eventsss-main/apps/web/public/data/wale-waves-playlists.json
