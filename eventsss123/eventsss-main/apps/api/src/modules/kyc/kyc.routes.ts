@@ -80,7 +80,7 @@ kycRouter.post("/bytid/webhook", asyncHandler(async (req, res) => {
         if (bytidOutcomeIsVerified(data, consentMeta?.requireDocument === true)) {
           await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.VERIFIED, notes: "Identity verified by Bytid hosted KYC." } });
         } else if (bytidOutcomeIsRejected(data, consentMeta?.requireDocument === true)) {
-          await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.REJECTED, notes: `Bytid KYC outcome: ${data.outcome.slice(0, 100)}` } });
+          await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.REJECTED, notes: `Bytid KYC outcome: ${(data.outcome || "unknown").slice(0, 100)}` } });
         }
       }
     }
@@ -191,7 +191,7 @@ kycRouter.get("/bytid/requests/:id", asyncHandler(async (req, res) => {
   if (request.status === VerificationStatus.PENDING && bytidOutcomeIsVerified(result, consentMeta?.requireDocument === true)) {
     await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.VERIFIED, notes: "Identity verified by Bytid hosted KYC." } });
   } else if (request.status === VerificationStatus.PENDING && bytidOutcomeIsRejected(result, consentMeta?.requireDocument === true)) {
-    await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.REJECTED, notes: `Bytid KYC outcome: ${result.outcome.slice(0, 100)}` } });
+    await prisma.verificationRequest.update({ where: { id: request.id }, data: { status: VerificationStatus.REJECTED, notes: `Bytid KYC outcome: ${(result.outcome || "unknown").slice(0, 100)}` } });
   }
   const latest = await prisma.verificationRequest.findUnique({ where: { id: request.id }, select: { id: true, status: true, createdAt: true, reviewedAt: true } });
   return res.json({ request: latest, provider: "BYTID", providerStatus: result.status, outcome: result.outcome || null, faceMatch: result.verification?.face_match?.status || null, liveness: result.liveness?.status || null });
