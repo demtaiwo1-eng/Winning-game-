@@ -60,7 +60,15 @@ export function selectProvider(currency: string, country?: string): ProviderName
 
   const c = currency.toUpperCase();
 
-  if (c === "NGN" && env.OPAY_MERCHANT_ID && env.OPAY_PUBLIC_KEY && env.OPAY_SECRET_KEY) return "opay";
+  // The OPay adapter is deliberately sandbox-only. Never select it while the
+  // application is configured for live payments.
+  if (
+    c === "NGN" &&
+    env.PAYMENT_MODE === "test" &&
+    env.OPAY_MERCHANT_ID &&
+    env.OPAY_PUBLIC_KEY &&
+    env.OPAY_SECRET_KEY
+  ) return "opay";
 
   if (["NGN", "GHS"].includes(c)) {
     if (env.PAYSTACK_SECRET_KEY) return "paystack";
@@ -99,12 +107,23 @@ export async function initializeOpay(input: {
   notifyUrl?: string;
 }): Promise<InitResult> {
   assertPaymentMode();
+  if (env.PAYMENT_MODE !== "test") {
+    throw new Error("OPay checkout is sandbox-only; live OPay processing is not enabled");
+  }
   if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
     throw new Error("OPay credentials are not configured");
   }
   if (input.currency.toUpperCase() !== "NGN") {
     throw new Error("OPay checkout currently supports NGN only");
   }
+  const total = Number(input.amountMinor);
+  if (!Number.isSafeInteger(total) || total <= 0) {
+    throw new Error("OPay amount must be a positive safe integer in minor units");
+  }
+  if (!input.reference.trim()) {
+    throw new Error("OPay payment reference is required");
+  }
+
   const res = await fetch("https://testapi.opaycheckout.com/api/v1/international/cashier/create", {
     method: "POST",
     headers: {
@@ -115,7 +134,7 @@ export async function initializeOpay(input: {
     body: JSON.stringify({
       country: "NG",
       reference: input.reference,
-      amount: { total: Number(input.amountMinor), currency: "NGN" },
+      amount: { total, currency: "NGN" },
       returnUrl: input.callbackUrl,
       ...(input.notifyUrl ? { callbackUrl: input.notifyUrl } : {}),
       product: { name: "EPHINTA Wallet Deposit", description: "Wallet funding" },
@@ -130,10 +149,30 @@ export async function initializeOpay(input: {
   if (!res.ok || data.code !== "00000" || !data.data?.cashierUrl) {
     throw new Error(data.message || "OPay checkout initialization failed");
   }
+  if (data.data.reference !== input.reference) {
+    throw new Error("OPay checkout response reference does not match the requested payment");
+  }
+
+  let cashierUrl: URL;
+  try {
+    cashierUrl = new URL(data.data.cashierUrl);
+  } catch {
+    throw new Error("OPay returned an invalid cashier URL");
+  }
+  if (
+    cashierUrl.protocol !== "https:" ||
+    cashierUrl.hostname.toLowerCase() !== "sandboxcashier.opaycheckout.com" ||
+    cashierUrl.username ||
+    cashierUrl.password ||
+    cashierUrl.port
+  ) {
+    throw new Error("OPay returned a cashier URL outside the approved sandbox host");
+  }
+
   return {
     provider: "opay",
     providerRef: data.data.reference || input.reference,
-    authorizationUrl: data.data.cashierUrl,
+    authorizationUrl: cashierUrl.toString(),
     // This adapter targets OPay's test endpoint; report sandbox explicitly.
     mode: "sandbox",
   };
