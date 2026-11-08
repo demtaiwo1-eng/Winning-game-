@@ -41,18 +41,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install PostgreSQL client tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-          pg_dump --version
-          pg_restore --version
-
-      - name: Create disposable source fixture and custom archive
+      - name: Create disposable source fixture and PostgreSQL 16 custom archive
         run: |
           set -euo pipefail
-          pg_isready -h 127.0.0.1 -p 5432 -U postgres
-          psql "$SOURCE_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          docker run --rm --network host -e PGPASSWORD=postgres -e SOURCE_DATABASE_URL="$SOURCE_DATABASE_URL" postgres:16 \
+            pg_isready -h 127.0.0.1 -p 5432 -U postgres
+          docker run --rm --network host -i -e PGPASSWORD=postgres -e SOURCE_DATABASE_URL="$SOURCE_DATABASE_URL" postgres:16 \
+            psql "$SOURCE_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
           CREATE TABLE public."_prisma_migrations" (
             id text PRIMARY KEY,
             checksum text NOT NULL,
@@ -68,31 +63,47 @@ jobs:
           CREATE TABLE public."RestoreFixture" (id integer PRIMARY KEY, marker text NOT NULL);
           INSERT INTO public."RestoreFixture" VALUES (1, 'restored-ok'), (2, 'preserve-fixture');
           SQL
-          pg_dump --format=custom --no-owner --no-privileges --schema=public \
-            --file="$RUNNER_TEMP/ephinta-ci-fixture.dump" "$SOURCE_DATABASE_URL"
-          pg_restore --list "$RUNNER_TEMP/ephinta-ci-fixture.dump" >/dev/null
-          createdb -h 127.0.0.1 -p 5432 -U postgres ephinta_restore_ci
+          mkdir -p "$RUNNER_TEMP/ephinta-restore"
+          docker run --rm --network host -e PGPASSWORD=postgres -v "$RUNNER_TEMP/ephinta-restore:/backup" postgres:16 \
+            pg_dump --format=custom --no-owner --no-privileges --schema=public \
+            --file=/backup/ephinta-ci-fixture.dump "$SOURCE_DATABASE_URL"
+          docker run --rm --network host -v "$RUNNER_TEMP/ephinta-restore:/backup" postgres:16 \
+            pg_restore --list /backup/ephinta-ci-fixture.dump >/dev/null
+          docker run --rm --network host -e PGPASSWORD=postgres postgres:16 \
+            createdb -h 127.0.0.1 -p 5432 -U postgres ephinta_restore_ci
 
-      - name: Run the guarded restore verifier
+      - name: Run the guarded restore verifier with PostgreSQL 16 tools
         env:
-          BACKUP: ${{ runner.temp }}/ephinta-ci-fixture.dump
+          BACKUP: ${{ runner.temp }}/ephinta-restore/ephinta-ci-fixture.dump
           RESTORE_TARGET_CONFIRMATION: DISPOSABLE_NON_PRODUCTION
-        run: bash scripts/verify-backup-restore.sh
+        run: |
+          docker run --rm --network host \
+            -e PGPASSWORD=postgres \
+            -e BACKUP=/backup/ephinta-ci-fixture.dump \
+            -e RESTORE_DATABASE_URL="$RESTORE_DATABASE_URL" \
+            -e RESTORE_TARGET_CONFIRMATION="$RESTORE_TARGET_CONFIRMATION" \
+            -v "$RUNNER_TEMP/ephinta-restore:/backup" \
+            -v "$GITHUB_WORKSPACE/eventsss123/eventsss-main:/workspace" \
+            -w /workspace postgres:16 bash scripts/verify-backup-restore.sh
 
       - name: Confirm restored fixture rows
         run: |
           set -euo pipefail
-          test "$(psql "$RESTORE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public."RestoreFixture"')" = "2"
-          test "$(psql "$RESTORE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public."_prisma_migrations" WHERE finished_at IS NOT NULL')" = "1"
+          test "$(docker run --rm --network host -e PGPASSWORD=postgres postgres:16 psql "$RESTORE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public."RestoreFixture"')" = "2"
+          test "$(docker run --rm --network host -e PGPASSWORD=postgres postgres:16 psql "$RESTORE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public."_prisma_migrations" WHERE finished_at IS NOT NULL')" = "1"
 
       - name: Prove non-empty target is refused
         run: |
           set -euo pipefail
-          psql "$RESTORE_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE TABLE public.existing_sentinel (id integer PRIMARY KEY)'
-          if BACKUP="$RUNNER_TEMP/ephinta-ci-fixture.dump" \
-             RESTORE_DATABASE_URL="$RESTORE_DATABASE_URL" \
-             RESTORE_TARGET_CONFIRMATION=DISPOSABLE_NON_PRODUCTION \
-             bash scripts/verify-backup-restore.sh; then
+          docker run --rm --network host -e PGPASSWORD=postgres postgres:16 psql "$RESTORE_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE TABLE public.existing_sentinel (id integer PRIMARY KEY)'
+          if docker run --rm --network host \
+             -e PGPASSWORD=postgres \
+             -e BACKUP=/backup/ephinta-ci-fixture.dump \
+             -e RESTORE_DATABASE_URL="$RESTORE_DATABASE_URL" \
+             -e RESTORE_TARGET_CONFIRMATION=DISPOSABLE_NON_PRODUCTION \
+             -v "$RUNNER_TEMP/ephinta-restore:/backup" \
+             -v "$GITHUB_WORKSPACE/eventsss123/eventsss-main:/workspace" \
+             -w /workspace postgres:16 bash scripts/verify-backup-restore.sh; then
             echo "::error::Restore verifier unexpectedly accepted a non-empty target."
             exit 1
           fi
