@@ -1,0 +1,98 @@
+name: EPHINTA disposable backup restore rehearsal
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "eventsss123/eventsss-main/scripts/verify-backup-restore.sh"
+      - "eventsss123/eventsss-main/docs/PHASE_0_RESTORE_REHEARSAL.md"
+      - ".github/workflows/ephinta-backup-restore-rehearsal.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restore-fixture:
+    name: Verify custom archive restore and target safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    env:
+      PGPASSWORD: postgres
+      SOURCE_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable
+      RESTORE_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/ephinta_restore_ci?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          pg_dump --version
+          pg_restore --version
+
+      - name: Create disposable source fixture and custom archive
+        run: |
+          set -euo pipefail
+          pg_isready -h 127.0.0.1 -p 5432 -U postgres
+          psql "$SOURCE_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE TABLE public."_prisma_migrations" (
+            id text PRIMARY KEY,
+            checksum text NOT NULL,
+            finished_at timestamptz,
+            migration_name text NOT NULL,
+            logs text,
+            rolled_back_at timestamptz,
+            started_at timestamptz NOT NULL DEFAULT now(),
+            applied_steps_count integer NOT NULL DEFAULT 1
+          );
+          INSERT INTO public."_prisma_migrations" (id, checksum, finished_at, migration_name)
+          VALUES ('ci-fixture-migration', 'fixture-checksum', now(), '20261108000000_ci_restore_fixture');
+          CREATE TABLE public."RestoreFixture" (id integer PRIMARY KEY, marker text NOT NULL);
+          INSERT INTO public."RestoreFixture" VALUES (1, 'restored-ok'), (2, 'preserve-fixture');
+          SQL
+          pg_dump --format=custom --no-owner --no-privileges --schema=public \
+            --file="$RUNNER_TEMP/ephinta-ci-fixture.dump" "$SOURCE_DATABASE_URL"
+          pg_restore --list "$RUNNER_TEMP/ephinta-ci-fixture.dump" >/dev/null
+          createdb -h 127.0.0.1 -p 5432 -U postgres ephinta_restore_ci
+
+      - name: Run the guarded restore verifier
+        env:
+          BACKUP: ${{ runner.temp }}/ephinta-ci-fixture.dump
+          RESTORE_TARGET_CONFIRMATION: DISPOSABLE_NON_PRODUCTION
+        run: bash scripts/verify-backup-restore.sh
+
+      - name: Confirm restored fixture rows
+        run: |
+          set -euo pipefail
+          test "$(psql "$RESTORE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public."RestoreFixture"')" = "2"
+          test "$(psql "$RESTORE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public."_prisma_migrations" WHERE finished_at IS NOT NULL')" = "1"
+
+      - name: Prove non-empty target is refused
+        run: |
+          set -euo pipefail
+          psql "$RESTORE_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE TABLE public.existing_sentinel (id integer PRIMARY KEY)'
+          if BACKUP="$RUNNER_TEMP/ephinta-ci-fixture.dump" \
+             RESTORE_DATABASE_URL="$RESTORE_DATABASE_URL" \
+             RESTORE_TARGET_CONFIRMATION=DISPOSABLE_NON_PRODUCTION \
+             bash scripts/verify-backup-restore.sh; then
+            echo "::error::Restore verifier unexpectedly accepted a non-empty target."
+            exit 1
+          fi
