@@ -23,6 +23,7 @@ import {
   type EventBuilderProgress,
 } from "./lib/eventDraft";
 import { registrationFieldError, type RegistrationField } from "./lib/registrationValidation";
+import { formatMoneyInput } from "./lib/currency";
 import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from "./lib/roleLabels";
 import NotificationsPanel from "./components/NotificationsPanel";
 import "./enterprise.css";
