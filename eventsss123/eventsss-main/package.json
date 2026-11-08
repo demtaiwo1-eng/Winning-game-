@@ -37,7 +37,8 @@
     "dev:db:stop": "docker compose -f compose.dev.yml stop postgres",
     "dev:db:logs": "docker compose -f compose.dev.yml logs -f postgres",
     "dev:db:reset": "docker compose -f compose.dev.yml down -v",
-    "dev:smoke": "node scripts/smoke-dev.mjs"
+    "dev:smoke": "node scripts/smoke-dev.mjs",
+    "connection:check": "node scripts/ephinta-connection-check.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.4",
