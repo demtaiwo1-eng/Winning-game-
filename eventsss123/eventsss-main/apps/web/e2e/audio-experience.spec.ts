@@ -96,3 +96,13 @@ test("all bundled EPHINTA music files are served as non-empty audio assets", asy
     expect((await response.body()).byteLength, track + " should not be empty").toBeGreaterThan(10000);
   }
 });
+
+test("music can be re-enabled after a user turns it off", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("ephinta:sound", "off"));
+  await page.goto("/");
+  const restore = page.getByRole("button", { name: "♫ Turn music on" });
+  await expect(restore).toBeVisible();
+  await restore.click();
+  await expect(page.getByRole("region", { name: "EPHINTA music player" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("on");
+});
