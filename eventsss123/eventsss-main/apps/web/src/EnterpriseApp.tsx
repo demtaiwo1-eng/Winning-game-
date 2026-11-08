@@ -2630,7 +2630,7 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
     setAnswers((current) => {
       const next = { ...current, [key]: value };
       if (key === "type") {
-        const category = value === "CULTURAL" ? "burial" : value === "PERSONAL" ? "wedding" : null;
+        const category = value === "CULTURAL" ? "burial" : null;
         if (category) {
           try { localStorage.setItem("ephinta:music-category", category); } catch { /* optional music preference */ }
           window.dispatchEvent(new CustomEvent("ephinta:music-category-change", { detail: category }));
