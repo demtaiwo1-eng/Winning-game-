@@ -60,7 +60,7 @@ else
   printf 'All four signing secret names are present. Values were not read or displayed.\n'
 fi
 
-VARIABLES="$(gh variable list --repo "$REPO" | awk 'NR>1 {print $1}')"
+VARIABLES="$(gh api --paginate "repos/$REPO/actions/variables" --jq '.variables[].name')"
 grep -Fxq "ANDROID_CERT_SHA256" <<<"$VARIABLES" || fail "ANDROID_CERT_SHA256 repository variable is missing. Run the approved signing setup script or ask a repository admin to configure it."
 
 step "4/5 — Require a recoverable encrypted keystore backup"
