@@ -10,6 +10,15 @@ import { bytidRequest, verifyBytidWebhook } from "../../lib/bytid";
 
 export const kycRouter = Router();
 
+kycRouter.get("/bytid/config", (_req, res) => {
+  const key = process.env.BYTID_API_KEY?.trim() || "";
+  res.json({
+    enabled: key.startsWith("uvk_test_") || (key.startsWith("uvk_live_") && process.env.BYTID_ALLOW_LIVE === "true"),
+    mode: key.startsWith("uvk_live_") && process.env.BYTID_ALLOW_LIVE === "true" ? "live" : "sandbox",
+    requireDocument: process.env.BYTID_REQUIRE_DOCUMENT === "true",
+  });
+});
+
 type BytidKycData = {
   id: string;
   reference: string;
