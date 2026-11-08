@@ -39,7 +39,7 @@ git ls-remote --exit-code origin "refs/heads/$CURRENT_BRANCH" >/dev/null 2>&1 ||
 gh auth status >/dev/null 2>&1 || fail "GitHub CLI is not authenticated. Run gh auth login and authorize repository access."
 
 step "2/5 — Inspect signing configuration without revealing values"
-SECRET_LIST="$(gh secret list --repo "$REPO" | awk 'NR>1 {print $1}')"
+SECRET_LIST="$(gh api --paginate "repos/$REPO/actions/secrets" --jq '.secrets[].name')"
 required=(ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_PASSWORD ANDROID_KEY_ALIAS)
 present=0
 missing=()
