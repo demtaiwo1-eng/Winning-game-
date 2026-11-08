@@ -33,7 +33,15 @@ export async function api<T = unknown>(
   const t = token();
   if (t) headers.Authorization = `Bearer ${t}`;
 
-  const res = await fetch(apiUrl(path), { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(apiUrl(path), { ...options, headers });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Network request failed";
+    throw new Error(
+      "EPHINTA could not reach its API. Check the internet connection, VITE_API_URL, the Render API service, and the API CORS_ORIGINS setting. (" + detail + ")",
+    );
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const message =
