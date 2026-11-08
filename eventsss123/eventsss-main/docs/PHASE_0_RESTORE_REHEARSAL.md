@@ -49,3 +49,9 @@ The script's success is necessary but not sufficient for Phase 0 sign-off. Also:
 4. Record the operator and any warnings. Keep the production database unchanged.
 
 A successful archive listing alone is not a restore rehearsal. A successful restore alone is not complete application-data validation.
+
+## Automated verifier regression (CI)
+
+The repository workflow `.github/workflows/ephinta-backup-restore-rehearsal.yml` creates a synthetic PostgreSQL 16 custom-format archive, restores it to a newly created database named `ephinta_restore_ci`, checks fixture rows and Prisma migration metadata, and confirms the verifier refuses a non-empty target. This protects the restore procedure against regressions.
+
+**This synthetic CI fixture is not the owner-held production backup.** It does not prove that `ephinta_db_20261030.dump` is intact or restorable. The exact owner archive must still pass `pg_restore --list` and a full restore to an independently confirmed disposable target before Phase 0 can be signed off.
