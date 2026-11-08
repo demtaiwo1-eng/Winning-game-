@@ -210,7 +210,7 @@ This section records the work completed after the 2026-11-07 acceptance snapshot
 ### Prepared and under review
 
 - PR #79 adds a PostgreSQL 16 synthetic backup/restore regression. Its dedicated restore job passed on the PR head, including a real custom-format dump/restore into an empty disposable DB and refusal of a non-empty target. The PR remains subject to its full verification suite and merge.
-- PR #80 documents OPay and Eversend merchant onboarding and the Cleva product/API documentation gap.
+- PR #80 merged as `7c7df407e752e42da230a4033e4d466af2b53643`; it documents OPay and Eversend merchant onboarding and the Cleva product/API documentation gap.
 - PR #81 prepares an owner-controlled App Store Connect signed IPA workflow for bundle ID `com.eventselfsolutions.app`.
 - PR #82 prepares a Codespaces helper that creates an Android upload key in the owner's home directory and writes its four values directly to protected GitHub Actions secrets through GitHub CLI stdin. It refuses to overwrite existing keys/secrets.
 - The Android signed-release workflow is merged, but no production-signed APK/AAB exists until the owner runs the Codespaces helper (or configures the four secrets manually) and dispatches the workflow.
