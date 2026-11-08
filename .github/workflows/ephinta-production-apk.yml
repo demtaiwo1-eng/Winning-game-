@@ -1,6 +1,11 @@
 name: EPHINTA Production-Signed Android APK
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/ephinta-production-apk.yml"
+      - "scripts/complete-production-apk.sh"
+      - "scripts/setup-android-signing-github.sh"
   workflow_dispatch:
   push:
     tags:
@@ -14,10 +19,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate-production-workflow:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate release workflow and helper scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ephinta-production-apk.yml", aliases: true)'
+          bash -n scripts/setup-android-signing-github.sh
+          bash -n scripts/complete-production-apk.sh
+          grep -q 'secrets.ANDROID_KEYSTORE_BASE64' .github/workflows/ephinta-production-apk.yml
+          grep -q 'vars.ANDROID_CERT_SHA256' .github/workflows/ephinta-production-apk.yml
+
   build-production-apk:
+    if: ${{ github.event_name != 'pull_request' }}
     name: Build, sign and verify production APK
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: eventsss123/eventsss-main
@@ -203,6 +228,11 @@ jobs:
             exit 1
           fi
           "$APKSIGNER" verify --verbose "$APK" >/dev/null
+          AAB_CERT="$(keytool -printcert -jarfile "$AAB" | awk -F': ' '/SHA256:/{print $2; exit}' | tr -d ':' | tr 'A-Z' 'a-z')"
+          if [[ -z "$AAB_CERT" || "$AAB_CERT" != "$EXPECTED_NORMALIZED" ]]; then
+            echo "::error::AAB signing certificate does not match ANDROID_CERT_SHA256. Refusing to publish."
+            exit 1
+          fi
           jarsigner -verify -verbose -certs "$AAB" >/dev/null
           (cd "$RUNNER_TEMP/ephinta-production" && sha256sum ephinta-production.apk ephinta-production.aab > SHA256SUMS.txt)
           unzip -t "$APK" >/dev/null
@@ -275,3 +305,11 @@ jobs:
           test -s "$BUNDLE"
           unzip -t "$BUNDLE" >/dev/null
           echo "Production OTA manifest and web bundle are reachable through the live API."
+
+      - name: Remove temporary signing material
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${RUNNER_TEMP:-}" ]]; then
+            rm -f "$RUNNER_TEMP/ephinta-production.keystore"
+          fi
