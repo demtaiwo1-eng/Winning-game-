@@ -96,10 +96,14 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm --network host -e PGPASSWORD=postgres postgres:16 psql "$RESTORE_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE TABLE public.existing_sentinel (id integer PRIMARY KEY)'
-          if BACKUP="$RUNNER_TEMP/ephinta-ci-fixture.dump" \
-             RESTORE_DATABASE_URL="$RESTORE_DATABASE_URL" \
-             RESTORE_TARGET_CONFIRMATION=DISPOSABLE_NON_PRODUCTION \
-             bash scripts/verify-backup-restore.sh; then
+          if docker run --rm --network host \
+             -e PGPASSWORD=postgres \
+             -e BACKUP=/backup/ephinta-ci-fixture.dump \
+             -e RESTORE_DATABASE_URL="$RESTORE_DATABASE_URL" \
+             -e RESTORE_TARGET_CONFIRMATION=DISPOSABLE_NON_PRODUCTION \
+             -v "$RUNNER_TEMP/ephinta-restore:/backup" \
+             -v "$GITHUB_WORKSPACE/eventsss123/eventsss-main:/workspace" \
+             -w /workspace postgres:16 bash scripts/verify-backup-restore.sh; then
             echo "::error::Restore verifier unexpectedly accepted a non-empty target."
             exit 1
           fi
