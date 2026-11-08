@@ -88,7 +88,10 @@ async function main() {
     }, token);
     for (const playlist of ownedPlaylists) {
       const playlistId = playlist.id;
-      if (!playlistId) continue;
+      const privacyStatus = safeText(playlist.status?.privacyStatus);
+      // Private playlists cannot be played by the public audience. Never publish
+      // their titles, IDs, or item metadata into the public app catalogue.
+      if (!playlistId || !["public", "unlisted"].includes(privacyStatus)) continue;
       const title = safeText(playlist.snippet?.title);
       const playlistCategory = categoryFromTitle(title);
       const playlistItems = await youtubeList("playlistItems", {
@@ -97,7 +100,8 @@ async function main() {
       }, token);
       const items = playlistItems.flatMap((entry, index) => {
         const videoId = entry.contentDetails?.videoId || entry.snippet?.resourceId?.videoId;
-        if (!videoId) return [];
+        const itemPrivacy = safeText(entry.status?.privacyStatus);
+        if (!videoId || itemPrivacy === "private") return [];
         const videoTitle = safeText(entry.snippet?.title) || "Untitled video";
         const taggedCategory = categoryFromTitle(videoTitle);
         const category = taggedCategory || playlistCategory || "unclassified";
@@ -121,7 +125,7 @@ async function main() {
         title,
         description: safeText(playlist.snippet?.description),
         category: playlistCategory || "mixed",
-        privacyStatus: safeText(playlist.status?.privacyStatus),
+        privacyStatus,
         itemCount: items.length,
         playlistUrl: "https://www.youtube.com/playlist?list=" + encodeURIComponent(playlistId),
         embedUrl: "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlistId),
