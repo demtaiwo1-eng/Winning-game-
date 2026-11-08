@@ -776,7 +776,7 @@ test("Plan a Burial opens the burial planner and selects the burial soundtrack",
   });
   await page.goto("/");
   await page.getByRole("button", { name: "Plan a Burial" }).click();
-  await expect(page).toHaveURL(/\\/plan$/);
+  await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Burial celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("CULTURAL");
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:music-category"))).toBe("burial");
