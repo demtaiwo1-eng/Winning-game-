@@ -37,4 +37,12 @@ The repository's current CI run also produces a debug APK, but that is not the p
 
 ## If Codespaces or repository secret-write permission is unavailable
 
-The setup script stops without exposing the key. An account with repository Actions-secret write permission must run the one-time setup. Do not work around this by uploading a keystore to this public repository or by printing credentials into Actions logs.
+Codespaces' injected `GITHUB_TOKEN` may authenticate `gh` but still lack permission to manage repository secrets. In the Codespaces terminal, switch `gh` to an authorized browser login, then rerun the setup command:
+
+```bash
+unset GITHUB_TOKEN GH_TOKEN
+gh auth login --hostname github.com --web --scopes repo
+bash scripts/setup-android-signing-github.sh
+```
+
+Complete the browser sign-in with an account that has repository Actions-secret write access. If that account lacks permission, a repository admin must run the one-time setup. Do not work around this by uploading a keystore to this public repository or by printing credentials into Actions logs.

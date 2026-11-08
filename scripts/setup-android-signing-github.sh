@@ -17,7 +17,7 @@ command -v openssl >/dev/null || fail "OpenSSL is required for the encrypted key
 gh auth status >/dev/null 2>&1 || fail "Sign in to GitHub CLI in this Codespace, then rerun."
 gh repo view "$REPO" >/dev/null 2>&1 || fail "Cannot access $REPO with the current GitHub account."
 
-SECRET_LIST="$(gh secret list --repo "$REPO" 2>/dev/null)" || fail "This GitHub account cannot manage repository Actions secrets. Ask a repository admin to run this setup from their Codespace."
+SECRET_LIST="$(gh secret list --repo "$REPO" 2>/dev/null)" || fail "The active gh token cannot read repository Actions secrets (Codespaces GITHUB_TOKEN commonly lacks this permission). Authenticate gh with an account that has Actions-secret write access: run 'unset GITHUB_TOKEN GH_TOKEN; gh auth login --hostname github.com --web --scopes repo', complete the browser sign-in, then rerun this script. Never paste a token into the repository or chat."
 if printf '%s\n' "$SECRET_LIST" | awk '{print $1}' | grep -qx 'ANDROID_KEYSTORE_BASE64'; then
   fail "ANDROID_KEYSTORE_BASE64 already exists. Refusing to replace an existing release key."
 fi

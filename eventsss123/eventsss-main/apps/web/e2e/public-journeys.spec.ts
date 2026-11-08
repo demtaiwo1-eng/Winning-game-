@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/v1/billing/public-promotions", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [] }),
+    }),
+  );
+});
+
 test("public landing page explains the event-planning service and its menu", async ({ page }) => {
   await page.goto("/");
   await expect(
@@ -74,6 +84,25 @@ test("the menu planner action opens the guided event planner", async ({ page }) 
   await page.getByRole("navigation", { name: "Main navigation" })
     .getByRole("button", { name: /Plan your next event here/ }).click();
 
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+});
+
+test("event planning supports in-app back and browser back/forward navigation", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Start planning" }).click();
+
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await page.getByRole("button", { name: /Back to home/ }).click();
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("heading", { name: /Plan the event you imagine/i })).toBeVisible();
+
+  await page.getByRole("button", { name: "Start planning" }).click();
+  await expect(page).toHaveURL(/\/plan$/);
+  await page.goBack();
+  await expect(page).toHaveURL("/");
+  await page.goForward();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
 });
@@ -421,16 +450,25 @@ test("authenticated planner receives no private event data outside the owned eve
 
 
 test("branded startup splash appears and clears after the app shell is ready", async ({ page }) => {
-  // Hold the entry module briefly so the short first-paint splash can be
-  // observed deterministically instead of racing its 450ms dismissal timer.
-  await page.route("**/src/main.tsx", async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    await route.continue();
+  await page.addInitScript(() => {
+    const state = window as Window & { __dismissEphintaStartup?: () => void };
+    const nativeSetTimeout = window.setTimeout;
+    window.setTimeout = ((handler, timeout, ...args) => {
+      if (timeout === 450 && typeof handler === "function") {
+        state.__dismissEphintaStartup = () => handler();
+        return 0;
+      }
+      return nativeSetTimeout(handler, timeout, ...args);
+    }) as typeof window.setTimeout;
   });
   await page.goto("/", { waitUntil: "commit" });
   const splash = page.locator("[data-ephinta-startup-splash]");
-  await expect(splash).toBeVisible({ timeout: 5000 });
+  await expect(splash).toBeVisible();
   await expect(splash).toContainText("EPHINTA");
+  await page.evaluate(() => {
+    const state = window as Window & { __dismissEphintaStartup?: () => void };
+    state.__dismissEphintaStartup?.();
+  });
   await expect(splash).toBeHidden({ timeout: 5000 });
 });
 
