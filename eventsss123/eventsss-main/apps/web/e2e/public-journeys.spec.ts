@@ -761,6 +761,18 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   await onboarding.getByRole("button", { name: "Continue" }).click();
   await onboarding.getByRole("button", { name: "Open my planner" }).click();
 
+  // The first planner workspace should be a full marketplace welcome session,
+  // not a blank-looking overview or a tiny block of text in the page corner.
+  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+  await expect(page.getByRole("region", { name: "What you can do with EPHINTA" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Plan with confidence" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Find the right people" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Book with clarity" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Stay in control" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Explore the marketplace" })).toBeVisible();
+
+  // The saved follow-up questionnaire remains available in Overview.
+  await page.getByRole("button", { name: "Overview", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Plan the details for Planner Follow-up Event" }),
   ).toBeVisible();
