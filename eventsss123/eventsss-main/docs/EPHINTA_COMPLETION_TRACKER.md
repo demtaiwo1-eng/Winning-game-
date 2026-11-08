@@ -205,7 +205,7 @@ This section records the work completed after the 2026-11-07 acceptance snapshot
 
 - PR #75 merged as `181525b463a0eda7ab5bb584490c5f96b084a907`. Its final PR head passed the parent-theme, responsive UX, API/database, browser journey, Android compatibility, iOS Simulator and application verification workflows.
 - PR #76 merged as `d31670c54779a7cb30f8ca839618c1095c624f32`. It adds a manual owner-controlled Android signed APK/AAB workflow and gives the full-stack verification job a disposable PostgreSQL 16 service. All five PR verification workflows passed, including the full-stack startup smoke, web/Android build and unsigned iOS Simulator build.
-- Render API service `ephinta_wss` has a live deployment for main commit `d31670c54779a7cb30f8ca839618c1095c624f32`. This is deployment evidence, not a physical-device or live-payment sign-off.
+- Render API service `ephinta_wss` and static site `ephinta-web` have live deployments for main commit `cf3fd323e6356c963103f4bcf9a401437a89598c` (verified 2026-11-08). The API reports `/health` and `/ready` HTTP 200; 24 migrations are applied and baseline categories/plans initialize. This is deployment evidence, not a physical-device or live-payment sign-off.
 
 ### Prepared and under review
 
