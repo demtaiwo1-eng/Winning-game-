@@ -18,7 +18,7 @@ test("music consent is a small corner prompt and accepted playback advances auto
   const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
   await expect(prompt).toBeVisible();
   await expect(page.locator(".eph-audio__backdrop")).toHaveCSS("position", "fixed");
-  await expect(page.locator(".eph-audio__backdrop")).toHaveCSS("width", "320px");
+  await expect(page.locator(".eph-audio__backdrop")).toHaveCSS("width", "340px");
   await expect(prompt.getByRole("button", { name: "No, thanks" })).toBeVisible();
 
   await prompt.getByRole("button", { name: "Yes, play music" }).click();
