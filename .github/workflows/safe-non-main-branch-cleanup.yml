@@ -40,12 +40,19 @@ jobs:
           done
           echo "All required integration PRs are merged and no PR is open."
 
-      - name: Delete only the reviewed non-main branches
+      - name: Checkout branch graph for merge-equivalence checks
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Delete only fully integrated non-main branches
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
+          git fetch --no-tags origin main
+          main_tree="$(git rev-parse 'refs/remotes/origin/main^{tree}')"
           branches=(
             "feature/ephinta-device-security-20261108"
             "feature/ephinta-bytid-kyc-20261108"
@@ -72,21 +79,29 @@ jobs:
 
           for branch in "${branches[@]}"; do
             encoded="$(jq -rn --arg value "$branch" '$value | @uri')"
-            if gh api "repos/$GITHUB_REPOSITORY/branches/$encoded" >/dev/null 2>&1; then
-              # Never delete work that is not reachable from main. The branch
-              # inventory can contain unique commits even after a PR is merged.
-              comparison="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$encoded" --jq '.status')"
-              changed_files="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$encoded" --jq '.files | length')"
-              # A branch may have different commit ancestry but an identical
-              # final tree after equivalent work was integrated elsewhere.
-              if [ "$comparison" = "behind" ] || [ "$comparison" = "identical" ] || [ "$changed_files" = "0" ]; then
+            if ! gh api "repos/$GITHUB_REPOSITORY/branches/$encoded" >/dev/null 2>&1; then
+              echo "Already absent: $branch"
+              continue
+            fi
+
+            # Compute the result of merging this branch into current main.
+            # Delete only when that result is exactly main's tree, meaning the
+            # branch contributes no remaining content. Conflicts and unique
+            # changes are preserved for review.
+            if ! git fetch --no-tags origin "refs/heads/$branch:refs/remotes/origin/$branch"; then
+              echo "Preserved $branch: unable to fetch for merge-equivalence check."
+              continue
+            fi
+            if merge_output="$(git merge-tree --write-tree refs/remotes/origin/main "refs/remotes/origin/$branch" 2>&1)"; then
+              merged_tree="$(printf '%s\\n' "$merge_output" | head -n 1)"
+              if [ "$merged_tree" = "$main_tree" ]; then
                 gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$encoded"
-                echo "Deleted fully integrated branch $branch (tree has no unmerged file changes)"
+                echo "Deleted fully integrated branch $branch"
               else
-                echo "Preserved $branch: $comparison with $changed_files changed file(s) versus main."
+                echo "Preserved $branch: it still contributes content not present on main."
               fi
             else
-              echo "Already absent: $branch"
+              echo "Preserved $branch: merge-equivalence check found conflicts."
             fi
           done
 
