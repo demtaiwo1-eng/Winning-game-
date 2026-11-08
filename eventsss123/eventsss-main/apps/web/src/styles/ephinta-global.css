@@ -1,0 +1,34 @@
+/*
+ * EPHINTA single global stylesheet entrypoint.
+ * Keep the existing design layers in their established order while making
+ * this the only global CSS import used by the application entry modules.
+ */
+
+/* Existing app shell and page styles */
+@import "../enterprise.css";
+@import "./event-planner-registration.css";
+@import "../portal-menu.css";
+@import "../public-menu.css";
+@import "../event-builder.css";
+@import "../public-landing.css";
+
+/* Shared foundations and public-facing design */
+@import "../index.css";
+@import "../ephinta-accessible-contrast.css";
+@import "./ephinta-design4.css";
+@import "../ess-bright-orange-theme.css";
+@import "../theme/tokens.css";
+@import "../ephinta-intro-refinement.css";
+@import "./ephinta-design4-enforced.css";
+@import "./ephinta-responsive-polish.css";
+@import "./ephinta-landing-repair.css";
+@import "./ephinta-current-ui-repair.css";
+
+/* Product refinements and shared components */
+@import "./ephinta-polish.css";
+@import "./ephinta-audio.css";
+@import "../ephinta-product-excellence.css";
+@import "../ephinta-screen-refinement.css";
+
+/* Parent theme stays last so its shared tokens and component overrides win. */
+@import "./ephinta-parent-design-system.css";
