@@ -21,7 +21,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [isMuted, setIsMuted] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const skipNextAutoPlay = useRef(false);
+  const skipNextAutoPlay = useRef(false);\n  const shouldResumeTrack = useRef(true);
   const currentTrack = TRACKS[trackIndex];
 
   useEffect(() => {
@@ -81,10 +81,10 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     setStatus(accepted ? "Background music is starting." : "Background music is off.");
     try { localStorage.setItem("ephinta:sound", accepted ? "on" : "off"); } catch { /* Consent remains in memory for this visit. */ }
     if (!accepted) { audioRef.current?.pause(); setIsPlaying(false); return; }
-    if (audioRef.current) { skipNextAutoPlay.current = true; void startPlayback(audioRef.current); }
+    if (audioRef.current) { shouldResumeTrack.current = false; skipNextAutoPlay.current = true; void startPlayback(audioRef.current); }
   }
 
-  function changeTrack(direction: -1 | 1) { setTrackIndex((current) => (current + direction + TRACKS.length) % TRACKS.length); }
+  function changeTrack(direction: -1 | 1, resume = isPlaying) {\n    shouldResumeTrack.current = resume;\n    setTrackIndex((current) => (current + direction + TRACKS.length) % TRACKS.length);\n  }
 
   async function togglePlayback() {
     const audio = audioRef.current;
@@ -96,7 +96,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   return (
     <>
       <audio ref={audioRef} src={audioUrl || currentTrack.src} preload="metadata"
-        onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={() => changeTrack(1)}
+        onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={() => changeTrack(1, true)}
         onError={() => { setIsPlaying(false); console.error("An EPHINTA background music track could not be loaded.", audioRef.current?.error); setStatus("This music track could not be loaded. Try the next track."); }}
       />
       <p className="eph-audio__status" role="status" aria-live="polite">{status}</p>
