@@ -113,4 +113,5 @@ const server = createServer(async (req, res) => {
     server.close();
   }
 });
-server.listen(port, "0.0.0.0");
+const listenHost = redirect.hostname === "127.0.0.1" || redirect.hostname === "localhost" ? "127.0.0.1" : "0.0.0.0";
+server.listen(port, listenHost);
