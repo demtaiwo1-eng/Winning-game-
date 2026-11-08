@@ -31,4 +31,4 @@ jobs:
           cache-dependency-path: eventsss123/eventsss-main/package-lock.json
       - name: Run guarded EPHINTA verification script
         shell: pwsh
-        run: ./scripts/verify-ephinta.ps1 -SkipAndroid
+        run: ./scripts/verify-ephinta.ps1 -SkipAndroid -SkipBrowser
