@@ -34,3 +34,20 @@
 .eph-audio__restore { position: fixed; z-index: 1190; right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); min-height: 42px; padding: 0 16px; border: 1px solid rgb(255 255 255 / 15%); border-radius: 999px; color: #f8f7ff; background: #30245a; box-shadow: 0 12px 32px rgb(12 8 30 / 28%); font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
 .eph-audio__restore:hover { background: #46347d; }
 @media (max-width: 600px) { .eph-audio__restore { right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); } }
+
+/* Prevent long permission copy and side-by-side actions from widening the
+   fixed mobile dialog beyond its viewport container. */
+.eph-audio__prompt {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.eph-audio__choices {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.eph-audio__choices button {
+  min-width: 0;
+  max-width: 100%;
+}
