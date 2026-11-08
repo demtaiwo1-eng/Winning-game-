@@ -1,6 +1,6 @@
 # Bytid identity verification integration
 
-EPHINTA uses Bytid's hosted verification link for Nigerian identity checks. The hosted journey collects an allowed identity type, performs provider liveness and face matching, and returns a provider outcome. EPHINTA does not receive or persist raw BVN/NIN values, selfie images, or biometric templates.
+EPHINTA uses Bytid's hosted verification link for Nigerian identity checks. The hosted journey supports `bvn`, `nin`, `drivers_license`, `voters_card`, and `bvn_igree` (customer-consented BVN iGree), performs provider liveness and face matching, and returns a provider outcome. EPHINTA does not receive or persist raw BVN/NIN values, selfie images, or biometric templates.
 
 ## API flow
 
