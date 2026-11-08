@@ -160,3 +160,39 @@ This section supersedes no historical evidence above. It records the latest chec
 - The Android debug APK workflow produces a device-test artifact only; it is not a production-signed release.
 - Live provider settlement, real payouts/refunds, push delivery, restore rehearsal, and physical-device acceptance must be evidenced before production sign-off.
 
+
+## Final acceptance update — 2026-11-07
+
+This section supersedes older point-in-time workflow and deployment statements above where revisions differ. It records the current repository inspection; it does not convert external/owner-dependent checks into completed work.
+
+### Source and deployment snapshot
+
+- Repository: `demtaiwo1-eng/Winning-game-`; target branch: `main`.
+- Main revision inspected: `742739733399729409c6fa877e395a2fb143f94a`.
+- PR #68 (parent design system, responsive questionnaire/audio-consent correction and acceptance audit) is merged.
+- Render web and API services were previously observed live, and the API readiness endpoint returned HTTP 200. Reconfirm both services against the post-merge main revision after the new acceptance PR is merged; a successful prior deploy is not proof that a later commit has deployed.
+- Android debug APK build job in workflow run `42420006588` completed successfully. At the last inspection, Android API 35 emulator install/launch was still in progress and API 36 was queued. Do not mark the matrix complete until both jobs finish successfully; a CI APK build is not a physical-device test.
+- Open PR #65 (`integration/ephinta-design-system-main`) is not mergeable at this inspection. It contains a broad 27-file change set; do not merge it wholesale. Review individual changes against current main before reusing any.
+- The repository currently has multiple non-main branches. Preserve branches with unique commits or open PRs. A proposed cleanup workflow is added separately and is intentionally restricted to branches with zero commits ahead of main, excluding protected branches and branches referenced by open PRs.
+
+### New CI safeguards proposed on `ops/ephinta-final-acceptance-20261107`
+
+- Add an unsigned iOS Simulator build workflow using macOS/Xcode, Capacitor iOS sync, and an uploaded simulator artifact. This verifies simulator compilation only; it does not create a signed iPhone install or App Store release.
+- Add conservative branch cleanup automation. It deletes only branches whose GitHub comparison reports zero commits ahead of main; it skips protected branches, branches with open PRs, and branches whose comparison cannot be verified. The branch containing unique OPay work must remain preserved until separately reviewed.
+- These safeguards are proposed changes until their pull request is reviewed, merged, and their own CI runs pass.
+
+### Remaining release gates — not safely automatable without owner/provider evidence
+
+1. **Cleva and Eversend:** neither adapter exists in the inspected provider registry. Implementation requires the current official API contracts, account eligibility, sandbox credentials in Render's secret store, webhook signing rules, settlement/reconciliation references, and provider approval. Do not invent endpoints or enable real-money traffic.
+2. **OPay:** existing sandbox collection code is present, but provider-side sandbox collection, webhook signature/replay handling, settlement reconciliation, refund/payout and FX capabilities must each be tested against actual sandbox credentials before claiming acceptance.
+3. **Production Android:** debug APK is not a production release. Owner must configure an Android upload/release keystore or Play App Signing and protected GitHub Actions secrets. Never commit a keystore or disclose passwords. Then build, verify signature, install and test on a physical device.
+4. **iOS distribution:** unsigned simulator build is not a physical-device/App Store build. Owner must supply Apple Developer team access, bundle identifier approval, signing certificate, provisioning profile, and protected CI credentials. No Apple credentials are available in the repository.
+5. **Physical device acceptance:** owner must install the APK on a real Android phone and test registration/sign-in (including wrong password), client/planner/vendor journeys, messaging, permissions, offline check-in, push notifications, and payment sandbox. Emulator tests cannot prove hardware NFC/Bluetooth/camera behavior.
+6. **Database restore and continuity:** the existing backup has only had its archive header inspected according to the restore runbook. Complete `pg_restore --list` and a full restore to a newly created disposable PostgreSQL target; never restore over production. The Render Free database has a reported expiry of 2026-11-26; owner must approve a no-cost continuity destination and preserve a verified backup before that date. No paid resource or destructive database operation is authorized.
+7. **Dependency security:** the repository has a reporting-only npm audit workflow. Historical reports recorded 13 total advisories (1 critical, 2 high, 8 moderate, 2 low) in one full dependency context; production-only audit previously reported zero. Re-run the audit on the current lockfile, identify exact vulnerable dependency paths, apply compatible targeted updates (including a planned Capacitor major-version migration if still required), and rerun all API/web/mobile checks. Do not use `npm audit fix --force`.
+8. **Authenticated end-to-end journeys and financial integrity:** complete seeded isolated client/planner/vendor browser journeys, role/tenant negative tests, payment webhook signature/replay tests, idempotent ledger settlement/refund tests, currency isolation, and provider sandbox settlement. Existing unit/API tests and public browser checks are not substitutes for these acceptance journeys.
+9. **Operational sign-off:** verify current Render deployment commit, public smoke tests, logs/alerts, rollback procedure, database backup and restore evidence, privacy/consent and accessibility/performance checks, then obtain explicit owner production approval.
+
+### Safety decision
+
+Do not label EPHINTA production-ready until all owner/provider/device/database gates above have evidence. Keep payment collection in sandbox/test mode, paid entitlements fail-closed, and advertising disabled until their required approvals and configuration exist.

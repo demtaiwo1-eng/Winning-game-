@@ -33,10 +33,13 @@
     "web:check": "npm run test -w apps/web && npm run build -w apps/web",
     "kyc:research": "node scripts/research-kyc-providers.mjs",
     "test:kyc-research": "node scripts/research-kyc-providers.mjs --self-test",
-    "ux:audit": "node scripts/ux-audit.mjs"
+    "ux:audit": "node scripts/ux-audit.mjs",
+    "dev:db:stop": "docker compose -f compose.dev.yml stop postgres",
+    "dev:db:logs": "docker compose -f compose.dev.yml logs -f postgres",
+    "dev:db:reset": "docker compose -f compose.dev.yml down -v",
+    "dev:smoke": "node scripts/smoke-dev.mjs"
   },
   "devDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.65.1",
     "concurrently": "^9.2.4",
     "wait-on": "^9.5.1"
   },

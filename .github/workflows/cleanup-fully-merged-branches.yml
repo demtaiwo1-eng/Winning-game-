@@ -1,0 +1,58 @@
+name: Clean up fully merged branches
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: cleanup-fully-merged-branches
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Delete only branches with zero unique commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove verified stale branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          open_pr_branches="$(gh api "repos/$REPOSITORY/pulls?state=open&per_page=100" --paginate --jq '.[] | select(.head.repo.full_name == env.REPOSITORY) | .head.ref')"
+
+          while IFS=$'\t' read -r branch protected; do
+            [[ -z "$branch" || "$branch" == "main" ]] && continue
+            if [[ "$protected" == "true" ]]; then
+              echo "KEEP protected branch: $branch"
+              continue
+            fi
+            if grep -Fxq -- "$branch" <<<"$open_pr_branches"; then
+              echo "KEEP branch with open PR: $branch"
+              continue
+            fi
+
+            encoded_branch="$(jq -rn --arg value "$branch" '$value | @uri')"
+            compare_json="$(gh api "repos/$REPOSITORY/compare/main...$encoded_branch" 2>/dev/null || true)"
+            if [[ -z "$compare_json" ]]; then
+              echo "KEEP branch; comparison unavailable: $branch"
+              continue
+            fi
+
+            ahead_by="$(jq -r '.ahead_by // -1' <<<"$compare_json")"
+            if [[ "$ahead_by" == "0" ]]; then
+              echo "DELETE fully merged branch: $branch"
+              gh api --method DELETE "repos/$REPOSITORY/git/refs/heads/$encoded_branch"
+            else
+              echo "KEEP branch with $ahead_by unique commit(s): $branch"
+            fi
+          done < <(gh api "repos/$REPOSITORY/branches?per_page=100" --paginate --jq '.[] | [.name, (.protected | tostring)] | @tsv')
+
+          echo "Cleanup finished. main, protected branches, open-PR branches, and branches with unique commits were preserved."

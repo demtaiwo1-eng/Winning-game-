@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ephinta-dev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ess
+      POSTGRES_PASSWORD: ess
+      POSTGRES_DB: ess
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ephinta_dev_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ess -d ess"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  ephinta_dev_postgres:

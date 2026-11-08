@@ -672,3 +672,36 @@
     background: #fff;
   }
 }
+
+/* Prevent intrinsic form controls and role chips from widening the registration dialog. */
+.ess-auth-modal,
+.ess-auth-modal * {
+  box-sizing: border-box;
+}
+.ess-auth-modal {
+  min-width: 0;
+  max-width: min(100%, 520px);
+  overflow-x: clip;
+}
+.ess-auth-modal form,
+.ess-auth-modal form > *,
+.ess-auth-modal .ess-auth-roles {
+  min-width: 0;
+  max-width: 100%;
+}
+.ess-auth-modal .ess-auth-roles {
+  width: 100%;
+}
+.ess-auth-modal .ess-auth-roles button {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.ess-auth-modal input:not([type="radio"]):not([type="checkbox"]),
+.ess-auth-modal select,
+.ess-auth-modal textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}

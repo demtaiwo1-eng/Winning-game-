@@ -44,8 +44,21 @@ test("public landing page explains the event-planning service and its menu", asy
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
 });
-test("event builder saves a brief and opens registration", async ({ page }) => {
+test("event builder inherits the global parent theme and saves a brief", async ({ page }) => {
   await page.goto("/plan");
+
+  const builderCard = page.locator(".ess-builder-card");
+  await expect(builderCard).toBeVisible();
+  await expect(builderCard).toHaveCSS("color", "rgb(33, 29, 55)");
+  const cardBackground = await builderCard.evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(cardBackground).toContain("linear-gradient");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileCard = await builderCard.boundingBox();
+  expect(mobileCard).not.toBeNull();
+  expect(mobileCard!.x).toBeGreaterThanOrEqual(0);
+  expect(mobileCard!.x + mobileCard!.width).toBeLessThanOrEqual(390);
+  await page.setViewportSize({ width: 1280, height: 900 });
 
   await page.getByLabel("Event name").fill("ESS E2E Test Event");
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ess_event_builder_progress")))
@@ -627,4 +640,33 @@ test("production app loads the bundled music track and plays after consent", asy
   await prompt.getByRole("button", { name: "Yes, play music" }).click();
   await expect(prompt).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("on");
+});
+
+test("mobile registration keeps compact branding and reachable navigation without audio prompt overlap", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/v1/billing/public-promotions", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ items: [] }),
+  }));
+  await page.goto("/auth/signup?role=CLIENT", { waitUntil: "networkidle" });
+
+  const dialog = page.locator(".ess-auth-modal");
+  await expect(dialog).toBeVisible();
+  await expect(page.locator(".eph-audio__prompt")).toHaveCount(0);
+
+  const logo = dialog.locator("img").first();
+  const logoBox = await logo.boundingBox();
+  expect(logoBox).not.toBeNull();
+  expect(logoBox!.width).toBeLessThanOrEqual(72);
+  expect(logoBox!.height).toBeLessThanOrEqual(72);
+
+  const back = dialog.getByRole("button", { name: /Back/ });
+  const next = dialog.getByRole("button", { name: /Next/ });
+  await expect(back).toBeVisible();
+  await expect(next).toBeVisible();
+  const dialogBox = await dialog.boundingBox();
+  expect(dialogBox).not.toBeNull();
+  expect(dialogBox!.x).toBeGreaterThanOrEqual(0);
+  expect(dialogBox!.x + dialogBox!.width).toBeLessThanOrEqual(390);
 });

@@ -15,6 +15,9 @@ command -v npm >/dev/null 2>&1 || fail "npm is required"
 step "Install locked dependencies"
 npm ci
 
+step "Full-stack local startup smoke test"
+npm run dev:smoke
+
 step "Web production build"
 npm run build -w @ess/web
 

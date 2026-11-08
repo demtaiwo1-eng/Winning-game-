@@ -153,7 +153,7 @@ export async function verifyOpay(reference: string): Promise<{
   const requestBody = { country: "NG", reference };
   const body = JSON.stringify(requestBody);
   const signature = createHmac("sha512", env.OPAY_SECRET_KEY).update(body).digest("hex");
-  const res = await fetch("https://sandboxapi.opaycheckout.com/api/v1/international/cashier/status", {
+  const res = await fetch("https://testapi.opaycheckout.com/api/v1/international/cashier/status", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${signature}`,
