@@ -211,7 +211,7 @@ This section records the work completed after the 2026-11-07 acceptance snapshot
 
 - PR #83 is the current-main rebase of the PostgreSQL 16 synthetic backup/restore regression. Its predecessor PR #79 passed all six verification workflows, including a dedicated restore job that performed a custom-format dump/restore into an empty disposable DB and refused a non-empty target. PR #83 is rerunning those checks on the latest main head.
 - PR #80 merged as `7c7df407e752e42da230a4033e4d466af2b53643`; it documents OPay and Eversend merchant onboarding and the Cleva product/API documentation gap.
-- PR #81 prepares an owner-controlled App Store Connect signed IPA workflow for bundle ID `com.eventselfsolutions.app`.
+- PR #81 merged as `926b05d2ff3df4c76172b0e69e056efda3b0883d`; it prepares an owner-controlled App Store Connect signed IPA workflow for bundle ID `com.eventselfsolutions.app`. The pull-request YAML validation and all five application verification workflows passed; actual signing still requires Apple owner secrets.
 - PR #82 prepares a Codespaces helper that creates an Android upload key in the owner's home directory and writes its four values directly to protected GitHub Actions secrets through GitHub CLI stdin. It refuses to overwrite existing keys/secrets.
 - The Android signed-release workflow is merged, but no production-signed APK/AAB exists until the owner runs the Codespaces helper (or configures the four secrets manually) and dispatches the workflow.
 
