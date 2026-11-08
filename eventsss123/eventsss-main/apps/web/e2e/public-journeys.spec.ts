@@ -670,3 +670,99 @@ test("mobile registration keeps compact branding and reachable navigation withou
   expect(dialogBox!.x).toBeGreaterThanOrEqual(0);
   expect(dialogBox!.x + dialogBox!.width).toBeLessThanOrEqual(390);
 });
+
+test("planner registration keeps the logo visible and opens the saved follow-up questionnaire", async ({ page }) => {
+  await page.route("**/api/v1/auth/register", async (route) => {
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        accessToken: "planner-e2e-access",
+        refreshToken: "planner-e2e-refresh",
+        user: {
+          id: "planner-followup-e2e",
+          email: "planner-followup@example.test",
+          name: "Planner Followup",
+          role: "CLIENT",
+        },
+      }),
+    });
+  });
+
+  await page.route("**/api/v1/events**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname.endsWith("/plan-answers")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ answers: {}, complete: false }),
+      });
+      return;
+    }
+    if (request.method() === "POST") {
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          event: {
+            id: "planner-followup-event",
+            title: "Planner Follow-up Event",
+            city: "Ibadan",
+          },
+        }),
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [] }),
+    });
+  });
+  await page.route("**/api/v1/readiness/mine", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [] }),
+    });
+  });
+
+  await page.goto("/plan");
+  await page.getByLabel("Event name").fill("Planner Follow-up Event");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("City or venue area").fill("Ibadan");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Expected guests").fill("90");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Build my event brief/ }).click();
+  await page.getByRole("button", { name: /Save brief and create account/ }).click();
+
+  const dialog = page.locator("#eph-auth-dialog");
+  await expect(dialog).toBeVisible();
+  const brand = dialog.locator(".ess-auth-brand");
+  await expect(brand).toBeVisible();
+  await expect(brand).toHaveCSS("justify-content", "flex-start");
+  await expect(brand.locator(".ess-auth-brand-mark")).toBeVisible();
+  await expect(brand.locator(".ess-auth-brand-name")).toHaveText("EPHINTA");
+
+  await dialog.getByLabel("Full name").fill("Planner Followup");
+  await dialog.getByLabel("Email address").fill("planner-followup@example.test");
+  await dialog.getByLabel("Password", { exact: true }).fill("StrongPass123!");
+  await dialog.getByRole("button", { name: "Next" }).click();
+  await dialog.getByRole("button", { name: "Next" }).click();
+  await dialog.getByRole("button", { name: "Create account" }).click();
+
+  const onboarding = page.getByRole("dialog", { name: "client onboarding" });
+  await expect(onboarding).toBeVisible();
+  await onboarding.getByRole("button", { name: "Continue" }).click();
+  await onboarding.getByRole("button", { name: "Continue" }).click();
+  await onboarding.getByRole("button", { name: "Continue" }).click();
+  await onboarding.getByRole("button", { name: "Open my planner" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Plan the details for Planner Follow-up Event" }),
+  ).toBeVisible();
+  await expect(page.getByText("What would make this event a success for you?")).toBeVisible();
+});
