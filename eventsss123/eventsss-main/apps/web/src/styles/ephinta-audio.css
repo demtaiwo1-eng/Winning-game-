@@ -31,3 +31,6 @@
 .eph-audio__dismiss:hover { color: #fff; }
 @media (max-width: 600px) { .eph-audio__backdrop { right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); width: min(320px, calc(100vw - 20px)); } .eph-audio__prompt { padding: 14px; border-radius: 14px; } .eph-audio__player { right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); width: min(360px, calc(100vw - 20px)); padding: 12px; } }
 @media (max-width: 360px) { .eph-audio__player-controls { gap: 5px; } .eph-audio__control { flex-basis: 31px; width: 31px; height: 32px; } .eph-audio__control.eph-audio__play { flex-basis: 36px; width: 36px; height: 36px; } }
+.eph-audio__restore { position: fixed; z-index: 1190; right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); min-height: 42px; padding: 0 16px; border: 1px solid rgb(255 255 255 / 15%); border-radius: 999px; color: #f8f7ff; background: #30245a; box-shadow: 0 12px 32px rgb(12 8 30 / 28%); font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
+.eph-audio__restore:hover { background: #46347d; }
+@media (max-width: 600px) { .eph-audio__restore { right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); } }
