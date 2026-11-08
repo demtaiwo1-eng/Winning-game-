@@ -133,7 +133,7 @@ textarea::placeholder {
 /* Shared light surfaces stay light in light and colorful themes, dark in dark. */
 :where(.workspace-card, .dashboard-card, .stat-card, .panel-card, .surface-card,
        .listing-card, .vendor-card, .marketplace-card, .empty-marketplace,
-       .detail-section-card, .cart-summary, .ess-card, .ess-builder-card,
+       .detail-section-card, .cart-summary, .ess-card,
        .ess-auth-modal, .eph-modal, [role="dialog"], [aria-modal="true"],
        dialog[open]) {
   color: var(--ephinta-theme-ink) !important;
@@ -142,14 +142,14 @@ textarea::placeholder {
 }
 :where(.workspace-card, .dashboard-card, .stat-card, .panel-card, .surface-card,
        .listing-card, .vendor-card, .marketplace-card, .empty-marketplace,
-       .detail-section-card, .cart-summary, .ess-card, .ess-builder-card,
+       .detail-section-card, .cart-summary, .ess-card,
        .ess-auth-modal, .eph-modal, [role="dialog"], [aria-modal="true"],
        dialog[open]) :where(h1,h2,h3,h4,strong,b,label) {
   color: var(--ephinta-theme-ink) !important;
 }
 :where(.workspace-card, .dashboard-card, .stat-card, .panel-card, .surface-card,
        .listing-card, .vendor-card, .marketplace-card, .empty-marketplace,
-       .detail-section-card, .cart-summary, .ess-card, .ess-builder-card,
+       .detail-section-card, .cart-summary, .ess-card,
        .ess-auth-modal, .eph-modal, [role="dialog"], [aria-modal="true"],
        dialog[open]) :where(p,small,li,.muted,.text-muted,.helper-text) {
   color: var(--ephinta-theme-muted) !important;
@@ -193,4 +193,18 @@ textarea::placeholder {
     --ephinta-theme-muted: var(--ephinta-theme-ink);
     --ephinta-theme-border: #64748b;
   }
+}
+
+/* The guided event builder is an intentionally branded feature surface.
+   Preserve its violet-tinted gradient while giving its copy a crisp ink tone. */
+.ess-builder-card {
+  color: #211d37 !important;
+  background-image: linear-gradient(145deg, #ffffff 0%, #f8f6ff 100%) !important;
+  border-color: #d9d2ee !important;
+}
+.ess-builder-card :where(h1, h2, h3, h4, strong, b, label) {
+  color: #211d37 !important;
+}
+.ess-builder-card :where(p, small, li, .muted, .text-muted, .helper-text) {
+  color: #514d65 !important;
 }
