@@ -98,11 +98,12 @@ hours and can also be started manually from GitHub Actions. It:
 2. Calls YouTube `channels.list(mine=true)`, then `playlists.list(channelId=...)` for each accessible channel.
 3. Reads every playlist's entries, following pagination.
 4. Writes `eventsss123/eventsss-main/apps/web/public/data/wale-waves-playlists.json`.
-5. Commits changed metadata to `main`.
+5. Opens a pull request containing only the changed catalogue JSON for review.
 
-The workflow requires Actions write permission to push to main. If main is
-protected against direct pushes, change the final step to open a pull request
-rather than weakening branch protection.
+The workflow uses the repository's `GITHUB_TOKEN` with contents and pull-request
+write permissions to create or update a dedicated automation pull request. It
+never pushes generated catalogue data directly to `main`; review and merge the
+catalogue update like any other code change. Branch protection remains intact.
 
 ## 6. Playback and rights
 
