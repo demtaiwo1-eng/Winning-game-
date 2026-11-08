@@ -51,7 +51,7 @@ function playlistIdFromUrl(raw, variableName) {
 const CATEGORIES = new Set(["wedding", "naming", "burial"]);
 
 function categoryFromTitle(title) {
-  const match = title.match(/\\[EPHINTA:(WEDDING|NAMING|BURIAL)\\]/i);
+  const match = title.match(/\[EPHINTA:(WEDDING|NAMING|BURIAL)\]/i);
   return match ? match[1].toLowerCase() : null;
 }
 
