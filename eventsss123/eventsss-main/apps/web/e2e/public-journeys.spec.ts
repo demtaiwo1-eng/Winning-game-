@@ -77,8 +77,11 @@ test("event builder inherits the global parent theme and saves a brief", async (
   await page.getByLabel("Expected guests").fill("120");
   await page.getByRole("button", { name: /Next question/ }).click();
 
-  await page.getByLabel("Planning budget").fill("NGN 2500000");
+  const planningBudget = page.getByLabel("Planning budget");
+  await planningBudget.fill("NGN 2500000");
+  await expect(planningBudget).toHaveValue("2,500,000");
   await page.getByRole("button", { name: /Build my event brief/ }).click();
+  await expect(page.getByText("2,500,000.00")).toBeVisible();
 
   await expect(
     page.getByRole("heading", { name: "ESS E2E Test Event" }),
@@ -100,7 +103,7 @@ test("event builder inherits the global parent theme and saves a brief", async (
     title: "ESS E2E Test Event",
     city: "Ibadan",
     guests: "120",
-    budget: "NGN 2500000",
+    budget: "2,500,000.00",
   });
 
 });
