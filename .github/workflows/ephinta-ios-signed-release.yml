@@ -1,6 +1,10 @@
 name: EPHINTA signed iOS distribution build
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/ephinta-ios-signed-release.yml"
+      - "eventsss123/eventsss-main/docs/IOS_SIGNED_RELEASE.md"
   workflow_dispatch:
 
 permissions:
@@ -11,7 +15,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate-release-config:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate workflow YAML and distribution secret references
+        run: |
+          ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ephinta-ios-signed-release.yml", aliases: true)'
+          grep -q 'secrets.IOS_CERTIFICATE_P12_BASE64' .github/workflows/ephinta-ios-signed-release.yml
+          grep -q 'secrets.IOS_CERTIFICATE_PASSWORD' .github/workflows/ephinta-ios-signed-release.yml
+          grep -q 'secrets.IOS_PROVISIONING_PROFILE_BASE64' .github/workflows/ephinta-ios-signed-release.yml
+          grep -q 'secrets.IOS_TEAM_ID' .github/workflows/ephinta-ios-signed-release.yml
+
   signed-ios:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     name: Archive and export signed iOS IPA
     runs-on: macos-15
     timeout-minutes: 60
