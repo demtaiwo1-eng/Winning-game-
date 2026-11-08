@@ -8,7 +8,7 @@
  * The script never asks for or stores a Google password.
  */
 import { createServer } from "node:http";
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdir, writeFile, chmod } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
@@ -19,6 +19,8 @@ const output = resolve(process.env.YOUTUBE_TOKEN_OUTPUT || ".secrets/youtube-oau
 const scopes = ["https://www.googleapis.com/auth/youtube.readonly"];
 const port = Number(new URL(redirectUri || "http://127.0.0.1:53682/callback").port || 53682);
 const state = randomBytes(32).toString("hex");
+const codeVerifier = randomBytes(48).toString("base64url");
+const codeChallenge = createHash("sha256").update(codeVerifier).digest("base64url");
 
 if (!clientId || !clientSecret || !redirectUri) {
   console.error("Set YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET and YOUTUBE_OAUTH_REDIRECT_URI.");
@@ -39,6 +41,8 @@ authUrl.search = new URLSearchParams({
   prompt: "consent",
   include_granted_scopes: "true",
   state,
+  code_challenge: codeChallenge,
+  code_challenge_method: "S256",
 }).toString();
 
 console.log("\nOpen this URL and choose the YouTube account that owns your EPHINTA playlists:\n");
@@ -79,6 +83,7 @@ const server = createServer(async (req, res) => {
         client_secret: clientSecret,
         redirect_uri: redirectUri,
         grant_type: "authorization_code",
+        code_verifier: codeVerifier,
       }),
       signal: AbortSignal.timeout(30_000),
     });
