@@ -13,30 +13,28 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("music consent opens the player and its playback controls work", async ({ page }) => {
+test("accepting background music saves consent, starts playback and dismisses all player UI", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
   await expect(prompt).toBeVisible();
-  await expect(page.locator(".eph-audio__backdrop")).toHaveCSS("position", "fixed");
   await prompt.getByRole("button", { name: "Yes, play music" }).click();
-  const player = page.getByRole("region", { name: "EPHINTA music player" });
-  await expect(player).toBeVisible();
-  await expect(player.getByText("Here We Are — Wedding 1")).toBeVisible();
-  await expect(player.getByRole("button", { name: "Pause music" })).toBeVisible();
-  await player.getByRole("button", { name: "Next track" }).click();
-  await expect(player.getByText("Here We Are — Wedding 2")).toBeVisible();
-  await player.getByRole("button", { name: "Previous track" }).click();
-  await expect(player.getByText("Here We Are — Wedding 1")).toBeVisible();
-  await player.getByRole("button", { name: "Pause music" }).click();
-  await expect(player.getByRole("button", { name: "Play music" })).toBeVisible();
-  await player.getByRole("button", { name: "Play music" }).click();
-  await expect(player.getByRole("button", { name: "Pause music" })).toBeVisible();
-  await player.getByRole("button", { name: "Mute music" }).click();
-  await expect(player.getByRole("button", { name: "Unmute music" })).toBeVisible();
-  await player.getByLabel("Music volume").fill("0.5");
-  await expect.poll(() => page.locator("audio").evaluate((audio: HTMLAudioElement) => audio.volume)).toBe(0.5);
+  await expect(prompt).toHaveCount(0);
+  await expect(page.locator(".eph-audio__player, .eph-audio__restore, .eph-audio__backdrop")).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("on");
+  await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBe(1);
+  await expect(page.locator("audio")).toHaveAttribute("src", /Wedding/);
+});
+
+test("declining music dismisses the prompt, saves the choice and keeps audio stopped", async ({ page }) => {
+  await page.goto("/");
+  const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
+  await expect(prompt).toBeVisible();
+  await prompt.getByRole("button", { name: "No, thanks" }).click();
+  await expect(prompt).toHaveCount(0);
+  await expect(page.locator(".eph-audio__player, .eph-audio__restore, .eph-audio__backdrop")).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("off");
+  await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBe(0);
 });
 
 const viewports = [
@@ -46,40 +44,26 @@ const viewports = [
   { name: "small mobile", width: 320, height: 740 },
 ];
 for (const viewport of viewports) {
-  const projectTag = viewport.name.includes("mobile") ? " @mobile" : "";
-  test("music player fits " + viewport.name + " without horizontal overflow" + projectTag, async ({ page }) => {
+  test("music permission prompt fits " + viewport.name, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await page.addInitScript(() => localStorage.setItem("ephinta:sound", "on"));
     await page.goto("/");
-    const player = page.getByRole("region", { name: "EPHINTA music player" });
-    await expect(player).toBeVisible();
-    const bounds = await player.boundingBox();
+    const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
+    await expect(prompt).toBeVisible();
+    const bounds = await prompt.boundingBox();
     expect(bounds).not.toBeNull();
     expect(bounds!.x).toBeGreaterThanOrEqual(0);
     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport.width);
-    await expect(player.locator('button[aria-label="Play music"], button[aria-label="Pause music"]')).toBeVisible();
-    await expect(player.getByRole("button", { name: "Next track" })).toBeVisible();
   });
 }
 
-test("declining music closes the prompt and remembers the choice", async ({ page }) => {
-  await page.goto("/");
-  const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
-  await expect(prompt).toBeVisible();
-  await prompt.getByRole("button", { name: "No, thanks" }).click();
-  await expect(prompt).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "EPHINTA music player" })).toHaveCount(0);
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("off");
-  await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBe(0);
-});
-
-test("track playback advances when the current track ends", async ({ page }) => {
+test("saved music consent starts background playback without displaying a player", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("ephinta:sound", "on"));
   await page.goto("/");
-  const audio = page.locator("audio");
-  await audio.evaluate((element) => element.dispatchEvent(new Event("ended")));
-  await expect(page.getByText("Here We Are — Wedding 2")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Enjoy background music?" })).toHaveCount(0);
+  await expect(page.locator(".eph-audio__player, .eph-audio__restore, .eph-audio__backdrop")).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBe(1);
 });
+
 test("all bundled EPHINTA music files are served as non-empty audio assets", async ({ page }) => {
   await page.goto("/");
   const tracks = [
@@ -96,14 +80,4 @@ test("all bundled EPHINTA music files are served as non-empty audio assets", asy
     expect(response.headers()["content-type"] || "").toMatch(/audio|octet-stream/i);
     expect((await response.body()).byteLength, track + " should not be empty").toBeGreaterThan(10000);
   }
-});
-
-test("music can be re-enabled after a user turns it off", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("ephinta:sound", "off"));
-  await page.goto("/");
-  const restore = page.getByRole("button", { name: "♫ Turn music on" });
-  await expect(restore).toBeVisible();
-  await restore.click();
-  await expect(page.getByRole("region", { name: "EPHINTA music player" })).toBeVisible();
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("on");
 });
