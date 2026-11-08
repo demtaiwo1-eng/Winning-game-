@@ -52,7 +52,7 @@ Repository → Settings → Secrets and variables → Actions → New repository
 - `YOUTUBE_REFRESH_TOKEN` (copy only the refresh_token value from the local
   .secrets/youtube-oauth.json file)
 
-Do not put credentials in repository variables, source code, or chat.
+Do not put credentials in repository variables, source code, or chat.\n\n**Important for uninterrupted scheduling:** Google issues refresh tokens that expire\nafter seven days when an external OAuth consent screen is left in Testing mode\nwith YouTube scopes. For a persistent six-hour sync, publish the consent screen\nto Production and complete any verification Google requires for your intended\naudience. If you deliberately keep it in Testing, expect to repeat authorisation\nwhen the token expires. Google can also revoke refresh tokens for other security\nreasons, so the workflow reports authentication failures rather than silently\npretending the catalogue was refreshed.
 
 ## 4. Name your playlists so EPHINTA can recognise them
 
