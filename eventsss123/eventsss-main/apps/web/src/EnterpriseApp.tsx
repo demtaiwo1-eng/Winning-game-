@@ -3449,6 +3449,9 @@ function AuthModal({
                   className="ess-primary ess-full-button"
                   type="button"
                   onClick={(event) => {
+                    // Prevent the browser's default form submit if React updates this
+                    // same button from type="button" to type="submit" on the final step.
+                    event.preventDefault();
                     const form = event.currentTarget.form;
                     if (form?.reportValidity()) setRegistrationStep((step) => Math.min(2, step + 1));
                   }}
