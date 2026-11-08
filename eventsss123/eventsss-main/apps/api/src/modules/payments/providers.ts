@@ -26,6 +26,16 @@ export function canCompleteDemoCheckout(
   return provider === "demo" && status === "PENDING" && canUseDemoPayments(options);
 }
 
+export function canUseProductionTestMode(
+  options: { nodeEnv?: string; paymentMode?: string; allowProductionTestMode?: string } = {},
+): boolean {
+  return (
+    (options.nodeEnv ?? env.NODE_ENV) !== "production" ||
+    (options.paymentMode ?? env.PAYMENT_MODE) !== "test" ||
+    (options.allowProductionTestMode ?? env.ALLOW_PRODUCTION_TEST_MODE) === "true"
+  );
+}
+
 function assertPaymentMode() {
   const keys: Array<[string, string | undefined, RegExp, RegExp]> = [
     ["Paystack", env.PAYSTACK_SECRET_KEY, /^sk_test_/, /^sk_live_/],
@@ -45,8 +55,8 @@ function assertPaymentMode() {
     }
   }
 
-  if (env.NODE_ENV === "production" && env.PAYMENT_MODE === "test") {
-    throw new Error("PAYMENT_MODE=test is forbidden in production");
+  if (!canUseProductionTestMode()) {
+    throw new Error("PAYMENT_MODE=test in production requires ALLOW_PRODUCTION_TEST_MODE=true; demo checkout remains disabled in production");
   }
 }
 

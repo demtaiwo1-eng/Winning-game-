@@ -38,8 +38,19 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState("");
+  const [bytidConsent, setBytidConsent] = useState(false);
+  const [bytidRequestId, setBytidRequestId] = useState("");
+  const [bytidStatus, setBytidStatus] = useState("");
+  const [bytidBusy, setBytidBusy] = useState(false);
+  const [bytidEnabled, setBytidEnabled] = useState(false);
+  const [bytidMode, setBytidMode] = useState<"sandbox" | "live">("sandbox");
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("kyc") === "bytid" && params.get("requestId")) {
+      setBytidRequestId(params.get("requestId") || "");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
     kycCountriesApi
       .list()
       .then((res) => {
@@ -51,6 +62,7 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
       })
       .catch(() => setCountries([]));
     kycApi.me().then((res) => setItems((res.items as KycItem[]) || [])).catch(() => setItems([]));
+    kycApi.bytidConfig().then((res) => { setBytidEnabled(res.enabled); setBytidMode(res.mode); }).catch(() => setBytidEnabled(false));
   }, []);
 
   useEffect(() => {
@@ -81,6 +93,33 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
       c.name.toLowerCase().includes(filter.toLowerCase()) ||
       c.code.toLowerCase().includes(filter.toLowerCase()),
   );
+
+  const startBytid = async () => {
+    setBytidBusy(true);
+    setMsg("");
+    try {
+      const result = await kycApi.startBytid(bytidConsent);
+      setBytidRequestId(result.requestId);
+      window.location.assign(result.verificationUrl);
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : "Unable to start secure identity verification.");
+      setBytidBusy(false);
+    }
+  };
+
+  const refreshBytid = async () => {
+    if (!bytidRequestId) return;
+    setBytidBusy(true);
+    try {
+      const result = await kycApi.bytidStatus(bytidRequestId);
+      setBytidStatus(`${result.request.status} · provider ${result.providerStatus} · face ${result.faceMatch || "pending"} · liveness ${result.liveness || "pending"}`);
+      kycApi.me().then((r) => setItems((r.items as KycItem[]) || []));
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : "Unable to refresh identity verification.");
+    } finally {
+      setBytidBusy(false);
+    }
+  };
 
   const onFile = async (file: File | null) => {
     if (!file) return;
@@ -182,6 +221,32 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
           </select>
         </label>
 
+        {kind === "IDENTITY" && country === "NG" && (
+          <div className="ess-wallet-card" style={{ display: "grid", gap: 10 }}>
+            <strong>Secure Nigerian identity verification</strong>
+            {!bytidEnabled ? (
+              <p className="ess-muted">Bytid hosted verification is awaiting the API service's sandbox key. You can still submit documents for manual review below.</p>
+            ) : (
+              <>
+                <p className="ess-muted">Provider mode: {bytidMode}. Use Bytid's hosted BVN/NIN verification. The provider handles ID capture, live-face checks and face matching. EPHINTA receives the verification result, not your raw ID number or selfie.</p>
+                <p className="ess-muted">{bytidMode === "live" ? "Live verification may incur provider fees. Review Bytid pricing before continuing." : "Sandbox mode uses test records and is free."}</p>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <input type="checkbox" checked={bytidConsent} onChange={(e) => setBytidConsent(e.target.checked)} />
+              <span>I consent to EPHINTA sending my name and email to Bytid and to Bytid collecting and checking my selected identity document and live face for identity verification. I understand this is a third-party verification service.</span>
+            </label>
+            <button className="ess-primary" type="button" disabled={bytidBusy || !bytidConsent} onClick={startBytid}>
+              {bytidBusy ? "Starting secure verification…" : "Continue with secure ID and face verification"}
+            </button>
+            {bytidRequestId && (
+              <div>
+                <button type="button" disabled={bytidBusy} onClick={refreshBytid}>Refresh verification status</button>
+                {bytidStatus && <p className="ess-muted" role="status">{bytidStatus}</p>}
+              </div>
+            )}
+              </>
+            )}
+          </div>
+        )}
         <label>
           Primary document type
           <select value={primaryDocType} onChange={(e) => setPrimaryDocType(e.target.value)}>

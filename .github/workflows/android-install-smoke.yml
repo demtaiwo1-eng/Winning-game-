@@ -161,9 +161,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/android-emulator-diagnostics"
-          adb devices -l > "$RUNNER_TEMP/android-emulator-diagnostics/adb-devices.txt" 2>&1 || true
-          adb shell getprop > "$RUNNER_TEMP/android-emulator-diagnostics/getprop.txt" 2>&1 || true
-          adb logcat -d -t 3000 > "$RUNNER_TEMP/android-emulator-diagnostics/logcat.txt" 2>&1 || true
+          timeout 10s adb devices -l > "$RUNNER_TEMP/android-emulator-diagnostics/adb-devices.txt" 2>&1 || true
+          timeout 10s adb shell getprop > "$RUNNER_TEMP/android-emulator-diagnostics/getprop.txt" 2>&1 || true
+          timeout 10s adb logcat -d -t 3000 > "$RUNNER_TEMP/android-emulator-diagnostics/logcat.txt" 2>&1 || true
 
       - name: Upload Android emulator diagnostics
         if: failure()

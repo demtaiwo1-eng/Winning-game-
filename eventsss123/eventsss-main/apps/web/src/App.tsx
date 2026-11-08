@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import PublicLanding from './components/PublicLanding';
 import SplashLogo from './components/SplashLogo';
 import AudioExperience from './components/AudioExperience';
+import DeviceSecurityGate from './components/DeviceSecurityGate';
 
 import { initializeEphintaTheme } from "./lib/ephintaTheme";
 import { prepareKycUpload } from "./lib/prepareKycUpload";
