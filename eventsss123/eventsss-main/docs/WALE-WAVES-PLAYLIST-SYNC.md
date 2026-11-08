@@ -64,7 +64,7 @@ Use these exact playlist-title prefixes:
 
 You can keep all three playlists in the same YouTube account. The sync job
 discovers the account's owned playlists and identifies the category by title.
-Playlist order is preserved.
+Playlist order is preserved. Set each EPHINTA playlist to **Public** or\n**Unlisted** so visitors can play it. Private playlists and private videos are\nexcluded from the public catalogue to protect account-only content.
 
 For a mixed playlist, use a tag at the start of each video title instead:
 
