@@ -507,7 +507,10 @@ export default function PublicLanding({
 
   function startBurialPlanning() {
     selectMusicCategory('burial');
-    try { localStorage.setItem('ess:eventDraft', JSON.stringify({ ...draft, type: 'Burial' })); } catch { /* storage may be disabled */ }
+    try {
+      localStorage.removeItem('ess_event_builder_progress');
+      localStorage.setItem('ess:eventDraft', JSON.stringify({ ...draft, type: 'Burial' }));
+    } catch { /* storage may be disabled */ }
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (onStartBuilder) {
@@ -519,7 +522,10 @@ export default function PublicLanding({
 
   function startNamingPlanning() {
     selectMusicCategory('naming');
-    try { localStorage.setItem('ess:eventDraft', JSON.stringify({ ...draft, type: 'Naming ceremony' })); } catch { /* storage may be disabled */ }
+    try {
+      localStorage.removeItem('ess_event_builder_progress');
+      localStorage.setItem('ess:eventDraft', JSON.stringify({ ...draft, type: 'Naming ceremony' }));
+    } catch { /* storage may be disabled */ }
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (onStartBuilder) {
