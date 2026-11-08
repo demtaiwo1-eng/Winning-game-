@@ -79,3 +79,20 @@ test("track playback advances when the current track ends", async ({ page }) => 
   await audio.evaluate((element) => element.dispatchEvent(new Event("ended")));
   await expect(page.getByText("Here We Are — Wedding 2")).toBeVisible();
 });
+test("all bundled EPHINTA music files are served as non-empty audio assets", async ({ page }) => {
+  await page.goto("/");
+  const tracks = [
+    "/audio/Here%20we%20are-1%20-Wale%20Waves_ESS_Wedding.mp3",
+    "/audio/Here%20we%20are-2%20-Wale%20Waves_ESS_Wedding.mp3",
+    "/audio/Welcome,%20Little%20One-1-Wale%20Waves_ESS_Naming.mp3",
+    "/audio/Welcome,%20Little%20One-2-Wale%20Waves_ESS_Naming.mp3",
+    "/audio/You%20Will%20Live%20in%20Our%20Hearts-1-Wale%20Waves_ESS_Burials.mp3",
+    "/audio/You%20Will%20Live%20in%20Our%20Hearts-2-Wale%20Waves_ESS_Burials.mp3",
+  ];
+  for (const track of tracks) {
+    const response = await page.request.get(track);
+    expect(response.ok(), track + " should return a successful response").toBeTruthy();
+    expect(response.headers()["content-type"] || "").toMatch(/audio|octet-stream/i);
+    expect((await response.body()).byteLength, track + " should not be empty").toBeGreaterThan(10000);
+  }
+});
