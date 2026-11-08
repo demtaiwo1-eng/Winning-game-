@@ -10,9 +10,9 @@ ACTIVITY="$PACKAGE/.MainActivity"
 fail() {
   echo "::error::$*"
   echo "===== Android activity diagnostics ====="
-  adb shell dumpsys activity activities 2>&1 | tail -n 180 || true
+  timeout 10s adb shell dumpsys activity activities 2>&1 | tail -n 180 || true
   echo "===== App crash / ANR log ====="
-  adb logcat -d -t 3000 2>&1 | grep -Ei "$PACKAGE|FATAL EXCEPTION|AndroidRuntime|ANR in" | tail -n 240 || true
+  timeout 10s adb logcat -d -t 3000 2>&1 | grep -Ei "$PACKAGE|FATAL EXCEPTION|AndroidRuntime|ANR in" | tail -n 240 || true
   exit 1
 }
 
