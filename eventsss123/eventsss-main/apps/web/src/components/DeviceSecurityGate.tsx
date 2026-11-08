@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import { AndroidBiometryStrength, BiometricAuth } from "@aparajita/capacitor-biometric-auth";
 
 const IDLE_LIMIT_MS = 5 * 60 * 1000;
 const PBKDF2_ITERATIONS = 310_000;
@@ -44,9 +46,48 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
   const lastActivity = useRef(Date.now());
   const timer = useRef<number | null>(null);
   const attempts = useRef(0);
+
+  useEffect(() => {
+    let active = true;
+    if (!Capacitor.isNativePlatform()) return;
+    BiometricAuth.checkBiometry()
+      .then((result) => {
+        if (active) setBiometricAvailable(Boolean(result.isAvailable || result.deviceIsSecure));
+      })
+      .catch(() => {
+        if (active) setBiometricAvailable(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const unlockWithBiometrics = async () => {
+    setError("");
+    setBusy(true);
+    try {
+      await BiometricAuth.authenticate({
+        reason: "Authenticate to unlock EPHINTA",
+        cancelTitle: "Use PIN",
+        allowDeviceCredential: true,
+        iosFallbackTitle: "Use device passcode",
+        androidTitle: "Unlock EPHINTA",
+        androidSubtitle: "Verify your identity to continue",
+        androidConfirmationRequired: false,
+        androidBiometryStrength: AndroidBiometryStrength.weak,
+      });
+      attempts.current = 0;
+      setLocked(false);
+      setPin("");
+      markActivity();
+    } catch {
+      setError("Biometric authentication was cancelled or unavailable. You can still use your EPHINTA PIN.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const lock = useCallback(() => {
     setLocked(true);
@@ -152,6 +193,11 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
               <input id="ephinta-device-pin-confirm" inputMode="numeric" maxLength={6} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Repeat PIN" type="password" style={{ boxSizing: "border-box", width: "100%", padding: "15px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.08)", color: "inherit", fontSize: 20, letterSpacing: ".25em" }} />
             </>}
             {error && <p role="alert" style={{ color: "#ffb4b4", margin: "12px 0 0" }}>{error}</p>}
+            {configured && biometricAvailable && (
+              <button disabled={busy} type="button" onClick={unlockWithBiometrics} style={{ width: "100%", marginTop: 20, padding: 15, border: "1px solid rgba(255,255,255,.24)", borderRadius: 12, background: "rgba(255,255,255,.08)", color: "inherit", fontWeight: 700, cursor: "pointer" }}>
+                {busy ? "Checking..." : "Use fingerprint / Face ID / device passcode"}
+              </button>
+            )}
             <button disabled={busy || pin.length !== 6 || (!configured && confirmPin.length !== 6)} type="submit" style={{ width: "100%", marginTop: 20, padding: 15, border: 0, borderRadius: 12, background: "var(--primary, #a78bfa)", color: "#16072c", fontWeight: 700, cursor: "pointer" }}>{busy ? "Securing..." : configured ? "Unlock EPHINTA" : "Set PIN and continue"}</button>
             <button type="button" onClick={onSignOut} style={{ width: "100%", marginTop: 12, padding: 12, border: "1px solid rgba(255,255,255,.2)", borderRadius: 12, background: "transparent", color: "inherit", cursor: "pointer" }}>Sign out instead</button>
             <p style={{ fontSize: 12, opacity: .62, lineHeight: 1.5, margin: "18px 0 0" }}>This device PIN is a local privacy lock. Native fingerprint/Face ID authentication and server-enforced account security require the mobile biometric integration described in the security rollout plan.</p>
