@@ -13,6 +13,7 @@ const VendorEventMessagesPanel = lazy(() => import("./components/EventMessagesPa
 const VerifierPicker = lazy(() => import("./components/VerifierPicker"));
 import { OnboardingOverlay, hasCompletedOnboard, ResumeStrip } from "./components/JourneyMoments";
 import { api, downloadApiFile } from "./lib/api";
+import { formatMoneyInput } from "./lib/currency";
 import { registerPushIfNative, unregisterPushDevice } from "./lib/push";
 import {
   eventBuilderProgressFromLandingDraft,
@@ -22,7 +23,6 @@ import {
   type EventBuilderProgress,
 } from "./lib/eventDraft";
 import { registrationFieldError, type RegistrationField } from "./lib/registrationValidation";
-import { formatMoneyInput } from "./lib/currency";
 import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from "./lib/roleLabels";
 import NotificationsPanel from "./components/NotificationsPanel";
 import "./enterprise.css";
@@ -2605,8 +2605,8 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
   const [saveError, setSaveError] = useState("");
   const [answers, setAnswers] = useState<EventBuilderProgress>(() => {
     const defaults: EventBuilderProgress = {
-      title: "",
-      type: "SOCIAL",
+      title: (() => { try { return localStorage.getItem("ephinta:music-category") === "burial" ? "Burial / Memorial" : ""; } catch { return ""; } })(),
+      type: (() => { try { return localStorage.getItem("ephinta:music-category") === "burial" ? "CULTURAL" : "SOCIAL"; } catch { return "SOCIAL"; } })(),
       goal: "Celebrate",
       date: "",
       city: "",
@@ -2630,6 +2630,13 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
   const update = (key: keyof typeof answers, value: string) => {
     setAnswers((current) => {
       const next = { ...current, [key]: value };
+      if (key === "type") {
+        const category = value === "CULTURAL" ? "burial" : null;
+        if (category) {
+          try { localStorage.setItem("ephinta:music-category", category); } catch { /* optional music preference */ }
+          window.dispatchEvent(new CustomEvent("ephinta:music-category-change", { detail: category }));
+        }
+      }
       try {
         localStorage.setItem("ess_event_builder_progress", JSON.stringify(next));
       } catch {
@@ -2649,7 +2656,7 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
     }
   }, [answers, complete, step]);
   const questions = [
-    { title: 'What are you creating?', prompt: 'Give the event a working name and choose its format.', fields: <><label>Event name<input value={answers.title} maxLength={160} onChange={(event) => update('title', event.target.value)} placeholder="e.g. Wale Waves Life Experience" required /></label><label>Event format<select value={answers.type} onChange={(event) => update('type', event.target.value)}><option value="PERSONAL">Personal milestone</option><option value="CORPORATE">Corporate gathering</option><option value="SOCIAL">Social celebration</option><option value="ENTERTAINMENT">Entertainment experience</option><option value="EDUCATIONAL">Workshop or learning event</option></select></label></> },
+    { title: 'What are you creating?', prompt: 'Give the event a working name and choose its format.', fields: <><label>Event name<input value={answers.title} maxLength={160} onChange={(event) => update('title', event.target.value)} placeholder="e.g. Wale Waves Life Experience" required /></label><label>Event format<select value={answers.type} onChange={(event) => update('type', event.target.value)}><option value="PERSONAL">Personal milestone</option><option value="CORPORATE">Corporate gathering</option><option value="SOCIAL">Social celebration</option><option value="CULTURAL">Burial or memorial</option><option value="ENTERTAINMENT">Entertainment experience</option><option value="EDUCATIONAL">Workshop or learning event</option></select></label></> },
     { title: 'What should it achieve?', prompt: 'This shapes the checklist, vendor recommendations, and guest experience.', fields: <><label>Primary goal<select value={answers.goal} onChange={(event) => update('goal', event.target.value)}><option>Celebrate</option><option>Launch a product</option><option>Build community</option><option>Raise funds</option><option>Train or educate</option><option>Host an unforgettable guest experience</option></select></label><label>What matters most?<select value={answers.priorities} onChange={(event) => update('priorities', event.target.value)}><option>Guest experience</option><option>Brand impression</option><option>Budget control</option><option>Speed and simplicity</option><option>Accessibility and inclusion</option></select></label></> },
     { title: 'Where and when?', prompt: 'Location and timing help us suggest vendors close to the venue.', fields: <><DateWheelPicker value={answers.date} onChange={(date) => update('date', date)} label="Event date" /><label>City or venue area<input value={answers.city} maxLength={120} onChange={(event) => update('city', event.target.value)} placeholder="Lagos, Abuja, London..." required /></label><label>Venue status<select value={answers.venue} onChange={(event) => update('venue', event.target.value)}><option>Still deciding</option><option>Venue selected</option><option>Private residence</option><option>Outdoor or public space</option><option>Virtual</option><option>Hybrid</option></select></label></> },
     { title: 'Who is coming?', prompt: 'Guest volume drives capacity, catering, staffing, and RSVP planning.', fields: <><label>Expected guests<input type="number" min="1" max="5000000" value={answers.guests} onChange={(event) => update('guests', event.target.value)} placeholder="150" required /></label><label>Food direction<select value={answers.food} onChange={(event) => update('food', event.target.value)}><option>Mixed menu</option><option>Local cuisine</option><option>International menu</option><option>Vegetarian or vegan focused</option><option>Not sure yet</option></select></label></> },
@@ -3059,9 +3066,19 @@ function AuthModal({
         <button className="ess-close" onClick={onClose}>
           ×
         </button>
-        <div className="ess-auth-brand">
-          <img src="/brand/ephinta_logo2.png" alt="" />
-          <span>EPHINTA</span>
+        <div className="ess-auth-brand" aria-label="EPHINTA registration">
+          <span className="ess-auth-brand-mark">
+            <img
+              src="/brand/ephinta_logo2.png"
+              alt="EPHINTA logo"
+              onError={(event) => {
+                event.currentTarget.hidden = true;
+                event.currentTarget.parentElement?.classList.add("logo-fallback");
+              }}
+            />
+            <span aria-hidden="true">EP</span>
+          </span>
+          <span className="ess-auth-brand-name">EPHINTA</span>
         </div>
         <p className="ess-eyebrow">{mode === "signup" ? `${roleMeta[role].short} registration` : "Secure access"}</p>
         <h2 id="ess-auth-title">
