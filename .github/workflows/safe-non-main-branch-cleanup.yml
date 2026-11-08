@@ -93,7 +93,7 @@ jobs:
               continue
             fi
             if merge_output="$(git merge-tree --write-tree refs/remotes/origin/main "refs/remotes/origin/$branch" 2>&1)"; then
-              merged_tree="$(printf '%s\\n' "$merge_output" | head -n 1)"
+              merged_tree="$(printf '%s\n' "$merge_output" | head -n 1)"
               if [ "$merged_tree" = "$main_tree" ]; then
                 gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$encoded"
                 echo "Deleted fully integrated branch $branch"
