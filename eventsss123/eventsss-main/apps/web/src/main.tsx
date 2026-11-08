@@ -8,18 +8,9 @@ import EphintaIntro from './components/branding/EphintaIntro';
 import AudioExperience from "./components/AudioExperience";
 import OfflineStatus from './components/OfflineStatus';
 import SyncConflictList from './components/SyncConflictList';
-import './index.css';
-import './ephinta-accessible-contrast.css';
-import "./styles/ephinta-design4.css";
-import './ess-bright-orange-theme.css';
-import './theme/tokens.css';
-import './ephinta-intro-refinement.css';
-import "./styles/ephinta-design4-enforced.css";
-import "./styles/ephinta-responsive-polish.css";
+import "./styles/ephinta-global.css";
 import { initLiveUpdate } from "./lib/liveUpdate";
 import { initOfflineSync } from './lib/offline/sync';
-import "./styles/ephinta-landing-repair.css";
-import "./styles/ephinta-current-ui-repair.css";
 import { installEphintaIntroWatchdog, markEphintaAppReady } from "./lib/ephintaStartup";
 
 /* ---------- Platform setup ---------- */
@@ -156,8 +147,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 initLiveUpdate();
 initOfflineSync();
-import "./styles/ephinta-polish.css";
-import "./styles/ephinta-audio.css";
-import "./ephinta-product-excellence.css";
-import "./ephinta-screen-refinement.css";
-import "./styles/ephinta-parent-design-system.css";
