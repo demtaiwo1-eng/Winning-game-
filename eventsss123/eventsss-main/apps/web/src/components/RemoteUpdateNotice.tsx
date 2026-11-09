@@ -14,8 +14,8 @@ type ViteUpdateEnv = {
 };
 
 const env = (import.meta as unknown as { env?: ViteUpdateEnv }).env ?? {};
-const API_BASE = (env.VITE_API_URL || "/api/v1").replace(/\\/+$/, "");
-const UPDATE_BASE = (env.VITE_UPDATE_URL || `${API_BASE}/app-updates`).replace(/\\/+$/, "");
+const API_BASE = (env.VITE_API_URL || "/api/v1").replace(/\/+$/, "");
+const UPDATE_BASE = (env.VITE_UPDATE_URL || `${API_BASE}/app-updates`).replace(/\/+$/, "");
 const BUILT_VERSION = env.VITE_APP_VERSION || "bundled";
 const DISMISSED_PREFIX = "ephinta:update-dismissed:";
 
