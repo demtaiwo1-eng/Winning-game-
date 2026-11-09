@@ -30,6 +30,9 @@ export default function RemoteUpdateNotice() {
   const [error, setError] = useState("");
 
   const checkForPatch = useCallback(async () => {
+    // Never interrupt local development with a remote release banner unless
+    // the developer explicitly opts into testing the update-notice experience.
+    if (env.DEV && !env.VITE_UPDATE_URL && localStorage.getItem("ephinta:dev-update-notice") !== "enabled") return;
     if (document.visibilityState === "hidden" || !navigator.onLine) return;
     try {
       const response = await fetch(`${UPDATE_BASE}/version.json?t=${Date.now()}`, {
