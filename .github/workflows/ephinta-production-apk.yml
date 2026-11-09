@@ -49,6 +49,7 @@ jobs:
     env:
       VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
       VITE_UPDATE_URL: ${{ format('{0}/app-updates', vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1') }}
+      VITE_APP_VERSION: ${{ github.sha }}
 
     steps:
       - name: Check out source
@@ -150,9 +151,10 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/ephinta-production"
           (cd apps/web/dist && zip -qr "$RUNNER_TEMP/ephinta-production/ephinta-web-bundle.zip" .)
-          VERSION="${GITHUB_SHA::12}"
+          VERSION="${GITHUB_SHA}"
           BUNDLE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/ephinta-web-latest/ephinta-web-bundle.zip"
-          printf '{\n  "version": "%s",\n  "url": "%s"\n}\n' "$VERSION" "$BUNDLE_URL" > "$RUNNER_TEMP/ephinta-production/version.json"
+          PUBLISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          printf '{\n  "version": "%s",\n  "url": "%s",\n  "title": "EPHINTA update available",\n  "message": "A new EPHINTA patch is ready with the latest improvements and fixes.",\n  "publishedAt": "%s",\n  "updateType": "web"\n}\n' "$VERSION" "$BUNDLE_URL" "$PUBLISHED_AT" > "$RUNNER_TEMP/ephinta-production/version.json"
           test -s "$RUNNER_TEMP/ephinta-production/ephinta-web-bundle.zip"
           test -s "$RUNNER_TEMP/ephinta-production/version.json"
 
