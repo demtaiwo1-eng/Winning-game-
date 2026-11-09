@@ -27,6 +27,7 @@ function readCategory(): MusicCategory {
 
 export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay = false }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const skipNextAutoPlay = useRef(false);
   const [category, setCategory] = useState<MusicCategory>(readCategory);
   const [trackIndex, setTrackIndex] = useState(0);
   const [volume, setVolume] = useState(() => {
@@ -93,6 +94,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
 
   useEffect(() => {
     if (!autoPlay || consent !== true || !preferencesLoaded) return;
+    if (skipNextAutoPlay.current) { skipNextAutoPlay.current = false; return; }
     const audio = audioRef.current;
     if (!audio) return;
     // Browsers and Android WebView may reject background autoplay. The visible
@@ -118,7 +120,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   function chooseConsent(accepted: boolean): void {
     setConsent(accepted);
     writePreference("ephinta:sound", accepted ? "on" : "off");
-    if (accepted) void play();
+    if (accepted) { skipNextAutoPlay.current = true; void play(); }
     else {
       audioRef.current?.pause();
       setPlaying(false);
