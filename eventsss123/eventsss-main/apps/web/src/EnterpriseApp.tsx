@@ -338,6 +338,9 @@ function ClientPortal({
         setPlanningAnswersEventId(result.event.id);
       }
       setEventLoadError("");
+      setSelectedEventId(result.event.id);
+      setChecklistEventId(result.event.id);
+      setVerifierEventId(result.event.id);
       setOwnedEvents((current) => [result.event, ...current.filter((event) => event.id !== result.event.id)]);
       if (result.event.startsAt && Date.parse(result.event.startsAt) >= Date.now() - 6 * 60 * 60 * 1000) {
         setReadinessEvents((current) => [result.event, ...current.filter((event) => event.id !== result.event.id)]);
