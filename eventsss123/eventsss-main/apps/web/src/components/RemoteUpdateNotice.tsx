@@ -11,6 +11,7 @@ type ViteUpdateEnv = {
   VITE_API_URL?: string;
   VITE_UPDATE_URL?: string;
   VITE_APP_VERSION?: string;
+  DEV?: boolean;
 };
 
 const env = (import.meta as unknown as { env?: ViteUpdateEnv }).env ?? {};
