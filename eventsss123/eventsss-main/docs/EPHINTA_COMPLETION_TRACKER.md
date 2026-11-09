@@ -231,3 +231,38 @@ This section records the work completed after the 2026-11-07 acceptance snapshot
 - No production database reset, restore, destructive migration, or credential rotation was performed.
 - No signing key, Apple certificate, provisioning profile, merchant secret or live payment credential was generated or committed.
 - Payment traffic remains sandbox/test and live provider operations remain blocked pending explicit provider and owner acceptance.
+
+
+## Final acceptance snapshot — 2026-11-09
+
+This snapshot records the current main commit and distinguishes automated CI/deployment evidence from owner-controlled release gates.
+
+### Current main and automated evidence
+
+- Canonical main commit: `ea8244f42add91a08b24a62a652b1fe021544605` (PR #137).
+- On that commit, GitHub Actions runs completed successfully for web checks + Android debug APK build (run `42547397876`), browser E2E and API database integration (run `42547397988`), dependency security audit (run `42547397882`), GitHub Pages build/deployment (run `42547397889`), and verified APK publication (run `42547670253`).
+- The APK publication job downloaded the successful debug APK artifact, verified its artifact ZIP digest, and published the installable **unsigned debug/test APK** as release `ephinta-apk-42547397876`, asset `ephinta-869.apk`. This is not a production-signed APK.
+- Render static site `ephinta-web` and API `ephinta_wss` both built and deployed commit `ea8244f42add91a08b24a62a652b1fe021544605` successfully on 2026-11-09. The API deployment completed successfully; the static site build output reports the PWA service worker and 86 precache entries.
+- Android compatibility matrix run `42545346593` was on the prior commit `ac4eb659e461086c9a3dd29e9f19338e8e14921e`: API 35 install/launch failed amid ADB/emulator system-service instability, while API 36 was still in progress at last inspection. Do not count that matrix as a pass or as proof of an EPHINTA app crash.
+- The branch-cleanup workflow completed successfully, but deliberately retained branches with unique commits and the open Bytid PR. It did not merge or delete those branches.
+
+### Repository consolidation
+
+- Branches whose contents were verified identical to main were aligned to the current main commit during the consolidation pass.
+- Remaining divergent branches contain unique file differences and are not safe to merge wholesale. In particular, retain the Bytid KYC draft for review, preserve current Android signing scripts/workflows over older variants, and do not port the device-security branch's camera permission removals.
+- PR #129 (`feature/ephinta-bytid-kyc-20261108`) remains draft and non-mergeable against its stale base. The current main KYC route includes stricter outcome handling than the older branch version. Review and selectively port only improvements that pass API/web/database checks.
+- Do not delete branches with unique commits until every useful change is either merged or explicitly rejected after review.
+
+### Remaining owner/provider acceptance gates
+
+1. **Android release signing:** configure the owner-controlled keystore and protected GitHub Actions secrets/variable described in `ANDROID_SIGNED_RELEASE.md`; verify the encrypted backup; run the production signed workflow; independently verify its certificate; install the signed build on a physical Android device.
+2. **Physical-device acceptance:** test registration and wrong-password handling, customer/planner/vendor journeys, messaging, navigation/back behavior, camera/file permissions, offline check-in, and sandbox payments on a real supported phone. CI/emulator evidence is not a substitute.
+3. **Payments:** OPay remains sandbox until merchant-side joint testing, signed webhook/replay checks, settlement/reconciliation, and separately approved refund/payout/FX checks pass. Cleva and Eversend must not be implemented against guessed API contracts; obtain account-specific official documentation, sandbox access, credentials and webhook rules first.
+4. **Bytid KYC:** configure the sandbox API key and webhook secret in the Render API service, register the webhook, and complete provider deterministic sandbox journeys. Keep live KYC disabled until pricing, consent, privacy and owner approval are complete.
+5. **Database continuity:** complete a full restore of the owner's actual backup to a disposable PostgreSQL target, never production. Reconfirm the Render Free database continuity plan before its previously reported 2026-11-26 expiry.
+6. **Production operations:** complete authenticated role-isolation and financial-ledger E2E coverage, provider sandbox settlement evidence, dependency advisory remediation, measured accessibility/performance review, monitoring/rollback rehearsal and explicit owner release approval.
+7. **Public URL acceptance:** Render deployment events confirm successful deployments to `https://ephinta-web.onrender.com` and `https://ephinta-wss.onrender.com`. The separate `https://ephinta.github.io` URL was not independently verified in this pass; do not treat it as the confirmed production URL.
+
+### Release decision
+
+**Status: CI green and Render deployments successful; production release NOT SIGNED OFF.** Keep live payment operations, paid entitlements, live KYC and public store distribution disabled until their corresponding owner/provider/device evidence exists. No production database reset, restore, secret rotation, paid Render upgrade or live-payment activation was performed in this consolidation pass.
