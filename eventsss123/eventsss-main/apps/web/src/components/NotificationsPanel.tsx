@@ -88,7 +88,18 @@ export default function NotificationsPanel() {
       } else {
         await api(`/notifications/${id}/${action}`, { method: "PATCH", body: "{}" });
       }
-      setItems((current) => current.filter((item) => item.id !== id));
+      setItems((current) => {
+        if (action === "delete" || (action === "archive" && folder !== "ALL") || (action === "unarchive" && folder === "ARCHIVED")) {
+          return current.filter((item) => item.id !== id);
+        }
+        return current.map((item) => item.id !== id ? item : {
+          ...item,
+          ...(action === "read" ? { readAt: new Date().toISOString() } : {}),
+          ...(action === "unread" ? { readAt: null } : {}),
+          ...(action === "archive" ? { archivedAt: new Date().toISOString() } : {}),
+          ...(action === "unarchive" ? { archivedAt: null } : {}),
+        });
+      });
       setNotice(action === "delete" ? "Notification deleted." : action === "archive" ? "Notification archived." : action === "unarchive" ? "Notification restored." : action === "read" ? "Marked as read." : "Marked as unread.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to update notification.");
