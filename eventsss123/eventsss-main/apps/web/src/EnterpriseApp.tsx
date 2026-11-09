@@ -25,14 +25,7 @@ import {
 import { registrationFieldError, type RegistrationField } from "./lib/registrationValidation";
 import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from "./lib/roleLabels";
 import NotificationsPanel from "./components/NotificationsPanel";
-import "./enterprise.css";
-import "./styles/event-planner-registration.css";
-import "./portal-menu.css";
-import "./public-menu.css";
-import "./event-builder.css";
-import "./public-landing.css";
-import "./styles/ephinta-planner-portal-polish.css"; // Shared planner, finance, check-in and trust portal layer.
-import "./styles/ephinta-parent-design-system.css";
+import MarketplaceAdStrip from "./components/MarketplaceAdStrip";
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
@@ -2403,6 +2396,7 @@ export default function EnterpriseApp() {
                     />
                   </div>
                 )}
+                <MarketplaceAdStrip />
                 {portal}
               </main>
             }
