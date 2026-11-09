@@ -117,3 +117,27 @@
 @media (prefers-reduced-motion: reduce) {
   .ess-filter-row .ess-chip, .ess-panel :is(.ess-checklist-item, [data-checklist-item]) { transition: none; }
 }
+
+.ess-message-toolbar, .ess-notification-toolbar, .ess-notification-actions, .ess-message-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 9px; flex-wrap: wrap;
+}
+.ess-message-actions { justify-content: flex-end; align-self: center; }
+.ess-recipient-options {
+  border: 1px solid var(--ess-ui-line); border-radius: 13px; padding: 11px 13px;
+  background: var(--ess-ui-soft);
+}
+.ess-recipient-options > summary { cursor: pointer; font-weight: 600; color: var(--ess-ui-ink); }
+.ess-recipient-options fieldset { margin-top: 12px; }
+.ess-event-messages .ess-choice-group {
+  border: 1px solid var(--ess-ui-line); border-radius: 13px; padding: 12px;
+}
+.ess-event-messages .ess-choice-group label {
+  display: flex; align-items: center; gap: 9px; padding: 5px 0; cursor: pointer;
+}
+.ess-notification-actions { justify-content: flex-start; }
+.ess-message-row p { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .ess-message-toolbar, .ess-notification-toolbar { align-items: stretch; }
+  .ess-message-actions { justify-content: flex-start; }
+  .ess-notification-actions { width: 100%; }
+}
