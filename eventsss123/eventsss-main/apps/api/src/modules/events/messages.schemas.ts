@@ -27,11 +27,11 @@ export const sendEventMessageSchema = z
         message: "Choose broadcast or explicit recipients, not both.",
       });
     }
-    if (!value.broadcast && !value.recipientIds && !hasNewRecipients) {
+    if (!value.broadcast && !value.recipientIds && !value.toIds?.length) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["toIds"],
-        message: "Choose at least one To, CC or BCC participant.",
+        message: "Choose at least one primary To recipient. CC and BCC are optional.",
       });
     }
     const allIds = [
