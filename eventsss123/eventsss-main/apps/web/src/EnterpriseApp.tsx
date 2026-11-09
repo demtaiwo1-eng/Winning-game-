@@ -614,7 +614,7 @@ function ClientPortal({
                 Event to review
                 <select
                   value={ownedEvents.some((event) => event.id === readinessEventId) ? readinessEventId : ownedEvents[0].id}
-                  onChange={(e) => setReadinessEventId(e.target.value)}
+                  onChange={(e) => { setReadinessEventId(e.target.value); setSelectedEventId(e.target.value); }}
                   style={{ display: "block", width: "100%", maxWidth: 520, marginTop: 6 }}
                 >
                   {ownedEvents.map((event) => (
