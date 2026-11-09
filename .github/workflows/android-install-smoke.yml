@@ -97,6 +97,8 @@ jobs:
         run: npm run sync -w apps/mobile
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
+          VITE_UPDATE_URL: ${{ format('{0}/app-updates', vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1') }}
+          VITE_APP_VERSION: ${{ github.sha }}
 
       - name: Build and inspect APK
         working-directory: eventsss123/eventsss-main/apps/mobile/android
