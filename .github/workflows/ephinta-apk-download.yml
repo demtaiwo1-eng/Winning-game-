@@ -22,7 +22,9 @@ jobs:
       github.event.workflow_run.head_branch == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
-      - name: Download verified APK build artifact
+      - name: Download verified APK build artifact (optional for web-only changes)
+        id: download_apk
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: ephinta-android-debug-apk
@@ -39,16 +41,20 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
 
       - name: Prepare release files
+        id: prepare
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p release-assets
           APK="$(find release-assets -type f -name '*.apk' -print -quit)"
           if [[ -z "$APK" || ! -s "$APK" ]]; then
-            echo "::error::The successful APK build did not contain an installable APK."
-            exit 1
+            echo "apk_available=false" >> "$GITHUB_OUTPUT"
+            echo "No Android APK artifact was produced for this web-only change; publishing the OTA bundle only."
+            exit 0
           fi
           cp "$APK" "release-assets/ephinta-${{ github.event.workflow_run.run_number }}.apk"
           (cd release-assets && sha256sum "ephinta-${{ github.event.workflow_run.run_number }}.apk" > "ephinta-${{ github.event.workflow_run.run_number }}.apk.sha256")
+          echo "apk_available=true" >> "$GITHUB_OUTPUT"
 
       - name: Publish stable OTA bundle release
         uses: softprops/action-gh-release@v2
@@ -69,6 +75,7 @@ jobs:
           generate_release_notes: false
 
       - name: Publish APK download release
+        if: steps.prepare.outputs.apk_available == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ephinta-apk-${{ github.event.workflow_run.id }}
