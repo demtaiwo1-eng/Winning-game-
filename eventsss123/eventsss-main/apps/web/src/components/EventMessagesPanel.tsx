@@ -152,17 +152,19 @@ export default function EventMessagesPanel({ events, initialEventId }: { events:
         await api(`/events/${currentEventId}/messages/${message.id}/${action}`, { method: "PATCH", body: "{}" });
       }
       setMessages((current) => {
+        const isTarget = (item: EventMessage) =>
+          sent ? Boolean(message.groupId && item.groupId === message.groupId) : item.id === message.id;
         if (action === "delete" || (action === "archive" && folder !== "ALL") || (action === "unarchive" && folder === "ARCHIVED")) {
-          return current.filter((item) => item.id !== message.id);
+          return current.filter((item) => !isTarget(item));
         }
-        return current.map((item) => item.id !== message.id ? item : {
+        return current.map((item) => !isTarget(item) ? item : {
           ...item,
           ...(action === "read" ? { readAt: new Date().toISOString() } : {}),
           ...(action === "unread" ? { readAt: null } : {}),
-          ...(action === "archive" ? (item.senderId === viewerId
+          ...(action === "archive" ? (sent
             ? { senderArchivedAt: new Date().toISOString() }
             : { recipientArchivedAt: new Date().toISOString() }) : {}),
-          ...(action === "unarchive" ? (item.senderId === viewerId
+          ...(action === "unarchive" ? (sent
             ? { senderArchivedAt: null }
             : { recipientArchivedAt: null }) : {}),
         });
