@@ -59,6 +59,8 @@ describe.skipIf(!run)("event messages (DB)", () => {
       expect(carbonCopy.body.items).toHaveLength(2);
       expect(carbonCopy.body.items.map((item: { recipientKind: string }) => item.recipientKind).sort()).toEqual(["CC", "TO"]);
       const verifierCopy = carbonCopy.body.items.find((item: { recipientId: string }) => item.recipientId === verifier.id);
+      expect(verifierCopy.toRecipientIds).toEqual([verifier.id]);
+      expect(verifierCopy.ccRecipientIds).toEqual([verifierTwo.id]);
       const copyRead = await request(app).patch(`/api/v1/events/${eventId}/messages/${verifierCopy.id}/read`).set(auth(verifier.token));
       expect(copyRead.status).toBe(200);
       const copyUnread = await request(app).patch(`/api/v1/events/${eventId}/messages/${verifierCopy.id}/unread`).set(auth(verifier.token));
