@@ -1,5 +1,5 @@
 /* EPHINTA public marketplace carousel and authenticated portal visual system. */
-.eph-marketplace-advertising{padding:clamp(20px,3vw,34px);background:radial-gradient(circle at 88% 12%,rgba(166,122,255,.25),transparent 34%),linear-gradient(125deg,#12152f 0%,#28204b 52%,#192e4a 100%);border-color:rgba(205,184,255,.3);box-shadow:0 22px 55px rgba(17,21,45,.18)}
+.eph-landing .eph-promo-shell.eph-marketplace-advertising{padding:clamp(20px,3vw,34px);background:radial-gradient(circle at 88% 12%,rgba(166,122,255,.25),transparent 34%),linear-gradient(125deg,#12152f 0%,#28204b 52%,#192e4a 100%);border-color:rgba(205,184,255,.3);box-shadow:0 22px 55px rgba(17,21,45,.18)}
 .eph-landing .eph-promo-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px}
 .eph-landing .eph-promo-heading>div{max-width:760px}
 .eph-landing .eph-promo-kicker{display:block;margin-bottom:10px;color:#ffd47c;font-size:10px;font-weight:900;letter-spacing:.16em}
@@ -82,3 +82,16 @@
 @media(max-width:980px){.ess-content{padding-top:30px}.ess-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.ess-topbar{align-items:center;flex-wrap:wrap;padding:12px 16px;gap:10px}.ess-content{padding:24px 14px 72px}.ess-page-heading{align-items:stretch;flex-direction:column;gap:16px}.ess-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ess-metric{min-height:116px;padding:15px}.ess-panel{padding:16px}.ess-section-title{align-items:flex-start;flex-direction:column}.ess-filter-row{margin-inline:-2px}.ess-journey-card{padding:22px}.ess-journey-actions{align-items:stretch;flex-direction:column}.ess-journey-actions>*{width:100%}}
 @media(max-width:380px){.ess-metrics{grid-template-columns:1fr}.ess-account span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+/* Header controls stay aligned and reachable at every portal width. */
+.ess-topbar .ess-brand{gap:10px;color:#fff}
+.ess-topbar .ess-brand>span:last-child{color:#f7f5ff;font-size:13px;line-height:1.25}
+.ess-topbar .ess-brand small{color:#aeb2cb;font-size:10px}
+.ess-topbar .ess-account{gap:12px;color:#d8d6e8;font-size:12px}
+.ess-topbar .ess-account button{padding:8px 11px;border:1px solid rgba(194,181,238,.22);border-radius:9px;color:#f3eaff;background:rgba(255,255,255,.045)}
+.ess-topbar .ess-locale-switch{display:flex;gap:8px;min-width:0}
+.ess-topbar .ess-locale-switch select{min-width:76px;min-height:38px;padding:7px 9px;border:1px solid rgba(194,181,238,.2);border-radius:9px;background:#171b32;color:#f8f6ff}
+.ess-menu-dropdown{border-color:rgba(190,178,232,.22);border-radius:16px;background:rgba(19,22,43,.98)}
+.ess-menu-option:hover,.ess-menu-option.active{border-color:rgba(182,154,255,.35);background:rgba(132,94,209,.14)}
+.ess-menu-option-icon{background:rgba(151,117,220,.16);color:#c8b4ff}
+@media(max-width:760px){.ess-topbar .ess-locale-switch{flex:1 1 100%;order:4}.ess-topbar .ess-locale-switch select{flex:1}.ess-topbar .ess-account{margin-left:auto}.ess-menu-dropdown{max-width:calc(100vw - 28px)}}
