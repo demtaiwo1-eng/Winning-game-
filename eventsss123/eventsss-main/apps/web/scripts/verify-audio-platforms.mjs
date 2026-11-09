@@ -38,9 +38,15 @@ for (const feature of ["Play music", "Pause music", "Previous track", "Next trac
   else pass("Audio control present: " + feature);
 }
 
-const config = fs.readFileSync(path.join(repoRoot, "mobile", "capacitor.config.ts"), "utf8");
-if (!config.includes('appName: "EPHINTA"')) fail("Capacitor app identity is not EPHINTA.");
-else pass("Capacitor Android/iOS shell is configured for EPHINTA.");
+// Capacitor lives in the mobile workspace, not in a repository-root /mobile folder.
+const configPath = path.join(repoRoot, "apps", "mobile", "capacitor.config.ts");
+if (!fs.existsSync(configPath)) {
+  fail("Capacitor configuration not found at apps/mobile/capacitor.config.ts.");
+} else {
+  const config = fs.readFileSync(configPath, "utf8");
+  if (!config.includes('appName: "EPHINTA"')) fail("Capacitor app identity is not EPHINTA.");
+  else pass("Capacitor Android/iOS shell is configured for EPHINTA.");
+}
 
 if (process.exitCode) {
   console.error("\nAudio readiness checks failed. Fix the listed issues before building.");
