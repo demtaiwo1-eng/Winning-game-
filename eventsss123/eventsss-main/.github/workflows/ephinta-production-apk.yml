@@ -51,6 +51,15 @@ jobs:
             fi
           done
 
+      - name: Download known-working Build 869 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ephinta-baseline"
+          curl --fail --location --retry 3 \
+            "https://github.com/demtaiwo1-eng/Winning-game-/releases/download/ephinta-apk-42547397876/ephinta-869.apk" \
+            --output "$RUNNER_TEMP/ephinta-baseline/ephinta-869.apk"
+          test -s "$RUNNER_TEMP/ephinta-baseline/ephinta-869.apk"
       - name: Install dependencies
         run: npm ci
 
@@ -91,12 +100,29 @@ jobs:
           echo "ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
           echo "ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
 
+      - name: Verify Build 869 signing identity before build
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ env.ANDROID_KEYSTORE_PATH }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          EXPECTED_CERT: ${{ vars.ANDROID_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          test -x "$APKSIGNER" && test -x "$AAPT"
+          bash scripts/verify-protected-869-signing-identity.sh \
+            "$RUNNER_TEMP/ephinta-baseline/ephinta-869.apk" "$APKSIGNER" "$AAPT"
       - name: Build signed release APK
         working-directory: apps/mobile/android
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        env:
+          EPHINTA_VERSION_CODE: "870"
         run: ./gradlew --no-daemon clean assembleRelease
 
       - name: Verify signature and prepare downloads
@@ -105,6 +131,13 @@ jobs:
           set -euo pipefail
           APK="apps/mobile/android/app/build/outputs/apk/release/app-release.apk"
           test -s "$APK"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          BASELINE_VERSION="$("$AAPT" dump badging "$RUNNER_TEMP/ephinta-baseline/ephinta-869.apk" | sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" | head -n 1)"
+          RELEASE_VERSION="$("$AAPT" dump badging "$APK" | sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" | head -n 1)"
+          PACKAGE="$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" | head -n 1)"
+          [[ "$PACKAGE" == "com.ephinta.app" ]]
+          [[ "$BASELINE_VERSION" =~ ^[0-9]+$ && "$RELEASE_VERSION" =~ ^[0-9]+$ ]]
+          (( RELEASE_VERSION > BASELINE_VERSION )) || { echo "::error::Release versionCode must exceed Build 869 ($BASELINE_VERSION); got $RELEASE_VERSION"; exit 1; }
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           test -x "$APKSIGNER"
           "$APKSIGNER" verify --verbose --print-certs "$APK"
