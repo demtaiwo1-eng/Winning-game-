@@ -2278,6 +2278,7 @@ export default function EnterpriseApp() {
 
   return (
     <div className="ess-app">
+      {session && <a className="ess-skip-link" href="#dashboard-main">Skip to dashboard content</a>}
       <header className="ess-topbar">
         <button
           className="ess-brand"
@@ -2291,7 +2292,11 @@ export default function EnterpriseApp() {
         </button>
         {session ? (
           <>
-            <div className="ess-portal-menu" onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}>
+            <div
+              className="ess-portal-menu"
+              onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}
+              onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setMenuOpen(false); }}
+            >
               <button
                 className="ess-menu-trigger"
                 type="button"
@@ -2379,7 +2384,11 @@ export default function EnterpriseApp() {
             </div>
           </>
         ) : (
-          <div className="ess-public-menu">
+          <div
+            className="ess-public-menu"
+            onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}
+            onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setMenuOpen(false); }}
+          >
             <button
               className="ess-menu-trigger"
               type="button"
