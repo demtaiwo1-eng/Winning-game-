@@ -227,3 +227,56 @@ textarea::placeholder {
   ) !important;
   color: var(--ephinta-theme-ink) !important;
 }
+
+
+/* Planner registration dialog: keep every form control readable in every theme.
+   Scoped selectors intentionally outrank legacy planner/auth field styling. */
+:where(.eph-modal, .ess-auth-modal) {
+  color: var(--ephinta-theme-ink) !important;
+  color-scheme: inherit;
+}
+:where(.eph-modal, .ess-auth-modal) :where(label, legend, .field-label) {
+  color: var(--ephinta-theme-ink) !important;
+}
+:where(.eph-modal, .ess-auth-modal)
+  :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+         select, textarea) {
+  color: var(--ephinta-theme-ink) !important;
+  -webkit-text-fill-color: var(--ephinta-theme-ink) !important;
+  background-color: var(--ephinta-theme-surface-soft) !important;
+  border: 1px solid var(--ephinta-theme-border) !important;
+  opacity: 1 !important;
+}
+:where(.eph-modal, .ess-auth-modal)
+  :where(input, textarea)::placeholder {
+  color: var(--ephinta-theme-placeholder) !important;
+  -webkit-text-fill-color: var(--ephinta-theme-placeholder) !important;
+  opacity: 1 !important;
+}
+:where(.eph-modal, .ess-auth-modal) select option {
+  color: var(--ephinta-theme-ink) !important;
+  background-color: var(--ephinta-theme-surface) !important;
+}
+:where(.eph-modal, .ess-auth-modal)
+  :where(input, select, textarea):disabled {
+  color: var(--ephinta-theme-muted) !important;
+  -webkit-text-fill-color: var(--ephinta-theme-muted) !important;
+  background-color: var(--ephinta-theme-page) !important;
+  opacity: 1 !important;
+}
+:where(.eph-modal, .ess-auth-modal)
+  input:-webkit-autofill,
+:where(.eph-modal, .ess-auth-modal)
+  input:-webkit-autofill:hover,
+:where(.eph-modal, .ess-auth-modal)
+  input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ephinta-theme-ink) !important;
+  box-shadow: 0 0 0 1000px var(--ephinta-theme-surface-soft) inset !important;
+  caret-color: var(--ephinta-theme-ink);
+}
+:where(.eph-modal, .ess-auth-modal)
+  :where(input, select, textarea):focus-visible {
+  border-color: var(--ephinta-theme-focus) !important;
+  outline: 3px solid color-mix(in srgb, var(--ephinta-theme-focus), transparent 72%) !important;
+  outline-offset: 1px;
+}
