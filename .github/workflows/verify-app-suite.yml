@@ -41,7 +41,18 @@ jobs:
         working-directory: eventsss123/eventsss-main
     steps:
       - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: android_changes
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        with:
+          filters: |
+            android:
+              - 'eventsss123/eventsss-main/apps/mobile/**'
+              - 'eventsss123/eventsss-main/capacitor.config.*'
+              - 'eventsss123/eventsss-main/package.json'
+              - 'eventsss123/eventsss-main/package-lock.json'
       - uses: actions/setup-java@v4
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.android_changes.outputs.android == 'true' }}
         with:
           distribution: temurin
           java-version: '17'
@@ -53,3 +64,5 @@ jobs:
           cache-dependency-path: eventsss123/eventsss-main/package-lock.json
       - run: chmod +x scripts/verify-all.sh
       - run: scripts/verify-all.sh
+        env:
+          EPHINTA_RUN_ANDROID_BUILD: ${{ github.event_name == 'workflow_dispatch' || steps.android_changes.outputs.android == 'true' }}
