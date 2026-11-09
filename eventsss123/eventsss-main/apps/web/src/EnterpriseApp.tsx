@@ -2099,7 +2099,7 @@ export default function EnterpriseApp() {
       localStorage.setItem("ess_refresh_token", result.refreshToken);
       localStorage.setItem("ess_user", JSON.stringify(user));
       void registerPushIfNative();
-      setSession({ name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
+      setSession({ id: user.id, name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
       setActiveRole(user.role);
       navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
       if (authMode === "signup" || !hasCompletedOnboard(user.role, user.organizationMode)) {
@@ -2178,6 +2178,7 @@ export default function EnterpriseApp() {
         localStorage.setItem("ess_user", JSON.stringify(user));
         void registerPushIfNative();
         setSession({
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
