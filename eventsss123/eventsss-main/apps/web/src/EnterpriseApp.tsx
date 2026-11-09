@@ -25,6 +25,7 @@ import {
 import { registrationFieldError, type RegistrationField } from "./lib/registrationValidation";
 import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from "./lib/roleLabels";
 import NotificationsPanel from "./components/NotificationsPanel";
+import DeviceSecurityGate from "./components/DeviceSecurityGate";
 import MarketplaceAdStrip from "./components/MarketplaceAdStrip";
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
@@ -84,7 +85,7 @@ type KycCase = {
   status: "Pending" | "Revision";
 };
 
-type UserSession = { name: string; email: string; role: Role; organizationMode?: OrganizationMode | null };
+type UserSession = { id: string; name: string; email: string; role: Role; organizationMode?: OrganizationMode | null };
 
 function getAuthErrorMessage(status: number, error: unknown, mode: "signin" | "signup" | "forgot"): string {
   const payload = error && typeof error === "object" ? error as Record<string, unknown> : {};
@@ -1795,15 +1796,15 @@ export default function EnterpriseApp() {
       const raw = localStorage.getItem("ess_user");
       const token = localStorage.getItem("ess_access_token");
       if (raw && token) {
-        const user = JSON.parse(raw) as { name?: string; email?: string; role?: string; organizationMode?: OrganizationMode | null };
-        if (user?.name && user?.email && user?.role && isRole(user.role)) {
+        const user = JSON.parse(raw) as { id?: string; name?: string; email?: string; role?: string; organizationMode?: OrganizationMode | null };
+        if (user?.id && user?.name && user?.email && user?.role && isRole(user.role)) {
           if (user.role === "ORGANIZATION" && user.organizationMode !== "EVENT_PLANNING" && user.organizationMode !== "SERVICE_PROVIDER") {
             localStorage.removeItem("ess_access_token");
             localStorage.removeItem("ess_refresh_token");
             localStorage.removeItem("ess_user");
             setAccountNotice("Choose an organization operating mode when creating your organization account.");
           } else {
-            setSession({ name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
+            setSession({ id: user.id, name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
             setActiveRole(user.role);
           }
         } else if (user?.role === "RIDER") {
@@ -1998,7 +1999,7 @@ export default function EnterpriseApp() {
       localStorage.setItem("ess_refresh_token", result.refreshToken);
       localStorage.setItem("ess_user", JSON.stringify(user));
       void registerPushIfNative();
-      setSession({ name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
+      setSession({ id: user.id, name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
       setActiveRole(user.role);
       navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
       if (authMode === "signup" || !hasCompletedOnboard(user.role, user.organizationMode)) {
@@ -2026,7 +2027,9 @@ export default function EnterpriseApp() {
   };
   if (session && showOnboard) {
     return (
-      <OnboardingOverlay name={session.name} role={session.role} organizationMode={session.organizationMode} onDone={() => setShowOnboard(false)} />
+      <DeviceSecurityGate userId={session.id} onSignOut={signOut}>
+        <OnboardingOverlay name={session.name} role={session.role} organizationMode={session.organizationMode} onDone={() => setShowOnboard(false)} />
+      </DeviceSecurityGate>
     );
   }
 
@@ -2170,7 +2173,7 @@ export default function EnterpriseApp() {
     );
   }
 
-  return (
+  const content = (
     <div className="ess-app">
       <header className="ess-topbar">
         <button
@@ -2450,6 +2453,9 @@ export default function EnterpriseApp() {
       )}
     </div>
   );
+  return session ? (
+    <DeviceSecurityGate userId={session.id} onSignOut={signOut}>{content}</DeviceSecurityGate>
+  ) : content;
 }
 
 function ResetPasswordPage({ token }: { token: string }) {
