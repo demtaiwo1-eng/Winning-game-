@@ -54,7 +54,8 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
   const lastActivity = useRef(Date.now());
   const timer = useRef<number | null>(null);
   const attemptsKey = useMemo(() => `ephinta:device-pin-attempts:v1:${userId}`, [userId]);
-  const attempts = useRef(Math.max(0, Math.min(5, Number(localStorage.getItem(attemptsKey) || 0))));
+  const storedAttempts = Number.parseInt(localStorage.getItem(attemptsKey) ?? "0", 10);
+  const attempts = useRef(Number.isFinite(storedAttempts) ? Math.max(0, Math.min(5, storedAttempts)) : 0);
 
   useEffect(() => {
     let active = true;
