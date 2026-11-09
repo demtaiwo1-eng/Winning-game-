@@ -163,4 +163,5 @@ import "./ephinta-screen-refinement.css";
 import "./styles/ephinta-unified-design-system.css";
 import "./styles/ephinta-theme-text-contrast.css";
 import "./styles/ephinta-operations-experience.css";
+import "./styles/ephinta-global-navigation-fix.css";
 import "./styles/ephinta-parent-design-system.css";
