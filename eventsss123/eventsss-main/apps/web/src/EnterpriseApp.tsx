@@ -361,13 +361,17 @@ function ClientPortal({
     api<{ items: Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }> }>("/events")
       .then((result) => {
         setEventLoadError("");
+        const incomingEvents = result.items || [];
         setOwnedEvents((current) => {
-          const byId = new Map((result.items || []).map((event) => [event.id, event]));
+          const byId = new Map(incomingEvents.map((event) => [event.id, event]));
           for (const event of current) byId.set(event.id, event);
-          const next = [...byId.values()];
-          setVerifierEventId((selected) => selected && next.some((event) => event.id === selected) ? selected : next[0]?.id || "");
-          return next;
+          return [...byId.values()];
         });
+        setVerifierEventId((selected) =>
+          selected && incomingEvents.some((event) => event.id === selected)
+            ? selected
+            : incomingEvents[0]?.id || "",
+        );
       })
       .catch((error: Error) => setEventLoadError(error.message));
   }, []);
