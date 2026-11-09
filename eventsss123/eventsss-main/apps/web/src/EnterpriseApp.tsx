@@ -25,8 +25,15 @@ import {
 import { registrationFieldError, type RegistrationField } from "./lib/registrationValidation";
 import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from "./lib/roleLabels";
 import NotificationsPanel from "./components/NotificationsPanel";
-import DeviceSecurityGate from "./components/DeviceSecurityGate";
-import MarketplaceAdStrip from "./components/MarketplaceAdStrip";
+import "./enterprise.css";
+import "./styles/event-planner-registration.css";
+import "./portal-menu.css";
+import "./public-menu.css";
+import "./event-builder.css";
+import "./public-landing.css";
+import "./styles/ephinta-planner-portal-polish.css";
+import "./styles/ephinta-parent-design-system.css"; // Must load last: parent theme overrides component-level palettes.
+import "./styles/ephinta-navigation-accessibility.css"; // Accessibility and responsive navigation overrides must follow theme styles.
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
@@ -85,7 +92,7 @@ type KycCase = {
   status: "Pending" | "Revision";
 };
 
-type UserSession = { id: string; name: string; email: string; role: Role; organizationMode?: OrganizationMode | null };
+type UserSession = { name: string; email: string; role: Role; organizationMode?: OrganizationMode | null };
 
 function getAuthErrorMessage(status: number, error: unknown, mode: "signin" | "signup" | "forgot"): string {
   const payload = error && typeof error === "object" ? error as Record<string, unknown> : {};
@@ -279,13 +286,14 @@ function ClientPortal({
 }) {
   const [tab, setTab] = useDashboardTab(
     ["overview", "checklist", "planner", "checkin", "marketplace", "payments", "readiness", "messages", "notifications", "verifiers", "kyc", "feedback"] as const,
-    "marketplace",
+    "overview",
   );
   const [bookingNotice, setBookingNotice] = useState("");
   const [readinessEvents, setReadinessEvents] = useState<Array<{ id: string; title: string; startsAt?: string | null }>>([]);
   const [checklistEventId, setChecklistEventId] = useState<string>("");
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [readinessEventId, setReadinessEventId] = useState<string>("");
+  const [verifierEventId, setVerifierEventId] = useState<string>("");
   const [showCreate, setShowCreate] = useState(false);
   const [ownedEvents, setOwnedEvents] = useState<Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }>>([]);
   const [eventLoadError, setEventLoadError] = useState("");
@@ -331,6 +339,9 @@ function ClientPortal({
         setPlanningAnswersEventId(result.event.id);
       }
       setEventLoadError("");
+      setSelectedEventId(result.event.id);
+      setChecklistEventId(result.event.id);
+      setVerifierEventId(result.event.id);
       setOwnedEvents((current) => [result.event, ...current.filter((event) => event.id !== result.event.id)]);
       if (result.event.startsAt && Date.parse(result.event.startsAt) >= Date.now() - 6 * 60 * 60 * 1000) {
         setReadinessEvents((current) => [result.event, ...current.filter((event) => event.id !== result.event.id)]);
@@ -355,13 +366,22 @@ function ClientPortal({
     api<{ items: Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }> }>("/events")
       .then((result) => {
         setEventLoadError("");
+        const incomingEvents = result.items || [];
         setOwnedEvents((current) => {
-          const byId = new Map((result.items || []).map((event) => [event.id, event]));
+          const byId = new Map(incomingEvents.map((event) => [event.id, event]));
           for (const event of current) byId.set(event.id, event);
-          const next = [...byId.values()];
-          setSelectedEventId((selected) => selected && next.some((event) => event.id === selected) ? selected : next[0]?.id || "");
-          return next;
+          return [...byId.values()];
         });
+        setSelectedEventId((selected) =>
+          selected && incomingEvents.some((event) => event.id === selected)
+            ? selected
+            : incomingEvents[0]?.id || "",
+        );
+        setVerifierEventId((selected) =>
+          selected && incomingEvents.some((event) => event.id === selected)
+            ? selected
+            : incomingEvents[0]?.id || "",
+        );
       })
       .catch((error: Error) => setEventLoadError(error.message));
   }, []);
@@ -381,7 +401,7 @@ function ClientPortal({
   }, []);
 
   return (
-    <div className="ess-portal-stack">
+    <main id="dashboard-main" className="ess-portal-stack" tabIndex={-1} aria-label="Event planner dashboard">
       <div className="ess-page-heading">
         <div>
           <p className="ess-eyebrow">Executive Planner command center</p>
@@ -394,13 +414,13 @@ function ClientPortal({
           <button className="ess-primary" type="button" onClick={() => setShowCreate((v) => !v)}>
             <Icon>＋</Icon> New event
           </button>
-          <button className="ess-outline-button" type="button" onClick={() => setTab("payments")}>
+          <button className="ess-outline-button" type="button" onClick={() => { setTab("payments"); window.scrollTo({ top: 0, behavior: "smooth" }); }} aria-label="Open payments and wallet">
             Payments & finances
           </button>
         </div>
       </div>
 
-      <div className="ess-filter-row" style={{ marginBottom: 8 }}>
+      <nav className="ess-filter-row ess-dashboard-nav" style={{ marginBottom: 8 }} aria-label="Planner dashboard sections">
         {(
           [
             ["overview", "Overview"],
@@ -421,12 +441,14 @@ function ClientPortal({
             key={id}
             type="button"
             className={tab === id ? "ess-chip ess-chip-active" : "ess-chip"}
+            aria-current={tab === id ? "page" : undefined}
+            aria-label={`Open ${label}`}
             onClick={() => setTab(id)}
           >
             {label}
           </button>
         ))}
-      </div>
+      </nav>
 
       {showCreate && (
         <EventCreatePanel
@@ -434,7 +456,8 @@ function ClientPortal({
             setReadinessEventId(id);
             setChecklistEventId(id);
             setSelectedEventId(id);
-            setTab("planner");
+            setVerifierEventId(id);
+            setTab("verifiers");
             setShowCreate(false);
             api<{ items: Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }> }>("/events")
               .then((result) => {
@@ -479,15 +502,29 @@ function ClientPortal({
           {eventLoadError && <p className="ess-form-error" role="alert">{eventLoadError}</p>}
           <div className="ess-metrics">
             <Metric
-              label="Active events"
+              label="Events in your workspace"
               value={String(ownedEvents.length)}
-              detail={ownedEvents.length === 1 ? "Event in your workspace" : "Events in your workspace"}
+              detail={ownedEvents.length === 1 ? "Event ready for planning" : "Events ready for planning"}
               accent
             />
-            <Metric label="Committed budget" value="—" detail="Review budgets inside each event" />
-            <Metric label="Guest responses" value="—" detail="Open an event to manage guests" />
-            <Metric label="Vendor shortlist" value="—" detail="Browse marketplace services" />
+            <Metric label="Readiness events" value={String(readinessEvents.length)} detail="Events with a readiness workflow" />
+            <Metric label="Planning brief" value={planningAnswersEventId ? "In progress" : "Available"} detail="Your planning answers can be saved over multiple visits" />
           </div>
+          <section className="ess-panel ess-planner-quick-actions">
+            <div>
+              <p className="ess-eyebrow">Quick actions</p>
+              <h2>Continue planning</h2>
+              <p className="ess-muted">Jump directly to the part of your event that needs attention.</p>
+            </div>
+            <div className="ess-planner-action-grid">
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("planner")}>Event workspace</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("checklist")}>Interactive checklist</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("checkin")}>Guest check-in</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("marketplace")}>Marketplace</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("payments")}>Payments & escrow</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("verifiers")}>Choose a verifier</button>
+            </div>
+          </section>
           {ownedEvents.length === 0 ? (
             <section className="ess-panel">
               <EmptyState
@@ -509,35 +546,34 @@ function ClientPortal({
                     <p className="ess-muted">
                       {[event.city, event.startsAt ? new Date(event.startsAt).toLocaleDateString() : "Date to be confirmed"].filter(Boolean).join(" · ")}
                     </p>
-                    <div className="ess-event-actions">
-                    <button
-                      className="ess-outline-button"
-                      type="button"
-                      onClick={() => { setSelectedEventId(event.id); setChecklistEventId(event.id); setTab("planner"); }}
-                    >Open event workspace</button>
-                    <button
-                      className="ess-outline-button"
-                      type="button"
-                      onClick={() => { setSelectedEventId(event.id); setReadinessEventId(event.id); setTab("verifiers"); }}
-                    >Choose verifier</button>
-                    <button
-                      className="ess-outline-button"
-                      type="button"
-                      disabled={!readinessEvents.some((readinessEvent) => readinessEvent.id === event.id)}
-                      onClick={() => {
-                        setReadinessEventId(event.id);
-                        setSelectedEventId(event.id);
-                        setTab("readiness");
-                      }}
-                    >
-                      {readinessEvents.some((readinessEvent) => readinessEvent.id === event.id) ? "Open readiness" : "Add a future event date to open readiness"}
-                    </button>
+                    <div className="ess-event-card-actions">
+                      <button className="ess-primary" type="button" onClick={() => { setSelectedEventId(event.id); setChecklistEventId(event.id); setTab("planner"); }}>Open workspace</button>
+                      <button className="ess-outline-button" type="button" onClick={() => { setSelectedEventId(event.id); setChecklistEventId(event.id); setTab("checkin"); }}>Guest check-in</button>
+                      <button
+                        className="ess-quiet-button"
+                        type="button"
+                        disabled={!readinessEvents.some((readinessEvent) => readinessEvent.id === event.id)}
+                        onClick={() => { setSelectedEventId(event.id); setReadinessEventId(event.id); setTab("readiness"); }}
+                      >
+                        {readinessEvents.some((readinessEvent) => readinessEvent.id === event.id) ? "Open readiness" : "Set event date for readiness"}
+                      </button>
                     </div>
                   </article>
                 ))}
               </div>
             </section>
           )}
+          <div className="ess-overview-finance">
+            <div className="ess-section-heading">
+              <div>
+                <p className="ess-eyebrow">Financial overview</p>
+                <h2>Funds, bookings and escrow</h2>
+                <p className="ess-muted">Live balances and protected payments for your planning account.</p>
+              </div>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("payments")}>Open full wallet</button>
+            </div>
+            <WalletPanel locale={locale} role="CLIENT" />
+          </div>
         </>
       )}
 
@@ -570,30 +606,54 @@ function ClientPortal({
             Your verifier confirms each booked service. All lights must be green at least 2 hours before start.
             The confirmation window opens 6 hours before the event.
           </p>
-          {readinessEvents.length === 0 ? (
+          {ownedEvents.length === 0 ? (
             <EmptyState
               icon="●"
-              title="No upcoming events"
-              description="Create an event with a start time, book services, then open this tab so a verifier can traffic-light every item."
+              title="Your readiness workspace starts with an event"
+              description="Create an event, add its date and location, book services and select a verifier. Your planner details will flow into this event's readiness board."
+              actionLabel="Create event"
+              onAction={() => setShowCreate(true)}
             />
           ) : (
             <>
               <label style={{ display: "block", marginTop: 12, marginBottom: 8 }}>
-                Event
+                Event to review
                 <select
-                  value={readinessEventId}
+                  value={ownedEvents.some((event) => event.id === readinessEventId) ? readinessEventId : ownedEvents[0].id}
                   onChange={(e) => { setReadinessEventId(e.target.value); setSelectedEventId(e.target.value); }}
-                  style={{ display: "block", width: "100%", maxWidth: 420, marginTop: 6 }}
+                  style={{ display: "block", width: "100%", maxWidth: 520, marginTop: 6 }}
                 >
-                  {readinessEvents.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.title}
-                      {e.startsAt ? ` · ${new Date(e.startsAt).toLocaleString()}` : ""}
+                  {ownedEvents.map((event) => (
+                    <option key={event.id} value={event.id}>
+                      {event.title}
+                      {event.startsAt ? ` · ${new Date(event.startsAt).toLocaleString()}` : ""}
                     </option>
                   ))}
                 </select>
               </label>
-              {readinessEventId ? <EventReadinessBoard eventId={readinessEventId} mode="client" /> : null}
+              <div className="ess-readiness-planner-context">
+                <div>
+                  <p className="ess-eyebrow">From your planner</p>
+                  <strong>{(ownedEvents.find((event) => event.id === readinessEventId) || ownedEvents[0]).title}</strong>
+                  <p className="ess-muted">
+                    {[
+                      (ownedEvents.find((event) => event.id === readinessEventId) || ownedEvents[0]).city,
+                      (ownedEvents.find((event) => event.id === readinessEventId) || ownedEvents[0]).startsAt
+                        ? new Date((ownedEvents.find((event) => event.id === readinessEventId) || ownedEvents[0]).startsAt!).toLocaleString()
+                        : "Event date not set",
+                    ].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <div className="ess-filter-row">
+                  <button type="button" className="ess-quiet-button" onClick={() => { setChecklistEventId(readinessEventId || ownedEvents[0].id); setTab("planner"); }}>Open event workspace</button>
+                  <button type="button" className="ess-quiet-button" onClick={() => { setChecklistEventId(readinessEventId || ownedEvents[0].id); setTab("checklist"); }}>Review checklist</button>
+                  <button type="button" className="ess-quiet-button" onClick={() => { setVerifierEventId(readinessEventId || ownedEvents[0].id); setTab("verifiers"); }}>Manage verifier</button>
+                </div>
+              </div>
+              <EventReadinessBoard
+                eventId={ownedEvents.some((event) => event.id === readinessEventId) ? readinessEventId : ownedEvents[0].id}
+                mode="client"
+              />
             </>
           )}
         </section>
@@ -603,16 +663,16 @@ function ClientPortal({
         <EventChecklistPanel events={ownedEvents} initialEventId={selectedEventId || checklistEventId || undefined} />
       )}
       {tab === "planner" && <EventPlannerWorkspace events={ownedEvents} initialEventId={selectedEventId || checklistEventId || undefined} />}
-      {tab === "checkin" && <GuestCheckInPanel events={ownedEvents} initialEventId={selectedEventId || undefined} />}
-      {tab === "messages" && <EventMessagesPanel events={ownedEvents} initialEventId={selectedEventId || undefined} />}
+      {tab === "checkin" && <GuestCheckInPanel events={ownedEvents} initialEventId={selectedEventId || checklistEventId || undefined} />}
+      {tab === "messages" && <EventMessagesPanel events={ownedEvents} initialEventId={selectedEventId || checklistEventId || undefined} />}
       {tab === "notifications" && <NotificationsPanel />}
       {tab === "payments" && <WalletPanel locale={locale} role="CLIENT" />}
       {tab === "feedback" && <FeedbackPanel locale={locale} />}
       {tab === "verifiers" && (
-        <VerifierPicker eventId={selectedEventId || readinessEventId || undefined} />
+        <VerifierPicker events={ownedEvents} eventId={selectedEventId || verifierEventId || readinessEventId || undefined} onEventChange={(id) => { setSelectedEventId(id); setVerifierEventId(id); }} />
       )}
       {tab === "kyc" && <KycUpload defaultKind="IDENTITY" />}
-    </div>
+    </main>
   );
 }
 
@@ -884,20 +944,20 @@ function VendorPortal({
             <Icon>＋</Icon> Add package
           </button>
           <button className="ess-outline-button" type="button" onClick={() => setVendorTab("wallet")}>
-            Payments & finance
+            Payments
           </button>
         </div>
       </div>
       {notice && <div className="ess-toast">{notice}</div>}
-      <div className="ess-filter-row" style={{ marginBottom: 12 }}>
-        <button type="button" className={vendorTab === "catalog" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("catalog")}>Catalog & demand</button>
-        <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
-        <button type="button" className={vendorTab === "payments" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("payments")}>Booking payments</button>
-        <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
-        <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
-        <button type="button" className={vendorTab === "notifications" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("notifications")}>Notifications</button>
-        <button type="button" className={vendorTab === "promotions" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("promotions")}>Promotions</button>
-      </div>
+      <nav className="ess-filter-row ess-dashboard-nav ess-vendor-nav" style={{ marginBottom: 12 }} aria-label="Vendor dashboard sections">
+        <button type="button" className={vendorTab === "catalog" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "catalog" ? "page" : undefined} aria-label="Open Catalog & demand" onClick={() => setVendorTab("catalog")}>Catalog & demand</button>
+        <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "wallet" ? "page" : undefined} aria-label="Open Wallet & escrow" onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
+        <button type="button" className={vendorTab === "payments" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "payments" ? "page" : undefined} aria-label="Open Booking payments" onClick={() => setVendorTab("payments")}>Booking payments</button>
+        <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "kyc" ? "page" : undefined} aria-label="Open KYC" onClick={() => setVendorTab("kyc")}>KYC</button>
+        <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "messages" ? "page" : undefined} aria-label="Open Enquiries & messages" onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
+        <button type="button" className={vendorTab === "notifications" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "notifications" ? "page" : undefined} aria-label="Open Notifications" onClick={() => setVendorTab("notifications")}>Notifications</button>
+        <button type="button" className={vendorTab === "promotions" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "promotions" ? "page" : undefined} aria-label="Open Promotions" onClick={() => setVendorTab("promotions")}>Promotions</button>
+      </nav>
       {vendorTab === "promotions" ? (
         <PromotionsPanel mode="vendor" />
       ) : vendorTab === "wallet" ? (
@@ -1250,8 +1310,6 @@ function AffiliatePortal() {
         />
         <Metric label="Conversion" value="—" detail="No traffic recorded" />
       </div>
-      <WalletPanel role="AFFILIATE" />
-      <NotificationsPanel />
       <section className="ess-panel">
         <SectionTitle
           eyebrow="Partner setup"
@@ -1286,6 +1344,11 @@ function AffiliatePortal() {
           Save partner profile
         </button>
       </section>
+      <section className="ess-panel">
+        <p className="ess-eyebrow">Partner earnings</p>
+        <h2>Wallet and reward activity</h2>
+        <WalletPanel role="AFFILIATE" />
+      </section>
     </>
   );
 }
@@ -1305,12 +1368,24 @@ function VerifierPortal() {
   >([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [queueLoading, setQueueLoading] = useState(true);
+  const [queueRefresh, setQueueRefresh] = useState(0);
 
   useEffect(() => {
+    let active = true;
+    setQueueLoading(true);
+    setMsg("");
     api<{ items: typeof queue }>("/readiness/queue")
-      .then((r) => setQueue(r.items || []))
-      .catch((e) => setMsg(e instanceof Error ? e.message : "Queue failed"));
-  }, []);
+      .then((r) => { if (active) setQueue(r.items || []); })
+      .catch((e) => { if (active) setMsg(e instanceof Error ? e.message : "Queue failed"); })
+      .finally(() => { if (active) setQueueLoading(false); });
+    return () => { active = false; };
+  }, [queueRefresh]);
+
+  const needsAttention = queue.filter((event) =>
+    event.readiness?.status === "BLOCKED" || event.readiness?.status === "AT_RISK",
+  ).length;
+  const allGreen = queue.filter((event) => event.readiness?.allGreen || event.readiness?.status === "ALL_GREEN").length;
 
   return (
     <div className="ess-shell">
@@ -1327,10 +1402,25 @@ function VerifierPortal() {
       </p>
       {msg && <div className="ess-form-error">{msg}</div>}
       <div style={{ display: "grid", gap: 16, marginTop: 20 }}>
-        <section className="ess-panel">
-          <h2>Recent and upcoming events</h2>
+        <section className="ess-panel" aria-busy={queueLoading}>
+          <div className="ess-section-heading">
+            <div>
+              <p className="ess-eyebrow">Assigned work</p>
+              <h2>Event verification queue</h2>
+              <p className="ess-muted">Choose one event to open its checks, countdown, service confirmations and completion actions.</p>
+            </div>
+            <button type="button" className="ess-outline-button" disabled={queueLoading} onClick={() => setQueueRefresh((value) => value + 1)}>
+              {queueLoading ? "Loading…" : "Refresh queue"}
+            </button>
+          </div>
+          <div className="ess-metrics">
+            <Metric label="Assigned events" value={String(queue.length)} detail="Events available to review" accent />
+            <Metric label="Needs attention" value={String(needsAttention)} detail="Blocked or at-risk readiness" />
+            <Metric label="All green" value={String(allGreen)} detail="Events meeting service checks" />
+          </div>
           <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
-            {queue.length === 0 && <li className="ess-muted">No recent or upcoming events need verifier action.</li>}
+            {queueLoading && <li className="ess-muted">Loading assigned events…</li>}
+            {!queueLoading && queue.length === 0 && <li className="ess-muted">No recent or upcoming events need verifier action.</li>}
             {queue.map((e) => (
               <li key={e.id} className="ess-wallet-card" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                 <div>
@@ -1355,13 +1445,25 @@ function VerifierPortal() {
           </ul>
         </section>
         {selected && (
-          <>
+          <section className="ess-verifier-workspace">
+            <div className="ess-section-heading">
+              <div>
+                <p className="ess-eyebrow">Active assignment</p>
+                <h2>{queue.find((event) => event.id === selected)?.title || "Selected event"}</h2>
+                <p className="ess-muted">All readiness checks and event actions below are scoped to this event.</p>
+              </div>
+              <button type="button" className="ess-quiet-button" onClick={() => setSelected(null)}>Back to event queue</button>
+            </div>
             <EventReadinessBoard eventId={selected} mode="verifier" />
-          </>
+          </section>
         )}
-        {queue.length > 0 && <EventMessagesPanel events={queue} initialEventId={selected || undefined} />}
-        <WalletPanel role="VERIFIER" />
+        <section className="ess-panel">
+          <p className="ess-eyebrow">Your finances</p>
+          <h2>Verifier earnings and protected funds</h2>
+          <WalletPanel role="VERIFIER" />
+        </section>
         <NotificationsPanel />
+        {queue.length > 0 && <EventMessagesPanel events={queue} initialEventId={selected || undefined} />}
       </div>
     </div>
   );
@@ -1386,8 +1488,6 @@ function ConsultantPortal() {
           <p>Review the latest notifications for your assigned event work.</p>
         </div>
       </header>
-      <WalletPanel role="CONSULTANT" />
-      <NotificationsPanel />
       <section className="ess-panel">
         <SectionTitle eyebrow="Activity" title="Recent updates" />
         {error ? <p className="ess-form-error" role="alert">{error}</p> : null}
@@ -1402,6 +1502,12 @@ function ConsultantPortal() {
           ))}
         </ul>
       </section>
+      <section className="ess-panel">
+        <p className="ess-eyebrow">Consultant finances</p>
+        <h2>Wallet and payment activity</h2>
+        <WalletPanel role="CONSULTANT" />
+      </section>
+      <NotificationsPanel />
     </div>
   );
 }
@@ -1796,15 +1902,15 @@ export default function EnterpriseApp() {
       const raw = localStorage.getItem("ess_user");
       const token = localStorage.getItem("ess_access_token");
       if (raw && token) {
-        const user = JSON.parse(raw) as { id?: string; name?: string; email?: string; role?: string; organizationMode?: OrganizationMode | null };
-        if (user?.id && user?.name && user?.email && user?.role && isRole(user.role)) {
+        const user = JSON.parse(raw) as { name?: string; email?: string; role?: string; organizationMode?: OrganizationMode | null };
+        if (user?.name && user?.email && user?.role && isRole(user.role)) {
           if (user.role === "ORGANIZATION" && user.organizationMode !== "EVENT_PLANNING" && user.organizationMode !== "SERVICE_PROVIDER") {
             localStorage.removeItem("ess_access_token");
             localStorage.removeItem("ess_refresh_token");
             localStorage.removeItem("ess_user");
             setAccountNotice("Choose an organization operating mode when creating your organization account.");
           } else {
-            setSession({ id: user.id, name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
+            setSession({ name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
             setActiveRole(user.role);
           }
         } else if (user?.role === "RIDER") {
@@ -1999,7 +2105,7 @@ export default function EnterpriseApp() {
       localStorage.setItem("ess_refresh_token", result.refreshToken);
       localStorage.setItem("ess_user", JSON.stringify(user));
       void registerPushIfNative();
-      setSession({ id: user.id, name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
+      setSession({ name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
       setActiveRole(user.role);
       navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
       if (authMode === "signup" || !hasCompletedOnboard(user.role, user.organizationMode)) {
@@ -2027,9 +2133,7 @@ export default function EnterpriseApp() {
   };
   if (session && showOnboard) {
     return (
-      <DeviceSecurityGate userId={session.id} onSignOut={signOut}>
-        <OnboardingOverlay name={session.name} role={session.role} organizationMode={session.organizationMode} onDone={() => setShowOnboard(false)} />
-      </DeviceSecurityGate>
+      <OnboardingOverlay name={session.name} role={session.role} organizationMode={session.organizationMode} onDone={() => setShowOnboard(false)} />
     );
   }
 
@@ -2173,8 +2277,9 @@ export default function EnterpriseApp() {
     );
   }
 
-  const content = (
+  return (
     <div className="ess-app">
+      {session && <a className="ess-skip-link" href="#dashboard-main">Skip to dashboard content</a>}
       <header className="ess-topbar">
         <button
           className="ess-brand"
@@ -2188,9 +2293,17 @@ export default function EnterpriseApp() {
         </button>
         {session ? (
           <>
-            <div className="ess-portal-menu">
+            <div
+              className="ess-portal-menu"
+              onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}
+              onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setMenuOpen(false); }}
+            >
               <button
                 className="ess-menu-trigger"
+                type="button"
+                aria-expanded={menuOpen}
+                aria-controls="ess-account-workspace-menu"
+                aria-label={`${roleMeta[activeRole].short} portal menu`}
                 onClick={() => setMenuOpen(!menuOpen)}
               >
                 <span className="ess-account-dot" />
@@ -2198,7 +2311,7 @@ export default function EnterpriseApp() {
                 <span className="ess-menu-chevron">⌄</span>
               </button>
               {menuOpen && (
-                <div className="ess-menu-dropdown">
+                <div className="ess-menu-dropdown" id="ess-account-workspace-menu" role="region" aria-label="Workspace menu">
                   <div className="ess-menu-heading">
                     <span>Switch workspace</span>
                     <small>Choose an operating lane</small>
@@ -2271,10 +2384,17 @@ export default function EnterpriseApp() {
             </div>
           </>
         ) : (
-          <div className="ess-public-menu">
+          <div
+            className="ess-public-menu"
+            onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}
+            onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setMenuOpen(false); }}
+          >
             <button
               className="ess-menu-trigger"
-              aria-label="Open ESS menu"
+              type="button"
+              aria-label="Open EPHINTA navigation menu"
+              aria-expanded={menuOpen}
+              aria-controls="ess-public-navigation-menu"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               <span className="ess-hamburger">
@@ -2285,7 +2405,7 @@ export default function EnterpriseApp() {
               Menu
             </button>
             {menuOpen && (
-              <div className="ess-menu-dropdown ess-public-dropdown">
+              <div className="ess-menu-dropdown ess-public-dropdown" id="ess-public-navigation-menu" role="region" aria-label="EPHINTA navigation">
                 <div className="ess-menu-heading">
                   <span>EPHINTA</span>
                   <small>Choose how you want to work</small>
@@ -2399,7 +2519,6 @@ export default function EnterpriseApp() {
                     />
                   </div>
                 )}
-                <MarketplaceAdStrip />
                 {portal}
               </main>
             }
@@ -2453,9 +2572,6 @@ export default function EnterpriseApp() {
       )}
     </div>
   );
-  return session ? (
-    <DeviceSecurityGate userId={session.id} onSignOut={signOut}>{content}</DeviceSecurityGate>
-  ) : content;
 }
 
 function ResetPasswordPage({ token }: { token: string }) {
@@ -2571,17 +2687,17 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
     }
   };
 
-  const answeredCount = questions.filter(([key]) => Boolean(answers[key]?.trim())).length;
-  const complete = answeredCount === questions.length;
+  const answered = questions.filter(([key]) => answers[key]?.trim()).length;
+  const complete = answered === questions.length;
   if (loading) return <section className="ess-panel" aria-live="polite">Loading your planning questions…</section>;
   return (
-    <section className="ess-panel ess-planning-questionnaire" aria-labelledby="planning-questions-title">
+    <section className="ess-panel" aria-labelledby="planning-questions-title">
       <p className="ess-eyebrow">Continue your event brief</p>
       <h2 id="planning-questions-title">Plan the details for {eventTitle}</h2>
-      <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits.</p>
-      <div style={{ margin: "14px 0 18px", padding: 12, border: "1px solid #e2e8f0", borderRadius: 12, background: "#f8fafc" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12, color: "#64748b" }}><span>Planning brief progress</span><strong>{answeredCount} of {questions.length} complete</strong></div>
-        <div role="progressbar" aria-label="Planning brief progress" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={answeredCount} style={{ height: 6, marginTop: 9, overflow: "hidden", borderRadius: 999, background: "#e2e8f0" }}><span style={{ display: "block", width: `${answeredCount / questions.length * 100}%`, height: "100%", borderRadius: 999, background: "#e99b22", transition: "width .2s ease" }} /></div>
+      <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits. Share only details that help us plan the event well.</p>
+      <div className="ess-question-progress">
+        <span>{answered} of {questions.length} planning prompts answered</span>
+        <progress value={answered} max={questions.length} aria-label="Planning questionnaire progress" />
       </div>
       {questions.map(([key, label]) => (
         <label key={key} style={{ display: "block", marginTop: 12 }}>
