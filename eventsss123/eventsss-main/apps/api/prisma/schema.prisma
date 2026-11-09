@@ -751,20 +751,29 @@ model Review {
 }
 
 model Message {
-  id          String    @id @default(uuid())
-  senderId    String
-  recipientId String
-  eventId     String?
-  body        String
-  readAt      DateTime?
-  createdAt   DateTime  @default(now())
-  sender      User      @relation("SentMessages", fields: [senderId], references: [id])
-  recipient   User      @relation("ReceivedMessages", fields: [recipientId], references: [id])
-  event       Event?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  id                  String    @id @default(uuid())
+  groupId             String    @default(uuid())
+  senderId            String
+  recipientId         String
+  recipientKind       String    @default("TO")
+  toRecipientIds      Json?
+  ccRecipientIds      Json?
+  eventId             String?
+  body                String
+  readAt              DateTime?
+  senderArchivedAt    DateTime?
+  recipientArchivedAt DateTime?
+  senderDeletedAt     DateTime?
+  recipientDeletedAt  DateTime?
+  createdAt           DateTime  @default(now())
+  sender              User      @relation("SentMessages", fields: [senderId], references: [id])
+  recipient           User      @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  event               Event?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
 
   @@index([recipientId, readAt])
   @@index([eventId, createdAt, id])
   @@index([senderId, recipientId, createdAt])
+  @@index([groupId])
 }
 
 /// Public-facing verifier card: location, rating, jobs for client selection
@@ -812,6 +821,7 @@ model Notification {
   title     String
   body      String
   readAt         DateTime?
+  archivedAt     DateTime?
   data           Json?
   deliveryStatus NotificationDeliveryStatus @default(NOT_REQUESTED)
   attemptCount   Int       @default(0)
@@ -823,6 +833,7 @@ model Notification {
 
   @@index([userId, readAt])
   @@index([userId, createdAt, id])
+  @@index([userId, archivedAt, createdAt])
 }
 
 enum NotificationDeliveryStatus {

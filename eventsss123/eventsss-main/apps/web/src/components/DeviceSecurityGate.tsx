@@ -53,7 +53,9 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const lastActivity = useRef(Date.now());
   const timer = useRef<number | null>(null);
-  const attempts = useRef(0);
+  const attemptsKey = useMemo(() => `ephinta:device-pin-attempts:v1:${userId}`, [userId]);
+  const storedAttempts = Number.parseInt(localStorage.getItem(attemptsKey) ?? "0", 10);
+  const attempts = useRef(Number.isFinite(storedAttempts) ? Math.max(0, Math.min(5, storedAttempts)) : 0);
 
   useEffect(() => {
     let active = true;
@@ -83,6 +85,7 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
         androidBiometryStrength: AndroidBiometryStrength.weak,
       });
       attempts.current = 0;
+      localStorage.removeItem(attemptsKey);
       setLocked(false);
       setPin("");
       markActivity();
@@ -154,6 +157,7 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
         setConfigured(true);
         setLocked(false);
         attempts.current = 0;
+        localStorage.removeItem(attemptsKey);
         markActivity();
         setPin("");
         setConfirmPin("");
@@ -162,15 +166,18 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
       const record = JSON.parse(stored) as { salt: string; hash: string; version: number };
       const candidate = await derivePinHash(pin, base64ToBytes(record.salt));
       if (!equalConstantTime(candidate, record.hash)) {
-        attempts.current += 1;
+        attempts.current = Math.min(5, attempts.current + 1);
+        localStorage.setItem(attemptsKey, String(attempts.current));
         setError(attempts.current >= 5 ? "Too many attempts. Sign out and recover access through your account sign-in." : "Incorrect PIN. Try again.");
         if (attempts.current >= 5) {
           localStorage.removeItem(storageKey);
+          localStorage.removeItem(attemptsKey);
           onSignOut();
         }
         return;
       }
       attempts.current = 0;
+      localStorage.removeItem(attemptsKey);
       setLocked(false);
       setPin("");
       markActivity();
@@ -185,26 +192,26 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
     <>
       <div style={{ display: locked ? "none" : "contents" }} aria-hidden={locked}>{children}</div>
       {locked && (
-        <main role="dialog" aria-modal="true" aria-labelledby="ephinta-device-lock-title" style={{ minHeight: "100dvh", display: "grid", placeItems: "center", padding: 24, background: "var(--app-bg, #10002f)", color: "var(--app-text, #fff)", fontFamily: "inherit" }}>
-          <form onSubmit={submit} style={{ width: "min(100%, 420px)", padding: 28, borderRadius: 24, background: "var(--surface, #211044)", border: "1px solid rgba(255,255,255,.14)", boxShadow: "0 24px 80px rgba(0,0,0,.28)" }}>
+        <main className="ess-device-lock" role="dialog" aria-modal="true" aria-labelledby="ephinta-device-lock-title">
+          <form className="ess-device-lock-card" onSubmit={submit}>
             <p style={{ margin: "0 0 8px", opacity: .72, letterSpacing: ".12em", textTransform: "uppercase", fontSize: 12 }}>EPHINTA secure access</p>
             <h1 id="ephinta-device-lock-title" style={{ margin: "0 0 10px", fontSize: 28 }}>{configured ? "App locked" : "Set your device PIN"}</h1>
             <p style={{ margin: "0 0 22px", opacity: .8, lineHeight: 1.5 }}>{configured ? "Your app was locked after five minutes of inactivity. Enter your PIN to continue." : "Create a six-digit device PIN. You will need it when reopening the app and after inactivity."}</p>
-            <label htmlFor="ephinta-device-pin" style={{ display: "block", marginBottom: 8, fontWeight: 600 }}>Six-digit PIN</label>
-            <input id="ephinta-device-pin" autoFocus inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="••••••" type="password" style={{ boxSizing: "border-box", width: "100%", padding: "15px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.08)", color: "inherit", fontSize: 22, letterSpacing: ".35em" }} />
+            <label className="ess-device-lock-label" htmlFor="ephinta-device-pin">Six-digit PIN</label>
+            <input className="ess-device-lock-input" id="ephinta-device-pin" autoFocus inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="••••••" type="password" />
             {!configured && <>
-              <label htmlFor="ephinta-device-pin-confirm" style={{ display: "block", margin: "16px 0 8px", fontWeight: 600 }}>Confirm PIN</label>
-              <input id="ephinta-device-pin-confirm" inputMode="numeric" maxLength={6} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Repeat PIN" type="password" style={{ boxSizing: "border-box", width: "100%", padding: "15px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.08)", color: "inherit", fontSize: 20, letterSpacing: ".25em" }} />
+              <label className="ess-device-lock-label ess-device-lock-label-confirm" htmlFor="ephinta-device-pin-confirm">Confirm PIN</label>
+              <input className="ess-device-lock-input" id="ephinta-device-pin-confirm" inputMode="numeric" maxLength={6} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Repeat PIN" type="password" />
             </>}
-            {error && <p role="alert" style={{ color: "#ffb4b4", margin: "12px 0 0" }}>{error}</p>}
+            {error && <p className="ess-device-lock-error" role="alert">{error}</p>}
             {configured && biometricAvailable && (
-              <button disabled={busy} type="button" onClick={unlockWithBiometrics} style={{ width: "100%", marginTop: 20, padding: 15, border: "1px solid rgba(255,255,255,.24)", borderRadius: 12, background: "rgba(255,255,255,.08)", color: "inherit", fontWeight: 700, cursor: "pointer" }}>
+              <button className="ess-device-lock-secondary" disabled={busy} type="button" onClick={unlockWithBiometrics}>
                 {busy ? "Checking..." : "Use fingerprint / Face ID / device passcode"}
               </button>
             )}
-            <button disabled={busy || pin.length !== 6 || (!configured && confirmPin.length !== 6)} type="submit" style={{ width: "100%", marginTop: 20, padding: 15, border: 0, borderRadius: 12, background: "var(--primary, #a78bfa)", color: "#16072c", fontWeight: 700, cursor: "pointer" }}>{busy ? "Securing..." : configured ? "Unlock EPHINTA" : "Set PIN and continue"}</button>
-            <button type="button" onClick={onSignOut} style={{ width: "100%", marginTop: 12, padding: 12, border: "1px solid rgba(255,255,255,.2)", borderRadius: 12, background: "transparent", color: "inherit", cursor: "pointer" }}>Sign out instead</button>
-            <p style={{ fontSize: 12, opacity: .62, lineHeight: 1.5, margin: "18px 0 0" }}>This device PIN is a local privacy lock. Native fingerprint/Face ID authentication and server-enforced account security require the mobile biometric integration described in the security rollout plan.</p>
+            <button className="ess-device-lock-primary" disabled={busy || pin.length !== 6 || (!configured && confirmPin.length !== 6)} type="submit">{busy ? "Securing..." : configured ? "Unlock EPHINTA" : "Set PIN and continue"}</button>
+            <button className="ess-device-lock-secondary ess-device-lock-signout" type="button" onClick={onSignOut}>Sign out instead</button>
+            <p className="ess-device-lock-note">This device PIN is a local privacy lock. Native fingerprint/Face ID authentication and server-enforced account security require the mobile biometric integration described in the security rollout plan.</p>
           </form>
         </main>
       )}

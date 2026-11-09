@@ -18,6 +18,20 @@ const portals: PortalCase[] = [
   { role: "ADMIN", email: "qa-admin@example.com", heading: /Platform operations/ },
 ];
 
+async function unlockDeviceGate(page: Page) {
+  const securityDialog = page.getByRole("dialog", { name: /Set your device PIN|App locked/ });
+  await expect(securityDialog).toBeVisible();
+  const title = await securityDialog.locator("h1").textContent();
+  await securityDialog.getByLabel("Six-digit PIN").fill("123456");
+  if (title?.includes("Set your device PIN")) {
+    await securityDialog.getByLabel("Confirm PIN").fill("123456");
+    await securityDialog.getByRole("button", { name: "Set PIN and continue" }).click();
+  } else {
+    await securityDialog.getByRole("button", { name: "Unlock EPHINTA" }).click();
+  }
+  await expect(securityDialog).toBeHidden();
+}
+
 async function installRoleApiFixtures(page: Page, portal: PortalCase, options: { firstRun?: boolean } = {}) {
   const onboardingKey = `ess_onboard_v2_${portal.role.toLowerCase()}_${portal.organizationMode ?? "default"}`;
   await page.addInitScript(({ key, completed }) => {
@@ -107,6 +121,7 @@ for (const portal of portals) {
     const loginRequest = page.waitForRequest((request) => request.method() === "POST" && request.url().includes("/auth/login"), { timeout: 15_000 });
     await page.getByRole("textbox", { name: "Password" }).press("Enter");
     await loginRequest;
+    await unlockDeviceGate(page);
 
     await expect(page).toHaveURL(new RegExp(`/dashboard/${portal.role.toLowerCase()}$`));
     await expect(page.getByRole("heading", { name: portal.heading }).first()).toBeVisible();
@@ -158,6 +173,7 @@ test("new vendor accounts see vendor-specific onboarding before their workspace"
   const loginRequest = page.waitForRequest((request) => request.method() === "POST" && request.url().includes("/auth/login"), { timeout: 15_000 });
   await page.getByRole("textbox", { name: "Password" }).press("Enter");
   await loginRequest;
+  await unlockDeviceGate(page);
 
   const onboarding = page.getByRole("dialog", { name: "vendor onboarding" });
   await expect(onboarding).toBeVisible();
@@ -176,6 +192,7 @@ test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", a
   const loginRequest = page.waitForRequest((request) => request.method() === "POST" && request.url().includes("/auth/login"), { timeout: 15_000 });
   await page.getByRole("textbox", { name: "Password" }).press("Enter");
   await loginRequest;
+  await unlockDeviceGate(page);
   await expect(page.getByRole("heading", { name: client.heading }).first()).toBeVisible();
   const clientWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(clientWidth).toBeLessThanOrEqual(390);
@@ -192,6 +209,7 @@ test("CLIENT and VENDOR workspaces remain usable on a phone viewport @mobile", a
   const vendorLogin = page.waitForRequest((request) => request.method() === "POST" && request.url().includes("/auth/login"), { timeout: 15_000 });
   await page.getByRole("textbox", { name: "Password" }).press("Enter");
   await vendorLogin;
+  await unlockDeviceGate(page);
   await expect(page).toHaveURL(/\/dashboard\/vendor$/);
   await expect(page.getByRole("heading", { name: vendor.heading }).first()).toBeVisible();
   const vendorWidth = await page.evaluate(() => document.documentElement.scrollWidth);

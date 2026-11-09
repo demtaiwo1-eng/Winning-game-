@@ -4,22 +4,16 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, HashRouter } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
 import App from './EnterpriseApp';
+import './styles/ephinta-global.css';
 import EphintaIntro from './components/branding/EphintaIntro';
 import AudioExperience from "./components/AudioExperience";
 import OfflineStatus from './components/OfflineStatus';
 import SyncConflictList from './components/SyncConflictList';
-import './index.css';
-import './ephinta-accessible-contrast.css';
-import "./styles/ephinta-design4.css";
-import './ess-bright-orange-theme.css';
-import './theme/tokens.css';
-import './ephinta-intro-refinement.css';
-import "./styles/ephinta-design4-enforced.css";
-import "./styles/ephinta-responsive-polish.css";
+import RemoteUpdateNotice from './components/RemoteUpdateNotice';
+
 import { initLiveUpdate } from "./lib/liveUpdate";
 import { initOfflineSync } from './lib/offline/sync';
-import "./styles/ephinta-landing-repair.css";
-import "./styles/ephinta-current-ui-repair.css";
+
 import { installEphintaIntroWatchdog, markEphintaAppReady } from "./lib/ephintaStartup";
 
 /* ---------- Platform setup ---------- */
@@ -126,7 +120,15 @@ function StartupLoadingScreen(): React.ReactElement {
         fontFamily: 'system-ui, sans-serif',
       }}
     >
-      <strong style={{ fontSize: 24, letterSpacing: 1 }}>EPHINTA</strong>
+      <img
+        src={`${import.meta.env.BASE_URL}brand/ephinta_logo2.png`}
+        alt="EPHINTA"
+        width={112}
+        height={112}
+        fetchPriority="high"
+        style={{ width: 112, height: 112, objectFit: "contain", margin: "0 auto 8px", filter: "drop-shadow(0 10px 28px rgba(124, 77, 255, .28))" }}
+      />
+      <strong style={{ fontSize: 24, letterSpacing: 2, fontWeight: 900 }}>EPHINTA</strong>
       <span>Preparing your workspace…</span>
     </main>
   );
@@ -148,6 +150,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <AudioExperience showPrompt autoPlay />
           <OfflineStatus />
           <SyncConflictList />
+          <RemoteUpdateNotice />
         </>
       </AppRouter>
     </StartupErrorBoundary>
@@ -156,11 +159,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 initLiveUpdate();
 initOfflineSync();
-import "./styles/ephinta-polish.css";
-import "./styles/ephinta-audio.css";
-import "./ephinta-product-excellence.css";
-import "./ephinta-screen-refinement.css";
-import "./styles/ephinta-unified-design-system.css";
-import "./styles/ephinta-theme-text-contrast.css";
-import "./styles/ephinta-global-navigation-fix.css";
-import "./styles/ephinta-parent-design-system.css";
+

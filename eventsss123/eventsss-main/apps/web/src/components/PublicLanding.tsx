@@ -137,6 +137,13 @@ function formatPromotionLocation(city?: string | null, country?: string | null) 
   return [city, country].filter(Boolean).join(', ');
 }
 
+const MARKETPLACE_SPOTLIGHTS = [
+  { id: 'venues', icon: '⌂', eyebrow: 'VENUES & SPACES', title: 'Find a setting that fits your occasion', description: 'Explore event spaces, halls, outdoor venues and locations for gatherings of every size.' },
+  { id: 'catering', icon: '✦', eyebrow: 'FOOD & EXPERIENCES', title: 'Bring everyone together around the table', description: 'Discover catering teams, cakes, drinks and hospitality services for your event.' },
+  { id: 'photography', icon: '◉', eyebrow: 'PHOTO & VIDEO', title: 'Keep the moments worth remembering', description: 'Find photographers, videographers and creative teams to capture your occasion.' },
+  { id: 'production', icon: '◇', eyebrow: 'DECOR & PRODUCTION', title: 'Give your ideas a memorable finish', description: 'Browse décor, rentals, sound, lighting, staging and event production services.' },
+] as const;
+
 export default function PublicLanding({
 
   onLoginSuccess,
@@ -233,11 +240,6 @@ export default function PublicLanding({
 
   const [promotions, setPromotions] = useState<PublicPromotion[]>([]);
 
-  const [activePromotionIndex, setActivePromotionIndex] = useState(0);
-
-  const [isPromotionHovered, setIsPromotionHovered] = useState(false);
-
-  const [isPromotionFocused, setIsPromotionFocused] = useState(false);
 
   // The public homepage always starts with the wedding soundtrack. A selected
   // naming or burial category is carried into /plan by its dedicated CTA.
@@ -263,55 +265,6 @@ export default function PublicLanding({
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (promotions.length <= 1) return;
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion || isPromotionHovered || isPromotionFocused || document.hidden) return;
-
-    const timer = window.setInterval(() => {
-      setActivePromotionIndex((current) => (current + 1) % promotions.length);
-    }, 8000);
-
-    return () => window.clearInterval(timer);
-  }, [promotions, isPromotionHovered, isPromotionFocused]);
-
-
-
-  useEffect(() => {
-    if (!promotions.length) return;
-    setActivePromotionIndex((current) => Math.min(current, promotions.length - 1));
-  }, [promotions.length]);
-
-
-
-  useEffect(() => {
-    if (!promotions.length) return;
-    const onVisibilityChange = () => {
-      if (document.hidden) {
-        setIsPromotionHovered(false);
-        setIsPromotionFocused(false);
-      }
-    };
-
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
-  }, [promotions.length]);
-
-
-
-  useEffect(() => {
-    if (!promotions.length) return;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduceMotion) return;
-    const handleVisibility = () => {
-      if (document.hidden) setIsPromotionHovered(true);
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [promotions.length]);
-
-
 
   useEffect(() => {
     try { localStorage.setItem('ess:eventDraft', JSON.stringify(draft)); } catch { /* storage may be disabled */ }
@@ -913,32 +866,48 @@ export default function PublicLanding({
 
 
 
-      {promotions.length > 0 && (
-        <section className="eph-promotions" aria-label="Featured promotions">
-          <div className="eph-promo-shell" onMouseEnter={() => setIsPromotionHovered(true)} onMouseLeave={() => setIsPromotionHovered(false)} onFocus={() => setIsPromotionFocused(true)} onBlur={() => setIsPromotionFocused(false)}>
-            <h2>Featured promotion</h2>
-            <p>Curated, active offers from trusted local vendors and service providers.</p>
-            {promotions.length > 0 && (
-              <div className="eph-promo-carousel" aria-live="polite">
-                <button type="button" className="eph-promo-arrow" aria-label="Previous promotion" onClick={() => setActivePromotionIndex((current) => (current - 1 + promotions.length) % promotions.length)}>‹</button>
-                <article className="eph-promo-card" aria-roledescription="carousel" aria-label={`Featured promotion ${activePromotionIndex + 1} of ${promotions.length}`}>
-                  <div>
-                    <small>Active offer</small>
-                    <h3>{promotions[activePromotionIndex].title}</h3>
-                    <p>{promotions[activePromotionIndex].description || `${promotions[activePromotionIndex].vendorName} is currently offering a featured event service.`}</p>
-                  </div>
-                  <div className="eph-promo-meta">
-                    <span>{promotions[activePromotionIndex].vendorName}</span>
-                    {promotions[activePromotionIndex].listingTitle && <span>{promotions[activePromotionIndex].listingTitle}</span>}
-                    {formatPromotionLocation(promotions[activePromotionIndex].city, promotions[activePromotionIndex].country) && <span>{formatPromotionLocation(promotions[activePromotionIndex].city, promotions[activePromotionIndex].country)}</span>}
-                  </div>
-                </article>
-                <button type="button" className="eph-promo-arrow" aria-label="Next promotion" onClick={() => setActivePromotionIndex((current) => (current + 1) % promotions.length)}>›</button>
-              </div>
-            )}
+      <section className="eph-promotions" aria-label="EPHINTA Marketplace and featured vendor promotions">
+        <div className="eph-promo-shell eph-marketplace-advertising">
+          <div className="eph-promo-heading">
+            <div>
+              <span className="eph-promo-kicker">DISCOVER THE EPHINTA MARKETPLACE</span>
+              <h2>Find the people and services behind your next big moment.</h2>
+              <p>Browse event venues, catering, photography, décor and trusted event professionals. Featured vendor campaigns appear here when approved and active.</p>
+            </div>
+            <button type="button" className="eph-promo-marketplace-cta" onClick={() => openAuth('signup', 'CLIENT')}>
+              Explore marketplace <span aria-hidden="true">→</span>
+            </button>
           </div>
-        </section>
-      )}
+          <div className="eph-ad-scroll" role="list" aria-label="Horizontally scrollable marketplace categories and sponsored offers">
+            {promotions.map((promotion) => (
+              <article className="eph-ad-card eph-ad-card-sponsored" role="listitem" key={promotion.id}>
+                <small>Sponsored · Featured vendor</small>
+                <strong>{promotion.title}</strong>
+                <p>{promotion.description || `${promotion.vendorName} is sharing a featured event service on EPHINTA.`}</p>
+                <div className="eph-ad-meta">
+                  <span>{promotion.vendorName}</span>
+                  {promotion.listingTitle && <span>{promotion.listingTitle}</span>}
+                  {formatPromotionLocation(promotion.city, promotion.country) && <span>{formatPromotionLocation(promotion.city, promotion.country)}</span>}
+                </div>
+                <button type="button" onClick={() => openAuth('signup', 'CLIENT')}>View marketplace offer →</button>
+              </article>
+            ))}
+            {MARKETPLACE_SPOTLIGHTS.map((item) => (
+              <article className="eph-ad-card eph-ad-card-marketplace" role="listitem" key={item.id}>
+                <span className="eph-ad-icon" aria-hidden="true">{item.icon}</span>
+                <small>{item.eyebrow}</small>
+                <strong>{item.title}</strong>
+                <p>{item.description}</p>
+                <button type="button" onClick={() => openAuth('signup', 'CLIENT')}>Explore services →</button>
+              </article>
+            ))}
+          </div>
+          <div className="eph-promo-footer">
+            <span>{promotions.length ? `${promotions.length} approved vendor promotion${promotions.length === 1 ? '' : 's'} currently featured` : 'Marketplace categories are ready to explore. Vendor promotions will appear here after approval.'}</span>
+            <span className="eph-promo-scroll-hint">Swipe or scroll to see more <span aria-hidden="true">→</span></span>
+          </div>
+        </div>
+      </section>
 
       <main id="home">
 

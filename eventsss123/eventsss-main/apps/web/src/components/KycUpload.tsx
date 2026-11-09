@@ -172,16 +172,17 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
   return (
     <section className="ess-panel ess-kyc-workspace">
       <p className="ess-eyebrow">Trust · 170+ countries</p>
-      <h2>Identity & business verification</h2>
-      <ol className="ess-kyc-steps" aria-label="Verification steps">
-        <li><span>01</span><strong>Profile</strong><small>Country and account type</small></li>
-        <li><span>02</span><strong>Documents</strong><small>Choose an accepted ID</small></li>
-        <li><span>03</span><strong>Review</strong><small>Secure submission and status</small></li>
-      </ol>
+      <h2>Global KYC verification</h2>
       <p className="ess-muted">
-        Select your country to load accepted ID types, national ID labels, and business documents.
-        FATF-aligned modular collection — production plugs OCR/liveness per region.
+        Complete the guided steps below. Requirements are selected for your country and account type;
+        EPHINTA only displays a verified status after the identity provider or review team confirms it.
       </p>
+      <div className="ess-kyc-stepper" aria-label="KYC verification steps">
+        <span aria-current="step">1 · Your details</span>
+        <span>2 · Identity check</span>
+        <span>3 · Documents</span>
+        <span>4 · Review</span>
+      </div>
 
       <form onSubmit={submit} style={{ display: "grid", gap: 12, maxWidth: 560, marginTop: 16 }}>
         <label>
@@ -228,12 +229,12 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
 
         {kind === "IDENTITY" && country === "NG" && (
           <div className="ess-wallet-card" style={{ display: "grid", gap: 10 }}>
-            <strong>Secure Nigerian identity verification</strong>
+            <strong>Verify your Nigerian identity securely</strong>
             {!bytidEnabled ? (
               <p className="ess-muted">Bytid hosted verification is awaiting the API service's sandbox key. You can still submit documents for manual review below.</p>
             ) : (
               <>
-                <p className="ess-muted">Provider mode: {bytidMode}. Use Bytid's hosted BVN/NIN verification. The provider handles ID capture, live-face checks and face matching. EPHINTA receives the verification result, not your raw ID number or selfie.</p>
+                <p className="ess-muted">Provider mode: {bytidMode}. Continue to the secure provider-hosted BVN/NIN check. The provider handles identity capture and face matching; EPHINTA receives the verification result rather than asking you to type your BVN or NIN into this form.</p>
                 <p className="ess-muted">{bytidMode === "live" ? "Live verification may incur provider fees. Review Bytid pricing before continuing." : "Sandbox mode uses test records and is free."}</p>
             <label style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
               <input type="checkbox" checked={bytidConsent} onChange={(e) => setBytidConsent(e.target.checked)} />
@@ -265,16 +266,16 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
         </label>
 
         <label>
-          Primary document file
+          Upload your identity document
           <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(e) => onFile(e.target.files?.[0] || null)} />
         </label>
         <label>
-          Address proof URL (optional)
+          Proof of residential address (optional)
           <input type="url" value={addressUrl} onChange={(e) => setAddressUrl(e.target.value)} placeholder="Utility bill / bank statement" />
         </label>
         {kind === "BUSINESS" && (
           <label>
-            Business registration URL (optional)
+            Business registration document (optional)
             <input type="url" value={businessUrl} onChange={(e) => setBusinessUrl(e.target.value)} placeholder="CAC / Companies House / trade licence" />
           </label>
         )}
@@ -283,7 +284,7 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
         </label>
         <button className="ess-primary" type="submit" disabled={busy || !base64}>
-          {busy ? "Submitting…" : "Submit KYC for review"}
+          {busy ? "Submitting…" : "Submit documents for review"}
         </button>
       </form>
 

@@ -23,5 +23,25 @@ describe("event messages", () => {
     expect(sendEventMessageSchema.safeParse({ body: "Hello", broadcast: true, recipientIds: [participant] }).success).toBe(false);
     expect(sendEventMessageSchema.safeParse({ body: " ", recipientIds: [participant] }).success).toBe(false);
     expect(sendEventMessageSchema.safeParse({ body: "Hello", recipientIds: [participant, participant] }).success).toBe(false);
+    expect(sendEventMessageSchema.parse({
+      body: "Hello",
+      toIds: [participant],
+      ccIds: ["a2d7f6b9-5c7e-4d3a-8b1f-6c9e2a4d7f10"],
+      bccIds: ["b3e8a7c1-6d2f-4e9a-8c5b-7f1d3a6e9b20"],
+    }).toIds).toEqual([participant]);
+    expect(sendEventMessageSchema.safeParse({
+      body: "Hello",
+      toIds: [participant],
+      ccIds: [participant],
+    }).success).toBe(false);
+    expect(sendEventMessageSchema.safeParse({
+      body: "Hello",
+      toIds: [participant],
+      broadcast: true,
+    }).success).toBe(false);
+    expect(sendEventMessageSchema.safeParse({
+      body: "Hello",
+      ccIds: ["a2d7f6b9-5c7e-4d3a-8b1f-6c9e2a4d7f10"],
+    }).success).toBe(false);
   });
 });

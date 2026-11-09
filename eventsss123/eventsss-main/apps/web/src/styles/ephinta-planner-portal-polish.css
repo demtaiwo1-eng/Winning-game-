@@ -214,3 +214,84 @@
   .ess-kyc-steps li { grid-template-columns: 28px 1fr; align-items: center; }
   .ess-kyc-steps li > span { grid-row: span 2; }
 }
+
+
+/* Guided first-view welcome: responsive cards share the EPHINTA global theme. */
+.ess-marketplace-welcome {
+  display: grid;
+  gap: clamp(16px, 2.5vw, 24px);
+  margin: 0 0 22px;
+  padding: clamp(18px, 3vw, 30px);
+  border: 1px solid var(--ess-border, rgba(148, 163, 184, .22));
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(249, 115, 22, .12), transparent 32%),
+    linear-gradient(145deg, rgba(28, 17, 58, .96), rgba(13, 24, 47, .98));
+  color: var(--ess-text, #f8fafc);
+  box-shadow: 0 18px 48px rgba(2, 6, 23, .16);
+}
+.ess-marketplace-welcome-copy { max-width: 760px; }
+.ess-marketplace-welcome-copy h2 {
+  margin: 4px 0 8px;
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+  line-height: 1.15;
+  letter-spacing: -.035em;
+}
+.ess-marketplace-welcome-copy > p:last-child {
+  max-width: 680px;
+  margin: 0;
+  color: var(--ess-muted, #cbd5e1);
+  line-height: 1.65;
+}
+.ess-marketplace-welcome-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.ess-marketplace-welcome-grid article {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid rgba(203, 213, 225, .18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .055);
+}
+.ess-marketplace-welcome-grid article > span {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: rgba(249, 115, 22, .16);
+  color: #fdba74;
+  font-size: .75rem;
+  font-weight: 800;
+}
+.ess-marketplace-welcome-grid h3 {
+  margin: 0 0 7px;
+  font-size: .94rem;
+  line-height: 1.3;
+}
+.ess-marketplace-welcome-grid p {
+  margin: 0;
+  color: var(--ess-muted, #cbd5e1);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+.ess-marketplace-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+@media (max-width: 1100px) {
+  .ess-marketplace-welcome-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .ess-marketplace-welcome { border-radius: 18px; padding: 17px; }
+  .ess-marketplace-welcome-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .ess-marketplace-welcome-grid article { padding: 12px; }
+  .ess-marketplace-welcome-actions > button { flex: 1 1 100%; min-height: 46px; }
+}
+@media (max-width: 360px) {
+  .ess-marketplace-welcome-grid { grid-template-columns: 1fr; }
+}

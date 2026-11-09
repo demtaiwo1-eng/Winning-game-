@@ -160,3 +160,5 @@
 @media (prefers-reduced-motion: reduce) {
   .ess-portal-stack > .ess-filter-row > .ess-chip { transition: none; }
 }
+
+

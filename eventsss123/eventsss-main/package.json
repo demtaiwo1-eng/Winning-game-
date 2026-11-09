@@ -38,7 +38,9 @@
     "dev:db:logs": "docker compose -f compose.dev.yml logs -f postgres",
     "dev:db:reset": "docker compose -f compose.dev.yml down -v",
     "dev:smoke": "node scripts/smoke-dev.mjs",
-    "connection:check": "node scripts/ephinta-connection-check.mjs"
+    "connection:check": "node scripts/ephinta-connection-check.mjs",
+    "device-security:verify": "node scripts/verify-device-security.mjs",
+    "device-security:verify:full": "node scripts/verify-device-security.mjs --full"
   },
   "devDependencies": {
     "concurrently": "^9.2.4",

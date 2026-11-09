@@ -70,13 +70,34 @@ appUpdatesRouter.get("/version.json", async (_req, res) => {
   try {
     const response = await fetchOtaAsset("version.json");
     const raw = await response.text();
-    const manifest = JSON.parse(raw) as { version?: unknown };
+    const manifest = JSON.parse(raw) as {
+      version?: unknown;
+      title?: unknown;
+      message?: unknown;
+      publishedAt?: unknown;
+      updateType?: unknown;
+    };
     if (typeof manifest.version !== "string" || !/^[a-zA-Z0-9._-]{1,64}$/.test(manifest.version)) {
       return res.status(502).json({ error: { code: "INVALID_UPDATE_MANIFEST", message: "The update manifest is invalid." } });
     }
+    const safeText = (value: unknown, maxLength: number) =>
+      typeof value === "string" ? value.replace(/[<>]/g, "").trim().slice(0, maxLength) : undefined;
+    const title = safeText(manifest.title, 100);
+    const message = safeText(manifest.message, 320);
+    const publishedAt = typeof manifest.publishedAt === "string" && !Number.isNaN(Date.parse(manifest.publishedAt))
+      ? manifest.publishedAt
+      : undefined;
+    const updateType = manifest.updateType === "native" ? "native" : "web";
 
     res.setHeader("Cache-Control", "no-store");
-    res.json({ version: manifest.version, url: `ephinta-web-bundle.zip?v=${encodeURIComponent(manifest.version)}` });
+    res.json({
+      version: manifest.version,
+      url: `ephinta-web-bundle.zip?v=${encodeURIComponent(manifest.version)}`,
+      ...(title ? { title } : {}),
+      ...(message ? { message } : {}),
+      ...(publishedAt ? { publishedAt } : {}),
+      updateType,
+    });
   } catch {
     res.status(503).json({ error: { code: "UPDATE_CHECK_UNAVAILABLE", message: "App updates are temporarily unavailable." } });
   }
