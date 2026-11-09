@@ -47,13 +47,16 @@ export default function RemoteUpdateNotice() {
       ) return;
 
       let installedVersion = BUILT_VERSION;
+      if (installedVersion === "bundled") {
+        installedVersion = localStorage.getItem("ephinta:installed-version") || installedVersion;
+      }
       if (isNativeApp()) {
         try {
           const { CapacitorUpdater } = await import("@capgo/capacitor-updater");
           const current = await CapacitorUpdater.current();
           installedVersion = current?.bundle?.version || installedVersion;
         } catch {
-          // The bundled version remains a safe comparison fallback.
+          // The embedded/saved version remains a safe comparison fallback.
         }
       }
       if (manifest.version === installedVersion) {
