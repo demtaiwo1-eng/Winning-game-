@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DateWheelPicker from './components/DateWheelPicker';
+import { checkPassword, PASSWORD_HELPER } from './lib/passwordRule';
 
 type AuthPayload = { accessToken: string; refreshToken: string; user: { id: string; email: string; name: string; role: string } };
 interface LandingPageProps { onLoginSuccess: (payload: AuthPayload) => void; }
@@ -8,8 +9,17 @@ async function auth({ path, body }: { path: 'login' | 'register'; body: unknown;
   const res = await fetch(`/api/v1/auth/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const d = await res.json().catch(() => ({}));
   if (!res.ok) {
+    const code = d?.error?.code;
     const f = d?.error?.details?.fieldErrors;
-    throw new Error((f && (Object.values(f).flat()[0] as string)) || d?.error?.message || 'Request failed. Try again.');
+    const fieldMessage = f && (Object.values(f).flat()[0] as string);
+    if (path === 'login' && (code === 'INVALID_CREDENTIALS' || res.status === 401)) {
+      throw new Error('That email and password do not match. Check your details and try again.');
+    }
+    if (code === 'ALREADY_EXISTS' || res.status === 409) {
+      throw new Error('An account with this email or phone number already exists. Sign in or use different details.');
+    }
+    if (res.status === 429) throw new Error('Too many attempts. Please wait a few minutes before trying again.');
+    throw new Error(fieldMessage || d?.error?.message || 'Request failed. Try again.');
   }
   return d;
 }
@@ -67,7 +77,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
   const [menu, setMenu] = useState(false);
   const [modal, setModal] = useState<null | 'signin' | 'register'>(null);
   const [role, setRole] = useState<'customer' | 'vendor' | 'organization'>('customer');
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', businessName: '' });
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   const [d, setD] = useState({ type: '', guests: '', date: '', vibe: '' });
 
@@ -79,9 +89,13 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
   const saveDraft = () => { try { localStorage.setItem('ess:eventDraft', JSON.stringify(d)); } catch { /* storage unavailable */ } };
   const submit = async () => {
     setErr('');
-    if (modal === 'register' && form.password.length < 12) return setErr('Use a password with at least 12 characters.');
+    if (modal === 'register') {
+      const passwordCheck = checkPassword(form.password);
+      if (!passwordCheck.ok) return setErr(PASSWORD_HELPER);
+      if (role === 'vendor' && !form.businessName.trim()) return setErr('Enter your business or service name.');
+    }
     setBusy(true);
-    try { onLoginSuccess(modal === 'signin' ? await auth({ path: 'login', body: { email: form.email, password: form.password } }) : await auth({ path: 'register', body: { ...form, ...(role === 'vendor' ? { role: 'VENDOR' } : {}) } })); }
+    try { onLoginSuccess(modal === 'signin' ? await auth({ path: 'login', body: { email: form.email, password: form.password } }) : await auth({ path: 'register', body: { ...form, ...(role === 'vendor' ? { role: 'VENDOR' } : role === 'organization' ? { role: 'ORGANIZATION', organizationMode: 'EVENT_PLANNING' } : {}) } })); }
     catch (e: any) { setErr(e.message); setBusy(false); }
   };
   const nice = d.date ? new Date(d.date).toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : 'date to be decided';
@@ -140,9 +154,9 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
 
       {modal && <div className="pl-md" role="presentation" onClick={() => setModal(null)}><div className="pl-dl" role="dialog" aria-modal="true" aria-label={modal === 'signin' ? 'Sign in' : 'Create account'} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><h2 style={{ fontSize: 26 }}>{modal === 'signin' ? 'Sign in' : 'Create your account'}</h2><button className="pl-t" aria-label="Close" style={{ fontSize: 26 }} onClick={() => setModal(null)}>×</button></div>
-        {modal === 'register' && <><label>Who are you registering as?<div className="pl-ch">{([['customer', 'Customer'], ['vendor', 'Service provider'], ['organization', 'Organization']] as const).map(([k, l]) => <button key={k} aria-pressed={role === k} onClick={() => setRole(k)}>{l}</button>)}</div></label><label>Full name<input className="pl-in" autoComplete="name" value={form.name} onChange={f('name')} /></label></>}
+        {modal === 'register' && <><label>Who are you registering as?<div className="pl-ch">{([['customer', 'Customer'], ['vendor', 'Service provider'], ['organization', 'Organization']] as const).map(([k, l]) => <button key={k} aria-pressed={role === k} onClick={() => setRole(k)}>{l}</button>)}</div></label><label>Full name<input className="pl-in" autoComplete="name" value={form.name} onChange={f('name')} /></label>{role === 'vendor' && <label>Business or service name<input className="pl-in" autoComplete="organization" value={form.businessName} onChange={f('businessName')} /></label>}</>}
         <label>Email<input className="pl-in" type="email" autoComplete="email" value={form.email} onChange={f('email')} /></label>
-        <label>Password{modal === 'register' ? ' (12 or more characters)' : ''}<input className="pl-in" type="password" autoComplete={modal === 'signin' ? 'current-password' : 'new-password'} value={form.password} onChange={f('password')} onKeyDown={(e) => e.key === 'Enter' && submit()} /></label>
+        <label>Password{modal === 'register' ? ' (8+ characters and a special character)' : ''}<input className="pl-in" type="password" autoComplete={modal === 'signin' ? 'current-password' : 'new-password'} value={form.password} onChange={f('password')} onKeyDown={(e) => e.key === 'Enter' && submit()} /></label>
         {err && <p className="pl-er" role="alert">{err}</p>}
         <button className="pl-b p" style={{ width: '100%' }} disabled={busy} onClick={submit}>{busy ? 'Please wait…' : modal === 'signin' ? 'Sign in' : 'Create account'}</button>
         <p style={{ textAlign: 'center', color: 'var(--mute)', fontSize: 14, marginBottom: 0 }}>{modal === 'signin' ? 'New here? ' : 'Already registered? '}<button className="pl-t" style={{ color: 'var(--blue)' }} onClick={() => open(modal === 'signin' ? 'register' : 'signin')}>{modal === 'signin' ? 'Create an account' : 'Sign in'}</button></p>
