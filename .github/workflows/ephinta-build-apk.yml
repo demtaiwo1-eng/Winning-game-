@@ -64,6 +64,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify EPHINTA device PIN, inactivity lock and biometric wiring
+        run: npm run device-security:verify
+
       - name: Restore Rollup Linux optional dependency
         run: npm install --no-save --package-lock=false @rollup/rollup-linux-x64-gnu@4.63.5
 
