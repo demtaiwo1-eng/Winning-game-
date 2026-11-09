@@ -107,7 +107,18 @@ export async function sendEventMessage(userId: string, eventId: string, input: S
   const items = await prisma.$transaction(
     recipients.map(({ id, kind }) =>
       prisma.message.create({
-        data: { groupId, senderId: userId, recipientId: id, recipientKind: kind, eventId, body: input.body },
+        data: {
+          groupId,
+          senderId: userId,
+          recipientId: id,
+          recipientKind: kind,
+          toRecipientIds: input.broadcast
+            ? recipients.map((recipient) => recipient.id)
+            : input.recipientIds ?? input.toIds ?? [],
+          ccRecipientIds: input.broadcast || input.recipientIds ? [] : input.ccIds ?? [],
+          eventId,
+          body: input.body,
+        },
         include: {
           sender: { select: { id: true, name: true, role: true } },
           recipient: { select: { id: true, name: true, role: true } },
