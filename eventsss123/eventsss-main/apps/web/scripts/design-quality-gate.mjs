@@ -87,11 +87,10 @@ function main() {
   if (!fs.existsSync(entry)) fail("Missing src/main.tsx.");
   else {
     const entrySource = fs.readFileSync(entry, "utf8");
-    if (entrySource.includes("ephinta-product-excellence.css")) pass("Product excellence stylesheet is imported.");
-    else fail("Product excellence stylesheet is not imported.");
+
 
     const globalStyleImport = "import './styles/ephinta-global.css';";
-    const cssImports = [...entrySource.matchAll(/^import\\s+["'][^"']+\\.css["'];?\\s*$/gm)].map((match) => match[0]);
+    const cssImports = [...entrySource.matchAll(/^import\s+["'][^"']+\.css["'];?\s*$/gm)].map((match) => match[0]);
     if (!entrySource.includes(globalStyleImport)) fail("The single EPHINTA global stylesheet is not imported by the active application entry point.");
     else if (cssImports.length !== 1) fail("The application entry point must import exactly one global stylesheet.");
     else pass("The application entry point uses one centralized global stylesheet.");
@@ -100,13 +99,15 @@ function main() {
     if (!fs.existsSync(globalStylePath)) fail("The centralized EPHINTA global stylesheet is missing.");
     else {
       const globalStyles = fs.readFileSync(globalStylePath, "utf8");
+      if (!globalStyles.includes("ephinta-product-excellence.css")) fail("Product excellence stylesheet is not imported by the global stylesheet.");
+      else pass("Product excellence stylesheet is imported globally.");
       if (!globalStyles.includes("ephinta-parent-design-system.css")) fail("The centralized stylesheet does not load the parent design system.");
       else if (!globalStyles.includes("ephinta-workspace-advertising.css")) fail("The centralized stylesheet does not load shared workspace styling.");
       else pass("Global design-system and workspace styles are centralized.");
     }
 
-    const strayStyleImports = files.filter((file) => /\\.(tsx|jsx|ts|js)$/.test(file) && file !== entry)
-      .filter((file) => /import\\s+["'][^"']+\\.css["']/.test(fs.readFileSync(file, "utf8")));
+    const strayStyleImports = files.filter((file) => /\.(tsx|jsx|ts|js)$/.test(file) && file !== entry)
+      .filter((file) => /import\s+["'][^"']+\.css["']/.test(fs.readFileSync(file, "utf8")));
     if (strayStyleImports.length) fail("Move component stylesheet imports into the global stylesheet: " + strayStyleImports.map((file) => path.relative(APP_ROOT, file)).join(", "));
     else pass("No component or portal imports a separate stylesheet.");
 
