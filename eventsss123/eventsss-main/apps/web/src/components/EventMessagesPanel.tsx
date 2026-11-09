@@ -144,7 +144,7 @@ export default function EventMessagesPanel({ events, initialEventId }: { events:
   }
 
   return (
-    <section className="ess-panel">
+    <section className="ess-panel ess-messaging-workspace">
       <p className="ess-eyebrow">Event coordination</p>
       <h2>Messages</h2>
       <label>
