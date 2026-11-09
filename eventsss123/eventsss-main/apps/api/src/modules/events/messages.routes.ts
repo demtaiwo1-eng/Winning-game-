@@ -9,6 +9,7 @@ import * as messages from "./messages.service";
 
 const uuid = z.string().uuid();
 const eventId = (value: string) => uuid.parse(value);
+const messageId = (value: string) => uuid.parse(value);
 
 export const eventMessagesRouter = Router();
 eventMessagesRouter.use(requireAuth);
@@ -25,13 +26,11 @@ const sendMessageLimiter = rateLimit({
 eventMessagesRouter.get(
   "/:eventId/messages",
   asyncHandler(async (req, res) => {
-    res.json(
-      await messages.listEventMessages(
-        req.user!.id,
-        eventId(req.params.eventId),
-        eventMessagesQuerySchema.parse(req.query),
-      ),
-    );
+    res.json(await messages.listEventMessages(
+      req.user!.id,
+      eventId(req.params.eventId),
+      eventMessagesQuerySchema.parse(req.query),
+    ));
   }),
 );
 
@@ -40,9 +39,7 @@ eventMessagesRouter.post(
   sendMessageLimiter,
   validateBody(sendEventMessageSchema),
   asyncHandler(async (req, res) => {
-    res.status(201).json(
-      await messages.sendEventMessage(req.user!.id, eventId(req.params.eventId), req.body),
-    );
+    res.status(201).json(await messages.sendEventMessage(req.user!.id, eventId(req.params.eventId), req.body));
   }),
 );
 
@@ -50,5 +47,31 @@ eventMessagesRouter.patch(
   "/:eventId/messages/read",
   asyncHandler(async (req, res) => {
     res.json(await messages.markEventMessagesRead(req.user!.id, eventId(req.params.eventId)));
+  }),
+);
+
+for (const action of ["read", "unread", "archive"] as const) {
+  eventMessagesRouter.patch(
+    `/:eventId/messages/:messageId/${action}`,
+    asyncHandler(async (req, res) => {
+      res.json(await messages.updateEventMessageState(
+        req.user!.id,
+        eventId(req.params.eventId),
+        messageId(req.params.messageId),
+        action.toUpperCase() as "READ" | "UNREAD" | "ARCHIVE",
+      ));
+    }),
+  );
+}
+
+eventMessagesRouter.delete(
+  "/:eventId/messages/:messageId",
+  asyncHandler(async (req, res) => {
+    res.json(await messages.updateEventMessageState(
+      req.user!.id,
+      eventId(req.params.eventId),
+      messageId(req.params.messageId),
+      "DELETE",
+    ));
   }),
 );
