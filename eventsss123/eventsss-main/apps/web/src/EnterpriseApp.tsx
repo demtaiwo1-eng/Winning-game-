@@ -2615,13 +2615,18 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
     }
   };
 
-  const complete = questions.every(([key]) => answers[key]?.trim());
+  const answered = questions.filter(([key]) => answers[key]?.trim()).length;
+  const complete = answered === questions.length;
   if (loading) return <section className="ess-panel" aria-live="polite">Loading your planning questions…</section>;
   return (
     <section className="ess-panel" aria-labelledby="planning-questions-title">
       <p className="ess-eyebrow">Continue your event brief</p>
       <h2 id="planning-questions-title">Plan the details for {eventTitle}</h2>
-      <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits.</p>
+      <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits. Share only details that help us plan the event well.</p>
+      <div className="ess-question-progress">
+        <span>{answered} of {questions.length} planning prompts answered</span>
+        <progress value={answered} max={questions.length} aria-label="Planning questionnaire progress" />
+      </div>
       {questions.map(([key, label]) => (
         <label key={key} style={{ display: "block", marginTop: 12 }}>
           {label}
