@@ -6,13 +6,15 @@ import assert from "node:assert/strict";
 const root = process.cwd();
 const read = (path) => readFileSync(resolve(root, path), "utf8");
 const gate = read("apps/web/src/components/DeviceSecurityGate.tsx");
-const app = read("apps/web/src/App.tsx");
+const app = read("apps/web/src/EnterpriseApp.tsx");
 const webPackage = JSON.parse(read("apps/web/package.json"));
 
 const checks = [
-  ["device security gate is imported by the application", /import DeviceSecurityGate from ['"]\.\/components\/DeviceSecurityGate['"]/.test(app)],
-  ["every authenticated app tree is wrapped by the gate", /<DeviceSecurityGate userId=\{auth\.user\.id\} onSignOut=\{handleLogout\}>[\s\S]*?<\/DeviceSecurityGate>/.test(app)],
-  ["the gate covers the authenticated audio experience", /<DeviceSecurityGate[\s\S]*?<AudioExperience showPrompt=\{false\} autoPlay \/>[\s\S]*?<\/DeviceSecurityGate>/.test(app)],
+  ["the real EnterpriseApp entrypoint imports the device security gate", /import DeviceSecurityGate from ['"]\.\/components\/DeviceSecurityGate['"]/.test(app)],
+  ["the authenticated portal root is wrapped by the gate", /<DeviceSecurityGate userId=\{session\.id\} onSignOut=\{signOut\}>\{content\}<\/DeviceSecurityGate>/.test(app)],
+  ["first-time onboarding is protected by the same gate", /if \(session && showOnboard\)[\s\S]*?<DeviceSecurityGate userId=\{session\.id\} onSignOut=\{signOut\}>[\s\S]*?<\/DeviceSecurityGate>/.test(app)],
+  ["every login path preserves the stable user ID", (app.match(/id: user\.id/g) || []).length >= 2],
+  ["restored sessions without a user ID are not accepted", /if \(user\?\.id && user\?\.name && user\?\.email/.test(app)],
   ["idle lock is exactly five minutes", /IDLE_LIMIT_MS\s*=\s*5\s*\*\s*60\s*\*\s*1000/.test(gate)],
   ["PIN is six numeric digits and must be confirmed", /\\d\{6\}/.test(gate) && /pin !== confirmPin/.test(gate)],
   ["PIN hash uses PBKDF2 SHA-256 with a strong iteration count", /PBKDF2_ITERATIONS\s*=\s*310_000/.test(gate) && /hash:\s*"SHA-256"/.test(gate)],
