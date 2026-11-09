@@ -160,7 +160,7 @@ export async function updateEventMessageState(
       eventId,
       OR: [{ senderId: userId }, { recipientId: userId }],
     },
-    select: { id: true, senderId: true, recipientId: true },
+    select: { id: true, groupId: true, senderId: true, recipientId: true },
   });
   if (!message) throw new HttpError(404, "NOT_FOUND", "Message not found");
   const now = new Date();
@@ -174,14 +174,26 @@ export async function updateEventMessageState(
     });
   } else if (action === "ARCHIVE" || action === "UNARCHIVE") {
     const archiveValue = action === "ARCHIVE" ? now : null;
-    await prisma.message.update({
-      where: { id: message.id },
-      data: message.senderId === userId ? { senderArchivedAt: archiveValue } : { recipientArchivedAt: archiveValue },
+    if (message.senderId === userId) {
+      await prisma.message.updateMany({
+        where: { groupId: message.groupId, senderId: userId, senderDeletedAt: null },
+        data: { senderArchivedAt: archiveValue },
+      });
+    } else {
+      await prisma.message.update({
+        where: { id: message.id },
+        data: { recipientArchivedAt: archiveValue },
+      });
+    }
+  } else if (message.senderId === userId) {
+    await prisma.message.updateMany({
+      where: { groupId: message.groupId, senderId: userId, senderDeletedAt: null },
+      data: { senderDeletedAt: now },
     });
   } else {
     await prisma.message.update({
       where: { id: message.id },
-      data: message.senderId === userId ? { senderDeletedAt: now } : { recipientDeletedAt: now },
+      data: { recipientDeletedAt: now },
     });
   }
   return { ok: true };
