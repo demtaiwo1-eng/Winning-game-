@@ -1,4 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function enableDevUpdateNotice(page: Page) {
+  await page.addInitScript(() => localStorage.setItem("ephinta:dev-update-notice", "enabled"));
+}
 
 async function publishPatchNotice(page: import("@playwright/test").Page) {
   await page.route("**/app-updates/version.json**", async (route) => {
@@ -18,6 +22,7 @@ async function publishPatchNotice(page: import("@playwright/test").Page) {
 }
 
 test("connected desktop app displays and can dismiss a server-published patch notice", async ({ page }) => {
+  await enableDevUpdateNotice(page);
   await publishPatchNotice(page);
   await page.goto("/");
 
@@ -30,6 +35,7 @@ test("connected desktop app displays and can dismiss a server-published patch no
 });
 
 test("web install action records the patch and reloads without repeating its notice", async ({ page }) => {
+  await enableDevUpdateNotice(page);
   await publishPatchNotice(page);
   await page.goto("/");
 
@@ -46,6 +52,7 @@ test("web install action records the patch and reloads without repeating its not
 
 test("remote patch notice fits a mobile installation without horizontal overflow @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
+  await enableDevUpdateNotice(page);
   await publishPatchNotice(page);
   await page.goto("/");
 
