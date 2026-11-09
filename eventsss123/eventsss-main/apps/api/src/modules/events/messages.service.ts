@@ -59,8 +59,8 @@ export async function listEventMessages(userId: string, eventId: string, query: 
           }
         : {
             OR: [
-              { senderId: userId, senderDeletedAt: null, senderArchivedAt: null },
-              { recipientId: userId, recipientDeletedAt: null, recipientArchivedAt: null },
+              { senderId: userId, senderDeletedAt: null },
+              { recipientId: userId, recipientDeletedAt: null },
             ],
           };
   const rows = await prisma.message.findMany({
