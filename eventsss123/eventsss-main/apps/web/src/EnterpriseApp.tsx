@@ -400,7 +400,7 @@ function ClientPortal({
   }, []);
 
   return (
-    <div className="ess-portal-stack">
+    <main id="dashboard-main" className="ess-portal-stack" tabIndex={-1} aria-label="Event planner dashboard">
       <div className="ess-page-heading">
         <div>
           <p className="ess-eyebrow">Executive Planner command center</p>
@@ -419,7 +419,7 @@ function ClientPortal({
         </div>
       </div>
 
-      <div className="ess-filter-row" style={{ marginBottom: 8 }}>
+      <nav className="ess-filter-row ess-dashboard-nav" style={{ marginBottom: 8 }} aria-label="Planner dashboard sections">
         {(
           [
             ["overview", "Overview"],
@@ -440,12 +440,14 @@ function ClientPortal({
             key={id}
             type="button"
             className={tab === id ? "ess-chip ess-chip-active" : "ess-chip"}
+            aria-current={tab === id ? "page" : undefined}
+            aria-label={`Open ${label}`}
             onClick={() => setTab(id)}
           >
             {label}
           </button>
         ))}
-      </div>
+      </nav>
 
       {showCreate && (
         <EventCreatePanel
@@ -727,7 +729,7 @@ function VendorAvailabilityManager({ listingId }: { listingId: string }) {
           <button className="ess-row-action" type="button" disabled={busy} onClick={() => removeSlot(slot.id)}>Remove</button>
         </div>
       )) : <p className="ess-muted">No availability windows added yet.</p>}
-    </div>
+    </main>
   );
 }
 
@@ -2289,9 +2291,14 @@ export default function EnterpriseApp() {
         </button>
         {session ? (
           <>
-            <div className="ess-portal-menu">
+            <div className="ess-portal-menu" onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}>
               <button
                 className="ess-menu-trigger"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={menuOpen}
+                aria-controls="ess-account-workspace-menu"
+                aria-label={`${roleMeta[activeRole].short} portal menu`}
                 onClick={() => setMenuOpen(!menuOpen)}
               >
                 <span className="ess-account-dot" />
@@ -2299,7 +2306,7 @@ export default function EnterpriseApp() {
                 <span className="ess-menu-chevron">⌄</span>
               </button>
               {menuOpen && (
-                <div className="ess-menu-dropdown">
+                <div className="ess-menu-dropdown" id="ess-account-workspace-menu" aria-label="Workspace menu">
                   <div className="ess-menu-heading">
                     <span>Switch workspace</span>
                     <small>Choose an operating lane</small>
@@ -2375,7 +2382,11 @@ export default function EnterpriseApp() {
           <div className="ess-public-menu">
             <button
               className="ess-menu-trigger"
-              aria-label="Open ESS menu"
+              type="button"
+              aria-label="Open EPHINTA navigation menu"
+              aria-haspopup="true"
+              aria-expanded={menuOpen}
+              aria-controls="ess-public-navigation-menu"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               <span className="ess-hamburger">
@@ -2386,7 +2397,7 @@ export default function EnterpriseApp() {
               Menu
             </button>
             {menuOpen && (
-              <div className="ess-menu-dropdown ess-public-dropdown">
+              <div className="ess-menu-dropdown ess-public-dropdown" id="ess-public-navigation-menu" aria-label="EPHINTA navigation">
                 <div className="ess-menu-heading">
                   <span>EPHINTA</span>
                   <small>Choose how you want to work</small>
