@@ -831,6 +831,7 @@ model Notification {
 
   @@index([userId, readAt])
   @@index([userId, createdAt, id])
+  @@index([userId, archivedAt, createdAt])
 }
 
 enum NotificationDeliveryStatus {
