@@ -39,5 +39,9 @@ describe("event messages", () => {
       toIds: [participant],
       broadcast: true,
     }).success).toBe(false);
+    expect(sendEventMessageSchema.safeParse({
+      body: "Hello",
+      ccIds: ["a2d7f6b9-5c7e-4d3a-8b1f-6c9e2a4d7f10"],
+    }).success).toBe(false);
   });
 });
