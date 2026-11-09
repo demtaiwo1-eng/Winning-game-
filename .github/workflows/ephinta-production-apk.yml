@@ -7,6 +7,12 @@ on:
       - "scripts/complete-production-apk.sh"
       - "scripts/setup-android-signing-github.sh"
   workflow_dispatch:
+    inputs:
+      minimum_version_code:
+        description: Minimum Android versionCode; set above the installed Build 869
+        required: false
+        type: string
+        default: '870'
   push:
     tags:
       - "v*"
@@ -186,7 +192,14 @@ jobs:
           # Android versionCode is a signed 32-bit integer capped at 2,100,000,000.
           # GitHub run IDs exceed that limit; the per-workflow run number is monotonic
           # and safely remains within Android's supported range.
-          VERSION_CODE="$((GITHUB_RUN_NUMBER + 2))"
+          RUN_VERSION_CODE="$((GITHUB_RUN_NUMBER + 2))"
+          REQUESTED_MINIMUM="${{ inputs.minimum_version_code || '870' }}"
+          if ! [[ "$REQUESTED_MINIMUM" =~ ^[0-9]+$ ]]; then
+            echo "::error::minimum_version_code must be a positive integer."
+            exit 1
+          fi
+          VERSION_CODE="$RUN_VERSION_CODE"
+          if (( REQUESTED_MINIMUM > VERSION_CODE )); then VERSION_CODE="$REQUESTED_MINIMUM"; fi
           if (( VERSION_CODE > 2100000000 )); then
             echo "::error::Calculated Android versionCode exceeds the Play Store limit."
             exit 1
