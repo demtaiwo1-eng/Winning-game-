@@ -31,8 +31,8 @@ import "./portal-menu.css";
 import "./public-menu.css";
 import "./event-builder.css";
 import "./public-landing.css";
-import "./styles/ephinta-parent-design-system.css";
 import "./styles/ephinta-planner-portal-polish.css"; // Shared planner, finance, check-in and trust portal layer.
+import "./styles/ephinta-parent-design-system.css";
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
