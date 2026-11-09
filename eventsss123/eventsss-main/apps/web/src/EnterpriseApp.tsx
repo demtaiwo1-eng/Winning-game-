@@ -949,15 +949,15 @@ function VendorPortal({
         </div>
       </div>
       {notice && <div className="ess-toast">{notice}</div>}
-      <div className="ess-filter-row" style={{ marginBottom: 12 }}>
-        <button type="button" className={vendorTab === "catalog" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("catalog")}>Catalog & demand</button>
-        <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
-        <button type="button" className={vendorTab === "payments" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("payments")}>Booking payments</button>
-        <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
-        <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
-        <button type="button" className={vendorTab === "notifications" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("notifications")}>Notifications</button>
-        <button type="button" className={vendorTab === "promotions" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("promotions")}>Promotions</button>
-      </div>
+      <nav className="ess-filter-row ess-dashboard-nav ess-vendor-nav" style={{ marginBottom: 12 }} aria-label="Vendor dashboard sections">
+        <button type="button" className={vendorTab === "catalog" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "catalog" ? "page" : undefined} aria-label="Open Catalog & demand" onClick={() => setVendorTab("catalog")}>Catalog & demand</button>
+        <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "wallet" ? "page" : undefined} aria-label="Open Wallet & escrow" onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
+        <button type="button" className={vendorTab === "payments" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "payments" ? "page" : undefined} aria-label="Open Booking payments" onClick={() => setVendorTab("payments")}>Booking payments</button>
+        <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "kyc" ? "page" : undefined} aria-label="Open KYC" onClick={() => setVendorTab("kyc")}>KYC</button>
+        <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "messages" ? "page" : undefined} aria-label="Open Enquiries & messages" onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
+        <button type="button" className={vendorTab === "notifications" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "notifications" ? "page" : undefined} aria-label="Open Notifications" onClick={() => setVendorTab("notifications")}>Notifications</button>
+        <button type="button" className={vendorTab === "promotions" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "promotions" ? "page" : undefined} aria-label="Open Promotions" onClick={() => setVendorTab("promotions")}>Promotions</button>
+      </nav>
       {vendorTab === "promotions" ? (
         <PromotionsPanel mode="vendor" />
       ) : vendorTab === "wallet" ? (
