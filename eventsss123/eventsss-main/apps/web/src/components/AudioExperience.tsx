@@ -85,7 +85,15 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   }, []);
 
   useEffect(() => {
-    const sync = () => setAuthDialogOpen(Boolean(document.querySelector(".ess-auth-modal, .eph-modal, #eph-auth-dialog")));
+    const sync = () => {
+      const deviceLocked = Boolean(document.querySelector(".ess-device-lock"));
+      const authDialog = Boolean(document.querySelector(".ess-auth-modal, .eph-modal, #eph-auth-dialog"));
+      setAuthDialogOpen(deviceLocked || authDialog);
+      if (deviceLocked) {
+        audioRef.current?.pause();
+        setPlaying(false);
+      }
+    };
     sync();
     const observer = new MutationObserver(sync);
     observer.observe(document.body, { childList: true, subtree: true });
@@ -163,7 +171,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         </div>
       )}
 
-      {consent === true && (!expanded ? (
+      {consent === true && !authDialogOpen && (!expanded ? (
         <button type="button" className="eph-audio__restore" onClick={() => setExpanded(true)} aria-label="Open music player">
           ♫ Music {playing ? "playing" : "paused"}
         </button>
