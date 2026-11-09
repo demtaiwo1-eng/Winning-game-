@@ -1,22 +1,19 @@
 name: Android install and launch compatibility matrix
 
+# Run this expensive Android compatibility build only on demand or when
+# native Android/CAPACITOR build inputs change on main. Routine PR/web changes
+# are covered by the web/API workflows and do not boot Android emulators.
 on:
   workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - "eventsss123/eventsss-main/apps/mobile/**"
-      - "eventsss123/eventsss-main/apps/web/**"
+      - "eventsss123/eventsss-main/apps/mobile/android/**"
+      - "eventsss123/eventsss-main/apps/mobile/capacitor.config.*"
+      - "eventsss123/eventsss-main/apps/mobile/package.json"
       - "eventsss123/eventsss-main/package-lock.json"
-      - ".github/workflows/android-install-smoke.yml"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "eventsss123/eventsss-main/apps/mobile/**"
-      - "eventsss123/eventsss-main/apps/web/**"
-      - "eventsss123/eventsss-main/package-lock.json"
+      - "eventsss123/eventsss-main/scripts/android-emulator-smoke.sh"
       - ".github/workflows/android-install-smoke.yml"
 
 permissions:
