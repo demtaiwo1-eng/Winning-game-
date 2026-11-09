@@ -145,8 +145,23 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
       } else {
         await api(`/events/${currentEventId}/messages/${message.id}/${action}`, { method: "PATCH", body: "{}" });
       }
-      setMessages((current) => current.filter((item) => item.id !== message.id));
-      setNotice(action === "delete" ? "Message deleted from your mailbox." : action === "archive" ? "Message archived." : action === "read" ? "Message marked as read." : "Message marked as unread.");
+      setMessages((current) => {
+        if (action === "delete" || (action === "archive" && folder !== "ALL") || (action === "unarchive" && folder === "ARCHIVED")) {
+          return current.filter((item) => item.id !== message.id);
+        }
+        return current.map((item) => item.id !== message.id ? item : {
+          ...item,
+          ...(action === "read" ? { readAt: new Date().toISOString() } : {}),
+          ...(action === "unread" ? { readAt: null } : {}),
+          ...(action === "archive" ? (item.senderId === viewerId
+            ? { senderArchivedAt: new Date().toISOString() }
+            : { recipientArchivedAt: new Date().toISOString() }) : {}),
+          ...(action === "unarchive" ? (item.senderId === viewerId
+            ? { senderArchivedAt: null }
+            : { recipientArchivedAt: null }) : {}),
+        });
+      });
+      setNotice(action === "delete" ? "Message deleted from your mailbox." : action === "archive" ? "Message archived." : action === "unarchive" ? "Message restored." : action === "read" ? "Message marked as read." : "Message marked as unread.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to update this message.");
     } finally {
@@ -195,6 +210,7 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
         {!loading && messages.length === 0 && <p className="ess-muted">No messages in this folder yet.</p>}
         {messages.map((message) => {
           const sent = message.senderId === viewerId;
+          const archivedForViewer = sent ? Boolean(message.senderArchivedAt) : Boolean(message.recipientArchivedAt);
           const busy = workingId === message.id;
           return (
             <article className="ess-wallet-card ess-message-row" key={message.id} style={{ justifySelf: sent ? "end" : "start", maxWidth: "min(100%, 700px)", width: "100%" }}>
@@ -208,7 +224,7 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
               </div>
               <div className="ess-message-actions">
                 {!sent && <button type="button" className="ess-quiet-button" disabled={busy} onClick={() => void mutateMessage(message, message.readAt ? "unread" : "read")}>{message.readAt ? "Mark unread" : "Mark read"}</button>}
-                <button type="button" className="ess-quiet-button" disabled={busy} onClick={() => void mutateMessage(message, folder === "ARCHIVED" ? "unarchive" : "archive")}>{folder === "ARCHIVED" ? "Restore" : "Archive"}</button>
+                <button type="button" className="ess-quiet-button" disabled={busy} onClick={() => void mutateMessage(message, archivedForViewer ? "unarchive" : "archive")}>{archivedForViewer ? "Restore" : "Archive"}</button>
                 <button type="button" className="ess-quiet-button" disabled={busy} onClick={() => void mutateMessage(message, "delete")}>Delete</button>
               </div>
             </article>
