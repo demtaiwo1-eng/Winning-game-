@@ -140,7 +140,7 @@ export async function updateEventMessageState(
   userId: string,
   eventId: string,
   messageId: string,
-  action: "READ" | "UNREAD" | "ARCHIVE" | "DELETE",
+  action: "READ" | "UNREAD" | "ARCHIVE" | "UNARCHIVE" | "DELETE",
 ) {
   await assertEventParticipant(userId, eventId);
   const message = await prisma.message.findFirst({
@@ -161,10 +161,11 @@ export async function updateEventMessageState(
       where: { id: message.id },
       data: { readAt: action === "READ" ? now : null },
     });
-  } else if (action === "ARCHIVE") {
+  } else if (action === "ARCHIVE" || action === "UNARCHIVE") {
+    const archiveValue = action === "ARCHIVE" ? now : null;
     await prisma.message.update({
       where: { id: message.id },
-      data: message.senderId === userId ? { senderArchivedAt: now } : { recipientArchivedAt: now },
+      data: message.senderId === userId ? { senderArchivedAt: archiveValue } : { recipientArchivedAt: archiveValue },
     });
   } else {
     await prisma.message.update({
