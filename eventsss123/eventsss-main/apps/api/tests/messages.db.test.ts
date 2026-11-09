@@ -76,6 +76,13 @@ describe.skipIf(!run)("event messages (DB)", () => {
       expect(verifierNotifications.body.items).toHaveLength(2);
       expect(verifierNotifications.body.items[0].type).toBe("MESSAGE");
       expect(verifierNotifications.body.items[0].deliveryStatus).toBe("NOT_CONFIGURED");
+      const notificationId = verifierNotifications.body.items[0].id as string;
+      expect((await request(app).patch(`/api/v1/notifications/${notificationId}/unread`).set(auth(verifier.token)).send({})).status).toBe(200);
+      expect((await request(app).patch(`/api/v1/notifications/${notificationId}/archive`).set(auth(verifier.token)).send({})).status).toBe(200);
+      const archivedNotifications = await request(app).get("/api/v1/notifications?folder=ARCHIVED").set(auth(verifier.token));
+      expect(archivedNotifications.body.items.some((item: { id: string }) => item.id === notificationId)).toBe(true);
+      expect((await request(app).patch(`/api/v1/notifications/${notificationId}/unarchive`).set(auth(verifier.token)).send({})).status).toBe(200);
+      expect((await request(app).delete(`/api/v1/notifications/${notificationId}`).set(auth(verifier.token))).status).toBe(200);
       const outsiderNotifications = await request(app).get("/api/v1/notifications").set(auth(outsider.token));
       expect(outsiderNotifications.body.items).toHaveLength(0);
 
