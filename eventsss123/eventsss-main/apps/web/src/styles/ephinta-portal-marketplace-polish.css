@@ -104,16 +104,25 @@
   place-items: center;
   padding: clamp(16px, 4vw, 28px);
   background: var(--app-bg, #10002f);
-  color: var(--app-text, #fff);
+  color: #f8fafc;
   font-family: inherit;
 }
 .ess-device-lock-card {
   width: min(100%, 420px);
   padding: clamp(20px, 5vw, 30px);
-  border: 1px solid var(--ess-border, rgba(255,255,255,.14));
+  border: 1px solid rgba(255,255,255,.16);
   border-radius: 24px;
-  background: var(--surface, #211044);
+  background: #171d32;
+  color: #f8fafc;
   box-shadow: 0 24px 80px rgba(0,0,0,.28);
+}
+.ess-device-lock-card h1,
+.ess-device-lock-card p,
+.ess-device-lock-card label {
+  color: #f8fafc;
+}
+.ess-device-lock-card .ess-device-lock-note {
+  color: #cbd5e1;
 }
 .ess-device-lock-label {
   display: block;
@@ -165,7 +174,7 @@
 .ess-device-lock-secondary:disabled { opacity: .55; cursor: not-allowed; }
 .ess-device-lock-note {
   margin: 18px 0 0;
-  color: var(--ess-muted, #cbd5e1);
+  color: #cbd5e1;
   font-size: 12px;
   line-height: 1.55;
 }
