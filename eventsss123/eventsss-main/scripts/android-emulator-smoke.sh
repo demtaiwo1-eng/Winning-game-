@@ -5,7 +5,6 @@ set -Eeuo pipefail
 APK="${1:-artifacts/android/app-debug.apk}"
 API_LEVEL="${2:-unknown}"
 PACKAGE="com.ephinta.app"
-ACTIVITY="$PACKAGE/.MainActivity"
 
 fail() {
   echo "::error::$*"
@@ -48,7 +47,14 @@ done
 timeout 10s adb shell pm path "$PACKAGE" | grep -q '^package:' || fail "Installed package $PACKAGE was not found"
 
 timeout 10s adb shell am force-stop "$PACKAGE" || true
-timeout 120s adb shell am start -W -n "$ACTIVITY" || fail "Android could not start $ACTIVITY"
+# Resolve the launchable activity from the installed APK instead of assuming its
+# fully-qualified class name. This also validates the packaged MAIN/LAUNCHER intent.
+launch_output="$(timeout 30s adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1 2>&1)" || {
+  echo "$launch_output"
+  fail "Android could not launch the installed EPHINTA package"
+}
+echo "$launch_output"
+grep -Eq "Events injected: 1|monkey: finished" <<<"$launch_output" || fail "Android launcher did not dispatch an app launch"
 
 # Require both a live process and the app as the resumed foreground activity.
 launched=0
