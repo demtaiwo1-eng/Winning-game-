@@ -58,6 +58,14 @@ describe.skipIf(!run)("event messages (DB)", () => {
       expect(carbonCopy.status).toBe(201);
       expect(carbonCopy.body.items).toHaveLength(2);
       expect(carbonCopy.body.items.map((item: { recipientKind: string }) => item.recipientKind).sort()).toEqual(["CC", "TO"]);
+      const sentArchive = await request(app).patch(`/api/v1/events/${eventId}/messages/${carbonCopy.body.items[0].id}/archive`).set(auth(owner.token));
+      expect(sentArchive.status).toBe(200);
+      const sentArchivedFolder = await request(app).get(`/api/v1/events/${eventId}/messages?folder=ARCHIVED`).set(auth(owner.token));
+      expect(sentArchivedFolder.body.items.filter((item: { groupId: string }) => item.groupId === carbonCopy.body.items[0].groupId)).toHaveLength(2);
+      expect((await request(app).patch(`/api/v1/events/${eventId}/messages/${carbonCopy.body.items[0].id}/unarchive`).set(auth(owner.token))).status).toBe(200);
+      expect((await request(app).delete(`/api/v1/events/${eventId}/messages/${carbonCopy.body.items[0].id}`).set(auth(owner.token))).status).toBe(200);
+      const sentAfterDelete = await request(app).get(`/api/v1/events/${eventId}/messages?folder=ALL`).set(auth(owner.token));
+      expect(sentAfterDelete.body.items.some((item: { groupId: string }) => item.groupId === carbonCopy.body.items[0].groupId)).toBe(false);
       const verifierCopy = carbonCopy.body.items.find((item: { recipientId: string }) => item.recipientId === verifier.id);
       expect(verifierCopy.toRecipientIds).toEqual([verifier.id]);
       expect(verifierCopy.ccRecipientIds).toEqual([verifierTwo.id]);
