@@ -11,6 +11,7 @@
 @import "../ess-bright-orange-theme.css";
 @import "../theme/tokens.css";
 @import "../ephinta-intro-refinement.css";
+@import "../components/branding/ephinta-intro.css";
 @import "./ephinta-design4-enforced.css";
 @import "./ephinta-responsive-polish.css";
 @import "./ephinta-landing-repair.css";
