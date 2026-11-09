@@ -126,7 +126,15 @@ function StartupLoadingScreen(): React.ReactElement {
         fontFamily: 'system-ui, sans-serif',
       }}
     >
-      <strong style={{ fontSize: 24, letterSpacing: 1 }}>EPHINTA</strong>
+      <img
+        src={`${import.meta.env.BASE_URL}brand/ephinta_logo2.png`}
+        alt="EPHINTA"
+        width={112}
+        height={112}
+        fetchPriority="high"
+        style={{ width: 112, height: 112, objectFit: "contain", margin: "0 auto 8px", filter: "drop-shadow(0 10px 28px rgba(124, 77, 255, .28))" }}
+      />
+      <strong style={{ fontSize: 24, letterSpacing: 2, fontWeight: 900 }}>EPHINTA</strong>
       <span>Preparing your workspace…</span>
     </main>
   );
