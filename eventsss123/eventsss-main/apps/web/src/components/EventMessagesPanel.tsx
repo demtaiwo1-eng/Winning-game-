@@ -131,8 +131,11 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
 
   const toggle = (setter: React.Dispatch<React.SetStateAction<string[]>>, id: string) =>
     setter((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  const toggleTo = (id: string) => { toggle(setToIds, id); setCcIds((current) => current.filter((item) => item !== id)); setBccIds((current) => current.filter((item) => item !== id)); };
+  const toggleCc = (id: string) => { toggle(setCcIds, id); setToIds((current) => current.filter((item) => item !== id)); setBccIds((current) => current.filter((item) => item !== id)); };
+  const toggleBcc = (id: string) => { toggle(setBccIds, id); setToIds((current) => current.filter((item) => item !== id)); setCcIds((current) => current.filter((item) => item !== id)); };
 
-  const mutateMessage = async (message: EventMessage, action: "read" | "unread" | "archive" | "delete") => {
+  const mutateMessage = async (message: EventMessage, action: "read" | "unread" | "archive" | "unarchive" | "delete") => {
     setWorkingId(message.id);
     setError("");
     setNotice("");
@@ -205,7 +208,7 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
               </div>
               <div className="ess-message-actions">
                 {!sent && <button type="button" className="ess-quiet-button" disabled={busy} onClick={() => void mutateMessage(message, message.readAt ? "unread" : "read")}>{message.readAt ? "Mark unread" : "Mark read"}</button>}
-                <button type="button" className="ess-quiet-button" disabled={busy} onClick={() => void mutateMessage(message, "archive")}>Archive</button>
+                <button type="button" className="ess-quiet-button" disabled={busy} onClick={() => void mutateMessage(message, folder === "ARCHIVED" ? "unarchive" : "archive")}>{folder === "ARCHIVED" ? "Restore" : "Archive"}</button>
                 <button type="button" className="ess-quiet-button" disabled={busy} onClick={() => void mutateMessage(message, "delete")}>Delete</button>
               </div>
             </article>
@@ -226,7 +229,7 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
               <legend>To · required</legend>
               {otherParticipants.map((person) => (
                 <label key={person.id}>
-                  <input type="checkbox" checked={toIds.includes(person.id)} onChange={() => toggle(setToIds, person.id)} />
+                  <input type="checkbox" checked={toIds.includes(person.id)} onChange={() => toggleTo(person.id)} />
                   {person.name} · {person.role}
                 </label>
               ))}
@@ -238,7 +241,7 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
                 <legend>CC · visible to recipients</legend>
                 {otherParticipants.filter((person) => !toIds.includes(person.id)).map((person) => (
                   <label key={person.id}>
-                    <input type="checkbox" checked={ccIds.includes(person.id)} onChange={() => toggle(setCcIds, person.id)} />
+                    <input type="checkbox" checked={ccIds.includes(person.id)} onChange={() => toggleCc(person.id)} />
                     {person.name} · {person.role}
                   </label>
                 ))}
@@ -247,7 +250,7 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
                 <legend>BCC · hidden from other recipients</legend>
                 {otherParticipants.filter((person) => !toIds.includes(person.id) && !ccIds.includes(person.id)).map((person) => (
                   <label key={person.id}>
-                    <input type="checkbox" checked={bccIds.includes(person.id)} onChange={() => toggle(setBccIds, person.id)} />
+                    <input type="checkbox" checked={bccIds.includes(person.id)} onChange={() => toggleBcc(person.id)} />
                     {person.name} · {person.role}
                   </label>
                 ))}
