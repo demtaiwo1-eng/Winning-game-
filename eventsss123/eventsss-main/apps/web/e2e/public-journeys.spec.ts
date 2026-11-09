@@ -1,4 +1,18 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function unlockDeviceGate(page: Page) {
+  const securityDialog = page.getByRole("dialog", { name: /Set your device PIN|App locked/ });
+  await expect(securityDialog).toBeVisible();
+  const title = await securityDialog.locator("h1").textContent();
+  await securityDialog.getByLabel("Six-digit PIN").fill("123456");
+  if (title?.includes("Set your device PIN")) {
+    await securityDialog.getByLabel("Confirm PIN").fill("123456");
+    await securityDialog.getByRole("button", { name: "Set PIN and continue" }).click();
+  } else {
+    await securityDialog.getByRole("button", { name: "Unlock EPHINTA" }).click();
+  }
+  await expect(securityDialog).toBeHidden();
+}
 
 test("startup shows only the EPHINTA logo until the app is ready", async ({ page }) => {
   let releaseLogo!: () => void;
@@ -120,6 +134,7 @@ test("signed-in event planners can open the modern planner route", async ({ page
   });
 
   await page.goto("/plan");
+  await unlockDeviceGate(page);
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
   await expect(page.locator(".eph-modal")).toHaveCount(0);
@@ -533,6 +548,7 @@ test("authenticated planner can add a checklist task to an owned event", async (
   }));
 
   await page.goto("/dashboard/client?tab=planner");
+  await unlockDeviceGate(page);
   await expect(page.getByRole("heading", { name: /Welcome back, E2E/ })).toBeVisible();
   // Auth/session restoration can normalize the dashboard URL and reset its tab.
   // Exercise the visible navigation instead of relying on a query-string tab state.
@@ -578,6 +594,7 @@ test("authenticated planner receives no private event data outside the owned eve
   }));
 
   await page.goto("/dashboard/client?tab=overview");
+  await unlockDeviceGate(page);
   await expect(page.getByRole("heading", { name: /Welcome back, Other/ })).toBeVisible();
   await expect(page.getByText("Another Owner's Private Event")).toHaveCount(0);
 });
