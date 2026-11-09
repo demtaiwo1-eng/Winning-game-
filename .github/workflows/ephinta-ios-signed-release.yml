@@ -39,6 +39,8 @@ jobs:
         working-directory: eventsss123/eventsss-main
     env:
       VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
+      VITE_UPDATE_URL: ${{ format('{0}/app-updates', vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1') }}
+      VITE_APP_VERSION: ${{ github.sha }}
       IOS_BUNDLE_ID: com.eventselfsolutions.app
     steps:
       - name: Checkout
