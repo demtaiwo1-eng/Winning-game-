@@ -26,14 +26,7 @@ import { registrationFieldError, type RegistrationField } from "./lib/registrati
 import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from "./lib/roleLabels";
 import NotificationsPanel from "./components/NotificationsPanel";
 import MarketplaceAdStrip from "./components/MarketplaceAdStrip";
-import "./enterprise.css";
-import "./styles/event-planner-registration.css";
-import "./portal-menu.css";
-import "./public-menu.css";
-import "./event-builder.css";
-import "./public-landing.css";
-import "./styles/ephinta-parent-design-system.css"; // Parent theme foundation.
-import "./styles/ephinta-workspace-advertising.css"; // Workspace advertising intentionally follows theme tokens.
+
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
@@ -1394,7 +1387,6 @@ function ConsultantPortal() {
   );
 }
 
-
 type FinancePaymentFeed = {
   total: number;
   summary: Array<{ provider: string; currency: string; status: string; count: number; amountMinor: string }>;
@@ -1487,7 +1479,6 @@ function FinanceOperationsPanel() {
     </section>
   );
 }
-
 
 type AdminApprovalItem = {
   id: string;
@@ -1807,7 +1798,6 @@ export default function EnterpriseApp() {
       if (pending) setResumeLabel(pending);
     } catch { /* */ }
   }, []);
-
 
   const [authError, setAuthError] = useState("");
   const [authNotice, setAuthNotice] = useState("");
