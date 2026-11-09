@@ -33,6 +33,7 @@ jobs:
           ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ephinta-production-apk.yml", aliases: true)'
           bash -n scripts/setup-android-signing-github.sh
           bash -n scripts/complete-production-apk.sh
+          bash -n scripts/verify-protected-869-signing-identity.sh
           grep -q 'secrets.ANDROID_KEYSTORE_BASE64' .github/workflows/ephinta-production-apk.yml
           grep -q 'vars.ANDROID_CERT_SHA256' .github/workflows/ephinta-production-apk.yml
 
