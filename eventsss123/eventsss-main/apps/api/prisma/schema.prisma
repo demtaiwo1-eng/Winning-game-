@@ -756,6 +756,8 @@ model Message {
   senderId            String
   recipientId         String
   recipientKind       String    @default("TO")
+  toRecipientIds      Json?
+  ccRecipientIds      Json?
   eventId             String?
   body                String
   readAt              DateTime?
