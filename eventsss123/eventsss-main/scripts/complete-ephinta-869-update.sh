@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # EPHINTA one-command Build 869-compatible Android update.
-# Run from any directory in a trusted GitHub Codespace with gh, Java 21,
-# Android SDK build-tools, and repository write/Actions permissions.
+# Run from the repository root on main in a trusted GitHub Codespace with gh,
+# Java 21, Android SDK build-tools, and repository write/Actions permissions.
 set -Eeuo pipefail
 
 REPO="demtaiwo1-eng/Winning-game-"
@@ -24,10 +24,14 @@ need awk
 need sed
 need sort
 need find
+need git
+need seq
+need sleep
+need grep
+need cut
 
 gh auth status >/dev/null 2>&1 || fail "Authenticate GitHub CLI first (gh auth login)."
 gh repo view "$REPO" >/dev/null 2>&1 || fail "This GitHub identity cannot access $REPO."
-REPO_ROOT="$(gh repo view "$REPO" --json url -q .url 2>/dev/null)"
 CURRENT_BRANCH="$(git -C "$PWD" branch --show-current 2>/dev/null || true)"
 if [[ "$CURRENT_BRANCH" != "main" ]]; then
   echo "Run this from the repository's main branch after the workflow/script PR is merged."
