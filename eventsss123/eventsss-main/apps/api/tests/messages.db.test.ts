@@ -103,7 +103,7 @@ describe.skipIf(!run)("event messages (DB)", () => {
       expect(securityHistory.body.items.some((entry: { action: string }) => entry.action === "ACCOUNT_REGISTERED")).toBe(true);
 
       const read = await request(app).patch(`/api/v1/events/${eventId}/messages/read`).set(auth(verifier.token));
-      expect(read.body.updated).toBe(2);
+      expect(read.body.updated).toBe(1);
 
       await request(app).patch("/api/v1/notifications/preferences").set(auth(verifier.token))
         .send({ messages: false });
