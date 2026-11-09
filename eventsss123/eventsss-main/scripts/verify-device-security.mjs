@@ -32,6 +32,7 @@ const checks = [
   ["native biometric dependency is declared", Boolean(webPackage.dependencies?.["@aparajita/capacitor-biometric-auth"])],
   ["raw PIN is not written directly to local storage", !/localStorage\.setItem\(storageKey,\s*pin\)/.test(gate)],
   ["device lock visual styling is defined in the shared global stylesheet", globalCss.includes('ephinta-portal-marketplace-polish.css') && lockStyles.includes(".ess-device-lock-card") && lockStyles.includes(".ess-device-lock-input")],
+  ["device lock text has a high-contrast foreground on its dark card", /background:\s*#171d32/.test(lockStyles) && /color:\s*#f8fafc/.test(lockStyles) && /color:\s*#cbd5e1/.test(lockStyles)],
   ["the active app entry imports one global CSS hub", (mainEntry.match(/import ['"][^'"]+\.css['"]/g) || []).length === 1 && mainEntry.includes("./styles/ephinta-global.css")],
   ["authenticated portal components do not import their own CSS", !/^import ['"].+\.css['"]/m.test(app)],
 ];
