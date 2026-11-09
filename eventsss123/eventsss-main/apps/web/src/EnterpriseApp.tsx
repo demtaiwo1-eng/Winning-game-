@@ -531,6 +531,17 @@ function ClientPortal({
               </div>
             </section>
           )}
+          <div className="ess-overview-finance">
+            <div className="ess-section-heading">
+              <div>
+                <p className="ess-eyebrow">Financial overview</p>
+                <h2>Funds, bookings and escrow</h2>
+                <p className="ess-muted">Live balances and protected payments for your planning account.</p>
+              </div>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("wallet")}>Open full wallet</button>
+            </div>
+            <WalletPanel locale={locale} role="CLIENT" />
+          </div>
         </>
       )}
 
@@ -1349,8 +1360,24 @@ function VerifierPortal() {
           </ul>
         </section>
         {selected && (
-          <EventReadinessBoard eventId={selected} mode="verifier" />
+          <section className="ess-verifier-workspace">
+            <div className="ess-section-heading">
+              <div>
+                <p className="ess-eyebrow">Active assignment</p>
+                <h2>{queue.find((event) => event.id === selected)?.title || "Selected event"}</h2>
+                <p className="ess-muted">All readiness checks and event actions below are scoped to this event.</p>
+              </div>
+              <button type="button" className="ess-quiet-button" onClick={() => setSelected(null)}>Back to event queue</button>
+            </div>
+            <EventReadinessBoard eventId={selected} mode="verifier" />
+          </section>
         )}
+        <section className="ess-panel">
+          <p className="ess-eyebrow">Your finances</p>
+          <h2>Verifier earnings and protected funds</h2>
+          <WalletPanel role="VERIFIER" />
+        </section>
+        <NotificationsPanel />
         {queue.length > 0 && <EventMessagesPanel events={queue} />}
       </div>
     </div>
