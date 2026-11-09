@@ -68,9 +68,9 @@ function savePending(eventId: string, ids: string[]) {
   try { localStorage.setItem(pendingKey(eventId), JSON.stringify([...new Set(ids)])); } catch { /* Storage can be unavailable in private contexts. */ }
 }
 
-export default function GuestCheckInPanel({ events }: { events: EventOption[] }) {
+export default function GuestCheckInPanel({ events, initialEventId }: { events: EventOption[]; initialEventId?: string }) {
   const online = useOnlineStatus();
-  const [eventId, setEventId] = useState(events[0]?.id || "");
+  const [eventId, setEventId] = useState(initialEventId || events[0]?.id || "");
   const [guests, setGuests] = useState<Guest[]>([]);
   const [pending, setPending] = useState<string[]>([]);
   const [search, setSearch] = useState("");
@@ -84,8 +84,12 @@ export default function GuestCheckInPanel({ events }: { events: EventOption[] })
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    if (initialEventId && events.some((event) => event.id === initialEventId)) {
+      setEventId(initialEventId);
+      return;
+    }
     if (!events.some((event) => event.id === eventId)) setEventId(events[0]?.id || "");
-  }, [events, eventId]);
+  }, [events, eventId, initialEventId]);
 
   const refresh = useCallback(async () => {
     if (!eventId) { setGuests([]); return; }
@@ -215,7 +219,7 @@ export default function GuestCheckInPanel({ events }: { events: EventOption[] })
   const visibleGuests = guests.filter((guest) => `${guest.name} ${guest.email || ""} ${guest.phone || ""}`.toLowerCase().includes(search.toLowerCase()));
   const checkedCount = guests.filter((guest) => Boolean(guest.checkedInAt) || pending.includes(guest.id)).length;
 
-  return <section className="ess-panel" aria-labelledby="ess-checkin-heading">
+  return <section className="ess-panel ess-checkin-workspace" aria-labelledby="ess-checkin-heading">
     <p className="ess-eyebrow">Phase 7 · Offline gate operations</p>
     <h2 id="ess-checkin-heading">Guest check-in</h2>
     <p className="ess-muted">Check in from the cached guest list while offline. NFC reads an ESS invitation UUID or RSVP URL. Bluetooth scanners must expose the ESS check-in GATT service documented in the Phase 7 report.</p>

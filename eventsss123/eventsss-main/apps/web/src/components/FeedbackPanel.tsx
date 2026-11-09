@@ -50,7 +50,7 @@ export default function FeedbackPanel({ locale = "en" }: { locale?: LocaleCode }
   };
 
   return (
-    <section className="ess-panel">
+    <section className="ess-panel ess-feedback-workspace">
       <p className="ess-eyebrow">After the event</p>
       <h2>Share feedback</h2>
       <p className="ess-muted">

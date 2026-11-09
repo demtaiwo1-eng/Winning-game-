@@ -93,7 +93,7 @@ export default function NotificationsPanel() {
   };
 
   return (
-    <section className="ess-panel">
+    <section className="ess-panel ess-notifications-workspace">
       <div className="ess-section-heading">
         <div>
           <p className="ess-eyebrow">Account updates</p>

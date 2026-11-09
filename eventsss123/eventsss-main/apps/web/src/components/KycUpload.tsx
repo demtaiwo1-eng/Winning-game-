@@ -170,9 +170,14 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
   };
 
   return (
-    <section className="ess-panel">
+    <section className="ess-panel ess-kyc-workspace">
       <p className="ess-eyebrow">Trust · 170+ countries</p>
-      <h2>Global KYC verification</h2>
+      <h2>Identity & business verification</h2>
+      <ol className="ess-kyc-steps" aria-label="Verification steps">
+        <li><span>01</span><strong>Profile</strong><small>Country and account type</small></li>
+        <li><span>02</span><strong>Documents</strong><small>Choose an accepted ID</small></li>
+        <li><span>03</span><strong>Review</strong><small>Secure submission and status</small></li>
+      </ol>
       <p className="ess-muted">
         Select your country to load accepted ID types, national ID labels, and business documents.
         FATF-aligned modular collection — production plugs OCR/liveness per region.

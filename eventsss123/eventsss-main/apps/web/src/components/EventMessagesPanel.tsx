@@ -20,8 +20,9 @@ type MessagePage = {
   nextBefore: string | null;
 };
 
-export default function EventMessagesPanel({ events }: { events: EventOption[] }) {
-  const [eventId, setEventId] = useState("");
+export default function EventMessagesPanel({ events, initialEventId }: { events: EventOption[]; initialEventId?: string }) {
+  const [eventId, setEventId] = useState(initialEventId || "");
+  useEffect(() => { if (initialEventId && events.some((event) => event.id === initialEventId)) setEventId(initialEventId); }, [initialEventId, events]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [viewerId, setViewerId] = useState("");
   const [messages, setMessages] = useState<EventMessage[]>([]);
@@ -143,7 +144,7 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
   }
 
   return (
-    <section className="ess-panel">
+    <section className="ess-panel ess-messaging-workspace">
       <p className="ess-eyebrow">Event coordination</p>
       <h2>Messages</h2>
       <label>

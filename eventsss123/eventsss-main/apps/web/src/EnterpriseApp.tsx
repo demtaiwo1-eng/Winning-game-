@@ -31,7 +31,8 @@ import "./portal-menu.css";
 import "./public-menu.css";
 import "./event-builder.css";
 import "./public-landing.css";
-import "./styles/ephinta-parent-design-system.css"; // Must load last: parent theme overrides component-level palettes.
+import "./styles/ephinta-planner-portal-polish.css"; // Shared planner, finance, check-in and trust portal layer.
+import "./styles/ephinta-parent-design-system.css";
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
@@ -40,7 +41,6 @@ const MarketplaceBrowse = lazy(() => import("./components/MarketplaceBrowse"));
 const FeedbackPanel = lazy(() => import("./components/FeedbackPanel"));
 import { EmptyState } from "./components/EmptyState";
 const KycUpload = lazy(() => import("./components/KycUpload"));
-const SubscriptionsPanel = lazy(() => import("./components/SubscriptionsPanel"));
 import {
   checkPassword,
   PASSWORD_HELPER,
@@ -284,12 +284,13 @@ function ClientPortal({
   currency: CurrencyCode;
 }) {
   const [tab, setTab] = useDashboardTab(
-    ["overview", "checklist", "planner", "checkin", "marketplace", "wallet", "readiness", "messages", "notifications", "verifiers", "plans", "kyc", "feedback"] as const,
+    ["overview", "checklist", "planner", "checkin", "marketplace", "payments", "readiness", "messages", "notifications", "verifiers", "kyc", "feedback"] as const,
     "marketplace",
   );
   const [bookingNotice, setBookingNotice] = useState("");
   const [readinessEvents, setReadinessEvents] = useState<Array<{ id: string; title: string; startsAt?: string | null }>>([]);
   const [checklistEventId, setChecklistEventId] = useState<string>("");
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [readinessEventId, setReadinessEventId] = useState<string>("");
   const [showCreate, setShowCreate] = useState(false);
   const [ownedEvents, setOwnedEvents] = useState<Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }>>([]);
@@ -363,7 +364,9 @@ function ClientPortal({
         setOwnedEvents((current) => {
           const byId = new Map((result.items || []).map((event) => [event.id, event]));
           for (const event of current) byId.set(event.id, event);
-          return [...byId.values()];
+          const next = [...byId.values()];
+          setSelectedEventId((selected) => selected && next.some((event) => event.id === selected) ? selected : next[0]?.id || "");
+          return next;
         });
       })
       .catch((error: Error) => setEventLoadError(error.message));
@@ -397,8 +400,8 @@ function ClientPortal({
           <button className="ess-primary" type="button" onClick={() => setShowCreate((v) => !v)}>
             <Icon>＋</Icon> New event
           </button>
-          <button className="ess-outline-button" type="button" onClick={() => setTab("wallet")}>
-            Payments
+          <button className="ess-outline-button" type="button" onClick={() => setTab("payments")}>
+            Payments & finances
           </button>
         </div>
       </div>
@@ -412,12 +415,11 @@ function ClientPortal({
             ["checkin", "Guest check-in"],
             ["marketplace", "Marketplace"],
             ["verifiers", "Verifiers"],
-            ["wallet", "Wallet & escrow"],
+            ["payments", "Payments & finances"],
             ["readiness", "Go-live readiness"],
             ["messages", "Messages"],
             ["notifications", "Notifications"],
             ["feedback", "Feedback"],
-            ["plans", "Plans"],
             ["kyc", "KYC"],
           ] as const
         ).map(([id, label]) => (
@@ -437,6 +439,7 @@ function ClientPortal({
           onCreated={(id) => {
             setReadinessEventId(id);
             setChecklistEventId(id);
+            setSelectedEventId(id);
             setTab("planner");
             setShowCreate(false);
             api<{ items: Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }> }>("/events")
@@ -512,17 +515,30 @@ function ClientPortal({
                     <p className="ess-muted">
                       {[event.city, event.startsAt ? new Date(event.startsAt).toLocaleDateString() : "Date to be confirmed"].filter(Boolean).join(" · ")}
                     </p>
+                    <div className="ess-event-actions">
+                    <button
+                      className="ess-outline-button"
+                      type="button"
+                      onClick={() => { setSelectedEventId(event.id); setChecklistEventId(event.id); setTab("planner"); }}
+                    >Open event workspace</button>
+                    <button
+                      className="ess-outline-button"
+                      type="button"
+                      onClick={() => { setSelectedEventId(event.id); setReadinessEventId(event.id); setTab("verifiers"); }}
+                    >Choose verifier</button>
                     <button
                       className="ess-outline-button"
                       type="button"
                       disabled={!readinessEvents.some((readinessEvent) => readinessEvent.id === event.id)}
                       onClick={() => {
                         setReadinessEventId(event.id);
+                        setSelectedEventId(event.id);
                         setTab("readiness");
                       }}
                     >
                       {readinessEvents.some((readinessEvent) => readinessEvent.id === event.id) ? "Open readiness" : "Add a future event date to open readiness"}
                     </button>
+                    </div>
                   </article>
                 ))}
               </div>
@@ -546,7 +562,7 @@ function ClientPortal({
               );
               setTab("kyc");
             }}
-            onOpenWallet={() => setTab("wallet")}
+            onOpenWallet={() => setTab("payments")}
           />
         </>
       )}
@@ -572,7 +588,7 @@ function ClientPortal({
                 Event
                 <select
                   value={readinessEventId}
-                  onChange={(e) => setReadinessEventId(e.target.value)}
+                  onChange={(e) => { setReadinessEventId(e.target.value); setSelectedEventId(e.target.value); }}
                   style={{ display: "block", width: "100%", maxWidth: 420, marginTop: 6 }}
                 >
                   {readinessEvents.map((e) => (
@@ -590,17 +606,16 @@ function ClientPortal({
       )}
 
       {tab === "checklist" && (
-        <EventChecklistPanel events={ownedEvents} initialEventId={checklistEventId || undefined} />
+        <EventChecklistPanel events={ownedEvents} initialEventId={selectedEventId || checklistEventId || undefined} />
       )}
-      {tab === "planner" && <EventPlannerWorkspace events={ownedEvents} initialEventId={checklistEventId || undefined} />}
-      {tab === "checkin" && <GuestCheckInPanel events={ownedEvents} />}
-      {tab === "messages" && <EventMessagesPanel events={ownedEvents} />}
+      {tab === "planner" && <EventPlannerWorkspace events={ownedEvents} initialEventId={selectedEventId || checklistEventId || undefined} />}
+      {tab === "checkin" && <GuestCheckInPanel events={ownedEvents} initialEventId={selectedEventId || undefined} />}
+      {tab === "messages" && <EventMessagesPanel events={ownedEvents} initialEventId={selectedEventId || undefined} />}
       {tab === "notifications" && <NotificationsPanel />}
-      {tab === "wallet" && <WalletPanel locale={locale} role="CLIENT" />}
+      {tab === "payments" && <WalletPanel locale={locale} role="CLIENT" />}
       {tab === "feedback" && <FeedbackPanel locale={locale} />}
-      {tab === "plans" && <SubscriptionsPanel audience="CLIENT" />}
       {tab === "verifiers" && (
-        <VerifierPicker eventId={readinessEventId || undefined} />
+        <VerifierPicker eventId={selectedEventId || readinessEventId || undefined} />
       )}
       {tab === "kyc" && <KycUpload defaultKind="IDENTITY" />}
     </div>
@@ -856,7 +871,7 @@ function VendorPortal({
     }
   };
   const [vendorTab, setVendorTab] = useDashboardTab(
-    ["catalog", "wallet", "payments", "plans", "kyc", "messages", "notifications", "promotions"] as const,
+    ["catalog", "wallet", "payments", "kyc", "messages", "notifications", "promotions"] as const,
     "catalog",
   );
   return (
@@ -875,7 +890,7 @@ function VendorPortal({
             <Icon>＋</Icon> Add package
           </button>
           <button className="ess-outline-button" type="button" onClick={() => setVendorTab("wallet")}>
-            Payments
+            Payments & finance
           </button>
         </div>
       </div>
@@ -884,7 +899,6 @@ function VendorPortal({
         <button type="button" className={vendorTab === "catalog" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("catalog")}>Catalog & demand</button>
         <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
         <button type="button" className={vendorTab === "payments" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("payments")}>Booking payments</button>
-        <button type="button" className={vendorTab === "plans" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("plans")}>Plans & promos</button>
         <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
         <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
         <button type="button" className={vendorTab === "notifications" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("notifications")}>Notifications</button>
@@ -896,8 +910,6 @@ function VendorPortal({
         <WalletPanel role="VENDOR" />
       ) : vendorTab === "payments" ? (
         <VendorPaymentRequestsPanel />
-      ) : vendorTab === "plans" ? (
-        <SubscriptionsPanel audience="VENDOR" />
       ) : vendorTab === "kyc" ? (
         <KycUpload defaultKind="BUSINESS" />
       ) : vendorTab === "messages" ? (
@@ -1244,6 +1256,8 @@ function AffiliatePortal() {
         />
         <Metric label="Conversion" value="—" detail="No traffic recorded" />
       </div>
+      <WalletPanel role="AFFILIATE" />
+      <NotificationsPanel />
       <section className="ess-panel">
         <SectionTitle
           eyebrow="Partner setup"
@@ -1347,9 +1361,13 @@ function VerifierPortal() {
           </ul>
         </section>
         {selected && (
-          <EventReadinessBoard eventId={selected} mode="verifier" />
+          <>
+            <EventReadinessBoard eventId={selected} mode="verifier" />
+          </>
         )}
-        {queue.length > 0 && <EventMessagesPanel events={queue} />}
+        {queue.length > 0 && <EventMessagesPanel events={queue} initialEventId={selected || undefined} />}
+        <WalletPanel role="VERIFIER" />
+        <NotificationsPanel />
       </div>
     </div>
   );
@@ -1374,6 +1392,8 @@ function ConsultantPortal() {
           <p>Review the latest notifications for your assigned event work.</p>
         </div>
       </header>
+      <WalletPanel role="CONSULTANT" />
+      <NotificationsPanel />
       <section className="ess-panel">
         <SectionTitle eyebrow="Activity" title="Recent updates" />
         {error ? <p className="ess-form-error" role="alert">{error}</p> : null}
@@ -2551,13 +2571,18 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
     }
   };
 
-  const complete = questions.every(([key]) => answers[key]?.trim());
+  const answeredCount = questions.filter(([key]) => Boolean(answers[key]?.trim())).length;
+  const complete = answeredCount === questions.length;
   if (loading) return <section className="ess-panel" aria-live="polite">Loading your planning questions…</section>;
   return (
-    <section className="ess-panel" aria-labelledby="planning-questions-title">
+    <section className="ess-panel ess-planning-questionnaire" aria-labelledby="planning-questions-title">
       <p className="ess-eyebrow">Continue your event brief</p>
       <h2 id="planning-questions-title">Plan the details for {eventTitle}</h2>
       <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits.</p>
+      <div style={{ margin: "14px 0 18px", padding: 12, border: "1px solid #e2e8f0", borderRadius: 12, background: "#f8fafc" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12, color: "#64748b" }}><span>Planning brief progress</span><strong>{answeredCount} of {questions.length} complete</strong></div>
+        <div role="progressbar" aria-label="Planning brief progress" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={answeredCount} style={{ height: 6, marginTop: 9, overflow: "hidden", borderRadius: 999, background: "#e2e8f0" }}><span style={{ display: "block", width: `${answeredCount / questions.length * 100}%`, height: "100%", borderRadius: 999, background: "#e99b22", transition: "width .2s ease" }} /></div>
+      </div>
       {questions.map(([key, label]) => (
         <label key={key} style={{ display: "block", marginTop: 12 }}>
           {label}
