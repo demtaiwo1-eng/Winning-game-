@@ -195,7 +195,7 @@ jobs:
           AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
           test -x "$APKSIGNER"
           test -x "$AAPT"
-          bash ../../scripts/verify-protected-869-signing-identity.sh \
+          bash scripts/verify-protected-869-signing-identity.sh \
             "$BASELINE_DIR/ephinta-869.apk" "$APKSIGNER" "$AAPT"
 
       - name: Set monotonic Android version code
