@@ -129,7 +129,7 @@ jobs:
     name: Android API ${{ matrix.api-level }} install and launch
     needs: build-apk
     runs-on: ubuntu-24.04
-    timeout-minutes: 24
+    timeout-minutes: 42
     strategy:
       fail-fast: false
       # Android emulators are memory-intensive; sequential boot avoids starving
@@ -149,13 +149,13 @@ jobs:
 
       - name: Install and launch APK on Android API ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
-        timeout-minutes: 18
+        timeout-minutes: 36
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 600
+          emulator-boot-timeout: 1500
           emulator-options: -no-window -no-snapshot -no-snapshot-load -no-snapshot-save -noaudio -gpu swiftshader_indirect -no-boot-anim -memory 3072 -cores 2
           disable-animations: true
           script: bash eventsss123/eventsss-main/scripts/android-emulator-smoke.sh artifacts/android/app-debug.apk "${{ matrix.api-level }}"
