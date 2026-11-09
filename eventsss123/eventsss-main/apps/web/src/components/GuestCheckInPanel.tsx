@@ -84,8 +84,12 @@ export default function GuestCheckInPanel({ events, initialEventId }: { events: 
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    if (initialEventId && events.some((event) => event.id === initialEventId)) {
+      setEventId(initialEventId);
+      return;
+    }
     if (!events.some((event) => event.id === eventId)) setEventId(events[0]?.id || "");
-  }, [events, eventId]);
+  }, [events, eventId, initialEventId]);
 
   const refresh = useCallback(async () => {
     if (!eventId) { setGuests([]); return; }
