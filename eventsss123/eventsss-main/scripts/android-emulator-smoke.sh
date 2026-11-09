@@ -20,7 +20,7 @@ echo "Starting Android API $API_LEVEL install-and-launch smoke test."
 command -v adb >/dev/null 2>&1 || fail "adb is not installed"
 [[ -s "$APK" ]] || fail "Verified APK is missing: $APK"
 
-adb start-server
+timeout 30s adb start-server || fail "adb server did not start within 30 seconds"
 timeout 180s adb wait-for-device || fail "Emulator did not become available to adb"
 
 # Emulator-runner performs the boot itself. Confirm Android services are ready.
