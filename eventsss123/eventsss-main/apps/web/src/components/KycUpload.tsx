@@ -170,7 +170,7 @@ export default function KycUpload({ defaultKind = "BUSINESS" }: { defaultKind?: 
   };
 
   return (
-    <section className="ess-panel">
+    <section className="ess-panel ess-kyc-workspace">
       <p className="ess-eyebrow">Trust · 170+ countries</p>
       <h2>Global KYC verification</h2>
       <p className="ess-muted">
