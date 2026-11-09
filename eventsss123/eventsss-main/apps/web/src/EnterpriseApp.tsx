@@ -2301,7 +2301,6 @@ export default function EnterpriseApp() {
               <button
                 className="ess-menu-trigger"
                 type="button"
-                aria-haspopup="true"
                 aria-expanded={menuOpen}
                 aria-controls="ess-account-workspace-menu"
                 aria-label={`${roleMeta[activeRole].short} portal menu`}
@@ -2312,7 +2311,7 @@ export default function EnterpriseApp() {
                 <span className="ess-menu-chevron">⌄</span>
               </button>
               {menuOpen && (
-                <div className="ess-menu-dropdown" id="ess-account-workspace-menu" aria-label="Workspace menu">
+                <div className="ess-menu-dropdown" id="ess-account-workspace-menu" role="region" aria-label="Workspace menu">
                   <div className="ess-menu-heading">
                     <span>Switch workspace</span>
                     <small>Choose an operating lane</small>
@@ -2394,7 +2393,6 @@ export default function EnterpriseApp() {
               className="ess-menu-trigger"
               type="button"
               aria-label="Open EPHINTA navigation menu"
-              aria-haspopup="true"
               aria-expanded={menuOpen}
               aria-controls="ess-public-navigation-menu"
               onClick={() => setMenuOpen(!menuOpen)}
@@ -2407,7 +2405,7 @@ export default function EnterpriseApp() {
               Menu
             </button>
             {menuOpen && (
-              <div className="ess-menu-dropdown ess-public-dropdown" id="ess-public-navigation-menu" aria-label="EPHINTA navigation">
+              <div className="ess-menu-dropdown ess-public-dropdown" id="ess-public-navigation-menu" role="region" aria-label="EPHINTA navigation">
                 <div className="ess-menu-heading">
                   <span>EPHINTA</span>
                   <small>Choose how you want to work</small>
