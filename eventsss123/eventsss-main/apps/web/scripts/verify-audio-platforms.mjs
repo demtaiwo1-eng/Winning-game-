@@ -63,7 +63,12 @@ function run(command, args, cwd, label) {
 }
 
 run("npm", ["run", "build"], appRoot, "Production web build");
-run("npm", ["run", "test:e2e", "--", "e2e/audio-experience.spec.ts"], appRoot, "Audio browser journey tests");
 
-console.log("\n✓ Web/PWA audio build and browser checks passed.");
+if (process.env.EPHINTA_AUDIO_SKIP_BROWSER_TESTS === "true") {
+  console.log("\n↷ Audio browser journey tests are covered by the Linux browser-regression workflow; skipping the duplicate server-backed run on this platform.");
+} else {
+  run("npm", ["run", "test:e2e", "--", "e2e/audio-experience.spec.ts"], appRoot, "Audio browser journey tests");
+}
+
+console.log("\n✓ Web/PWA audio readiness checks passed.");
 console.log("NOTE: A real Android/iOS device playback check is still required. Browser automation mocks audio output and cannot prove that a physical speaker produces sound.");
