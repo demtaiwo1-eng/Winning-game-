@@ -473,6 +473,24 @@ function ClientPortal({
       )}
       {tab === "overview" && (
         <>
+          <section className="ess-marketplace-welcome" role="region" aria-label="What you can do with EPHINTA">
+            <div className="ess-marketplace-welcome-copy">
+              <p className="ess-eyebrow">Your event journey starts here</p>
+              <h2>Welcome to your event marketplace.</h2>
+              <p>Plan your event, find trusted professionals, manage bookings and keep every important detail in one place.</p>
+            </div>
+            <div className="ess-marketplace-welcome-grid">
+              <article><span aria-hidden="true">01</span><h3>Plan with confidence</h3><p>Turn your ideas into a clear event brief, timeline and checklist.</p></article>
+              <article><span aria-hidden="true">02</span><h3>Find the right people</h3><p>Discover venues and service providers that match your event.</p></article>
+              <article><span aria-hidden="true">03</span><h3>Book with clarity</h3><p>Review booking details, payment milestones and escrow status.</p></article>
+              <article><span aria-hidden="true">04</span><h3>Stay in control</h3><p>Coordinate messages, guest check-in and event readiness.</p></article>
+              <article><span aria-hidden="true">05</span><h3>Explore the marketplace</h3><p>Browse approved offers and build the team your event needs.</p></article>
+            </div>
+            <div className="ess-marketplace-welcome-actions">
+              <button className="ess-primary" type="button" onClick={() => setTab("marketplace")}>Explore marketplace</button>
+              <button className="ess-outline-button" type="button" onClick={() => setShowCreate(true)}>Create an event</button>
+            </div>
+          </section>
           {planningAnswersEventId && (
             <PlanningQuestionnaire
               eventId={planningAnswersEventId}
