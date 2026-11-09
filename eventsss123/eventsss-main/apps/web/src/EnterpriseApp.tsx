@@ -1343,12 +1343,24 @@ function VerifierPortal() {
   >([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [queueLoading, setQueueLoading] = useState(true);
+  const [queueRefresh, setQueueRefresh] = useState(0);
 
   useEffect(() => {
+    let active = true;
+    setQueueLoading(true);
+    setMsg("");
     api<{ items: typeof queue }>("/readiness/queue")
-      .then((r) => setQueue(r.items || []))
-      .catch((e) => setMsg(e instanceof Error ? e.message : "Queue failed"));
-  }, []);
+      .then((r) => { if (active) setQueue(r.items || []); })
+      .catch((e) => { if (active) setMsg(e instanceof Error ? e.message : "Queue failed"); })
+      .finally(() => { if (active) setQueueLoading(false); });
+    return () => { active = false; };
+  }, [queueRefresh]);
+
+  const needsAttention = queue.filter((event) =>
+    event.readiness?.status === "BLOCKED" || event.readiness?.status === "AT_RISK",
+  ).length;
+  const allGreen = queue.filter((event) => event.readiness?.allGreen || event.readiness?.status === "ALL_GREEN").length;
 
   return (
     <div className="ess-shell">
@@ -1365,10 +1377,25 @@ function VerifierPortal() {
       </p>
       {msg && <div className="ess-form-error">{msg}</div>}
       <div style={{ display: "grid", gap: 16, marginTop: 20 }}>
-        <section className="ess-panel">
-          <h2>Recent and upcoming events</h2>
+        <section className="ess-panel" aria-busy={queueLoading}>
+          <div className="ess-section-heading">
+            <div>
+              <p className="ess-eyebrow">Assigned work</p>
+              <h2>Event verification queue</h2>
+              <p className="ess-muted">Choose one event to open its checks, countdown, service confirmations and completion actions.</p>
+            </div>
+            <button type="button" className="ess-outline-button" disabled={queueLoading} onClick={() => setQueueRefresh((value) => value + 1)}>
+              {queueLoading ? "Loading…" : "Refresh queue"}
+            </button>
+          </div>
+          <div className="ess-metrics">
+            <Metric label="Assigned events" value={String(queue.length)} detail="Events available to review" accent />
+            <Metric label="Needs attention" value={String(needsAttention)} detail="Blocked or at-risk readiness" />
+            <Metric label="All green" value={String(allGreen)} detail="Events meeting service checks" />
+          </div>
           <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
-            {queue.length === 0 && <li className="ess-muted">No recent or upcoming events need verifier action.</li>}
+            {queueLoading && <li className="ess-muted">Loading assigned events…</li>}
+            {!queueLoading && queue.length === 0 && <li className="ess-muted">No recent or upcoming events need verifier action.</li>}
             {queue.map((e) => (
               <li key={e.id} className="ess-wallet-card" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                 <div>
