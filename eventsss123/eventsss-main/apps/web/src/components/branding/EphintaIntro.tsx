@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import "./ephinta-intro.css";
 
 const logoUrl = `${import.meta.env.BASE_URL}brand/ephinta_logo2.png`;
 const APP_READY_EVENT = "ephinta:app-ready";
