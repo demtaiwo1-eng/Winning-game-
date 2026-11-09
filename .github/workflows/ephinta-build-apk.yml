@@ -110,6 +110,12 @@ jobs:
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
 
+      - name: Install Playwright Chromium for audio browser checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify EPHINTA audio assets, controls, web build and browser journeys
+        run: npm run audio:verify -w apps/web
+
       - name: Package OTA web bundle
         shell: bash
         run: |
