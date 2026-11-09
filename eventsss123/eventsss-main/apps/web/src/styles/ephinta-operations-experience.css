@@ -166,3 +166,14 @@
   color: var(--ess-ui-muted); font-size: .82rem;
 }
 .ess-question-progress progress { width: 100%; height: 6px; border: 0; border-radius: 99px; accent-color: var(--ess-ui-accent); }
+
+.ess-planner-quick-actions { display: grid; gap: 14px; margin-top: 16px; }
+.ess-planner-quick-actions h2 { margin: 0; }
+.ess-planner-action-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 9px;
+}
+.ess-planner-action-grid button, .ess-event-card-actions button {
+  min-height: 42px; justify-content: flex-start; text-align: left;
+}
+.ess-event-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.ess-event-card-actions button { flex: 1 1 135px; }
