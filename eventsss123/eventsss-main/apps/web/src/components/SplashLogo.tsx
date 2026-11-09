@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 
+const logoUrl = `${import.meta.env.BASE_URL}brand/ephinta_logo2.png`;
+
 /**
- * Branded splash: shield logo + ESS GLOBAL wordmark.
- * Shows for ~1.6s then fades out and reveals children (the landing page).
- * Mobile-safe, no external assets required.
+ * Branded loading screen using the approved EPHINTA logo asset.
+ * The app is mounted underneath so it is ready when the splash fades.
  */
 export default function SplashLogo({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<'in' | 'out' | 'done'>('in');
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('out'), 1400);
-    const t2 = setTimeout(() => setPhase('done'), 1900);
+    const t1 = window.setTimeout(() => setPhase('out'), 1400);
+    const t2 = window.setTimeout(() => setPhase('done'), 1900);
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
     };
   }, []);
 
@@ -21,7 +22,6 @@ export default function SplashLogo({ children }: { children: React.ReactNode }) 
 
   return (
     <>
-      {/* Landing is mounted underneath so it is ready when splash ends */}
       <div
         style={{
           visibility: phase === 'out' ? 'visible' : 'hidden',
@@ -35,69 +35,66 @@ export default function SplashLogo({ children }: { children: React.ReactNode }) 
 
       <div
         role="status"
-        aria-label="Loading ESS Global"
+        aria-label="Loading EPHINTA"
         style={{
           position: 'fixed',
           inset: 0,
           zIndex: 9999,
           display: 'grid',
           placeItems: 'center',
-          background: 'radial-gradient(ellipse at center, #0e1a33 0%, #020617 70%)',
+          background: 'radial-gradient(ellipse at center, #24104f 0%, #10002f 72%)',
           opacity: phase === 'out' ? 0 : 1,
           transition: 'opacity 0.45s ease',
           pointerEvents: phase === 'out' ? 'none' : 'auto',
         }}
       >
-        <div style={{ textAlign: 'center', animation: 'essPulse 1.4s ease-in-out infinite' }}>
-          {/* Shield mark */}
-          <div
+        <div style={{ textAlign: 'center', animation: 'ephintaLogoPulse 1.4s ease-in-out infinite' }}>
+          <img
+            src={logoUrl}
+            alt="EPHINTA"
+            width={144}
+            height={144}
+            fetchPriority="high"
             style={{
-              width: 72,
-              height: 72,
+              display: 'block',
+              width: 'min(144px, 38vw)',
+              height: 'auto',
+              aspectRatio: '1',
+              objectFit: 'contain',
               margin: '0 auto 16px',
-              borderRadius: 18,
-              background: 'linear-gradient(135deg, #22d3ee, #3b82f6, #6366f1)',
-              display: 'grid',
-              placeItems: 'center',
-              boxShadow: '0 0 40px rgba(34, 211, 238, 0.45)',
+              filter: 'drop-shadow(0 12px 32px rgba(150, 90, 255, .35))',
             }}
-          >
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          </div>
+          />
           <div
             style={{
+              color: '#fff',
               fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
               fontWeight: 900,
               fontSize: 22,
-              letterSpacing: '-0.03em',
-              background: 'linear-gradient(90deg, #fff, #67e8f9, #93c5fd)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            ESS GLOBAL
-          </div>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 11,
-              fontWeight: 600,
-              color: '#67e8f9',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
+              letterSpacing: '0.14em',
             }}
           >
             EPHINTA
+          </div>
+          <div
+            style={{
+              marginTop: 8,
+              fontSize: 11,
+              fontWeight: 600,
+              color: '#d5bfff',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Preparing your experience
           </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes essPulse {
+        @keyframes ephintaLogoPulse {
           0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.04); opacity: 0.92; }
+          50% { transform: scale(1.035); opacity: .94; }
         }
         @media (prefers-reduced-motion: reduce) {
           * { animation: none !important; transition: none !important; }
