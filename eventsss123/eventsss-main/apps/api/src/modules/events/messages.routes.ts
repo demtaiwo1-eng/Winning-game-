@@ -50,7 +50,7 @@ eventMessagesRouter.patch(
   }),
 );
 
-for (const action of ["read", "unread", "archive"] as const) {
+for (const action of ["read", "unread", "archive", "unarchive"] as const) {
   eventMessagesRouter.patch(
     `/:eventId/messages/:messageId/${action}`,
     asyncHandler(async (req, res) => {
@@ -58,7 +58,7 @@ for (const action of ["read", "unread", "archive"] as const) {
         req.user!.id,
         eventId(req.params.eventId),
         messageId(req.params.messageId),
-        action.toUpperCase() as "READ" | "UNREAD" | "ARCHIVE",
+        action.toUpperCase() as "READ" | "UNREAD" | "ARCHIVE" | "UNARCHIVE",
       ));
     }),
   );
