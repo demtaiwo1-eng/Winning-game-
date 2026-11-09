@@ -183,3 +183,34 @@
   .ess-feedback-workspace button,
   .ess-kyc-workspace button { transition: none; }
 }
+
+.ess-kyc-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.ess-kyc-steps li {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.ess-kyc-steps li > span {
+  color: #b7791f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+.ess-kyc-steps strong { color: #1e293b; font-size: 12px; }
+.ess-kyc-steps small { color: #64748b; font-size: 11px; line-height: 1.4; }
+@media (max-width: 520px) {
+  .ess-kyc-steps { grid-template-columns: 1fr; gap: 7px; }
+  .ess-kyc-steps li { grid-template-columns: 28px 1fr; align-items: center; }
+  .ess-kyc-steps li > span { grid-row: span 2; }
+}
