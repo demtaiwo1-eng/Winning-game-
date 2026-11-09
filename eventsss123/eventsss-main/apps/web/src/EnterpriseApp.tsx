@@ -1291,6 +1291,11 @@ function AffiliatePortal() {
           Save partner profile
         </button>
       </section>
+      <section className="ess-panel">
+        <p className="ess-eyebrow">Partner earnings</p>
+        <h2>Wallet and reward activity</h2>
+        <WalletPanel role="AFFILIATE" />
+      </section>
     </>
   );
 }
@@ -1417,6 +1422,12 @@ function ConsultantPortal() {
           ))}
         </ul>
       </section>
+      <section className="ess-panel">
+        <p className="ess-eyebrow">Consultant finances</p>
+        <h2>Wallet and payment activity</h2>
+        <WalletPanel role="CONSULTANT" />
+      </section>
+      <NotificationsPanel />
     </div>
   );
 }
