@@ -29,6 +29,21 @@ test("connected desktop app displays and can dismiss a server-published patch no
   await expect(notice).toHaveCount(0);
 });
 
+test("web install action records the patch and reloads without repeating its notice", async ({ page }) => {
+  await publishPatchNotice(page);
+  await page.goto("/");
+
+  const notice = page.getByRole("status", { name: "EPHINTA update available" });
+  await expect(notice).toBeVisible();
+  await Promise.all([
+    page.waitForNavigation(),
+    notice.getByRole("button", { name: "Install update" }).click(),
+  ]);
+
+  await expect(page.getByRole("status", { name: "EPHINTA update available" })).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:installed-version"))).toBe("ephinta-test-patch-20261109");
+});
+
 test("remote patch notice fits a mobile installation without horizontal overflow @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await publishPatchNotice(page);
