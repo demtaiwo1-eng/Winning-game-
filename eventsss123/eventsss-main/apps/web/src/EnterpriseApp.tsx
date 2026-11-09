@@ -1259,6 +1259,8 @@ function AffiliatePortal() {
         />
         <Metric label="Conversion" value="—" detail="No traffic recorded" />
       </div>
+      <WalletPanel role="AFFILIATE" />
+      <NotificationsPanel />
       <section className="ess-panel">
         <SectionTitle
           eyebrow="Partner setup"
@@ -1362,9 +1364,14 @@ function VerifierPortal() {
           </ul>
         </section>
         {selected && (
-          <EventReadinessBoard eventId={selected} mode="verifier" />
+          <>
+            <EventReadinessBoard eventId={selected} mode="verifier" />
+            <EventMessagesPanel events={queue} initialEventId={selected} />
+          </>
         )}
         {queue.length > 0 && <EventMessagesPanel events={queue} />}
+        <WalletPanel role="VERIFIER" />
+        <NotificationsPanel />
       </div>
     </div>
   );
@@ -1389,6 +1396,8 @@ function ConsultantPortal() {
           <p>Review the latest notifications for your assigned event work.</p>
         </div>
       </header>
+      <WalletPanel role="CONSULTANT" />
+      <NotificationsPanel />
       <section className="ess-panel">
         <SectionTitle eyebrow="Activity" title="Recent updates" />
         {error ? <p className="ess-form-error" role="alert">{error}</p> : null}
