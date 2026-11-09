@@ -38,7 +38,7 @@ for (const feature of ["Play music", "Pause music", "Previous track", "Next trac
   else pass("Audio control present: " + feature);
 }
 
-const config = fs.readFileSync(path.join(repoRoot, "apps/mobile/capacitor.config.ts"), "utf8");
+const config = fs.readFileSync(path.join(repoRoot, "mobile", "capacitor.config.ts"), "utf8");
 if (!config.includes('appName: "EPHINTA"')) fail("Capacitor app identity is not EPHINTA.");
 else pass("Capacitor Android/iOS shell is configured for EPHINTA.");
 
