@@ -651,10 +651,17 @@ export default function App() {
     </SplashLogo>
   );
 
-  return (
+  const authenticatedContent = auth ? (
+    <DeviceSecurityGate userId={auth.user.id} onSignOut={handleLogout}>
+      {appContent}
+      <AudioExperience showPrompt={false} autoPlay />
+    </DeviceSecurityGate>
+  ) : (
     <>
       {appContent}
       <AudioExperience showPrompt={false} autoPlay />
     </>
   );
+
+  return authenticatedContent;
 }
