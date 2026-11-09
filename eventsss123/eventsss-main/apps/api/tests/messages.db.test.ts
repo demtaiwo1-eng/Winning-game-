@@ -67,6 +67,10 @@ describe.skipIf(!run)("event messages (DB)", () => {
       expect(copyArchive.status).toBe(200);
       const archivedCopy = await request(app).get(`/api/v1/events/${eventId}/messages?folder=ARCHIVED`).set(auth(verifier.token));
       expect(archivedCopy.body.items.some((item: { id: string }) => item.id === verifierCopy.id)).toBe(true);
+      expect((await request(app).patch(`/api/v1/events/${eventId}/messages/${verifierCopy.id}/unarchive`).set(auth(verifier.token))).status).toBe(200);
+      const restoredCopy = await request(app).get(`/api/v1/events/${eventId}/messages?folder=ALL`).set(auth(verifier.token));
+      expect(restoredCopy.body.items.some((item: { id: string }) => item.id === verifierCopy.id)).toBe(true);
+      expect((await request(app).patch(`/api/v1/events/${eventId}/messages/${verifierCopy.id}/archive`).set(auth(verifier.token))).status).toBe(200);
       const copyDelete = await request(app).delete(`/api/v1/events/${eventId}/messages/${verifierCopy.id}`).set(auth(verifier.token));
       expect(copyDelete.status).toBe(200);
 
