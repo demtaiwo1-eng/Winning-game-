@@ -95,7 +95,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
       if (role === 'vendor' && !form.businessName.trim()) return setErr('Enter your business or service name.');
     }
     setBusy(true);
-    try { onLoginSuccess(modal === 'signin' ? await auth({ path: 'login', body: { email: form.email, password: form.password } }) : await auth({ path: 'register', body: { ...form, ...(role === 'vendor' ? { role: 'VENDOR' } : role === 'organization' ? { role: 'ORGANIZATION', organizationMode: 'EVENT_PLANNING' } : {}) } })); }
+    try { onLoginSuccess(modal === 'signin' ? await auth({ path: 'login', body: { email: form.email, password: form.password } }) : await auth({ path: 'register', body: { name: form.name, email: form.email, password: form.password, ...(role === 'vendor' ? { role: 'VENDOR', businessName: form.businessName } : role === 'organization' ? { role: 'ORGANIZATION', organizationMode: 'EVENT_PLANNING' } : {}) } })); }
     catch (e: any) { setErr(e.message); setBusy(false); }
   };
   const nice = d.date ? new Date(d.date).toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : 'date to be decided';
