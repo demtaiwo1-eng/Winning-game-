@@ -79,7 +79,12 @@ test("player controls switch tracks, categories, volume and stop playback", asyn
   await page.getByRole("combobox", { name: "Music category" }).selectOption("naming");
   await expect(audio).toHaveAttribute("src", /Welcome,%20Little%20One-1/);
 
-  await page.getByRole("slider", { name: "Music volume" }).fill("0.6");
+  await page.getByRole("slider", { name: "Music volume" }).evaluate((element) => {
+    const slider = element as HTMLInputElement;
+    slider.value = "0.6";
+    slider.dispatchEvent(new Event("input", { bubbles: true }));
+    slider.dispatchEvent(new Event("change", { bubbles: true }));
+  });
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound-volume"))).toBe("0.6");
 
   await page.getByRole("button", { name: "Minimize" }).click();
