@@ -32,8 +32,8 @@ import "./portal-menu.css";
 import "./public-menu.css";
 import "./event-builder.css";
 import "./public-landing.css";
-import "./styles/ephinta-workspace-advertising.css";
-import "./styles/ephinta-parent-design-system.css"; // Must load last: parent theme overrides component-level palettes.
+import "./styles/ephinta-parent-design-system.css"; // Parent theme foundation.
+import "./styles/ephinta-workspace-advertising.css"; // Workspace advertising intentionally follows theme tokens.
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
