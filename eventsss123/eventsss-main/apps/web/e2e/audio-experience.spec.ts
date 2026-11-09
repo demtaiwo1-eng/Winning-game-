@@ -81,9 +81,9 @@ test("player controls switch tracks, categories, volume and stop playback", asyn
 
   await page.getByRole("slider", { name: "Music volume" }).evaluate((element) => {
     const slider = element as HTMLInputElement;
-    slider.value = "0.6";
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    valueSetter?.call(slider, "0.6");
     slider.dispatchEvent(new Event("input", { bubbles: true }));
-    slider.dispatchEvent(new Event("change", { bubbles: true }));
   });
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound-volume"))).toBe("0.6");
 
