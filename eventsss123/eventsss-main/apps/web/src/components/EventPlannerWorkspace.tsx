@@ -218,7 +218,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
     const a = document.createElement("a"); a.href = url; a.download = "ephinta-event-readiness.csv"; a.click(); URL.revokeObjectURL(url);
   };
 
-  return <section className="ess-panel" aria-labelledby="event-workspace-title">
+  return <section className="ess-panel ess-planner-workspace" aria-labelledby="event-workspace-title">
     <p className="ess-eyebrow">Phase 4 · event planner</p><h2 id="event-workspace-title">Complete event workspace</h2>
     {!events.length ? <p className="ess-muted">Create an event to manage its timeline, budget, guests and bookings.</p> : <>
       <label style={{ display: "block", maxWidth: 520, margin: "12px 0" }}>Event
