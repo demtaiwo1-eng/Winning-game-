@@ -64,8 +64,8 @@ fi
 
 echo "[3/7] Confirming package identity and selecting a strictly higher versionCode..."
 BADGING="$("$AAPT" dump badging "$OLD_APK")"
-OLD_PACKAGE="$(awk -F\x27 '/^package:/ {print $2; exit}' <<<"$BADGING")"
-OLD_VERSION_CODE="$(awk -F\x27 '/^package:/ {for(i=1;i<=NF;i++) if($i=="versionCode") {print $(i+1); exit}}' <<<"$BADGING")"
+OLD_PACKAGE="$(awk -F"'" '/^package:/ {print $2; exit}' <<<"$BADGING")"
+OLD_VERSION_CODE="$(awk -F"'" '/^package:/ {for(i=1;i<=NF;i++) if($i=="versionCode") {print $(i+1); exit}}' <<<"$BADGING")"
 [[ "$OLD_PACKAGE" == "com.ephinta.app" ]] || fail "Build 869 package ID is '$OLD_PACKAGE', expected com.ephinta.app."
 [[ "$OLD_VERSION_CODE" =~ ^[0-9]+$ ]] || fail "Could not parse Build 869 versionCode."
 NEXT_VERSION_CODE="$((OLD_VERSION_CODE + 1))"
@@ -77,13 +77,17 @@ echo "[4/7] Confirming the production workflow is available on main..."
 gh workflow view "$WORKFLOW" --repo "$REPO" >/dev/null 2>&1 || fail "Workflow $WORKFLOW is not available. Merge the compatibility workflow change first."
 
 echo "[5/7] Dispatching signed build with the original certificate..."
+PREVIOUS_RUN_ID="$(gh run list --repo "$REPO" --workflow "$WORKFLOW" --branch main --event workflow_dispatch --limit 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || true)"
 gh workflow run "$WORKFLOW" --repo "$REPO" --ref main -f "minimum_version_code=$NEXT_VERSION_CODE"
 
 echo "[6/7] Waiting for the production APK workflow to finish..."
 RUN_ID=""
 for attempt in $(seq 1 60); do
-  RUN_ID="$(gh run list --repo "$REPO" --workflow "$WORKFLOW" --branch main --event workflow_dispatch --limit 1 --json databaseId,headBranch,status -q '.[0].databaseId' 2>/dev/null || true)"
-  [[ -n "$RUN_ID" && "$RUN_ID" != "null" ]] && break
+  CANDIDATE_RUN_ID="$(gh run list --repo "$REPO" --workflow "$WORKFLOW" --branch main --event workflow_dispatch --limit 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || true)"
+  if [[ -n "$CANDIDATE_RUN_ID" && "$CANDIDATE_RUN_ID" != "null" && "$CANDIDATE_RUN_ID" != "$PREVIOUS_RUN_ID" ]]; then
+    RUN_ID="$CANDIDATE_RUN_ID"
+    break
+  fi
   sleep 5
 done
 [[ -n "$RUN_ID" && "$RUN_ID" != "null" ]] || fail "Could not identify the dispatched workflow run. Check GitHub Actions manually."
@@ -98,9 +102,9 @@ NEW_APK="$OUT_DIR/ephinta-production.apk"
 NEW_CERT="$("$APKSIGNER" verify --print-certs "$NEW_APK" | awk '/certificate SHA-256 digest/ {sub(/^.*certificate SHA-256 digest:[[:space:]]*/, ""); print; exit}' | tr -d ':[:space:]' | tr 'A-F' 'a-f')"
 [[ "$NEW_CERT" == "$OLD_CERT" ]] || fail "Downloaded APK certificate differs from Build 869."
 NEW_BADGING="$("$AAPT" dump badging "$NEW_APK")"
-NEW_CODE="$(awk -F\x27 '/^package:/ {for(i=1;i<=NF;i++) if($i=="versionCode") {print $(i+1); exit}}' <<<"$NEW_BADGING")"
+NEW_CODE="$(awk -F"'" '/^package:/ {for(i=1;i<=NF;i++) if($i=="versionCode") {print $(i+1); exit}}' <<<"$NEW_BADGING")"
 [[ "$NEW_CODE" =~ ^[0-9]+$ ]] && (( NEW_CODE > OLD_VERSION_CODE )) || fail "New APK versionCode is not higher than Build 869."
-[[ "$(awk -F\x27 '/^package:/ {print $2; exit}' <<<"$NEW_BADGING")" == "$OLD_PACKAGE" ]] || fail "New APK package ID changed."
+[[ "$(awk -F"'" '/^package:/ {print $2; exit}' <<<"$NEW_BADGING")" == "$OLD_PACKAGE" ]] || fail "New APK package ID changed."
 (cd "$OUT_DIR" && sha256sum ephinta-production.apk > ephinta-production.apk.sha256)
 
 echo
