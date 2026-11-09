@@ -6,6 +6,7 @@ on:
       - ".github/workflows/ephinta-production-apk.yml"
       - "scripts/complete-production-apk.sh"
       - "scripts/setup-android-signing-github.sh"
+      - "scripts/verify-protected-869-signing-identity.sh"
   workflow_dispatch:
   push:
     tags:
