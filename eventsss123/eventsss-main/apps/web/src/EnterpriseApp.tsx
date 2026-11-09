@@ -672,7 +672,7 @@ function ClientPortal({
         <VerifierPicker events={ownedEvents} eventId={selectedEventId || verifierEventId || readinessEventId || undefined} onEventChange={(id) => { setSelectedEventId(id); setVerifierEventId(id); }} />
       )}
       {tab === "kyc" && <KycUpload defaultKind="IDENTITY" />}
-    </div>
+    </main>
   );
 }
 
@@ -730,7 +730,7 @@ function VendorAvailabilityManager({ listingId }: { listingId: string }) {
           <button className="ess-row-action" type="button" disabled={busy} onClick={() => removeSlot(slot.id)}>Remove</button>
         </div>
       )) : <p className="ess-muted">No availability windows added yet.</p>}
-    </main>
+    </div>
   );
 }
 
