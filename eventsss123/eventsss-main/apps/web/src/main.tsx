@@ -9,6 +9,7 @@ import EphintaIntro from './components/branding/EphintaIntro';
 import AudioExperience from "./components/AudioExperience";
 import OfflineStatus from './components/OfflineStatus';
 import SyncConflictList from './components/SyncConflictList';
+import RemoteUpdateNotice from './components/RemoteUpdateNotice';
 
 import { initLiveUpdate } from "./lib/liveUpdate";
 import { initOfflineSync } from './lib/offline/sync';
@@ -149,6 +150,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <AudioExperience showPrompt autoPlay />
           <OfflineStatus />
           <SyncConflictList />
+          <RemoteUpdateNotice />
         </>
       </AppRouter>
     </StartupErrorBoundary>
