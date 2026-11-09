@@ -31,7 +31,8 @@ import "./portal-menu.css";
 import "./public-menu.css";
 import "./event-builder.css";
 import "./public-landing.css";
-import "./styles/ephinta-parent-design-system.css"; // Must load last: parent theme overrides component-level palettes.
+import "./styles/ephinta-parent-design-system.css";
+import "./styles/ephinta-planner-portal-polish.css"; // Shared planner, finance, check-in and trust portal layer.
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
@@ -2570,13 +2571,18 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
     }
   };
 
-  const complete = questions.every(([key]) => answers[key]?.trim());
+  const answeredCount = questions.filter(([key]) => Boolean(answers[key]?.trim())).length;
+  const complete = answeredCount === questions.length;
   if (loading) return <section className="ess-panel" aria-live="polite">Loading your planning questions…</section>;
   return (
-    <section className="ess-panel" aria-labelledby="planning-questions-title">
+    <section className="ess-panel ess-planning-questionnaire" aria-labelledby="planning-questions-title">
       <p className="ess-eyebrow">Continue your event brief</p>
       <h2 id="planning-questions-title">Plan the details for {eventTitle}</h2>
       <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits.</p>
+      <div style={{ margin: "14px 0 18px", padding: 12, border: "1px solid #e2e8f0", borderRadius: 12, background: "#f8fafc" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12, color: "#64748b" }}><span>Planning brief progress</span><strong>{answeredCount} of {questions.length} complete</strong></div>
+        <div role="progressbar" aria-label="Planning brief progress" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={answeredCount} style={{ height: 6, marginTop: 9, overflow: "hidden", borderRadius: 999, background: "#e2e8f0" }}><span style={{ display: "block", width: `${answeredCount / questions.length * 100}%`, height: "100%", borderRadius: 999, background: "#e99b22", transition: "width .2s ease" }} /></div>
+      </div>
       {questions.map(([key, label]) => (
         <label key={key} style={{ display: "block", marginTop: 12 }}>
           {label}
