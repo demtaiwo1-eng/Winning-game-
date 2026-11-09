@@ -25,8 +25,8 @@ type MessagePage = {
   nextBefore: string | null;
 };
 
-export default function EventMessagesPanel({ events }: { events: EventOption[] }) {
-  const [eventId, setEventId] = useState("");
+export default function EventMessagesPanel({ events, initialEventId }: { events: EventOption[]; initialEventId?: string }) {
+  const [eventId, setEventId] = useState(initialEventId || "");
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [viewerId, setViewerId] = useState("");
   const [messages, setMessages] = useState<EventMessage[]>([]);
@@ -45,6 +45,10 @@ export default function EventMessagesPanel({ events }: { events: EventOption[] }
   const [refreshKey, setRefreshKey] = useState(0);
   const currentEventId = events.some((event) => event.id === eventId) ? eventId : events[0]?.id ?? "";
   const otherParticipants = participants.filter((person) => person.id !== viewerId);
+
+  useEffect(() => {
+    if (initialEventId && events.some((event) => event.id === initialEventId)) setEventId(initialEventId);
+  }, [initialEventId, events]);
 
   const load = async (active: boolean) => {
     if (!currentEventId) return;
