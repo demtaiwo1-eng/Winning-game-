@@ -564,7 +564,7 @@ function ClientPortal({
                 <h2>Funds, bookings and escrow</h2>
                 <p className="ess-muted">Live balances and protected payments for your planning account.</p>
               </div>
-              <button type="button" className="ess-quiet-button" onClick={() => setTab("wallet")}>Open full wallet</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("payments")}>Open full wallet</button>
             </div>
             <WalletPanel locale={locale} role="CLIENT" />
           </div>
