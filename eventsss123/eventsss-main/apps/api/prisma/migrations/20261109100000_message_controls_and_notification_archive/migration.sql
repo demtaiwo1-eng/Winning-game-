@@ -2,6 +2,8 @@
 ALTER TABLE "Message"
   ADD COLUMN "groupId" TEXT,
   ADD COLUMN "recipientKind" TEXT NOT NULL DEFAULT 'TO',
+  ADD COLUMN "toRecipientIds" JSONB,
+  ADD COLUMN "ccRecipientIds" JSONB,
   ADD COLUMN "senderArchivedAt" TIMESTAMP(3),
   ADD COLUMN "recipientArchivedAt" TIMESTAMP(3),
   ADD COLUMN "senderDeletedAt" TIMESTAMP(3),
