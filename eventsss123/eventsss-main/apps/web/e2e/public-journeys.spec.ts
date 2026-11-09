@@ -536,8 +536,22 @@ test("authenticated planner can add a checklist task to an owned event", async (
   await expect(page.getByRole("heading", { name: /Welcome back, E2E/ })).toBeVisible();
   // Auth/session restoration can normalize the dashboard URL and reset its tab.
   // Exercise the visible navigation instead of relying on a query-string tab state.
-  const eventWorkspaceTab = page.getByRole("button", { name: "Event workspace", exact: true });
+  const plannerNavigation = page.getByRole("navigation", { name: "Planner dashboard sections" });
+  await expect(plannerNavigation).toBeVisible();
+  const eventWorkspaceTab = plannerNavigation.getByRole("button", { name: "Open Event workspace" });
   await eventWorkspaceTab.dispatchEvent("click");
+  await expect(eventWorkspaceTab).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
+
+  const paymentsTab = plannerNavigation.getByRole("button", { name: "Open Payments & finances" });
+  await paymentsTab.click();
+  await expect(paymentsTab).toHaveAttribute("aria-current", "page");
+  await expect(page).toHaveURL(/tab=payments/);
+  await page.goBack();
+  await expect(eventWorkspaceTab).toHaveAttribute("aria-current", "page");
+  await page.goForward();
+  await expect(paymentsTab).toHaveAttribute("aria-current", "page");
+  await eventWorkspaceTab.click();
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
   await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
   const taskInput = page.locator('section[aria-labelledby="event-workspace-title"] label').filter({ hasText: /^Task$/ }).locator("input");
