@@ -151,3 +151,18 @@
 .ess-readiness-planner-context .ess-filter-row { padding: 0; }
 .ess-readiness-planner-context strong { font-size: 1.05rem; }
 .ess-readiness-planner-context p { margin: 5px 0 0; }
+
+.ess-panel[aria-labelledby="planning-questions-title"] > label {
+  display: grid !important; gap: 7px; margin-top: 15px !important;
+  color: var(--ess-ui-muted); font-size: .88rem; font-weight: 550;
+}
+.ess-panel[aria-labelledby="planning-questions-title"] textarea {
+  background: var(--ess-ui-soft); border-color: var(--ess-ui-line);
+  color: var(--ess-ui-ink); font-size: .94rem; line-height: 1.55;
+}
+.ess-question-progress {
+  display: grid; gap: 8px; padding: 12px 14px; margin: 16px 0;
+  border-radius: 13px; background: var(--ess-ui-soft); border: 1px solid var(--ess-ui-line);
+  color: var(--ess-ui-muted); font-size: .82rem;
+}
+.ess-question-progress progress { width: 100%; height: 6px; border: 0; border-radius: 99px; accent-color: var(--ess-ui-accent); }
