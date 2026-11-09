@@ -10,6 +10,8 @@ type EventMessage = {
   senderId: string;
   recipientId: string;
   recipientKind?: "TO" | "CC" | "BCC";
+  toRecipientIds?: string[] | null;
+  ccRecipientIds?: string[] | null;
   body: string;
   createdAt: string;
   readAt?: string | null;
@@ -216,6 +218,8 @@ export default function EventMessagesPanel({ events, initialEventId }: { events:
           const sent = message.senderId === viewerId;
           const archivedForViewer = sent ? Boolean(message.senderArchivedAt) : Boolean(message.recipientArchivedAt);
           const busy = workingId === message.id;
+          const visibleTo = (message.toRecipientIds || []).map((id) => participants.find((person) => person.id === id)?.name || "Event participant").join(", ");
+          const visibleCc = (message.ccRecipientIds || []).map((id) => participants.find((person) => person.id === id)?.name || "Event participant").join(", ");
           return (
             <article className="ess-wallet-card ess-message-row" key={message.id} style={{ justifySelf: sent ? "end" : "start", maxWidth: "min(100%, 700px)", width: "100%" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -223,6 +227,8 @@ export default function EventMessagesPanel({ events, initialEventId }: { events:
                   <strong>{sent ? `To: ${message.recipient.name}` : message.sender.name}</strong>
                   <small className="ess-muted">{new Date(message.createdAt).toLocaleString()}</small>
                 </div>
+                {!sent && visibleTo && <small className="ess-muted">To: {visibleTo}</small>}
+                {visibleCc && <small className="ess-muted">CC: {visibleCc}</small>}
                 <p>{message.body}</p>
                 <small className="ess-muted">{sent ? `Recipient type: ${message.recipientKind || "TO"}` : message.readAt ? "Read" : "Unread"}</small>
               </div>
