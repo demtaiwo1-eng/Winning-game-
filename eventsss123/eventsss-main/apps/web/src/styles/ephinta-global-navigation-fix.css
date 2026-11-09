@@ -1,0 +1,162 @@
+/* EPHINTA global dashboard navigation repair.
+   Loaded after all theme sheets so portal navigation stays legible and usable. */
+.ess-content,
+.ess-portal-stack,
+.ess-portal-stack > * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.ess-content {
+  width: min(100%, 1480px);
+  max-width: 100%;
+  margin-inline: auto;
+}
+.ess-portal-stack > .ess-filter-row {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 156px), 1fr));
+  align-items: stretch;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 12px;
+  overflow: visible;
+  border: 1px solid rgba(148, 163, 184, .26);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #111a32 0%, #1c2544 100%);
+  box-shadow: 0 12px 30px rgba(10, 15, 36, .14);
+}
+.ess-portal-stack > .ess-filter-row > .ess-chip {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  max-width: none;
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(203, 213, 225, .2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .075);
+  color: #f3f6ff !important;
+  font: 700 12px/1.35 var(--font-interface, Inter, system-ui, sans-serif);
+  text-align: center;
+  text-decoration: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+.ess-portal-stack > .ess-filter-row > .ess-chip:hover {
+  border-color: rgba(255, 176, 32, .7);
+  background: rgba(255, 176, 32, .14);
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+.ess-portal-stack > .ess-filter-row > .ess-chip.ess-chip-active {
+  border-color: #ffb020;
+  background: linear-gradient(120deg, #ffbf45, #f28a13);
+  color: #171329 !important;
+  box-shadow: 0 5px 16px rgba(255, 176, 32, .22);
+}
+.ess-portal-stack > .ess-filter-row > .ess-chip:focus-visible {
+  outline: 3px solid #00c2ff;
+  outline-offset: 3px;
+}
+.ess-portal-stack .ess-page-heading,
+.ess-portal-stack .ess-panel,
+.ess-portal-stack .ess-metric {
+  min-width: 0;
+  max-width: 100%;
+}
+.ess-portal-stack .ess-page-heading {
+  flex-wrap: wrap;
+}
+.ess-portal-stack .ess-page-heading > div {
+  min-width: 0;
+}
+.ess-portal-stack .ess-page-heading h1,
+.ess-portal-stack .ess-page-heading p,
+.ess-portal-stack .ess-panel h2,
+.ess-portal-stack .ess-panel h3 {
+  overflow-wrap: anywhere;
+}
+.ess-portal-stack .ess-table-wrap,
+.ess-portal-stack .ess-filter-row {
+  overscroll-behavior-x: contain;
+}
+.ess-app .ess-topbar {
+  position: relative;
+  z-index: 30;
+}
+.ess-app .ess-portal-menu {
+  position: relative;
+  z-index: 40;
+}
+.ess-app .ess-menu-dropdown {
+  z-index: 1000;
+  max-height: min(72vh, 620px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.ess-app .ess-menu-option,
+.ess-app .ess-menu-trigger,
+.ess-app .ess-account button,
+.ess-app .ess-locale-switch select {
+  min-height: 42px;
+}
+@media (max-width: 700px) {
+  .ess-content { padding: 16px 12px 44px; }
+  .ess-portal-stack { gap: 14px; }
+  .ess-portal-stack > .ess-filter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 9px;
+    border-radius: 15px;
+  }
+  .ess-portal-stack > .ess-filter-row > .ess-chip {
+    min-height: 46px;
+    padding: 10px 8px;
+    font-size: 11px;
+  }
+  .ess-portal-stack .ess-page-heading {
+    align-items: stretch;
+    gap: 14px;
+    padding: 18px 16px;
+  }
+  .ess-portal-stack .ess-page-heading > div:last-child {
+    justify-content: stretch;
+  }
+  .ess-portal-stack .ess-page-heading > div:last-child > button {
+    flex: 1 1 130px;
+  }
+  .ess-app .ess-topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .ess-app .ess-portal-menu { margin-left: auto; }
+  .ess-app .ess-menu-dropdown {
+    position: fixed;
+    top: max(68px, env(safe-area-inset-top));
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+  }
+}
+@media (max-width: 380px) {
+  .ess-content { padding-inline: 9px; }
+  .ess-portal-stack > .ess-filter-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ess-portal-stack > .ess-filter-row > .ess-chip {
+    justify-content: flex-start;
+    text-align: left;
+    padding-inline: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ess-portal-stack > .ess-filter-row > .ess-chip { transition: none; }
+}
