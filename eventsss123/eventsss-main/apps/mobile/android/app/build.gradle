@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+// Resolve the version before entering the Android DSL; this keeps local builds
+// on version 2 and lets the protected release workflow supply a higher value.
+def ephintaVersionCode = ((project.findProperty('ephintaVersionCode') ?: System.getenv('EPHINTA_VERSION_CODE')) ?: '2').toString().toInteger()
+
 android {
     namespace "com.ephinta.app"
     compileSdk rootProject.ext.compileSdkVersion
@@ -8,7 +12,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Production release workflow supplies 870+; retain 2 for ordinary debug/dev builds.
-        versionCode (project.findProperty("ephintaVersionCode") ?: System.getenv("EPHINTA_VERSION_CODE") ?: "2").toString().toInteger()
+        versionCode ephintaVersionCode
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
