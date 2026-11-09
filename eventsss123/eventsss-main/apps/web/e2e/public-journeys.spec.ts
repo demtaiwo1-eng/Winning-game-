@@ -798,16 +798,15 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   await expect(page.getByRole("heading", { name: "Stay in control" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Explore the marketplace" })).toBeVisible();
 
-  // The planner workspace uses the shared global responsive dashboard styles:
-  // full-width content, a real horizontal tab bar, and no phone-width page overflow.
+  // The planner workspace uses a responsive dashboard menu grid that keeps
+  // every destination visible without forcing horizontal page scrolling.
   const plannerShell = page.locator(".ess-content > .ess-portal-stack");
   await expect(plannerShell).toHaveCSS("display", "grid");
-  // Scope to the direct-child row containing the portal navigation tabs;
-  // nested event panels also use .ess-filter-row for their own actions.
   const plannerTabs = plannerShell.locator(":scope > .ess-filter-row").first();
   await expect(plannerTabs).toBeVisible();
-  await expect(plannerTabs).toHaveCSS("display", "flex");
-  await expect(plannerTabs).toHaveCSS("overflow-x", "auto");
+  await expect(plannerTabs).toHaveCSS("display", "grid");
+  await expect(plannerTabs).toHaveCSS("overflow-x", "visible");
+  await expect(plannerTabs.locator(".ess-chip-active")).toBeVisible();
   await expect(plannerTabs.locator(".ess-chip-active")).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(plannerTabs).toBeVisible();
