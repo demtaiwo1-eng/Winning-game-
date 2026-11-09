@@ -46,6 +46,7 @@ jobs:
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1' }}
           VITE_UPDATE_URL: ${{ format('{0}/app-updates', vars.VITE_API_URL || 'https://ephinta-wss.onrender.com/api/v1') }}
+          VITE_APP_VERSION: ${{ github.sha }}
 
       - name: Install Playwright Chromium for audio browser checks
         run: npx playwright install chromium
