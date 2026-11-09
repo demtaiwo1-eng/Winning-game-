@@ -95,3 +95,77 @@
 .ess-menu-option:hover,.ess-menu-option.active{border-color:rgba(182,154,255,.35);background:rgba(132,94,209,.14)}
 .ess-menu-option-icon{background:rgba(151,117,220,.16);color:#c8b4ff}
 @media(max-width:760px){.ess-topbar .ess-locale-switch{flex:1 1 100%;order:4}.ess-topbar .ess-locale-switch select{flex:1}.ess-topbar .ess-account{margin-left:auto}.ess-menu-dropdown{max-width:calc(100vw - 28px)}}
+
+
+/* Device PIN / biometric gate — shared global theme layer. */
+.ess-device-lock {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 4vw, 28px);
+  background: var(--app-bg, #10002f);
+  color: var(--app-text, #fff);
+  font-family: inherit;
+}
+.ess-device-lock-card {
+  width: min(100%, 420px);
+  padding: clamp(20px, 5vw, 30px);
+  border: 1px solid var(--ess-border, rgba(255,255,255,.14));
+  border-radius: 24px;
+  background: var(--surface, #211044);
+  box-shadow: 0 24px 80px rgba(0,0,0,.28);
+}
+.ess-device-lock-label {
+  display: block;
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.ess-device-lock-label-confirm { margin-top: 16px; }
+.ess-device-lock-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 54px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 12px;
+  background: rgba(255,255,255,.08);
+  color: inherit;
+  font: inherit;
+  font-size: 22px;
+  letter-spacing: .3em;
+}
+.ess-device-lock-input:focus-visible {
+  outline: 3px solid var(--ess-accent, #fb923c);
+  outline-offset: 2px;
+}
+.ess-device-lock-error { margin: 12px 0 0; color: #ffb4b4; }
+.ess-device-lock-primary,
+.ess-device-lock-secondary {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 16px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.ess-device-lock-primary {
+  border: 0;
+  background: var(--primary, #a78bfa);
+  color: #16072c;
+}
+.ess-device-lock-secondary {
+  border: 1px solid rgba(255,255,255,.24);
+  background: rgba(255,255,255,.08);
+  color: inherit;
+}
+.ess-device-lock-signout { margin-top: 10px; background: transparent; }
+.ess-device-lock-primary:disabled,
+.ess-device-lock-secondary:disabled { opacity: .55; cursor: not-allowed; }
+.ess-device-lock-note {
+  margin: 18px 0 0;
+  color: var(--ess-muted, #cbd5e1);
+  font-size: 12px;
+  line-height: 1.55;
+}
