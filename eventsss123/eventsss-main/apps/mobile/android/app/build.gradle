@@ -7,7 +7,8 @@ android {
         applicationId "com.ephinta.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
+        // Production release workflow supplies 870+; retain 2 for ordinary debug/dev builds.
+        versionCode (project.findProperty("ephintaVersionCode") ?: System.getenv("EPHINTA_VERSION_CODE") ?: "2").toString().toInteger()
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
