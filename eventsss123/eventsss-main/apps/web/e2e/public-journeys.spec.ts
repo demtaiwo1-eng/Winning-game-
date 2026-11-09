@@ -856,7 +856,7 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   await page.setViewportSize({ width: 1280, height: 900 });
 
   // The saved follow-up questionnaire remains available in Overview.
-  await page.getByRole("button", { name: "Overview", exact: true }).click();
+  await page.getByRole("button", { name: "Open Overview", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Plan the details for Planner Follow-up Event" }),
   ).toBeVisible();
