@@ -284,13 +284,14 @@ function ClientPortal({
   currency: CurrencyCode;
 }) {
   const [tab, setTab] = useDashboardTab(
-    ["overview", "checklist", "planner", "checkin", "marketplace", "wallet", "readiness", "messages", "notifications", "verifiers", "plans", "kyc", "feedback"] as const,
-    "marketplace",
+    ["overview", "checklist", "planner", "checkin", "marketplace", "wallet", "readiness", "messages", "notifications", "verifiers", "kyc", "feedback"] as const,
+    "overview",
   );
   const [bookingNotice, setBookingNotice] = useState("");
   const [readinessEvents, setReadinessEvents] = useState<Array<{ id: string; title: string; startsAt?: string | null }>>([]);
   const [checklistEventId, setChecklistEventId] = useState<string>("");
   const [readinessEventId, setReadinessEventId] = useState<string>("");
+  const [verifierEventId, setVerifierEventId] = useState<string>("");
   const [showCreate, setShowCreate] = useState(false);
   const [ownedEvents, setOwnedEvents] = useState<Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }>>([]);
   const [eventLoadError, setEventLoadError] = useState("");
@@ -363,7 +364,9 @@ function ClientPortal({
         setOwnedEvents((current) => {
           const byId = new Map((result.items || []).map((event) => [event.id, event]));
           for (const event of current) byId.set(event.id, event);
-          return [...byId.values()];
+          const next = [...byId.values()];
+          setVerifierEventId((selected) => selected && next.some((event) => event.id === selected) ? selected : next[0]?.id || "");
+          return next;
         });
       })
       .catch((error: Error) => setEventLoadError(error.message));
@@ -397,8 +400,8 @@ function ClientPortal({
           <button className="ess-primary" type="button" onClick={() => setShowCreate((v) => !v)}>
             <Icon>＋</Icon> New event
           </button>
-          <button className="ess-outline-button" type="button" onClick={() => setTab("wallet")}>
-            Payments
+          <button className="ess-outline-button" type="button" onClick={() => { setTab("wallet"); window.scrollTo({ top: 0, behavior: "smooth" }); }} aria-label="Open payments and wallet">
+            Payments & finances
           </button>
         </div>
       </div>
@@ -417,7 +420,6 @@ function ClientPortal({
             ["messages", "Messages"],
             ["notifications", "Notifications"],
             ["feedback", "Feedback"],
-            ["plans", "Plans"],
             ["kyc", "KYC"],
           ] as const
         ).map(([id, label]) => (
@@ -437,7 +439,8 @@ function ClientPortal({
           onCreated={(id) => {
             setReadinessEventId(id);
             setChecklistEventId(id);
-            setTab("planner");
+            setVerifierEventId(id);
+            setTab("verifiers");
             setShowCreate(false);
             api<{ items: Array<{ id: string; title: string; startsAt?: string | null; city?: string | null }> }>("/events")
               .then((result) => {
@@ -598,9 +601,8 @@ function ClientPortal({
       {tab === "notifications" && <NotificationsPanel />}
       {tab === "wallet" && <WalletPanel locale={locale} role="CLIENT" />}
       {tab === "feedback" && <FeedbackPanel locale={locale} />}
-      {tab === "plans" && <SubscriptionsPanel audience="CLIENT" />}
       {tab === "verifiers" && (
-        <VerifierPicker eventId={readinessEventId || undefined} />
+        <VerifierPicker events={ownedEvents} eventId={verifierEventId || undefined} onEventChange={setVerifierEventId} />
       )}
       {tab === "kyc" && <KycUpload defaultKind="IDENTITY" />}
     </div>
