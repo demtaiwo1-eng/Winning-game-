@@ -17,6 +17,10 @@ notificationsRouter.get(
     if (!Number.isInteger(rawLimit) || rawLimit < 1 || rawLimit > 100) {
       return res.status(400).json({ error: { code: "INVALID_LIMIT", message: "limit must be between 1 and 100" } });
     }
+    const folder = typeof req.query.folder === "string" ? req.query.folder : "ACTIVE";
+    if (!["ACTIVE", "ARCHIVED", "ALL"].includes(folder)) {
+      return res.status(400).json({ error: { code: "INVALID_FOLDER", message: "folder must be ACTIVE, ARCHIVED or ALL" } });
+    }
     const before = typeof req.query.before === "string" ? req.query.before : undefined;
     if (before && !uuidPattern.test(before)) {
       return res.status(400).json({ error: { code: "INVALID_CURSOR", message: "before must be a notification ID" } });
@@ -31,7 +35,10 @@ notificationsRouter.get(
       if (!cursor) return res.status(400).json({ error: { code: "INVALID_CURSOR", message: "Notification cursor is not available" } });
     }
     const rows = await prisma.notification.findMany({
-      where: { userId: req.user!.id },
+      where: {
+        userId: req.user!.id,
+        ...(folder === "ACTIVE" ? { archivedAt: null } : folder === "ARCHIVED" ? { archivedAt: { not: null } } : {}),
+      },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: rawLimit + 1,
       ...(before ? { cursor: { id: before }, skip: 1 } : {}),
@@ -70,6 +77,65 @@ notificationsRouter.patch(
       });
       if (!owned) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Notification not found" } });
     }
+    res.json({ ok: true });
+  }),
+);
+
+notificationsRouter.patch(
+  "/:notificationId/unread",
+  asyncHandler(async (req, res) => {
+    if (!uuidPattern.test(req.params.notificationId)) {
+      return res.status(400).json({ error: { code: "INVALID_ID", message: "Notification ID is invalid" } });
+    }
+    const result = await prisma.notification.updateMany({
+      where: { id: req.params.notificationId, userId: req.user!.id },
+      data: { readAt: null },
+    });
+    if (!result.count) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Notification not found" } });
+    res.json({ ok: true });
+  }),
+);
+
+notificationsRouter.patch(
+  "/:notificationId/archive",
+  asyncHandler(async (req, res) => {
+    if (!uuidPattern.test(req.params.notificationId)) {
+      return res.status(400).json({ error: { code: "INVALID_ID", message: "Notification ID is invalid" } });
+    }
+    const result = await prisma.notification.updateMany({
+      where: { id: req.params.notificationId, userId: req.user!.id },
+      data: { archivedAt: new Date() },
+    });
+    if (!result.count) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Notification not found" } });
+    res.json({ ok: true });
+  }),
+);
+
+notificationsRouter.patch(
+  "/:notificationId/unarchive",
+  asyncHandler(async (req, res) => {
+    if (!uuidPattern.test(req.params.notificationId)) {
+      return res.status(400).json({ error: { code: "INVALID_ID", message: "Notification ID is invalid" } });
+    }
+    const result = await prisma.notification.updateMany({
+      where: { id: req.params.notificationId, userId: req.user!.id },
+      data: { archivedAt: null },
+    });
+    if (!result.count) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Notification not found" } });
+    res.json({ ok: true });
+  }),
+);
+
+notificationsRouter.delete(
+  "/:notificationId",
+  asyncHandler(async (req, res) => {
+    if (!uuidPattern.test(req.params.notificationId)) {
+      return res.status(400).json({ error: { code: "INVALID_ID", message: "Notification ID is invalid" } });
+    }
+    const result = await prisma.notification.deleteMany({
+      where: { id: req.params.notificationId, userId: req.user!.id },
+    });
+    if (!result.count) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Notification not found" } });
     res.json({ ok: true });
   }),
 );
