@@ -53,6 +53,23 @@ describe.skipIf(!run)("event messages (DB)", () => {
       expect(personal.status).toBe(201);
       expect(personal.body.items).toHaveLength(1);
 
+      const carbonCopy = await request(app).post(`/api/v1/events/${eventId}/messages`).set(auth(owner.token))
+        .send({ toIds: [verifier.id], ccIds: [verifierTwo.id], bccIds: [], body: "Run-of-show update." });
+      expect(carbonCopy.status).toBe(201);
+      expect(carbonCopy.body.items).toHaveLength(2);
+      expect(carbonCopy.body.items.map((item: { recipientKind: string }) => item.recipientKind).sort()).toEqual(["CC", "TO"]);
+      const verifierCopy = carbonCopy.body.items.find((item: { recipientId: string }) => item.recipientId === verifier.id);
+      const copyRead = await request(app).patch(`/api/v1/events/${eventId}/messages/${verifierCopy.id}/read`).set(auth(verifier.token));
+      expect(copyRead.status).toBe(200);
+      const copyUnread = await request(app).patch(`/api/v1/events/${eventId}/messages/${verifierCopy.id}/unread`).set(auth(verifier.token));
+      expect(copyUnread.status).toBe(200);
+      const copyArchive = await request(app).patch(`/api/v1/events/${eventId}/messages/${verifierCopy.id}/archive`).set(auth(verifier.token));
+      expect(copyArchive.status).toBe(200);
+      const archivedCopy = await request(app).get(`/api/v1/events/${eventId}/messages?folder=ARCHIVED`).set(auth(verifier.token));
+      expect(archivedCopy.body.items.some((item: { id: string }) => item.id === verifierCopy.id)).toBe(true);
+      const copyDelete = await request(app).delete(`/api/v1/events/${eventId}/messages/${verifierCopy.id}`).set(auth(verifier.token));
+      expect(copyDelete.status).toBe(200);
+
       const received = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(verifier.token));
       expect(received.body.items[0].body).toBe("Please confirm your zone.");
       const verifierNotifications = await request(app).get("/api/v1/notifications").set(auth(verifier.token));
