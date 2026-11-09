@@ -795,6 +795,14 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   // This avoids Playwright waiting indefinitely on the animated dialog layout.
   await createAccount.evaluate((button) => (button as HTMLButtonElement).click());
 
+  // New authenticated devices must create and confirm a local six-digit PIN
+  // before any planner or communication workspace is rendered.
+  const deviceSecurity = page.getByRole("dialog", { name: "Set your device PIN" });
+  await expect(deviceSecurity).toBeVisible();
+  await deviceSecurity.getByLabel("Six-digit PIN").fill("482615");
+  await deviceSecurity.getByLabel("Confirm PIN").fill("482615");
+  await deviceSecurity.getByRole("button", { name: "Set PIN and continue" }).click();
+
   const onboarding = page.getByRole("dialog", { name: "client onboarding" });
   await expect(onboarding).toBeVisible();
   await onboarding.getByRole("button", { name: "Continue" }).click();
