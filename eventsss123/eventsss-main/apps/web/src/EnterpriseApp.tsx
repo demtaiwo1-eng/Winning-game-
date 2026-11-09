@@ -631,8 +631,8 @@ function ClientPortal({
         <EventChecklistPanel events={ownedEvents} initialEventId={checklistEventId || undefined} />
       )}
       {tab === "planner" && <EventPlannerWorkspace events={ownedEvents} initialEventId={checklistEventId || undefined} />}
-      {tab === "checkin" && <GuestCheckInPanel events={ownedEvents} />}
-      {tab === "messages" && <EventMessagesPanel events={ownedEvents} />}
+      {tab === "checkin" && <GuestCheckInPanel events={ownedEvents} initialEventId={checklistEventId || undefined} />}
+      {tab === "messages" && <EventMessagesPanel events={ownedEvents} initialEventId={checklistEventId || undefined} />}
       {tab === "notifications" && <NotificationsPanel />}
       {tab === "wallet" && <WalletPanel locale={locale} role="CLIENT" />}
       {tab === "feedback" && <FeedbackPanel locale={locale} />}
@@ -1407,7 +1407,7 @@ function VerifierPortal() {
           <WalletPanel role="VERIFIER" />
         </section>
         <NotificationsPanel />
-        {queue.length > 0 && <EventMessagesPanel events={queue} />}
+        {queue.length > 0 && <EventMessagesPanel events={queue} initialEventId={selected || undefined} />}
       </div>
     </div>
   );
