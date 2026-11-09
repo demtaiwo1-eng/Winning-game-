@@ -3,13 +3,16 @@ name: EPHINTA iOS Simulator Build
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "eventsss123/eventsss-main/apps/web/**"
+      - "eventsss123/eventsss-main/apps/mobile/**"
+      - "eventsss123/eventsss-main/package*.json"
   push:
     branches: [main]
     paths:
       - "eventsss123/eventsss-main/apps/web/**"
       - "eventsss123/eventsss-main/apps/mobile/**"
       - "eventsss123/eventsss-main/package*.json"
-      - ".github/workflows/ephinta-ios-simulator-build.yml"
   workflow_dispatch:
 
 permissions:
