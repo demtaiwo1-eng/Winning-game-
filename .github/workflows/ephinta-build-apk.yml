@@ -151,6 +151,9 @@ jobs:
           retention-days: 30
 
   android-apk:
+    # APK builds are expensive and are run deliberately at major Android
+    # milestones or release time via workflow_dispatch, not on every PR.
+    if: github.event_name == 'workflow_dispatch'
     name: Build installable Android APK
     runs-on: ubuntu-latest
     needs: web-checks
