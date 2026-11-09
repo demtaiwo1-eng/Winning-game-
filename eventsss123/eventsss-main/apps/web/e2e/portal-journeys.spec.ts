@@ -19,18 +19,17 @@ const portals: PortalCase[] = [
 ];
 
 async function unlockDeviceGate(page: Page) {
-  const setupDialog = page.getByRole("dialog", { name: "Set your device PIN" });
-  if (await setupDialog.isVisible().catch(() => false)) {
-    await setupDialog.getByLabel("Six-digit PIN").fill("123456");
-    await setupDialog.getByLabel("Confirm PIN").fill("123456");
-    await setupDialog.getByRole("button", { name: "Set PIN and continue" }).click();
+  const securityDialog = page.getByRole("dialog", { name: /Set your device PIN|App locked/ });
+  await expect(securityDialog).toBeVisible();
+  const title = await securityDialog.locator("h1").textContent();
+  await securityDialog.getByLabel("Six-digit PIN").fill("123456");
+  if (title?.includes("Set your device PIN")) {
+    await securityDialog.getByLabel("Confirm PIN").fill("123456");
+    await securityDialog.getByRole("button", { name: "Set PIN and continue" }).click();
   } else {
-    const lockedDialog = page.getByRole("dialog", { name: "App locked" });
-    await expect(lockedDialog).toBeVisible();
-    await lockedDialog.getByLabel("Six-digit PIN").fill("123456");
-    await lockedDialog.getByRole("button", { name: "Unlock EPHINTA" }).click();
+    await securityDialog.getByRole("button", { name: "Unlock EPHINTA" }).click();
   }
-  await expect(page.getByRole("dialog", { name: /Set your device PIN|App locked/ })).toBeHidden();
+  await expect(securityDialog).toBeHidden();
 }
 
 async function installRoleApiFixtures(page: Page, portal: PortalCase, options: { firstRun?: boolean } = {}) {
