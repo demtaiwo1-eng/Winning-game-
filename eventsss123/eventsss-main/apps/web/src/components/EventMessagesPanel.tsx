@@ -151,9 +151,10 @@ export default function EventMessagesPanel({ events, initialEventId }: { events:
       } else {
         await api(`/events/${currentEventId}/messages/${message.id}/${action}`, { method: "PATCH", body: "{}" });
       }
+      const isSent = message.senderId === viewerId;
       setMessages((current) => {
         const isTarget = (item: EventMessage) =>
-          sent ? Boolean(message.groupId && item.groupId === message.groupId) : item.id === message.id;
+          isSent ? Boolean(message.groupId && item.groupId === message.groupId) : item.id === message.id;
         if (action === "delete" || (action === "archive" && folder !== "ALL") || (action === "unarchive" && folder === "ARCHIVED")) {
           return current.filter((item) => !isTarget(item));
         }
@@ -161,10 +162,10 @@ export default function EventMessagesPanel({ events, initialEventId }: { events:
           ...item,
           ...(action === "read" ? { readAt: new Date().toISOString() } : {}),
           ...(action === "unread" ? { readAt: null } : {}),
-          ...(action === "archive" ? (sent
+          ...(action === "archive" ? (isSent
             ? { senderArchivedAt: new Date().toISOString() }
             : { recipientArchivedAt: new Date().toISOString() }) : {}),
-          ...(action === "unarchive" ? (sent
+          ...(action === "unarchive" ? (isSent
             ? { senderArchivedAt: null }
             : { recipientArchivedAt: null }) : {}),
         });
