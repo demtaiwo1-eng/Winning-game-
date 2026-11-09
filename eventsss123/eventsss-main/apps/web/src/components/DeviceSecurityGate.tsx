@@ -53,7 +53,8 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const lastActivity = useRef(Date.now());
   const timer = useRef<number | null>(null);
-  const attempts = useRef(0);
+  const attemptsKey = useMemo(() => `ephinta:device-pin-attempts:v1:${userId}`, [userId]);
+  const attempts = useRef(Math.max(0, Math.min(5, Number(localStorage.getItem(attemptsKey) || 0))));
 
   useEffect(() => {
     let active = true;
@@ -83,6 +84,7 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
         androidBiometryStrength: AndroidBiometryStrength.weak,
       });
       attempts.current = 0;
+      localStorage.removeItem(attemptsKey);
       setLocked(false);
       setPin("");
       markActivity();
@@ -154,6 +156,7 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
         setConfigured(true);
         setLocked(false);
         attempts.current = 0;
+        localStorage.removeItem(attemptsKey);
         markActivity();
         setPin("");
         setConfirmPin("");
@@ -162,15 +165,18 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
       const record = JSON.parse(stored) as { salt: string; hash: string; version: number };
       const candidate = await derivePinHash(pin, base64ToBytes(record.salt));
       if (!equalConstantTime(candidate, record.hash)) {
-        attempts.current += 1;
+        attempts.current = Math.min(5, attempts.current + 1);
+        localStorage.setItem(attemptsKey, String(attempts.current));
         setError(attempts.current >= 5 ? "Too many attempts. Sign out and recover access through your account sign-in." : "Incorrect PIN. Try again.");
         if (attempts.current >= 5) {
           localStorage.removeItem(storageKey);
+          localStorage.removeItem(attemptsKey);
           onSignOut();
         }
         return;
       }
       attempts.current = 0;
+      localStorage.removeItem(attemptsKey);
       setLocked(false);
       setPin("");
       markActivity();
