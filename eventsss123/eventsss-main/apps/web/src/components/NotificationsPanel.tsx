@@ -122,7 +122,7 @@ export default function NotificationsPanel() {
   const unreadCount = items.filter((item) => !item.readAt).length;
 
   return (
-    <section className="ess-panel ess-notifications-panel">
+    <section className="ess-panel ess-notifications-panel ess-notifications-workspace">
       <div className="ess-section-heading">
         <div>
           <p className="ess-eyebrow">Account updates</p>
