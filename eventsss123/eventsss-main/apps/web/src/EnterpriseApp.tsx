@@ -31,6 +31,7 @@ import "./portal-menu.css";
 import "./public-menu.css";
 import "./event-builder.css";
 import "./public-landing.css";
+import "./styles/ephinta-planner-portal-polish.css";
 import "./styles/ephinta-parent-design-system.css"; // Must load last: parent theme overrides component-level palettes.
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
