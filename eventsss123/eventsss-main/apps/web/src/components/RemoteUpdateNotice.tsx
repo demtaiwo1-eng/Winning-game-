@@ -46,9 +46,12 @@ export default function RemoteUpdateNotice() {
         !manifest.url
       ) return;
 
-      let installedVersion = BUILT_VERSION;
+      const savedInstalledVersion = localStorage.getItem("ephinta:installed-version");
+      let installedVersion = savedInstalledVersion === manifest.version
+        ? savedInstalledVersion
+        : BUILT_VERSION;
       if (installedVersion === "bundled") {
-        installedVersion = localStorage.getItem("ephinta:installed-version") || installedVersion;
+        installedVersion = savedInstalledVersion || installedVersion;
       }
       if (isNativeApp()) {
         try {
