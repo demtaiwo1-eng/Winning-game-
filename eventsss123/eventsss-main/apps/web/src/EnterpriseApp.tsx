@@ -574,30 +574,54 @@ function ClientPortal({
             Your verifier confirms each booked service. All lights must be green at least 2 hours before start.
             The confirmation window opens 6 hours before the event.
           </p>
-          {readinessEvents.length === 0 ? (
+          {ownedEvents.length === 0 ? (
             <EmptyState
               icon="●"
-              title="No upcoming events"
-              description="Create an event with a start time, book services, then open this tab so a verifier can traffic-light every item."
+              title="Your readiness workspace starts with an event"
+              description="Create an event, add its date and location, book services and select a verifier. Your planner details will flow into this event's readiness board."
+              actionLabel="Create event"
+              onAction={() => setShowCreate(true)}
             />
           ) : (
             <>
               <label style={{ display: "block", marginTop: 12, marginBottom: 8 }}>
-                Event
+                Event to review
                 <select
-                  value={readinessEventId}
+                  value={ownedEvents.some((event) => event.id === readinessEventId) ? readinessEventId : ownedEvents[0].id}
                   onChange={(e) => setReadinessEventId(e.target.value)}
-                  style={{ display: "block", width: "100%", maxWidth: 420, marginTop: 6 }}
+                  style={{ display: "block", width: "100%", maxWidth: 520, marginTop: 6 }}
                 >
-                  {readinessEvents.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.title}
-                      {e.startsAt ? ` · ${new Date(e.startsAt).toLocaleString()}` : ""}
+                  {ownedEvents.map((event) => (
+                    <option key={event.id} value={event.id}>
+                      {event.title}
+                      {event.startsAt ? ` · ${new Date(event.startsAt).toLocaleString()}` : ""}
                     </option>
                   ))}
                 </select>
               </label>
-              {readinessEventId ? <EventReadinessBoard eventId={readinessEventId} mode="client" /> : null}
+              <div className="ess-readiness-planner-context">
+                <div>
+                  <p className="ess-eyebrow">From your planner</p>
+                  <strong>{(ownedEvents.find((event) => event.id === readinessEventId) || ownedEvents[0]).title}</strong>
+                  <p className="ess-muted">
+                    {[
+                      (ownedEvents.find((event) => event.id === readinessEventId) || ownedEvents[0]).city,
+                      (ownedEvents.find((event) => event.id === readinessEventId) || ownedEvents[0]).startsAt
+                        ? new Date((ownedEvents.find((event) => event.id === readinessEventId) || ownedEvents[0]).startsAt!).toLocaleString()
+                        : "Event date not set",
+                    ].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <div className="ess-filter-row">
+                  <button type="button" className="ess-quiet-button" onClick={() => { setChecklistEventId(readinessEventId || ownedEvents[0].id); setTab("planner"); }}>Open event workspace</button>
+                  <button type="button" className="ess-quiet-button" onClick={() => { setChecklistEventId(readinessEventId || ownedEvents[0].id); setTab("checklist"); }}>Review checklist</button>
+                  <button type="button" className="ess-quiet-button" onClick={() => { setVerifierEventId(readinessEventId || ownedEvents[0].id); setTab("verifiers"); }}>Manage verifier</button>
+                </div>
+              </div>
+              <EventReadinessBoard
+                eventId={ownedEvents.some((event) => event.id === readinessEventId) ? readinessEventId : ownedEvents[0].id}
+                mode="client"
+              />
             </>
           )}
         </section>
