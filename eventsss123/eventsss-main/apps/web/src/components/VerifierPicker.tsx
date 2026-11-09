@@ -16,6 +16,8 @@ type VerifierCard = {
   tier: string;
 };
 
+type EventOption = { id: string; title: string; startsAt?: string | null; city?: string | null };
+
 type Review = {
   rating: number;
   comment?: string | null;
@@ -31,13 +33,17 @@ const TIER_LABEL: Record<string, string> = {
 };
 
 export default function VerifierPicker({
+  events = [],
   eventId,
+  onEventChange,
   city,
   country,
   lat,
   lng,
 }: {
+  events?: EventOption[];
   eventId?: string;
+  onEventChange?: (eventId: string) => void;
   city?: string;
   country?: string;
   lat?: number;
@@ -118,9 +124,22 @@ export default function VerifierPicker({
         Closest to your event location rank first (Top local → Nearby → Same city). Open a card for bio,
         ratings from past jobs, and specialties. Selected verifiers receive an in-app notification; device push alerts will be enabled when the notification provider is configured.
       </p>
+      {events.length > 0 && (
+        <label className="ess-verifier-event-select">
+          Select the event this verifier will support
+          <select value={eventId || ""} onChange={(event) => onEventChange?.(event.target.value)} required>
+            <option value="" disabled>Choose an event</option>
+            {events.map((event) => (
+              <option key={event.id} value={event.id}>
+                {event.title}{event.startsAt ? ` · ${new Date(event.startsAt).toLocaleDateString()}` : ""}{event.city ? ` · ${event.city}` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {!eventId && (
         <p className="ess-form-error" style={{ marginTop: 12 }}>
-          Set a readiness event id (or create an event first) to confirm selection.
+          {events.length ? "Choose an event before selecting its verifier." : "Create an event first, then return here to select its verifier."}
         </p>
       )}
       <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
