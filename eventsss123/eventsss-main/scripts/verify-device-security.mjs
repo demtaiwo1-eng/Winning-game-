@@ -8,6 +8,9 @@ const read = (path) => readFileSync(resolve(root, path), "utf8");
 const gate = read("apps/web/src/components/DeviceSecurityGate.tsx");
 const app = read("apps/web/src/EnterpriseApp.tsx");
 const webPackage = JSON.parse(read("apps/web/package.json"));
+const globalCss = read("apps/web/src/styles/ephinta-global.css");
+const lockStyles = read("apps/web/src/styles/ephinta-portal-marketplace-polish.css");
+const mainEntry = read("apps/web/src/main.tsx");
 
 const checks = [
   ["the real EnterpriseApp entrypoint imports the device security gate", /import DeviceSecurityGate from ['"]\.\/components\/DeviceSecurityGate['"]/.test(app)],
@@ -28,6 +31,9 @@ const checks = [
   ["authenticated children are hidden while the device is locked", /display:\s*locked\s*\?\s*"none"\s*:\s*"contents"/.test(gate)],
   ["native biometric dependency is declared", Boolean(webPackage.dependencies?.["@aparajita/capacitor-biometric-auth"])],
   ["raw PIN is not written directly to local storage", !/localStorage\.setItem\(storageKey,\s*pin\)/.test(gate)],
+  ["device lock visual styling is defined in the shared global stylesheet", globalCss.includes('ephinta-portal-marketplace-polish.css') && lockStyles.includes(".ess-device-lock-card") && lockStyles.includes(".ess-device-lock-input")],
+  ["the active app entry imports one global CSS hub", (mainEntry.match(/import ['"][^'"]+\.css['"]/g) || []).length === 1 && mainEntry.includes("./styles/ephinta-global.css")],
+  ["authenticated portal components do not import their own CSS", !/^import ['"].+\.css['"]/m.test(app)],
 ];
 
 let failed = 0;
