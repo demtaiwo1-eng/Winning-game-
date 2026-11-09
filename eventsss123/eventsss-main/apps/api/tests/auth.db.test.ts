@@ -46,7 +46,7 @@ describe.skipIf(!run)("authentication flow (DB)", () => {
       name: "Duplicate Registration",
     });
     expect(duplicate.status).toBe(409);
-    expect(duplicate.body.code).toBe("ALREADY_EXISTS");
+    expect(duplicate.body.error.code).toBe("ALREADY_EXISTS");
   });
 
   it("returns the same safe credential error for wrong passwords and unknown emails", async () => {
@@ -61,8 +61,8 @@ describe.skipIf(!run)("authentication flow (DB)", () => {
 
     expect(wrongPassword.status).toBe(401);
     expect(unknownEmail.status).toBe(401);
-    expect(wrongPassword.body.code).toBe("INVALID_CREDENTIALS");
-    expect(unknownEmail.body.code).toBe("INVALID_CREDENTIALS");
+    expect(wrongPassword.body.error.code).toBe("INVALID_CREDENTIALS");
+    expect(unknownEmail.body.error.code).toBe("INVALID_CREDENTIALS");
     expect(wrongPassword.body).not.toHaveProperty("accessToken");
     expect(unknownEmail.body).not.toHaveProperty("accessToken");
   });
