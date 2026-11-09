@@ -489,15 +489,29 @@ function ClientPortal({
           {eventLoadError && <p className="ess-form-error" role="alert">{eventLoadError}</p>}
           <div className="ess-metrics">
             <Metric
-              label="Active events"
+              label="Events in your workspace"
               value={String(ownedEvents.length)}
-              detail={ownedEvents.length === 1 ? "Event in your workspace" : "Events in your workspace"}
+              detail={ownedEvents.length === 1 ? "Event ready for planning" : "Events ready for planning"}
               accent
             />
-            <Metric label="Committed budget" value="—" detail="Review budgets inside each event" />
-            <Metric label="Guest responses" value="—" detail="Open an event to manage guests" />
-            <Metric label="Vendor shortlist" value="—" detail="Browse marketplace services" />
+            <Metric label="Readiness events" value={String(readinessEvents.length)} detail="Events with a readiness workflow" />
+            <Metric label="Planning brief" value={planningAnswersEventId ? "In progress" : "Available"} detail="Your planning answers can be saved over multiple visits" />
           </div>
+          <section className="ess-panel ess-planner-quick-actions">
+            <div>
+              <p className="ess-eyebrow">Quick actions</p>
+              <h2>Continue planning</h2>
+              <p className="ess-muted">Jump directly to the part of your event that needs attention.</p>
+            </div>
+            <div className="ess-planner-action-grid">
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("planner")}>Event workspace</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("checklist")}>Interactive checklist</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("checkin")}>Guest check-in</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("marketplace")}>Marketplace</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("wallet")}>Payments & escrow</button>
+              <button type="button" className="ess-quiet-button" onClick={() => setTab("verifiers")}>Choose a verifier</button>
+            </div>
+          </section>
           {ownedEvents.length === 0 ? (
             <section className="ess-panel">
               <EmptyState
@@ -519,17 +533,18 @@ function ClientPortal({
                     <p className="ess-muted">
                       {[event.city, event.startsAt ? new Date(event.startsAt).toLocaleDateString() : "Date to be confirmed"].filter(Boolean).join(" · ")}
                     </p>
-                    <button
-                      className="ess-outline-button"
-                      type="button"
-                      disabled={!readinessEvents.some((readinessEvent) => readinessEvent.id === event.id)}
-                      onClick={() => {
-                        setReadinessEventId(event.id);
-                        setTab("readiness");
-                      }}
-                    >
-                      {readinessEvents.some((readinessEvent) => readinessEvent.id === event.id) ? "Open readiness" : "Add a future event date to open readiness"}
-                    </button>
+                    <div className="ess-event-card-actions">
+                      <button className="ess-primary" type="button" onClick={() => { setChecklistEventId(event.id); setTab("planner"); }}>Open workspace</button>
+                      <button className="ess-outline-button" type="button" onClick={() => { setChecklistEventId(event.id); setTab("checkin"); }}>Guest check-in</button>
+                      <button
+                        className="ess-quiet-button"
+                        type="button"
+                        disabled={!readinessEvents.some((readinessEvent) => readinessEvent.id === event.id)}
+                        onClick={() => { setReadinessEventId(event.id); setTab("readiness"); }}
+                      >
+                        {readinessEvents.some((readinessEvent) => readinessEvent.id === event.id) ? "Open readiness" : "Set event date for readiness"}
+                      </button>
+                    </div>
                   </article>
                 ))}
               </div>
