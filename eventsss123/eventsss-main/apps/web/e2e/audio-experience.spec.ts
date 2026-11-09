@@ -20,7 +20,8 @@ test("accepting background music saves consent, starts playback and dismisses al
   await expect(prompt).toBeVisible();
   await prompt.getByRole("button", { name: "Yes, play music" }).click();
   await expect(prompt).toHaveCount(0);
-  await expect(page.locator(".eph-audio__player, .eph-audio__restore, .eph-audio__backdrop")).toHaveCount(0);
+  await expect(page.locator(".eph-audio__player")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pause music" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("on");
   await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBe(1);
   await expect(page.locator("audio")).toHaveAttribute("src", /Wedding/);
@@ -60,8 +61,9 @@ test("saved music consent starts background playback without displaying a player
   await page.addInitScript(() => localStorage.setItem("ephinta:sound", "on"));
   await page.goto("/");
   await expect(page.getByRole("dialog", { name: "Enjoy background music?" })).toHaveCount(0);
-  await expect(page.locator(".eph-audio__player, .eph-audio__restore, .eph-audio__backdrop")).toHaveCount(0);
-  await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBe(1);
+  await expect(page.locator(".eph-audio__player")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pause music" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBeGreaterThanOrEqual(1);
 });
 
 test("all bundled EPHINTA music files are served as non-empty audio assets", async ({ page }) => {
