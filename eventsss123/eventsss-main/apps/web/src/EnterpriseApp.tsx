@@ -40,7 +40,6 @@ const MarketplaceBrowse = lazy(() => import("./components/MarketplaceBrowse"));
 const FeedbackPanel = lazy(() => import("./components/FeedbackPanel"));
 import { EmptyState } from "./components/EmptyState";
 const KycUpload = lazy(() => import("./components/KycUpload"));
-const SubscriptionsPanel = lazy(() => import("./components/SubscriptionsPanel"));
 import {
   checkPassword,
   PASSWORD_HELPER,
@@ -562,7 +561,7 @@ function ClientPortal({
               );
               setTab("kyc");
             }}
-            onOpenWallet={() => setTab("wallet")}
+            onOpenWallet={() => setTab("payments")}
           />
         </>
       )}
@@ -871,7 +870,7 @@ function VendorPortal({
     }
   };
   const [vendorTab, setVendorTab] = useDashboardTab(
-    ["catalog", "wallet", "payments", "plans", "kyc", "messages", "notifications", "promotions"] as const,
+    ["catalog", "wallet", "payments", "kyc", "messages", "notifications", "promotions"] as const,
     "catalog",
   );
   return (
@@ -890,7 +889,7 @@ function VendorPortal({
             <Icon>＋</Icon> Add package
           </button>
           <button className="ess-outline-button" type="button" onClick={() => setVendorTab("wallet")}>
-            Payments
+            Payments & finance
           </button>
         </div>
       </div>
@@ -899,7 +898,6 @@ function VendorPortal({
         <button type="button" className={vendorTab === "catalog" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("catalog")}>Catalog & demand</button>
         <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
         <button type="button" className={vendorTab === "payments" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("payments")}>Booking payments</button>
-        <button type="button" className={vendorTab === "plans" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("plans")}>Plans & promos</button>
         <button type="button" className={vendorTab === "kyc" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("kyc")}>KYC</button>
         <button type="button" className={vendorTab === "messages" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("messages")}>Enquiries & messages</button>
         <button type="button" className={vendorTab === "notifications" ? "ess-chip ess-chip-active" : "ess-chip"} onClick={() => setVendorTab("notifications")}>Notifications</button>
@@ -911,8 +909,6 @@ function VendorPortal({
         <WalletPanel role="VENDOR" />
       ) : vendorTab === "payments" ? (
         <VendorPaymentRequestsPanel />
-      ) : vendorTab === "plans" ? (
-        <SubscriptionsPanel audience="VENDOR" />
       ) : vendorTab === "kyc" ? (
         <KycUpload defaultKind="BUSINESS" />
       ) : vendorTab === "messages" ? (
@@ -1366,10 +1362,9 @@ function VerifierPortal() {
         {selected && (
           <>
             <EventReadinessBoard eventId={selected} mode="verifier" />
-            <EventMessagesPanel events={queue} initialEventId={selected} />
           </>
         )}
-        {queue.length > 0 && <EventMessagesPanel events={queue} />}
+        {queue.length > 0 && <EventMessagesPanel events={queue} initialEventId={selected || undefined} />}
         <WalletPanel role="VERIFIER" />
         <NotificationsPanel />
       </div>
