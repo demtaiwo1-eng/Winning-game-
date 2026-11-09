@@ -32,7 +32,6 @@ import "./public-menu.css";
 import "./event-builder.css";
 import "./public-landing.css";
 import "./styles/ephinta-parent-design-system.css"; // Must load last: parent theme overrides component-level palettes.
-import "./styles/ephinta-portal-marketplace-polish.css"; // Final responsive portal and onboarding refinements.
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
