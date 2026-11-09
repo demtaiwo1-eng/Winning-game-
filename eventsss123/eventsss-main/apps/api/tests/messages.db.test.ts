@@ -73,7 +73,7 @@ describe.skipIf(!run)("event messages (DB)", () => {
       const received = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(verifier.token));
       expect(received.body.items[0].body).toBe("Please confirm your zone.");
       const verifierNotifications = await request(app).get("/api/v1/notifications").set(auth(verifier.token));
-      expect(verifierNotifications.body.items).toHaveLength(1);
+      expect(verifierNotifications.body.items).toHaveLength(2);
       expect(verifierNotifications.body.items[0].type).toBe("MESSAGE");
       expect(verifierNotifications.body.items[0].deliveryStatus).toBe("NOT_CONFIGURED");
       const outsiderNotifications = await request(app).get("/api/v1/notifications").set(auth(outsider.token));
@@ -92,12 +92,12 @@ describe.skipIf(!run)("event messages (DB)", () => {
       expect(securityHistory.body.items.some((entry: { action: string }) => entry.action === "ACCOUNT_REGISTERED")).toBe(true);
 
       const read = await request(app).patch(`/api/v1/events/${eventId}/messages/read`).set(auth(verifier.token));
-      expect(read.body.updated).toBe(1);
+      expect(read.body.updated).toBe(2);
 
       await request(app).patch("/api/v1/notifications/preferences").set(auth(verifier.token))
         .send({ messages: false });
       const secondVerifierBeforeBroadcast = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(verifierTwo.token));
-      expect(secondVerifierBeforeBroadcast.body.items).toHaveLength(0);
+      expect(secondVerifierBeforeBroadcast.body.items).toHaveLength(1);
       const beforeBroadcast = await prisma.notification.count({ where: { userId: verifier.id } });
       const broadcast = await request(app).post(`/api/v1/events/${eventId}/messages`).set(auth(owner.token))
         .send({ broadcast: true, body: "Team update." });
@@ -105,10 +105,11 @@ describe.skipIf(!run)("event messages (DB)", () => {
       expect(broadcast.body.items).toHaveLength(2);
       expect(await prisma.notification.count({ where: { userId: verifier.id } })).toBe(beforeBroadcast);
       const secondVerifierReceived = await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(verifierTwo.token));
-      expect(secondVerifierReceived.body.items).toHaveLength(1);
-      expect(secondVerifierReceived.body.items[0].body).toBe("Team update.");
+      expect(secondVerifierReceived.body.items).toHaveLength(2);
+      expect(secondVerifierReceived.body.items.some((item: { body: string }) => item.body === "Team update.")).toBe(true);
+      expect(secondVerifierReceived.body.items.some((item: { body: string }) => item.body === "Run-of-show update.")).toBe(true);
       const secondVerifierNotifications = await request(app).get("/api/v1/notifications").set(auth(verifierTwo.token));
-      expect(secondVerifierNotifications.body.items).toHaveLength(1);
+      expect(secondVerifierNotifications.body.items).toHaveLength(2);
       expect(secondVerifierNotifications.body.items[0].type).toBe("MESSAGE");
 
       expect((await request(app).get(`/api/v1/events/${eventId}/messages`).set(auth(outsider.token))).status).toBe(403);
