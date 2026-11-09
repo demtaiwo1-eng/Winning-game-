@@ -141,3 +141,13 @@
   .ess-message-actions { justify-content: flex-start; }
   .ess-notification-actions { width: 100%; }
 }
+
+.ess-readiness-planner-context {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; padding: 15px; margin: 12px 0 18px;
+  border: 1px solid var(--ess-ui-line); border-radius: 15px; background: var(--ess-ui-soft);
+}
+.ess-readiness-planner-context > div:first-child { min-width: min(100%, 220px); }
+.ess-readiness-planner-context .ess-filter-row { padding: 0; }
+.ess-readiness-planner-context strong { font-size: 1.05rem; }
+.ess-readiness-planner-context p { margin: 5px 0 0; }
