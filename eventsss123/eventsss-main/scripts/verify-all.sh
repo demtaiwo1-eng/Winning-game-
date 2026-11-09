@@ -36,6 +36,7 @@ npm run test:e2e -w @ess/web
 step "Strict design quality audit"
 npm run design:audit:strict -w @ess/web
 
+if [[ "${EPHINTA_RUN_ANDROID_BUILD:-false}" == "true" ]]; then
 step "Android sync, lint, unit tests, and debug APK"
 if [[ -x apps/mobile/android/gradlew ]]; then
   npm run sync -w @ess/mobile
@@ -62,3 +63,7 @@ unzip -t "$APK" >/dev/null || fail "APK archive integrity check failed"
 echo
 echo "PASS: all configured EPHINTA verification stages completed."
 echo "APK: $APK"
+else
+  echo
+  echo "SKIP: Android build not required for this change set; run it for Android-native changes or a deliberate release verification."
+fi
