@@ -107,7 +107,7 @@ export default function WalletPanel({
         <div>
           <p className="ess-eyebrow">{t(locale, "wallet.title")}</p>
           <h2>
-            {role === "VENDOR"
+            {["VENDOR", "VERIFIER", "AFFILIATE", "CONSULTANT"].includes(role)
               ? "Earnings & wallet"
               : "Funds & protection"}
           </h2>
