@@ -219,7 +219,7 @@ export default function GuestCheckInPanel({ events, initialEventId }: { events: 
   const visibleGuests = guests.filter((guest) => `${guest.name} ${guest.email || ""} ${guest.phone || ""}`.toLowerCase().includes(search.toLowerCase()));
   const checkedCount = guests.filter((guest) => Boolean(guest.checkedInAt) || pending.includes(guest.id)).length;
 
-  return <section className="ess-panel" aria-labelledby="ess-checkin-heading">
+  return <section className="ess-panel ess-checkin-workspace" aria-labelledby="ess-checkin-heading">
     <p className="ess-eyebrow">Phase 7 · Offline gate operations</p>
     <h2 id="ess-checkin-heading">Guest check-in</h2>
     <p className="ess-muted">Check in from the cached guest list while offline. NFC reads an ESS invitation UUID or RSVP URL. Bluetooth scanners must expose the ESS check-in GATT service documented in the Phase 7 report.</p>
