@@ -64,3 +64,71 @@ button, a, input, select, textarea { touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Public landing contrast correction: dark promotional panels use light copy;
+   pale hero/section surfaces use dark copy. This layer is last-loaded on purpose. */
+.eph-landing .eph-promo-shell {
+  color: #ffffff !important;
+}
+.eph-landing .eph-promo-shell :where(h2, h3, strong, b) {
+  color: #ffffff !important;
+}
+.eph-landing .eph-promo-shell :where(p, small, span, li) {
+  color: #e6ecfb !important;
+}
+.eph-landing .eph-promo-shell :where(button, a[role="button"]) {
+  color: #20172b !important;
+}
+.eph-landing .eph-promo-shell .eph-promo-arrow {
+  color: #ffffff !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-planner {
+  color: #21152f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-planner :where(h2, h3, strong, b, label) {
+  color: #21152f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-planner :where(p, small, span, li) {
+  color: #51445f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-section :where(h2, h3, h4, strong, b) {
+  color: #251a36 !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-section :where(p, small, li, summary) {
+  color: #51445f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-section-kicker,
+.eph-landing:not([data-theme="dark"]) .eph-section-head .eph-section-kicker {
+  color: #6030ad !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-card {
+  color: #251a36 !important;
+  background: #ffffff !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-card :where(h3, strong, b) {
+  color: #251a36 !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-card :where(p, small, span) {
+  color: #51445f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-faq summary {
+  color: #251a36 !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-faq p {
+  color: #51445f !important;
+}
+.eph-landing[data-theme="dark"] .eph-planner,
+.eph-landing[data-theme="dark"] .eph-section,
+.eph-landing[data-theme="dark"] .eph-card {
+  color: #f7f5ff !important;
+}
+.eph-landing[data-theme="dark"] .eph-planner :where(h2, h3, strong, b, label),
+.eph-landing[data-theme="dark"] .eph-section :where(h2, h3, h4, strong, b),
+.eph-landing[data-theme="dark"] .eph-card :where(h3, strong, b) {
+  color: #ffffff !important;
+}
+.eph-landing[data-theme="dark"] .eph-planner :where(p, small, span, li),
+.eph-landing[data-theme="dark"] .eph-section :where(p, small, li, summary),
+.eph-landing[data-theme="dark"] .eph-card :where(p, small, span) {
+  color: #d9d5eb !important;
+}
