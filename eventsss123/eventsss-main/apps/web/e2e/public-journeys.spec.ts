@@ -51,29 +51,29 @@ test("static-host deep links load the React app on a fresh navigation", async ({
 
 test("legacy sign-in and registration URLs resolve to the active authentication flow", async ({ page }) => {
   await page.goto("/login?role=VENDOR");
-  await expect(page).toHaveURL(/\\/auth\\/signin\\?role=VENDOR$/);
+  await expect(page).toHaveURL(/\/auth\/signin\?role=VENDOR$/);
   await expect(page.locator("#eph-auth-dialog")).toBeVisible();
 
   await page.goto("/register/vendor");
-  await expect(page).toHaveURL(/\\/auth\\/signup\\?role=VENDOR$/);
+  await expect(page).toHaveURL(/\/auth\/signup\?role=VENDOR$/);
   await expect(page.locator("#eph-auth-dialog")).toHaveAttribute("data-role", "vendor");
 
   await page.goto("/register");
-  await expect(page).toHaveURL(/\\/auth\\/signup\\?role=CLIENT$/);
+  await expect(page).toHaveURL(/\/auth\/signup\?role=CLIENT$/);
   await expect(page.locator("#eph-auth-dialog")).toBeVisible();
 });
 
 test("legacy forgot-password and planner continuation URLs resolve to active screens", async ({ page }) => {
   await page.goto("/forgot-password");
-  await expect(page).toHaveURL(/\\/auth\\/forgot\\?role=CLIENT$/);
+  await expect(page).toHaveURL(/\/auth\/forgot\?role=CLIENT$/);
   await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
 
   await page.goto("/plan/review");
-  await expect(page).toHaveURL(/\\/plan$/);
+  await expect(page).toHaveURL(/\/plan$/);
   await expect(page.locator(".ess-builder-card")).toBeVisible();
 
   await page.goto("/plan/create-account");
-  await expect(page).toHaveURL(/\\/auth\\/signup\\?role=CLIENT$/);
+  await expect(page).toHaveURL(/\/auth\/signup\?role=CLIENT$/);
   await expect(page.locator("#eph-auth-dialog")).toBeVisible();
 });
 
@@ -103,12 +103,12 @@ test("signed-out marketplace deep links return to the marketplace after sign-in"
     localStorage.setItem("ess_onboard_v2_client_default", "1");
   });
   await page.goto("/marketplace");
-  await expect(page).toHaveURL(/\\/auth\\/signin\\?role=CLIENT&returnTo=%2Fmarketplace$/);
+  await expect(page).toHaveURL(/\/auth\/signin\?role=CLIENT&returnTo=%2Fmarketplace$/);
   await page.getByLabel("Email").fill("marketplace-return@example.test");
   await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
   await page.getByRole("button", { name: /Continue securely/ }).click();
   await unlockDeviceGate(page);
-  await expect(page).toHaveURL(/\\/dashboard\\/client\\?tab=marketplace$/);
+  await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
   await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
 });
 
@@ -127,7 +127,7 @@ test("marketplace deep links open the marketplace tab in an authenticated custom
 
   await page.goto("/marketplace");
   await unlockDeviceGate(page);
-  await expect(page).toHaveURL(/\\/dashboard\\/client\\?tab=marketplace$/);
+  await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
   await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
 });
 
