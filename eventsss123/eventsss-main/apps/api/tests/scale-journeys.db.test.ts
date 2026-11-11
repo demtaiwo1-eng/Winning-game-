@@ -65,6 +65,7 @@ describe.skipIf(!enabled)("EPHINTA 300-persona isolated scale journey", () => {
       const response = await request(app)
         .post("/api/v1/events")
         .set(auth(client.token))
+        .set("X-Forwarded-For", `198.51.100.${index + 1}`)
         .send({
           title: `Scale journey ${index + 1} ${createdAt}`,
           type: eventTypes[index % eventTypes.length],
@@ -87,10 +88,10 @@ describe.skipIf(!enabled)("EPHINTA 300-persona isolated scale journey", () => {
       data: { name: `Scale QA ${runId}`, slug: `${prefix}-services` },
     });
     await batches(vendors, 10, async (vendor, index) => {
-      const profile = await request(app).get("/api/v1/vendor/profile").set(auth(vendor.token));
+      const profile = await request(app).get("/api/v1/vendor/profile").set(auth(vendor.token)).set("X-Forwarded-For", `203.0.113.${index + 1}`);
       expect(profile.status, `vendor profile access: ${vendor.email}`).toBe(200);
       expect(profile.body.profile?.businessName).toContain("Scale Test Vendor");
-      const listing = await request(app).post("/api/v1/vendor/listings").set(auth(vendor.token)).send({
+      const listing = await request(app).post("/api/v1/vendor/listings").set(auth(vendor.token)).set("X-Forwarded-For", `203.0.113.${index + 1}`).send({
         title: `QA Service Package ${index + 1}`,
         description: `Synthetic unpublished listing for vendor ${index + 1}`,
         priceMinor: String(250000 + index * 1000),
@@ -112,22 +113,22 @@ describe.skipIf(!enabled)("EPHINTA 300-persona isolated scale journey", () => {
       await prisma.eventVerifierAssignment.create({
         data: { eventId, verifierId: verifier.id, zone: "GENERAL", isLead: true },
       });
-      const claim = await request(app).post(`/api/v1/readiness/events/${eventId}/claim`).set(auth(verifier.token)).send({});
+      const claim = await request(app).post(`/api/v1/readiness/events/${eventId}/claim`).set(auth(verifier.token)).set("X-Forwarded-For", `192.0.2.${index + 1}`).send({});
       expect(claim.status, `verifier claims assigned event: ${verifier.email}`).toBe(200);
-      const board = await request(app).get(`/api/v1/readiness/events/${eventId}`).set(auth(verifier.token));
+      const board = await request(app).get(`/api/v1/readiness/events/${eventId}`).set(auth(verifier.token)).set("X-Forwarded-For", `192.0.2.${index + 1}`);
       expect(board.status, `verifier readiness board: ${verifier.email}`).toBe(200);
       expect(board.body.canFinalize).toBe(true);
-      const queue = await request(app).get("/api/v1/readiness/queue").set(auth(verifier.token));
+      const queue = await request(app).get("/api/v1/readiness/queue").set(auth(verifier.token)).set("X-Forwarded-For", `192.0.2.${index + 1}`);
       expect(queue.status, `verifier queue access: ${verifier.email}`).toBe(200);
       expect(Array.isArray(queue.body.items)).toBe(true);
     });
-    const forbidden = await request(app).get("/api/v1/readiness/queue").set(auth(clients[0].token));
+    const forbidden = await request(app).get("/api/v1/readiness/queue").set(auth(clients[0].token)).set("X-Forwarded-For", "198.51.100.203");
     expect(forbidden.status).toBe(403);
 
     // Exercise event ownership boundaries using a different client identity.
-    const ownEvent = await request(app).get(`/api/v1/events/${eventIds[0]}`).set(auth(clients[0].token));
-    expect([200, 404]).toContain(ownEvent.status);
-    const foreignEvent = await request(app).get(`/api/v1/events/${eventIds[0]}`).set(auth(clients[1].token));
+    const ownEvent = await request(app).get(`/api/v1/events/${eventIds[0]}`).set(auth(clients[0].token)).set("X-Forwarded-For", "198.51.100.201");
+    expect(ownEvent.status).toBe(200);
+    const foreignEvent = await request(app).get(`/api/v1/events/${eventIds[0]}`).set(auth(clients[1].token)).set("X-Forwarded-For", "198.51.100.202");
     expect([403, 404]).toContain(foreignEvent.status);
 
     // Concurrent read burst: 100 independent verifier sessions, bounded to
