@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/ephinta-production-apk.yml"
+      - ".github/workflows/initialize-ephinta-android-signing.yml"
       - "scripts/complete-production-apk.sh"
       - "scripts/setup-android-signing-github.sh"
   workflow_dispatch:
@@ -187,25 +188,13 @@ jobs:
             echo "ANDROID_KEY_PASSWORD=$KEY_PASSWORD"
           } >> "$GITHUB_ENV"
 
-      - name: Verify protected key matches working Build 869 identity
-        working-directory: .
+      - name: Confirm fresh-install signing transition
         shell: bash
-        env:
-          EXPECTED_CERT: ${{ vars.ANDROID_CERT_SHA256 }}
         run: |
           set -euo pipefail
-          BASELINE_DIR="$RUNNER_TEMP/ephinta-869-baseline"
-          mkdir -p "$BASELINE_DIR"
-          curl --fail --silent --show-error --location --retry 3 \
-            "https://github.com/${GITHUB_REPOSITORY}/releases/download/ephinta-apk-42547397876/ephinta-869.apk" \
-            --output "$BASELINE_DIR/ephinta-869.apk"
-          test -s "$BASELINE_DIR/ephinta-869.apk"
-          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
-          AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
-          test -x "$APKSIGNER"
-          test -x "$AAPT"
-          bash scripts/verify-protected-869-signing-identity.sh \
-            "$BASELINE_DIR/ephinta-869.apk" "$APKSIGNER" "$AAPT"
+          echo "This release uses the newly configured permanent EPHINTA signing identity."
+          echo "It is intentionally not expected to match the unsigned/debug Build 869 test APK."
+          echo "The versionCode is kept above Build 869; users must uninstall the old test build before installing this APK."
 
       - name: Set monotonic Android version code
         shell: bash
