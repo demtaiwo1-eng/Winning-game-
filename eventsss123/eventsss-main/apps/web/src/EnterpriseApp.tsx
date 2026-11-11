@@ -2219,7 +2219,12 @@ export default function EnterpriseApp() {
         try {
           hasPendingEventBrief = Boolean(localStorage.getItem("ess_event_draft"));
         } catch { /* storage may be disabled */ }
-        navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
+        const requestedReturnTo = new URLSearchParams(location.search).get("returnTo");
+        const safeReturnTo =
+          requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//")
+            ? requestedReturnTo
+            : `/dashboard/${String(user.role).toLowerCase()}`;
+        navigate(safeReturnTo, { replace: true });
         if (!hasCompletedOnboard(user.role, user.organizationMode)) setShowOnboard(true);
         try {
           const pending = localStorage.getItem("ess_resume_event");
@@ -2239,6 +2244,10 @@ export default function EnterpriseApp() {
           <Route path="/register" element={<LegacyAuthRedirect mode="signup" />} />
           <Route path="/register/:role" element={<LegacyAuthRedirect mode="signup" />} />
           <Route path="/forgot-password" element={<LegacyAuthRedirect mode="forgot" />} />
+          <Route
+            path="/marketplace"
+            element={<Navigate to="/auth/signin?role=CLIENT&returnTo=%2Fmarketplace" replace />}
+          />
           <Route path="/plan/review" element={<Navigate to="/plan" replace />} />
           <Route path="/plan/create-account" element={<Navigate to="/auth/signup?role=CLIENT" replace />} />
           <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
@@ -2518,6 +2527,14 @@ export default function EnterpriseApp() {
       </header>
       <Routes>
         <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
+        <Route
+          path="/marketplace"
+          element={
+            session.role === "CLIENT" || (session.role === "ORGANIZATION" && session.organizationMode === "EVENT_PLANNING")
+              ? <Navigate to={`/dashboard/${session.role.toLowerCase()}?tab=marketplace`} replace />
+              : <Navigate to={`/dashboard/${session.role.toLowerCase()}`} replace />
+          }
+        />
         <Route
           path={APP_ROUTE_PATHS.plan}
           element={
