@@ -135,8 +135,8 @@ describe.skipIf(!enabled)("EPHINTA 300-persona isolated scale journey", () => {
     // batches of 10 to avoid turning a functional test into a DB connection
     // exhaustion test. The separate load-test phase increases concurrency.
     let successfulQueueReads = 0;
-    await batches(verifiers, 10, async (verifier) => {
-      const response = await request(app).get("/api/v1/readiness/queue").set(auth(verifier.token));
+    await batches(verifiers, 10, async (verifier, index) => {
+      const response = await request(app).get("/api/v1/readiness/queue").set(auth(verifier.token)).set("X-Forwarded-For", `192.0.2.${index + 1}`);
       if (response.status === 200) successfulQueueReads += 1;
     });
     expect(successfulQueueReads).toBe(100);
@@ -149,4 +149,5 @@ afterAll(async () => {
   // Keep the disposable QA database tidy after the run. Related rows are
   // removed by the User foreign-key cascade rules in the Prisma schema.
   await prisma.user.deleteMany({ where: { email: { startsWith: prefix } } });
+  await prisma.category.deleteMany({ where: { slug: `${prefix}-services` } });
 });
