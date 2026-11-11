@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ephinta-web
+    runtime: static
+    repo: https://github.com/demtaiwo1-eng/Winning-game-
+    branch: main
+    buildCommand: cd eventsss123/eventsss-main && npm install --include=dev && npm run build -w apps/web
+    staticPublishPath: eventsss123/eventsss-main/apps/web/dist
+    autoDeployTrigger: commit
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
