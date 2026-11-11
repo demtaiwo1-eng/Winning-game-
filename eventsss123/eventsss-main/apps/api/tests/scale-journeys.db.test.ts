@@ -14,9 +14,9 @@ const eventTypes = ["PERSONAL", "CORPORATE", "SOCIAL", "SPORTS", "CULTURAL", "RE
 
 type TestUser = { id: string; token: string; email: string };
 
-async function batches<T>(items: T[], size: number, action: (item: T) => Promise<void>) {
+async function batches<T>(items: T[], size: number, action: (item: T, index: number) => Promise<void>) {
   for (let index = 0; index < items.length; index += size) {
-    await Promise.all(items.slice(index, index + size).map(action));
+    await Promise.all(items.slice(index, index + size).map((item, offset) => action(item, index + offset)));
   }
 }
 
