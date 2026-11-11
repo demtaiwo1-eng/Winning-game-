@@ -2137,7 +2137,23 @@ export default function EnterpriseApp() {
       void registerPushIfNative();
       setSession({ id: user.id, name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
       setActiveRole(user.role);
-      navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
+      let storedReturnTo: string | null = null;
+      try {
+        storedReturnTo = sessionStorage.getItem("ess_auth_return_to");
+        sessionStorage.removeItem("ess_auth_return_to");
+      } catch { /* storage may be disabled */ }
+      const requestedReturnTo =
+        new URLSearchParams(location.search).get("returnTo") || storedReturnTo;
+      const safeReturnTo =
+        requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//")
+          ? requestedReturnTo
+          : `/dashboard/${String(user.role).toLowerCase()}`;
+      const postLoginDestination = safeReturnTo === "/marketplace"
+        ? user.role === "CLIENT" || (user.role === "ORGANIZATION" && user.organizationMode === "EVENT_PLANNING")
+          ? `/dashboard/${String(user.role).toLowerCase()}?tab=marketplace`
+          : `/dashboard/${String(user.role).toLowerCase()}`
+        : safeReturnTo;
+      navigate(postLoginDestination, { replace: true });
       if (authMode === "signup" || !hasCompletedOnboard(user.role, user.organizationMode)) {
         setShowOnboard(true);
       }
