@@ -108,7 +108,8 @@ test("signed-out marketplace deep links return to the marketplace after sign-in"
   await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
   await page.getByRole("button", { name: /Continue securely/ }).click();
   await unlockDeviceGate(page);
-  await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
+  await expect(page).toHaveURL(/\/dashboard\/client(?:\?tab=marketplace)?$/);
+  await expect(page.getByRole("heading", { name: /Explore the EPHINTA Marketplace/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
 });
 
