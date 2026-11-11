@@ -27,7 +27,19 @@ The runner then executes API/web checks, the production web build, strict design
 
 ## Demo-to-live payment mode
 
-The API already uses the server-side `PAYMENT_MODE=test|live` setting. Keep `test` for demo and provider sandbox. A live cutover is a controlled backend configuration change, not a frontend switch:
+The API uses server-side `PAYMENT_MODE=test|live`; the service's default platform commission is configured in basis points. EPHINTA's requested 1% fee is `COMMISSION_BPS=100` (100 basis points). Staging is configured for `PAYMENT_MODE=test`, `ALLOW_PRODUCTION_TEST_MODE=true`, and `COMMISSION_BPS=100`; the staging deployment is being rolled out. Production settings remain unchanged until a separately approved live cutover.
+
+Use the guarded one-command Render switch from the repository root. Set `RENDER_API_KEY` in a private shell/CI secret store; never commit it:
+```bash
+EPHINTA_RENDER_TARGET=staging npm run payments:mode -- demo
+```
+For live, use the production target and complete every explicit cutover approval required by the script:
+```bash
+EPHINTA_RENDER_TARGET=production EPHINTA_LIVE_PROVIDER=paystack EPHINTA_LIVE_CUTOVER_APPROVED=YES EPHINTA_LIVE_PROVIDER_APPROVED=YES EPHINTA_LIVE_CREDENTIALS_VERIFIED=YES EPHINTA_LIVE_WEBHOOKS_VERIFIED=YES EPHINTA_LIVE_RECONCILIATION_VERIFIED=YES EPHINTA_LIVE_IDEMPOTENCY_VERIFIED=YES npm run payments:mode -- live
+```
+The script accepts only Paystack or Flutterwave for live mode; OPay is sandbox-only, Cleva/Eversend adapters are not present, and Stripe checkout is disabled. It checks for the appropriate live secret-key prefix without printing the key. The script changes only the payment-mode, production-test opt-in and 1% commission variables, then requests a Render deploy.
+
+A live cutover is a controlled backend configuration change, not a frontend switch:
 
 1. Confirm a live-capable provider adapter is implemented and approved. OPay in this repository is explicitly sandbox-only; it must not be treated as a live provider.
 2. Configure that provider's live credentials as Render backend secrets (never as `VITE_*` variables).
