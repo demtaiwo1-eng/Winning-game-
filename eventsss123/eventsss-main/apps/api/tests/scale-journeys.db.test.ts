@@ -56,9 +56,12 @@ describe.skipIf(!enabled)("EPHINTA 300-persona isolated scale journey", () => {
     expect(new Set([...clients, ...vendors, ...verifiers].map((user) => user.email)).size).toBe(300);
     expect(new Set([...clients, ...vendors, ...verifiers].map((user) => user.id)).size).toBe(300);
 
-    const eventIds: string[] = [];
+    const eventIds: string[] = Array(100).fill("");
     const createdAt = Date.now();
+    const eventStartBase = Date.now() + 24 * 60 * 60 * 1000;
     await batches(clients, 10, async (client, index) => {
+      const startsAt = new Date(eventStartBase + index * 60_000);
+      const endsAt = new Date(startsAt.getTime() + 2 * 60 * 60 * 1000);
       const response = await request(app)
         .post("/api/v1/events")
         .set(auth(client.token))
@@ -68,27 +71,55 @@ describe.skipIf(!enabled)("EPHINTA 300-persona isolated scale journey", () => {
           currency: "NGN",
           country: "NG",
           city: ["Lagos", "Abuja", "Ibadan", "Port Harcourt", "Kano"][index % 5],
+          startsAt: startsAt.toISOString(),
+          endsAt: endsAt.toISOString(),
           expectedGuests: 30 + ((index * 17) % 970),
           budgetMinor: String(500000 + index * 12500),
         });
       expect(response.status, `client event creation: ${client.email}`).toBe(201);
       expect(response.body.event?.id).toBeTruthy();
-      eventIds.push(response.body.event.id as string);
+      eventIds[index] = response.body.event.id as string;
     });
 
-    // Each vendor's profile is created as part of the registration transaction.
-    await batches(vendors, 10, async (vendor) => {
-      const response = await request(app).get("/api/v1/vendor/profile").set(auth(vendor.token));
-      expect(response.status, `vendor profile access: ${vendor.email}`).toBe(200);
-      expect(response.body.profile?.businessName).toContain("Scale Test Vendor");
+    // Each vendor creates one distinct unpublished service listing through the
+    // real API; the category is isolated to this run and never promoted live.
+    const category = await prisma.category.create({
+      data: { name: `Scale QA ${runId}`, slug: `${prefix}-services` },
+    });
+    await batches(vendors, 10, async (vendor, index) => {
+      const profile = await request(app).get("/api/v1/vendor/profile").set(auth(vendor.token));
+      expect(profile.status, `vendor profile access: ${vendor.email}`).toBe(200);
+      expect(profile.body.profile?.businessName).toContain("Scale Test Vendor");
+      const listing = await request(app).post("/api/v1/vendor/listings").set(auth(vendor.token)).send({
+        title: `QA Service Package ${index + 1}`,
+        description: `Synthetic unpublished listing for vendor ${index + 1}`,
+        priceMinor: String(250000 + index * 1000),
+        categoryId: category.id,
+        type: "SERVICE",
+        status: "DRAFT",
+        currency: "NGN",
+        city: "Lagos",
+        capacity: 50 + index,
+      });
+      expect(listing.status, `vendor draft listing: ${vendor.email}`).toBe(201);
+      expect(listing.body.listing?.status).toBe("DRAFT");
     });
 
-    // Each verifier has a distinct identity and is authorized for the verifier
-    // queue. A client token must never be able to access this role-only route.
-    await batches(verifiers, 10, async (verifier) => {
-      const response = await request(app).get("/api/v1/readiness/queue").set(auth(verifier.token));
-      expect(response.status, `verifier queue access: ${verifier.email}`).toBe(200);
-      expect(Array.isArray(response.body.items)).toBe(true);
+    // Assign one event to each distinct verifier, claim it, and read its
+    // readiness board. This exercises the real role boundary and assignment.
+    await batches(verifiers, 10, async (verifier, index) => {
+      const eventId = eventIds[index];
+      await prisma.eventVerifierAssignment.create({
+        data: { eventId, verifierId: verifier.id, zone: "GENERAL", isLead: true },
+      });
+      const claim = await request(app).post(`/api/v1/readiness/events/${eventId}/claim`).set(auth(verifier.token)).send({});
+      expect(claim.status, `verifier claims assigned event: ${verifier.email}`).toBe(200);
+      const board = await request(app).get(`/api/v1/readiness/events/${eventId}`).set(auth(verifier.token));
+      expect(board.status, `verifier readiness board: ${verifier.email}`).toBe(200);
+      expect(board.body.canFinalize).toBe(true);
+      const queue = await request(app).get("/api/v1/readiness/queue").set(auth(verifier.token));
+      expect(queue.status, `verifier queue access: ${verifier.email}`).toBe(200);
+      expect(Array.isArray(queue.body.items)).toBe(true);
     });
     const forbidden = await request(app).get("/api/v1/readiness/queue").set(auth(clients[0].token));
     expect(forbidden.status).toBe(403);
