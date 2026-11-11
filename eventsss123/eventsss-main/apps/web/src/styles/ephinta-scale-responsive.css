@@ -1,0 +1,66 @@
+/* EPHINTA responsive hardening layer.
+   Imported last from ephinta-global.css so layout fixes apply consistently
+   to landing, planner, marketplace and role workspaces. */
+:root {
+  --ephinta-content-max: 1360px;
+  --ephinta-gutter: clamp(16px, 3vw, 32px);
+  --ephinta-control-height: 46px;
+  --ephinta-focus-ring: 0 0 0 3px rgba(255, 106, 0, .22);
+}
+html, body, #root { width: 100%; max-width: 100%; }
+#root, main, section, article, form, nav, header, footer { min-width: 0; }
+img, video, canvas, svg { max-width: 100%; }
+button, input, select, textarea { max-width: 100%; }
+button, a, input, select, textarea { touch-action: manipulation; }
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ess-orange, #ff6a00);
+  outline-offset: 3px;
+}
+:where(input, select, textarea) { min-height: var(--ephinta-control-height); }
+:where(textarea) { min-height: 108px; }
+.workspace-shell {
+  width: min(100%, var(--ephinta-content-max));
+  padding-inline: var(--ephinta-gutter) !important;
+}
+.workspace-grid, .detail-grid, .listing-grid {
+  min-width: 0;
+}
+.workspace-grid > *, .detail-grid > *, .listing-grid > * { min-width: 0; }
+.eph-landing, .ess-app, .workspace-shell { max-width: 100%; }
+.eph-landing .eph-hero-grid { min-width: 0; }
+.eph-landing .eph-hero-grid > * { min-width: 0; }
+.eph-landing .eph-ad-scroll { max-width: 100%; overscroll-behavior-inline: contain; }
+@media (max-width: 640px) {
+  .workspace-shell { padding: 24px 16px calc(52px + env(safe-area-inset-bottom, 0px)) !important; }
+  .workspace-header, .section-header { flex-wrap: wrap; align-items: stretch; }
+  .workspace-grid, .detail-grid, .listing-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .event-form, .vendor-search { flex-wrap: wrap; }
+  .event-form input, .vendor-search input { flex: 1 1 100%; width: 100%; }
+  .event-form > button, .vendor-search > button { width: 100%; }
+  .event-form-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .detail-nav { width: 100%; max-width: 100%; overflow-x: auto; justify-content: flex-start; }
+  .detail-nav-button { flex: 0 0 auto; }
+  .workspace-card { padding: 18px !important; }
+  .eph-landing .eph-nav { min-height: 64px; height: auto; padding: 12px 16px; flex-wrap: wrap; }
+  .eph-landing .eph-links { display: none; }
+  .eph-landing .eph-nav-actions { gap: 8px; }
+  .eph-landing .eph-hero { padding: 34px 16px 42px; min-height: 0; }
+  .eph-landing .eph-hero-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 24px; }
+  .eph-landing .eph-hero-cta { display: flex; flex-wrap: wrap; }
+  .eph-landing .eph-hero-cta > button { flex: 1 1 100%; width: 100%; }
+  .eph-landing .eph-section { padding-inline: 16px; }
+  .eph-landing .eph-cards { grid-template-columns: minmax(0, 1fr) !important; }
+  .eph-landing .eph-footer { gap: 14px; flex-wrap: wrap; padding-inline: 16px; }
+  .eph-landing .eph-footer-links { flex-wrap: wrap; }
+}
+@media (min-width: 641px) and (max-width: 1024px) {
+  .workspace-shell { padding-inline: 24px !important; }
+  .workspace-grid, .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .listing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .eph-landing .eph-nav { padding-inline: 24px; }
+  .eph-landing .eph-hero { padding-inline: 28px; }
+  .eph-landing .eph-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); gap: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
