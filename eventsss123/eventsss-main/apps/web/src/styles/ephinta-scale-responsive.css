@@ -1,0 +1,167 @@
+/* EPHINTA responsive hardening layer.
+   Imported last from ephinta-global.css so layout fixes apply consistently
+   to landing, planner, marketplace and role workspaces. */
+:root {
+  --ephinta-content-max: 1360px;
+  --ephinta-gutter: clamp(16px, 3vw, 32px);
+  --ephinta-control-height: 46px;
+  --ephinta-focus-ring: 0 0 0 3px rgba(255, 106, 0, .22);
+}
+html, body, #root { width: 100%; max-width: 100%; }
+#root, main, section, article, form, nav, header, footer { min-width: 0; }
+img, video, canvas, svg { max-width: 100%; }
+button, input, select, textarea { max-width: 100%; }
+button, a, input, select, textarea { touch-action: manipulation; }
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ess-orange, #ff6a00);
+  outline-offset: 3px;
+}
+:where(input, select, textarea) { min-height: var(--ephinta-control-height); }
+:where(textarea) { min-height: 108px; }
+.workspace-shell {
+  width: min(100%, var(--ephinta-content-max));
+  padding-inline: var(--ephinta-gutter) !important;
+}
+.workspace-grid, .detail-grid, .listing-grid {
+  min-width: 0;
+}
+.workspace-grid > *, .detail-grid > *, .listing-grid > * { min-width: 0; }
+.eph-landing, .ess-app, .workspace-shell { max-width: 100%; }
+.eph-landing .eph-hero-grid { min-width: 0; }
+.eph-landing .eph-hero-grid > * { min-width: 0; }
+.eph-landing .eph-ad-scroll { max-width: 100%; overscroll-behavior-inline: contain; }
+@media (max-width: 640px) {
+  .workspace-shell { padding: 24px 16px calc(52px + env(safe-area-inset-bottom, 0px)) !important; }
+  .workspace-header, .section-header { flex-wrap: wrap; align-items: stretch; }
+  .workspace-grid, .detail-grid, .listing-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .event-form, .vendor-search { flex-wrap: wrap; }
+  .event-form input, .vendor-search input { flex: 1 1 100%; width: 100%; }
+  .event-form > button, .vendor-search > button { width: 100%; }
+  .event-form-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .detail-nav { width: 100%; max-width: 100%; overflow-x: auto; justify-content: flex-start; }
+  .detail-nav-button { flex: 0 0 auto; }
+  .workspace-card { padding: 18px !important; }
+  .eph-landing .eph-nav { min-height: 64px; height: auto; padding: 12px 16px; flex-wrap: wrap; }
+  .eph-landing .eph-links { display: none; }
+  .eph-landing .eph-nav-actions { gap: 8px; }
+  .eph-landing .eph-hero { padding: 34px 16px 42px; min-height: 0; }
+  .eph-landing .eph-hero-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 24px; }
+  .eph-landing .eph-hero-cta { display: flex; flex-wrap: wrap; }
+  .eph-landing .eph-hero-cta > button { flex: 1 1 100%; width: 100%; }
+  .eph-landing .eph-section { padding-inline: 16px; }
+  .eph-landing .eph-cards { grid-template-columns: minmax(0, 1fr) !important; }
+  .eph-landing .eph-footer { gap: 14px; flex-wrap: wrap; padding-inline: 16px; }
+  .eph-landing .eph-footer-links { flex-wrap: wrap; }
+}
+@media (min-width: 641px) and (max-width: 1024px) {
+  .workspace-shell { padding-inline: 24px !important; }
+  .workspace-grid, .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .listing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .eph-landing .eph-nav { padding-inline: 24px; }
+  .eph-landing .eph-hero { padding-inline: 28px; }
+  .eph-landing .eph-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); gap: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Public landing contrast correction: dark promotional panels use light copy;
+   pale hero/section surfaces use dark copy. This layer is last-loaded on purpose. */
+.eph-landing .eph-promo-shell {
+  color: #ffffff !important;
+}
+.eph-landing .eph-promo-shell :where(h2, h3, strong, b) {
+  color: #ffffff !important;
+}
+.eph-landing .eph-promo-shell :where(p, small, span, li) {
+  color: #e6ecfb !important;
+}
+.eph-landing .eph-promo-shell :where(button, a[role="button"]) {
+  color: #20172b !important;
+}
+.eph-landing .eph-promo-shell .eph-promo-arrow {
+  color: #ffffff !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-planner {
+  color: #21152f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-planner :where(h2, h3, strong, b, label) {
+  color: #21152f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-planner :where(p, small, span, li) {
+  color: #51445f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-section :where(h2, h3, h4, strong, b) {
+  color: #251a36 !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-section :where(p, small, li, summary) {
+  color: #51445f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-section-kicker,
+.eph-landing:not([data-theme="dark"]) .eph-section-head .eph-section-kicker {
+  color: #6030ad !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-card {
+  color: #251a36 !important;
+  background: #ffffff !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-card :where(h3, strong, b) {
+  color: #251a36 !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-card :where(p, small, span) {
+  color: #51445f !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-faq summary {
+  color: #251a36 !important;
+}
+.eph-landing:not([data-theme="dark"]) .eph-faq p {
+  color: #51445f !important;
+}
+.eph-landing[data-theme="dark"] .eph-planner,
+.eph-landing[data-theme="dark"] .eph-section,
+.eph-landing[data-theme="dark"] .eph-card {
+  color: #f7f5ff !important;
+}
+.eph-landing[data-theme="dark"] .eph-planner :where(h2, h3, strong, b, label),
+.eph-landing[data-theme="dark"] .eph-section :where(h2, h3, h4, strong, b),
+.eph-landing[data-theme="dark"] .eph-card :where(h3, strong, b) {
+  color: #ffffff !important;
+}
+.eph-landing[data-theme="dark"] .eph-planner :where(p, small, span, li),
+.eph-landing[data-theme="dark"] .eph-section :where(p, small, li, summary),
+.eph-landing[data-theme="dark"] .eph-card :where(p, small, span) {
+  color: #d9d5eb !important;
+}
+
+/* The feature spotlight is a pale surface in light/colorful modes, so its copy
+   must not inherit the white-on-dark treatment used by the old theme layer. */
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone {
+  color: #251633 !important;
+  background: linear-gradient(145deg, #ffffff 0%, #f1eaff 55%, #ffeaf5 100%) !important;
+  border-color: #d8c6ee !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone h2 {
+  color: #251633 !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone :where(p, small, span:not(.ephinta-human-faces span)) {
+  color: #51445f !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone__eyebrow {
+  color: #6030ad !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone__switches button {
+  color: #251633 !important;
+  background: #f4eaff !important;
+  border-color: #c9b4e8 !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone__switches button[aria-pressed="true"] {
+  color: #251633 !important;
+  background: linear-gradient(100deg, #ffd16b, #ffb7dc) !important;
+  border-color: #d9a7ca !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-bright-slogan {
+  color: #251a36 !important;
+  background: none !important;
+  -webkit-text-fill-color: #251a36 !important;
+  text-shadow: none !important;
+}

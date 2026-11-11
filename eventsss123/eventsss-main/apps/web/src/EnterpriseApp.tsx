@@ -188,6 +188,18 @@ function SignedOutDashboardRedirect() {
   return <Navigate to={target ?? "/"} replace />;
 }
 
+function LegacyAuthRedirect({ mode }: { mode: "signin" | "signup" | "forgot" }) {
+  const location = useLocation();
+  const { role: roleParam } = useParams();
+  const query = new URLSearchParams(location.search);
+  const requestedRole = (roleParam ?? query.get("role") ?? "CLIENT").toUpperCase();
+  const role = SELF_REGISTER_ROLES.includes(requestedRole as SelfRegisterRole)
+    ? requestedRole
+    : "CLIENT";
+  query.set("role", role);
+  return <Navigate to={`/auth/${mode}?${query.toString()}`} replace />;
+}
+
 const initialListings: Listing[] = [];
 const initialGigs: Gig[] = [];
 const initialCases: KycCase[] = [];
@@ -1938,6 +1950,12 @@ export default function EnterpriseApp() {
     } catch { /* */ }
   }, []);
 
+  useEffect(() => {
+    const requestedReturnTo = new URLSearchParams(location.search).get("returnTo");
+    if (requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//")) {
+      try { sessionStorage.setItem("ess_auth_return_to", requestedReturnTo); } catch { /* storage may be disabled */ }
+    }
+  }, [location.search]);
 
   const [authError, setAuthError] = useState("");
   const [authNotice, setAuthNotice] = useState("");
@@ -2119,7 +2137,23 @@ export default function EnterpriseApp() {
       void registerPushIfNative();
       setSession({ id: user.id, name: user.name, email: user.email, role: user.role, organizationMode: user.organizationMode });
       setActiveRole(user.role);
-      navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
+      let storedReturnTo: string | null = null;
+      try {
+        storedReturnTo = sessionStorage.getItem("ess_auth_return_to");
+        sessionStorage.removeItem("ess_auth_return_to");
+      } catch { /* storage may be disabled */ }
+      const requestedReturnTo =
+        new URLSearchParams(location.search).get("returnTo") || storedReturnTo;
+      const safeReturnTo =
+        requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//")
+          ? requestedReturnTo
+          : `/dashboard/${String(user.role).toLowerCase()}`;
+      const postLoginDestination = safeReturnTo === "/marketplace"
+        ? user.role === "CLIENT" || (user.role === "ORGANIZATION" && user.organizationMode === "EVENT_PLANNING")
+          ? `/dashboard/${String(user.role).toLowerCase()}?tab=marketplace`
+          : `/dashboard/${String(user.role).toLowerCase()}`
+        : safeReturnTo;
+      navigate(postLoginDestination, { replace: true });
       if (authMode === "signup" || !hasCompletedOnboard(user.role, user.organizationMode)) {
         setShowOnboard(true);
       }
@@ -2207,7 +2241,23 @@ export default function EnterpriseApp() {
         try {
           hasPendingEventBrief = Boolean(localStorage.getItem("ess_event_draft"));
         } catch { /* storage may be disabled */ }
-        navigate(`/dashboard/${String(user.role).toLowerCase()}`, { replace: true });
+        let storedReturnTo: string | null = null;
+        try {
+          storedReturnTo = sessionStorage.getItem("ess_auth_return_to");
+          sessionStorage.removeItem("ess_auth_return_to");
+        } catch { /* storage may be disabled */ }
+        const requestedReturnTo =
+          new URLSearchParams(location.search).get("returnTo") || storedReturnTo;
+        const safeReturnTo =
+          requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//")
+            ? requestedReturnTo
+            : `/dashboard/${String(user.role).toLowerCase()}`;
+        const postLoginDestination = safeReturnTo === "/marketplace"
+          ? user.role === "CLIENT" || (user.role === "ORGANIZATION" && user.organizationMode === "EVENT_PLANNING")
+            ? `/dashboard/${String(user.role).toLowerCase()}?tab=marketplace`
+            : `/dashboard/${String(user.role).toLowerCase()}`
+          : safeReturnTo;
+        navigate(postLoginDestination, { replace: true });
         if (!hasCompletedOnboard(user.role, user.organizationMode)) setShowOnboard(true);
         try {
           const pending = localStorage.getItem("ess_resume_event");
@@ -2223,6 +2273,17 @@ export default function EnterpriseApp() {
         {accountNotice && <div className="ess-shell"><p className="ess-muted" role="status">{accountNotice}</p></div>}
         <Routes>
           <Route path={APP_ROUTE_PATHS.home} element={publicLandingContent} />
+          <Route path="/login" element={<LegacyAuthRedirect mode="signin" />} />
+          <Route path="/register" element={<LegacyAuthRedirect mode="signup" />} />
+          <Route path="/register/:role" element={<LegacyAuthRedirect mode="signup" />} />
+          <Route path="/forgot-password" element={<LegacyAuthRedirect mode="forgot" />} />
+          <Route
+            path="/marketplace"
+            element={<Navigate to="/auth/signin?role=CLIENT&returnTo=%2Fmarketplace" replace />}
+          />
+          <Route path="/plan/review" element={<Navigate to="/plan" replace />} />
+          <Route path="/plan/create-account" element={<Navigate to="/auth/signup?role=CLIENT" replace />} />
+          <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
           <Route
             path={APP_ROUTE_PATHS.plan}
             element={<EventBuilder onBack={() => navigate("/")} onComplete={() => openAuth("CLIENT", "signup")} />}
@@ -2499,6 +2560,14 @@ export default function EnterpriseApp() {
       </header>
       <Routes>
         <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
+        <Route
+          path="/marketplace"
+          element={
+            session.role === "CLIENT" || (session.role === "ORGANIZATION" && session.organizationMode === "EVENT_PLANNING")
+              ? <Navigate to={`/dashboard/${session.role.toLowerCase()}?tab=marketplace`} replace />
+              : <Navigate to={`/dashboard/${session.role.toLowerCase()}`} replace />
+          }
+        />
         <Route
           path={APP_ROUTE_PATHS.plan}
           element={

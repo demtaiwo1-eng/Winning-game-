@@ -49,6 +49,103 @@ test("static-host deep links load the React app on a fresh navigation", async ({
   await expect(page.getByLabel("Event name")).toBeVisible();
 });
 
+test("legacy sign-in and registration URLs resolve to the active authentication flow", async ({ page }) => {
+  await page.goto("/login?role=VENDOR");
+  await expect(page).toHaveURL(/\/auth\/signin\?role=VENDOR$/);
+  await expect(page.locator("#eph-auth-dialog")).toBeVisible();
+
+  await page.goto("/register/vendor");
+  await expect(page).toHaveURL(/\/auth\/signup\?role=VENDOR$/);
+  await expect(page.locator("#eph-auth-dialog")).toHaveAttribute("data-role", "vendor");
+
+  await page.goto("/register");
+  await expect(page).toHaveURL(/\/auth\/signup\?role=CLIENT$/);
+  await expect(page.locator("#eph-auth-dialog")).toBeVisible();
+});
+
+test("legacy forgot-password and planner continuation URLs resolve to active screens", async ({ page }) => {
+  await page.goto("/forgot-password");
+  await expect(page).toHaveURL(/\/auth\/forgot\?role=CLIENT$/);
+  await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
+
+  await page.goto("/plan/review");
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(page.locator(".ess-builder-card")).toBeVisible();
+
+  await page.goto("/plan/create-account");
+  await expect(page).toHaveURL(/\/auth\/signup\?role=CLIENT$/);
+  await expect(page.locator("#eph-auth-dialog")).toBeVisible();
+});
+
+test("signed-out marketplace deep links return to the marketplace after sign-in", async ({ page }) => {
+  await page.route("**/api/v1/auth/login", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        user: {
+          id: "marketplace-return-e2e",
+          name: "Marketplace Return Test",
+          email: "marketplace-return@example.test",
+          role: "CLIENT",
+          country: "NG",
+          currency: "NGN",
+          locale: "en",
+        },
+        accessToken: "e2e-access-token",
+        refreshToken: "e2e-refresh-token",
+        expiresIn: 900,
+      }),
+    });
+  });
+
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_onboard_v2_client_default", "1");
+  });
+  await page.goto("/marketplace");
+  await expect(page).toHaveURL(/\/auth\/signin\?role=CLIENT&returnTo=%2Fmarketplace$/);
+  await page.getByLabel("Email").fill("marketplace-return@example.test");
+  await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
+  await page.getByRole("button", { name: /Continue securely/ }).click();
+  await unlockDeviceGate(page);
+  await expect(page).toHaveURL(/\/dashboard\/client(?:\?tab=marketplace)?$/);
+  await expect(page.getByRole("heading", { name: /Explore the EPHINTA Marketplace/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+});
+
+test("marketplace deep links open the marketplace tab in an authenticated customer workspace", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "marketplace-route-e2e",
+      email: "marketplace-route@example.test",
+      name: "Marketplace Route Test",
+      role: "CLIENT",
+    }));
+    localStorage.setItem("ess_access_token", "e2e-access-token");
+    localStorage.setItem("ess_refresh_token", "e2e-refresh-token");
+    localStorage.setItem("ess_onboard_v2_client_default", "1");
+  });
+
+  await page.goto("/marketplace");
+  await unlockDeviceGate(page);
+  await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
+  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+});
+
+test("guest RSVP deep links are public and show a safe unavailable state for an invalid token", async ({ page }) => {
+  await page.route("**/api/v1/rsvp/qa-invalid-token", async (route) => {
+    await route.fulfill({
+      status: 404,
+      contentType: "application/json",
+      body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Invitation not found" } }),
+    });
+  });
+
+  await page.goto("/rsvp/qa-invalid-token");
+  await expect(page.getByRole("heading", { name: "Invitation unavailable" })).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText(/invitation/i);
+});
+
 test("public landing page explains the event-planning service and its menu", async ({ page }) => {
   await page.goto("/");
   await expect(
