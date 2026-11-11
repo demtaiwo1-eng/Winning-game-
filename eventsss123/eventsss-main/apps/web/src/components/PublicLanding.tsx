@@ -874,7 +874,7 @@ export default function PublicLanding({
               <h2>Find the people and services behind your next big moment.</h2>
               <p>Browse event venues, catering, photography, décor and trusted event professionals. Featured vendor campaigns appear here when approved and active.</p>
             </div>
-            <button type="button" className="eph-promo-marketplace-cta" onClick={() => openAuth('signup', 'CLIENT')}>
+            <button type="button" className="eph-promo-marketplace-cta" onClick={() => window.location.assign('/marketplace')}>
               Explore marketplace <span aria-hidden="true">→</span>
             </button>
           </div>
@@ -889,7 +889,7 @@ export default function PublicLanding({
                   {promotion.listingTitle && <span>{promotion.listingTitle}</span>}
                   {formatPromotionLocation(promotion.city, promotion.country) && <span>{formatPromotionLocation(promotion.city, promotion.country)}</span>}
                 </div>
-                <button type="button" onClick={() => openAuth('signup', 'CLIENT')}>View marketplace offer →</button>
+                <button type="button" onClick={() => window.location.assign('/marketplace')}>View marketplace offer →</button>
               </article>
             ))}
             {MARKETPLACE_SPOTLIGHTS.map((item) => (
@@ -898,7 +898,7 @@ export default function PublicLanding({
                 <small>{item.eyebrow}</small>
                 <strong>{item.title}</strong>
                 <p>{item.description}</p>
-                <button type="button" onClick={() => openAuth('signup', 'CLIENT')}>Explore services →</button>
+                <button type="button" onClick={() => window.location.assign('/marketplace')}>Explore services →</button>
               </article>
             ))}
           </div>
