@@ -40,7 +40,9 @@
     "dev:smoke": "node scripts/smoke-dev.mjs",
     "connection:check": "node scripts/ephinta-connection-check.mjs",
     "device-security:verify": "node scripts/verify-device-security.mjs",
-    "device-security:verify:full": "node scripts/verify-device-security.mjs --full"
+    "device-security:verify:full": "node scripts/verify-device-security.mjs --full",
+    "qa:scale:plan": "node scripts/qa/ephinta-scale-qa.mjs --plan-only",
+    "qa:scale": "node scripts/qa/ephinta-scale-qa.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.4",
