@@ -77,6 +77,41 @@ test("legacy forgot-password and planner continuation URLs resolve to active scr
   await expect(page.locator("#eph-auth-dialog")).toBeVisible();
 });
 
+test("signed-out marketplace deep links return to the marketplace after sign-in", async ({ page }) => {
+  await page.route("**/api/v1/auth/login", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        user: {
+          id: "marketplace-return-e2e",
+          name: "Marketplace Return Test",
+          email: "marketplace-return@example.test",
+          role: "CLIENT",
+          country: "NG",
+          currency: "NGN",
+          locale: "en",
+        },
+        accessToken: "e2e-access-token",
+        refreshToken: "e2e-refresh-token",
+        expiresIn: 900,
+      }),
+    });
+  });
+
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_onboard_v2_client_default", "1");
+  });
+  await page.goto("/marketplace");
+  await expect(page).toHaveURL(/\\/auth\\/signin\\?role=CLIENT&returnTo=%2Fmarketplace$/);
+  await page.getByLabel("Email").fill("marketplace-return@example.test");
+  await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
+  await page.getByRole("button", { name: /Continue securely/ }).click();
+  await unlockDeviceGate(page);
+  await expect(page).toHaveURL(/\\/dashboard\\/client\\?tab=marketplace$/);
+  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+});
+
 test("marketplace deep links open the marketplace tab in an authenticated customer workspace", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("ess_user", JSON.stringify({
