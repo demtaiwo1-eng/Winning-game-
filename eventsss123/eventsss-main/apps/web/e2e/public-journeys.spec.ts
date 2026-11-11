@@ -77,6 +77,25 @@ test("legacy forgot-password and planner continuation URLs resolve to active scr
   await expect(page.locator("#eph-auth-dialog")).toBeVisible();
 });
 
+test("marketplace deep links open the marketplace tab in an authenticated customer workspace", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "marketplace-route-e2e",
+      email: "marketplace-route@example.test",
+      name: "Marketplace Route Test",
+      role: "CLIENT",
+    }));
+    localStorage.setItem("ess_access_token", "e2e-access-token");
+    localStorage.setItem("ess_refresh_token", "e2e-refresh-token");
+    localStorage.setItem("ess_onboard_v2_client_default", "1");
+  });
+
+  await page.goto("/marketplace");
+  await unlockDeviceGate(page);
+  await expect(page).toHaveURL(/\\/dashboard\\/client\\?tab=marketplace$/);
+  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+});
+
 test("guest RSVP deep links are public and show a safe unavailable state for an invalid token", async ({ page }) => {
   await page.route("**/api/v1/rsvp/qa-invalid-token", async (route) => {
     await route.fulfill({
