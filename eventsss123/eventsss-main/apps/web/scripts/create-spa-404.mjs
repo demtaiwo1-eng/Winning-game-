@@ -16,4 +16,4 @@ if (fallback !== html) {
   throw new Error("The static-host SPA fallback does not match index.html.");
 }
 
-process.stdout.write("Created dist/404.html for direct React Router deep links.\\n");
+process.stdout.write("Created dist/404.html for direct React Router deep links.\n");
