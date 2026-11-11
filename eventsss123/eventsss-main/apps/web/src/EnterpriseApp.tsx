@@ -188,6 +188,18 @@ function SignedOutDashboardRedirect() {
   return <Navigate to={target ?? "/"} replace />;
 }
 
+function LegacyAuthRedirect({ mode }: { mode: "signin" | "signup" | "forgot" }) {
+  const location = useLocation();
+  const { role: roleParam } = useParams();
+  const query = new URLSearchParams(location.search);
+  const requestedRole = (roleParam ?? query.get("role") ?? "CLIENT").toUpperCase();
+  const role = SELF_REGISTER_ROLES.includes(requestedRole as SelfRegisterRole)
+    ? requestedRole
+    : "CLIENT";
+  query.set("role", role);
+  return <Navigate to={`/auth/${mode}?${query.toString()}`} replace />;
+}
+
 const initialListings: Listing[] = [];
 const initialGigs: Gig[] = [];
 const initialCases: KycCase[] = [];
@@ -2223,6 +2235,13 @@ export default function EnterpriseApp() {
         {accountNotice && <div className="ess-shell"><p className="ess-muted" role="status">{accountNotice}</p></div>}
         <Routes>
           <Route path={APP_ROUTE_PATHS.home} element={publicLandingContent} />
+          <Route path="/login" element={<LegacyAuthRedirect mode="signin" />} />
+          <Route path="/register" element={<LegacyAuthRedirect mode="signup" />} />
+          <Route path="/register/:role" element={<LegacyAuthRedirect mode="signup" />} />
+          <Route path="/forgot-password" element={<LegacyAuthRedirect mode="forgot" />} />
+          <Route path="/plan/review" element={<Navigate to="/plan" replace />} />
+          <Route path="/plan/create-account" element={<Navigate to="/auth/signup?role=CLIENT" replace />} />
+          <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
           <Route
             path={APP_ROUTE_PATHS.plan}
             element={<EventBuilder onBack={() => navigate("/")} onComplete={() => openAuth("CLIENT", "signup")} />}
