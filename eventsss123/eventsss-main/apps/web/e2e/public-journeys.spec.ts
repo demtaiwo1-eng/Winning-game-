@@ -49,6 +49,48 @@ test("static-host deep links load the React app on a fresh navigation", async ({
   await expect(page.getByLabel("Event name")).toBeVisible();
 });
 
+test("legacy sign-in and registration URLs resolve to the active authentication flow", async ({ page }) => {
+  await page.goto("/login?role=VENDOR");
+  await expect(page).toHaveURL(/\\/auth\\/signin\\?role=VENDOR$/);
+  await expect(page.locator("#eph-auth-dialog")).toBeVisible();
+
+  await page.goto("/register/vendor");
+  await expect(page).toHaveURL(/\\/auth\\/signup\\?role=VENDOR$/);
+  await expect(page.locator("#eph-auth-dialog")).toHaveAttribute("data-role", "vendor");
+
+  await page.goto("/register");
+  await expect(page).toHaveURL(/\\/auth\\/signup\\?role=CLIENT$/);
+  await expect(page.locator("#eph-auth-dialog")).toBeVisible();
+});
+
+test("legacy forgot-password and planner continuation URLs resolve to active screens", async ({ page }) => {
+  await page.goto("/forgot-password");
+  await expect(page).toHaveURL(/\\/auth\\/forgot\\?role=CLIENT$/);
+  await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
+
+  await page.goto("/plan/review");
+  await expect(page).toHaveURL(/\\/plan$/);
+  await expect(page.locator(".ess-builder-card")).toBeVisible();
+
+  await page.goto("/plan/create-account");
+  await expect(page).toHaveURL(/\\/auth\\/signup\\?role=CLIENT$/);
+  await expect(page.locator("#eph-auth-dialog")).toBeVisible();
+});
+
+test("guest RSVP deep links are public and show a safe unavailable state for an invalid token", async ({ page }) => {
+  await page.route("**/api/v1/rsvp/qa-invalid-token", async (route) => {
+    await route.fulfill({
+      status: 404,
+      contentType: "application/json",
+      body: JSON.stringify({ error: { code: "NOT_FOUND", message: "Invitation not found" } }),
+    });
+  });
+
+  await page.goto("/rsvp/qa-invalid-token");
+  await expect(page.getByRole("heading", { name: "Invitation unavailable" })).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText(/invitation/i);
+});
+
 test("public landing page explains the event-planning service and its menu", async ({ page }) => {
   await page.goto("/");
   await expect(
