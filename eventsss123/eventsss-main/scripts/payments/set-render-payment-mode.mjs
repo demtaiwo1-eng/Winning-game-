@@ -14,8 +14,9 @@
 const mode = process.argv[2];
 const dryRun = process.argv.includes("--dry-run");
 const apiKey = process.env.RENDER_API_KEY;
-const serviceId = process.env.EPHINTA_RENDER_API_SERVICE_ID;
 const target = process.env.EPHINTA_RENDER_TARGET;
+const serviceId = process.env.EPHINTA_RENDER_API_SERVICE_ID ||
+  (target === "staging" ? "srv-dbjh2j8ae00c73e77110" : target === "production" ? "srv-dbgc7vvavr4c73dk5vo0" : undefined);
 
 function fail(message) {
   console.error(`[payment-mode] ${message}`);
