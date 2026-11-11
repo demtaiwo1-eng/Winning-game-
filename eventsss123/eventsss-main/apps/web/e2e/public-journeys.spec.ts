@@ -38,6 +38,17 @@ test("startup shows only the EPHINTA logo until the app is ready", async ({ page
   await expect(splash).toBeHidden();
 });
 
+test("static-host deep links load the React app on a fresh navigation", async ({ page }) => {
+  await page.goto("/auth/signin?role=CLIENT");
+  await expect(page.getByRole("dialog", { name: "Event Planner sign in" })).toBeVisible();
+  await expect(page.getByLabel("Email address")).toBeVisible();
+  await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
+
+  await page.goto("/plan");
+  await expect(page.locator(".ess-builder-card")).toBeVisible();
+  await expect(page.getByLabel("Event name")).toBeVisible();
+});
+
 test("public landing page explains the event-planning service and its menu", async ({ page }) => {
   await page.goto("/");
   await expect(
