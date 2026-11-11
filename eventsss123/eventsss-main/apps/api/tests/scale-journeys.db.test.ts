@@ -29,6 +29,7 @@ async function createUser(index: number, role: "CLIENT" | "VENDOR" | "VERIFIER")
     role,
     country: "NG",
     currency: "NGN",
+    locale: "en",
     ...(role === "VENDOR" ? { businessName: `Scale Test Vendor ${index + 1}`, businessCity: "Lagos" } : {}),
   });
   return { id: result.user.id, token: result.accessToken, email };
