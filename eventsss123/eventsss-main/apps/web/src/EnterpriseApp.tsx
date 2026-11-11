@@ -1950,6 +1950,12 @@ export default function EnterpriseApp() {
     } catch { /* */ }
   }, []);
 
+  useEffect(() => {
+    const requestedReturnTo = new URLSearchParams(location.search).get("returnTo");
+    if (requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//")) {
+      try { sessionStorage.setItem("ess_auth_return_to", requestedReturnTo); } catch { /* storage may be disabled */ }
+    }
+  }, [location.search]);
 
   const [authError, setAuthError] = useState("");
   const [authNotice, setAuthNotice] = useState("");
@@ -2219,12 +2225,23 @@ export default function EnterpriseApp() {
         try {
           hasPendingEventBrief = Boolean(localStorage.getItem("ess_event_draft"));
         } catch { /* storage may be disabled */ }
-        const requestedReturnTo = new URLSearchParams(location.search).get("returnTo");
+        let storedReturnTo: string | null = null;
+        try {
+          storedReturnTo = sessionStorage.getItem("ess_auth_return_to");
+          sessionStorage.removeItem("ess_auth_return_to");
+        } catch { /* storage may be disabled */ }
+        const requestedReturnTo =
+          new URLSearchParams(location.search).get("returnTo") || storedReturnTo;
         const safeReturnTo =
           requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//")
             ? requestedReturnTo
             : `/dashboard/${String(user.role).toLowerCase()}`;
-        navigate(safeReturnTo, { replace: true });
+        const postLoginDestination = safeReturnTo === "/marketplace"
+          ? user.role === "CLIENT" || (user.role === "ORGANIZATION" && user.organizationMode === "EVENT_PLANNING")
+            ? `/dashboard/${String(user.role).toLowerCase()}?tab=marketplace`
+            : `/dashboard/${String(user.role).toLowerCase()}`
+          : safeReturnTo;
+        navigate(postLoginDestination, { replace: true });
         if (!hasCompletedOnboard(user.role, user.organizationMode)) setShowOnboard(true);
         try {
           const pending = localStorage.getItem("ess_resume_event");
