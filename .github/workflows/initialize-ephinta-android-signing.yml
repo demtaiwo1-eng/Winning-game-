@@ -20,6 +20,7 @@ jobs:
       BACKUP_PASSWORD: ${{ secrets.EPHINTA_KEY_BACKUP_PASSPHRASE }}
       REPOSITORY: ${{ github.repository }}
       GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - name: Generate, register and back up signing identity
         shell: bash
