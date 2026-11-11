@@ -39,6 +39,8 @@ EPHINTA_RENDER_TARGET=production EPHINTA_LIVE_PROVIDER=paystack EPHINTA_LIVE_CUT
 ```
 The script accepts only Paystack or Flutterwave for live mode; OPay is sandbox-only, Cleva/Eversend adapters are not present, and Stripe checkout is disabled. It checks for the appropriate live secret-key prefix without printing the key. The script changes only the payment-mode, production-test opt-in and 1% commission variables, then requests a Render deploy.
 
+**Fee-policy sign-off required before live:** the current backend uses `COMMISSION_BPS` both when crediting wallet top-ups and when calculating booking/vendor commission. Setting it to 100 bps may therefore withhold 1% at wallet funding and apply 1% again at booking settlement. The staging value is for sandbox verification only. Confirm whether EPHINTA should charge 1% on wallet top-ups, on completed bookings, or only once on the final customer payment; separate fee settings if it should not be charged twice.
+
 A live cutover is a controlled backend configuration change, not a frontend switch:
 
 1. Confirm a live-capable provider adapter is implemented and approved. OPay in this repository is explicitly sandbox-only; it must not be treated as a live provider.
