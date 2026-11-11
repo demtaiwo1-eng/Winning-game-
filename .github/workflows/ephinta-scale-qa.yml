@@ -1,0 +1,80 @@
+name: EPHINTA 300-persona scale QA
+
+on:
+  pull_request:
+    paths:
+      - "eventsss123/eventsss-main/apps/api/**"
+      - "eventsss123/eventsss-main/apps/web/**"
+      - "eventsss123/eventsss-main/scripts/qa/**"
+      - "eventsss123/eventsss-main/package.json"
+      - "eventsss123/eventsss-main/package-lock.json"
+      - ".github/workflows/ephinta-scale-qa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ephinta-scale-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scale-qa:
+    name: 300 isolated personas + design and browser gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ess
+          POSTGRES_PASSWORD: ess
+          POSTGRES_DB: ess
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ess -d ess"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    env:
+      NODE_ENV: test
+      DATABASE_MODE: local
+      DATABASE_URL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
+      DATABASE_URL_LOCAL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
+      JWT_SECRET: e2e-only-secret-change-me-0123456789abcdef
+      QA_SCALE_CONFIRM: "YES"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Prisma client and apply migrations
+        run: |
+          npm run prisma:generate
+          npm run db:deploy -w apps/api
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: eventsss123/eventsss-main/apps/web
+      - name: Run one-command scale, design and browser QA
+        run: npm run qa:scale
+      - name: Upload QA and Playwright reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-300-persona-qa-report
+          path: |
+            eventsss123/eventsss-main/artifacts/ephinta-scale-qa-report.json
+            eventsss123/eventsss-main/apps/web/playwright-report/
+            eventsss123/eventsss-main/apps/web/test-results/
+          if-no-files-found: warn
+          retention-days: 14
