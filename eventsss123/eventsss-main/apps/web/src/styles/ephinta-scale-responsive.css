@@ -132,3 +132,36 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .eph-landing[data-theme="dark"] .eph-card :where(p, small, span) {
   color: #d9d5eb !important;
 }
+
+/* The feature spotlight is a pale surface in light/colorful modes, so its copy
+   must not inherit the white-on-dark treatment used by the old theme layer. */
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone {
+  color: #251633 !important;
+  background: linear-gradient(145deg, #ffffff 0%, #f1eaff 55%, #ffeaf5 100%) !important;
+  border-color: #d8c6ee !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone h2 {
+  color: #251633 !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone :where(p, small, span:not(.ephinta-human-faces span)) {
+  color: #51445f !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone__eyebrow {
+  color: #6030ad !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone__switches button {
+  color: #251633 !important;
+  background: #f4eaff !important;
+  border-color: #c9b4e8 !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone__switches button[aria-pressed="true"] {
+  color: #251633 !important;
+  background: linear-gradient(100deg, #ffd16b, #ffb7dc) !important;
+  border-color: #d9a7ca !important;
+}
+.eph-landing:not([data-theme="dark"]) .ephinta-bright-slogan {
+  color: #251a36 !important;
+  background: none !important;
+  -webkit-text-fill-color: #251a36 !important;
+  text-shadow: none !important;
+}
