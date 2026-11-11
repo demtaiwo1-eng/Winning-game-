@@ -20,6 +20,7 @@ regressions are maintained in `apps/web/e2e/public-journeys.spec.ts`.
 | `/login` | Compatibility redirect to sign-in |
 | `/register`, `/register/:role` | Compatibility redirects to registration |
 | `/forgot-password` | Compatibility redirect to password reset request |
+| `/marketplace` | Opens the marketplace tab in a signed-in customer workspace; signed-out visitors are sent through sign-in and returned to the marketplace |
 | `/plan/review` | Compatibility redirect to the resumable planner |
 | `/plan/create-account` | Compatibility redirect to customer registration |
 
@@ -40,7 +41,7 @@ regressions are maintained in `apps/web/e2e/public-journeys.spec.ts`.
 
 ## Not standalone routes
 
-- Marketplace browsing is currently part of authenticated role workspaces; there is no separate public `/marketplace/:listingId` listing-detail screen in the active route graph.
+- Marketplace browsing is part of the authenticated customer workspace and is deep-linkable at `/marketplace`; there is no separate `/marketplace/:listingId` listing-detail screen in the active route graph.
 - The planner review/create-account legacy paths are redirects, not separate page implementations.
 - Unknown paths intentionally return users to the landing page (or their dashboard when authenticated).
 
