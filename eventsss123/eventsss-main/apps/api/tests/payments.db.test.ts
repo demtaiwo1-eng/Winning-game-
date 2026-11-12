@@ -2,6 +2,8 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
+import { env } from "../src/config/env";
+import { bookingCommissionMinor, walletTopupFeeMinor } from "../src/modules/payments/feePolicy";
 
 const app = createApp();
 const run = process.env.RUN_DB_TESTS === "1";
@@ -41,11 +43,12 @@ describe.skipIf(!run)("platform revenue accounting (DB)", () => {
       const wallet = await prisma.wallet.findUniqueOrThrow({
         where: { userId_currency: { userId: customer.id, currency: "NGN" } },
       });
-      expect(wallet.availableMinor).toBe(99000n);
+      const expectedTopupFee = walletTopupFeeMinor(100000n, env);
+      expect(wallet.availableMinor).toBe(100000n - expectedTopupFee);
       const revenue = await prisma.platformRevenueEntry.findUniqueOrThrow({
         where: { idempotencyKey: `platform_wallet_topup_fee:${intent.id}` },
       });
-      expect(revenue.amountMinor).toBe(1000n);
+      expect(revenue.amountMinor).toBe(expectedTopupFee);
       expect(revenue.refType).toBe("PAYMENT_INTENT");
       expect(revenue.refId).toBe(intent.id);
       expect(await prisma.ledgerEntry.findUnique({ where: { idempotencyKey: `pay_deposit_fee:${intent.id}` } })).toBeNull();
@@ -53,7 +56,7 @@ describe.skipIf(!run)("platform revenue accounting (DB)", () => {
       const replay = await request(app).post(`/api/v1/payments/demo-checkout/${intent.id}`)
         .set(auth(customer.token)).send({});
       expect(replay.status).toBe(200);
-      expect((await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } })).availableMinor).toBe(99000n);
+      expect((await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } })).availableMinor).toBe(100000n - expectedTopupFee);
       expect(await prisma.platformRevenueEntry.count({ where: { idempotencyKey: `platform_wallet_topup_fee:${intent.id}` } })).toBe(1);
     } finally {
       const revenue = await prisma.platformRevenueEntry.findUnique({
@@ -244,7 +247,7 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       const vendorWallet = await prisma.wallet.findUniqueOrThrow({
         where: { userId_currency: { userId: vendor.id, currency: "NGN" } },
       });
-      const expectedCommission = 1000n;
+      const expectedCommission = bookingCommissionMinor(100000n, env);
       const platformAccount = await prisma.platformRevenueAccount.findUniqueOrThrow({ where: { currency: "NGN" } });
       const platformEntry = await prisma.platformRevenueEntry.findUniqueOrThrow({
         where: { idempotencyKey: `platform_commission:${booking.id}` },
@@ -254,7 +257,7 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       expect(platformEntry.refType).toBe("BOOKING");
       expect(platformEntry.refId).toBe(booking.id);
       expect(await prisma.ledgerEntry.findUnique({ where: { idempotencyKey: `commission:${booking.id}` } })).toBeNull();
-      expect(vendorWallet.availableMinor).toBe(99000n);
+      expect(vendorWallet.availableMinor).toBe(100000n - expectedCommission);
       const replayRelease = await request(app).post(`/api/v1/payments/bookings/${booking.id}/release`).set(auth(verifier.token)).send({});
       expect(replayRelease.status).toBe(200);
       expect(replayRelease.body.alreadyReleased).toBe(true);
