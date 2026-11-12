@@ -41,8 +41,8 @@ if (!serviceId) fail("Set EPHINTA_RENDER_API_SERVICE_ID to the intended Render A
 if (!apiKey && !dryRun) fail("Set RENDER_API_KEY in your shell/CI secret store; never commit it.");
 
 const updates = mode === "demo"
-  ? { PAYMENT_MODE: "test", ALLOW_PRODUCTION_TEST_MODE: "true", COMMISSION_BPS: "100" }
-  : { PAYMENT_MODE: "live", ALLOW_PRODUCTION_TEST_MODE: "false", COMMISSION_BPS: "100" };
+  ? { PAYMENT_MODE: "test", ALLOW_PRODUCTION_TEST_MODE: "true", COMMISSION_BPS: "100", WALLET_TOPUP_FEE_BPS: "100", BOOKING_COMMISSION_BPS: "100" }
+  : { PAYMENT_MODE: "live", ALLOW_PRODUCTION_TEST_MODE: "false", COMMISSION_BPS: "100", WALLET_TOPUP_FEE_BPS: "100", BOOKING_COMMISSION_BPS: "100" };
 
 const supportedLiveProviders = new Set(["paystack", "flutterwave"]);
 if (mode === "live") {
