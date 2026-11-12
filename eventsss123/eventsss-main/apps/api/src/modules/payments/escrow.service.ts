@@ -52,7 +52,7 @@ export async function releaseBookingEscrow(bookingId: string, actorUserId: strin
   }
 
   const vendorUserId = booking.vendor.userId;
-  const bps = env.COMMISSION_BPS;
+  const bps = env.BOOKING_COMMISSION_BPS ?? env.COMMISSION_BPS;
   // Prefer stored commission; recompute if zero
   let commission = booking.commissionMinor;
   if (commission === 0n && bps > 0) {
