@@ -20,6 +20,60 @@ async function register(tag: string, role: "CLIENT" | "VENDOR" | "VERIFIER" = "C
 }
 const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 
+describe.skipIf(!run)("platform revenue accounting (DB)", () => {
+  it("posts wallet top-up fees to platform revenue once without debiting the wallet twice", async () => {
+    const customer = await register("platform-topup-fee");
+    const intent = await prisma.paymentIntent.create({
+      data: {
+        userId: customer.id,
+        provider: "demo",
+        providerRef: `platform-topup-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        amountMinor: 100000n,
+        currency: "NGN",
+        purpose: "WALLET_DEPOSIT",
+        status: "PENDING",
+      },
+    });
+    try {
+      const settled = await request(app).post(`/api/v1/payments/demo-checkout/${intent.id}`)
+        .set(auth(customer.token)).send({});
+      expect(settled.status).toBe(200);
+      const wallet = await prisma.wallet.findUniqueOrThrow({
+        where: { userId_currency: { userId: customer.id, currency: "NGN" } },
+      });
+      expect(wallet.availableMinor).toBe(99000n);
+      const revenue = await prisma.platformRevenueEntry.findUniqueOrThrow({
+        where: { idempotencyKey: `platform_wallet_topup_fee:${intent.id}` },
+      });
+      expect(revenue.amountMinor).toBe(1000n);
+      expect(revenue.refType).toBe("PAYMENT_INTENT");
+      expect(revenue.refId).toBe(intent.id);
+      expect(await prisma.ledgerEntry.findUnique({ where: { idempotencyKey: `pay_deposit_fee:${intent.id}` } })).toBeNull();
+
+      const replay = await request(app).post(`/api/v1/payments/demo-checkout/${intent.id}`)
+        .set(auth(customer.token)).send({});
+      expect(replay.status).toBe(200);
+      expect((await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } })).availableMinor).toBe(99000n);
+      expect(await prisma.platformRevenueEntry.count({ where: { idempotencyKey: `platform_wallet_topup_fee:${intent.id}` } })).toBe(1);
+    } finally {
+      const revenue = await prisma.platformRevenueEntry.findUnique({
+        where: { idempotencyKey: `platform_wallet_topup_fee:${intent.id}` },
+      });
+      if (revenue) {
+        await prisma.platformRevenueAccount.update({
+          where: { id: revenue.accountId },
+          data: { balanceMinor: { decrement: revenue.amountMinor } },
+        });
+        await prisma.platformRevenueEntry.delete({ where: { id: revenue.id } });
+      }
+      await prisma.paymentIntent.deleteMany({ where: { id: intent.id } });
+      await prisma.ledgerEntry.deleteMany({ where: { wallet: { userId: customer.id } } });
+      await prisma.wallet.deleteMany({ where: { userId: customer.id } });
+      await prisma.user.deleteMany({ where: { id: customer.id } });
+    }
+  });
+});
+
 describe.skipIf(!run)("booking payment milestones (DB)", () => {
   it("holds a planner's initial payment, lets a vendor request milestones, and requires planner approval", async () => {
     const planner = await register("installment-planner");
