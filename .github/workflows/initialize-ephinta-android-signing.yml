@@ -1,0 +1,99 @@
+name: Initialize EPHINTA Android Signing Key
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ephinta-android-signing-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  initialize-signing:
+    name: Generate and securely register the permanent signing key
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ADMIN_TOKEN: ${{ secrets.EPHINTA_SECRETS_ADMIN_TOKEN }}
+      BACKUP_PASSWORD: ${{ secrets.EPHINTA_KEY_BACKUP_PASSPHRASE }}
+      REPOSITORY: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Generate, register and back up signing identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          fail() { echo "::error::$1"; exit 1; }
+
+          [[ "$REPOSITORY" == "demtaiwo1-eng/Winning-game-" ]] || fail "Unexpected repository; refusing to initialize signing."
+          [[ -n "$ADMIN_TOKEN" ]] || fail "Add EPHINTA_SECRETS_ADMIN_TOKEN as a repository Actions secret first."
+          [[ -n "$BACKUP_PASSWORD" && ${#BACKUP_PASSWORD} -ge 20 ]] || fail "Add EPHINTA_KEY_BACKUP_PASSPHRASE as a strong repository Actions secret (at least 20 characters)."
+
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if GH_TOKEN="$ADMIN_TOKEN" gh secret list --repo "$REPOSITORY" --json name --jq ".[].name" | grep -Fxq "$name"; then
+              fail "Existing signing secret $name detected. Refusing to rotate or overwrite a signing identity."
+            fi
+          done
+          if GH_TOKEN="$ADMIN_TOKEN" gh variable list --repo "$REPOSITORY" --json name --jq ".[].name" | grep -Fxq "ANDROID_CERT_SHA256"; then
+            fail "ANDROID_CERT_SHA256 already exists. Refusing to overwrite a potentially paired certificate."
+          fi
+          if GH_TOKEN="$GITHUB_TOKEN" gh release view ephinta-android-signing-backup-v1 --repo "$REPOSITORY" >/dev/null 2>&1; then
+            fail "Signing backup release already exists. Refusing to create a second identity."
+          fi
+
+          ROOT="$RUNNER_TEMP/ephinta-signing"
+          mkdir -p "$ROOT"
+          chmod 700 "$ROOT"
+          KEYSTORE="$ROOT/ephinta-release.jks"
+          BACKUP="$ROOT/ephinta-release.jks.enc"
+          CHECKSUM="$ROOT/SHA256SUMS.txt"
+          STORE_PASSWORD="$(openssl rand -hex 32)"
+          KEY_PASSWORD="$STORE_PASSWORD"
+          export EPHINTA_STORE_PASSWORD="$STORE_PASSWORD" EPHINTA_KEY_PASSWORD="$KEY_PASSWORD"
+          echo "::add-mask::$STORE_PASSWORD"
+          echo "::add-mask::$BACKUP_PASSWORD"
+
+          keytool -genkeypair -noprompt \
+            -keystore "$KEYSTORE" -storetype JKS -alias ephinta-release \
+            -keyalg RSA -keysize 4096 -validity 10000 \
+            -dname "CN=EPHINTA Android Release, OU=Mobile, O=EPHINTA" \
+            -storepass:env EPHINTA_STORE_PASSWORD -keypass:env EPHINTA_KEY_PASSWORD
+          chmod 600 "$KEYSTORE"
+
+          keytool -list -keystore "$KEYSTORE" -storepass:env EPHINTA_STORE_PASSWORD -alias ephinta-release >/dev/null
+          FINGERPRINT="$(keytool -list -v -keystore "$KEYSTORE" -storepass:env EPHINTA_STORE_PASSWORD -alias ephinta-release 2>/dev/null | awk '/SHA256:/ {sub(/^.*SHA256:[[:space:]]*/, ""); print; exit}')"
+          [[ -n "$FINGERPRINT" ]] || fail "Could not read the generated certificate fingerprint."
+
+          # Keep a durable encrypted recovery copy in a GitHub Release. The release is public,
+          # but the keystore is AES-256 encrypted with the separately supplied backup passphrase.
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 \
+            -in "$KEYSTORE" -out "$BACKUP" -pass env:BACKUP_PASSWORD
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+            -in "$BACKUP" -out "$ROOT/verify.jks" -pass env:BACKUP_PASSWORD
+          cmp -s "$KEYSTORE" "$ROOT/verify.jks" || fail "Encrypted signing backup verification failed."
+          rm -f "$ROOT/verify.jks"
+          (cd "$ROOT" && sha256sum ephinta-release.jks.enc > SHA256SUMS.txt)
+
+          # Register the signing values directly as repository secrets; never print them.
+          printf '%s' "$(base64 -w0 "$KEYSTORE")" | GH_TOKEN="$ADMIN_TOKEN" gh secret set ANDROID_KEYSTORE_BASE64 --repo "$REPOSITORY"
+          printf '%s' "$STORE_PASSWORD" | GH_TOKEN="$ADMIN_TOKEN" gh secret set ANDROID_KEYSTORE_PASSWORD --repo "$REPOSITORY"
+          printf '%s' "ephinta-release" | GH_TOKEN="$ADMIN_TOKEN" gh secret set ANDROID_KEY_ALIAS --repo "$REPOSITORY"
+          printf '%s' "$KEY_PASSWORD" | GH_TOKEN="$ADMIN_TOKEN" gh secret set ANDROID_KEY_PASSWORD --repo "$REPOSITORY"
+          GH_TOKEN="$ADMIN_TOKEN" gh variable set ANDROID_CERT_SHA256 --repo "$REPOSITORY" --body "$FINGERPRINT"
+
+          GH_TOKEN="$GITHUB_TOKEN" gh release create ephinta-android-signing-backup-v1 "$BACKUP" "$CHECKSUM" \
+            --repo "$REPOSITORY" \
+            --title "EPHINTA Android signing recovery backup" \
+            --notes "Encrypted permanent Android signing keystore recovery copy. Decrypt only with the EPHINTA_KEY_BACKUP_PASSPHRASE kept by the repository owner. Never publish the passphrase." \
+            --prerelease
+
+          echo "Permanent Android signing secrets and certificate variable registered."
+          echo "Certificate SHA-256: $FINGERPRINT"
+          echo "Encrypted recovery backup published: ephinta-android-signing-backup-v1"
+          echo "Revoke the temporary EPHINTA_SECRETS_ADMIN_TOKEN and remove that repository secret now."
+          rm -f "$KEYSTORE"
+          unset STORE_PASSWORD KEY_PASSWORD EPHINTA_STORE_PASSWORD EPHINTA_KEY_PASSWORD
