@@ -1,4 +1,4 @@
-import { BookingStatus, LedgerType } from "@prisma/client";
+import { BookingStatus, LedgerType, Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../lib/errors";
 import { env } from "../../config/env";
@@ -6,8 +6,47 @@ import { bookingCommissionMinor } from "./feePolicy";
 import { assertEscrowReleaseAllowed } from "./escrowPolicy";
 
 /**
+ * Record platform commission in its own currency-scoped revenue account.
+ * The account balance update and append-only journal entry share the escrow
+ * transaction, so a failed release cannot leave revenue partially posted.
+ */
+async function recordPlatformCommission(
+  tx: Prisma.TransactionClient,
+  bookingId: string,
+  currency: string,
+  amountMinor: bigint,
+) {
+  if (amountMinor <= 0n) return;
+  const idempotencyKey = `platform_commission:${bookingId}`;
+  const existing = await tx.platformRevenueEntry.findUnique({ where: { idempotencyKey } });
+  if (existing) return;
+
+  const account = await tx.platformRevenueAccount.upsert({
+    where: { currency },
+    create: { currency, balanceMinor: 0n },
+    update: {},
+  });
+  const updatedAccount = await tx.platformRevenueAccount.update({
+    where: { id: account.id },
+    data: { balanceMinor: { increment: amountMinor } },
+  });
+  await tx.platformRevenueEntry.create({
+    data: {
+      accountId: account.id,
+      amountMinor,
+      balanceAfterMinor: updatedAccount.balanceMinor,
+      refType: "BOOKING",
+      refId: bookingId,
+      idempotencyKey,
+    },
+  });
+}
+
+/**
  * Release booking escrow to vendor (minus commission).
- * Idempotent via ledger keys release:{bookingId} / vendor_release:{bookingId}.
+ * Vendor payout and platform commission are separate journal movements.
+ * Idempotency keys: release:{bookingId}, vendor_release:{bookingId},
+ * platform_commission:{bookingId}.
  */
 export async function releaseBookingEscrow(bookingId: string, actorUserId: string) {
   const booking = await prisma.booking.findUnique({
@@ -41,19 +80,7 @@ export async function releaseBookingEscrow(bookingId: string, actorUserId: strin
   ) {
     throw new HttpError(400, "INVALID_STATE", `Cannot release from status ${booking.status}`);
   }
-  if (booking.status === BookingStatus.FULFILLED) {
-    return {
-      status: "FULFILLED" as const,
-      bookingId: booking.id,
-      vendorNetMinor: (booking.totalMinor - booking.commissionMinor).toString(),
-      commissionMinor: booking.commissionMinor.toString(),
-      currency: booking.currency,
-      alreadyReleased: true,
-    };
-  }
 
-  const vendorUserId = booking.vendor.userId;
-  // Prefer stored commission; recompute with the same fee policy if zero.
   const commission = booking.commissionMinor > 0n
     ? booking.commissionMinor
     : bookingCommissionMinor(booking.totalMinor, env);
@@ -61,12 +88,34 @@ export async function releaseBookingEscrow(bookingId: string, actorUserId: strin
   const currency = booking.currency;
   const idempotencyKey = `release:${booking.id}`;
 
+  // Older releases wrote commission as an informational vendor-wallet row.
+  // Ensure the platform journal is populated even when replaying an already
+  // fulfilled booking created before this accounting correction.
+  if (booking.status === BookingStatus.FULFILLED) {
+    await prisma.$transaction(async (tx) => {
+      await recordPlatformCommission(tx, booking.id, currency, commission);
+      if (booking.commissionMinor === 0n && commission > 0n) {
+        await tx.booking.update({ where: { id: booking.id }, data: { commissionMinor: commission } });
+      }
+    });
+    return {
+      status: "FULFILLED" as const,
+      bookingId: booking.id,
+      vendorNetMinor: vendorNet.toString(),
+      commissionMinor: commission.toString(),
+      currency,
+      alreadyReleased: true,
+    };
+  }
+
+  const vendorUserId = booking.vendor.userId;
   await prisma.$transaction(async (tx) => {
     const existing = await tx.ledgerEntry.findUnique({ where: { idempotencyKey } });
     if (existing) {
+      await recordPlatformCommission(tx, booking.id, currency, commission);
       await tx.booking.update({
         where: { id: booking.id },
-        data: { status: BookingStatus.FULFILLED },
+        data: { status: BookingStatus.FULFILLED, commissionMinor: commission },
       });
       return;
     }
@@ -118,23 +167,15 @@ export async function releaseBookingEscrow(bookingId: string, actorUserId: strin
         idempotencyKey: `vendor_release:${booking.id}`,
       },
     });
-    if (commission > 0n) {
-      await tx.ledgerEntry.create({
-        data: {
-          walletId: vendorWallet.id,
-          type: LedgerType.COMMISSION,
-          amountMinor: commission,
-          balanceAfterMinor: vendorBal,
-          refType: "BOOKING",
-          refId: booking.id,
-          idempotencyKey: `commission:${booking.id}`,
-        },
-      });
-    }
     await tx.wallet.update({
       where: { id: vendorWallet.id },
       data: { availableMinor: vendorBal },
     });
+
+    // This is a distinct platform asset/liability ledger, not a second
+    // vendor-wallet debit or a customer checkout surcharge.
+    await recordPlatformCommission(tx, booking.id, currency, commission);
+
     await tx.booking.update({
       where: { id: booking.id },
       data: {
