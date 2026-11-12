@@ -33,6 +33,7 @@ import {
   verifyOpay,
 } from "./providers";
 import { releaseBookingEscrow } from "./escrow.service";
+import { recordPlatformRevenue } from "./platformRevenue.service";
 import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_MS, RECONCILIATION_MAX_ATTEMPTS, RECONCILIATION_PROVIDER_MAX_WAIT_MS, RECONCILIATION_PROVIDER_MIN_INTERVAL_MS, reconciliationProviderNextAllowedAt } from "./reconciliationPolicy";
 import {
   assertVerifiedPayment,
@@ -379,16 +380,12 @@ async function applySuccessfulPayment(intentId: string, providerRef: string): Pr
         },
       });
       if (feeMinor > 0n) {
-        await tx.ledgerEntry.create({
-          data: {
-            walletId: wallet.id,
-            type: LedgerType.COMMISSION,
-            amountMinor: feeMinor,
-            balanceAfterMinor: updatedWallet.availableMinor,
-            refType: "PAYMENT_INTENT",
-            refId: intentId,
-            idempotencyKey: `pay_deposit_fee:${intentId}`,
-          },
+        await recordPlatformRevenue(tx, {
+          amountMinor: feeMinor,
+          currency: intent.currency,
+          refType: "PAYMENT_INTENT",
+          refId: intentId,
+          idempotencyKey: `platform_wallet_topup_fee:${intentId}`,
         });
       }
     }
