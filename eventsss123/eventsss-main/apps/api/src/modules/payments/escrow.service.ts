@@ -2,6 +2,7 @@ import { BookingStatus, LedgerType } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../lib/errors";
 import { env } from "../../config/env";
+import { bookingCommissionMinor } from "./feePolicy";
 import { assertEscrowReleaseAllowed } from "./escrowPolicy";
 
 /**
@@ -52,12 +53,10 @@ export async function releaseBookingEscrow(bookingId: string, actorUserId: strin
   }
 
   const vendorUserId = booking.vendor.userId;
-  const bps = env.BOOKING_COMMISSION_BPS ?? env.COMMISSION_BPS;
-  // Prefer stored commission; recompute if zero
-  let commission = booking.commissionMinor;
-  if (commission === 0n && bps > 0) {
-    commission = (booking.totalMinor * BigInt(bps) + 5000n) / 10000n;
-  }
+  // Prefer stored commission; recompute with the same fee policy if zero.
+  const commission = booking.commissionMinor > 0n
+    ? booking.commissionMinor
+    : bookingCommissionMinor(booking.totalMinor, env);
   const vendorNet = booking.totalMinor - commission;
   const currency = booking.currency;
   const idempotencyKey = `release:${booking.id}`;
