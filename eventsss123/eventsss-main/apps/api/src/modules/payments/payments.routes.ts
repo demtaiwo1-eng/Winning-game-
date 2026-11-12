@@ -356,7 +356,7 @@ async function applySuccessfulPayment(intentId: string, providerRef: string): Pr
       // Apply the configured platform fee to incoming wallet funding.
       // The provider collects the gross amount; only the net amount is
       // credited to the customer wallet. Both ledger rows commit atomically.
-      const feeMinor = commissionMinor(intent.amountMinor, env.COMMISSION_BPS);
+      const feeMinor = commissionMinor(intent.amountMinor, env.WALLET_TOPUP_FEE_BPS ?? env.COMMISSION_BPS);
       const creditedMinor = intent.amountMinor - feeMinor;
       if (creditedMinor <= 0n) {
         throw new HttpError(400, "PAYMENT_TOO_SMALL", "Payment amount is too small after the platform fee");
@@ -579,7 +579,7 @@ paymentsRouter.post(
     if (!listing) throw new HttpError(404, "NOT_FOUND", "Listing not found or not active");
 
     const subtotal = listing.priceMinor * BigInt(quantity);
-    const commission = commissionMinor(subtotal, env.COMMISSION_BPS);
+    const commission = commissionMinor(subtotal, env.BOOKING_COMMISSION_BPS ?? env.COMMISSION_BPS);
     const total = subtotal;
     const initialPaymentRaw = req.body.initialPaymentMinor === undefined
       ? total.toString()
