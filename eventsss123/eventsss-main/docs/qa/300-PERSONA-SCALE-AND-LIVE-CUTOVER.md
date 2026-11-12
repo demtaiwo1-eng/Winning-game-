@@ -27,7 +27,7 @@ The runner then executes API/web checks, the production web build, strict design
 
 ## Demo-to-live payment mode
 
-The API uses server-side `PAYMENT_MODE=test|live`; the service's default platform commission is configured in basis points. EPHINTA's requested 1% fee is `COMMISSION_BPS=100` (100 basis points). Staging is configured for `PAYMENT_MODE=test`, `ALLOW_PRODUCTION_TEST_MODE=true`, and `COMMISSION_BPS=100`; the staging deployment is being rolled out. Production settings remain unchanged until a separately approved live cutover.
+The API uses server-side `PAYMENT_MODE=test|live`. EPHINTA's confirmed fee policy is two independent 1% fees: `WALLET_TOPUP_FEE_BPS=100` on successful wallet funding, and `BOOKING_COMMISSION_BPS=100` on completed booking settlement (100 basis points = 1% each). The legacy `COMMISSION_BPS` remains a fallback for existing deployments only. Staging is configured for test mode; the guarded mode-switch script sets both explicit fee variables to 100. Production settings remain unchanged until a separately approved live cutover.
 
 Use the guarded one-command Render switch from the repository root. Set `RENDER_API_KEY` in a private shell/CI secret store; never commit it:
 ```bash
@@ -37,9 +37,9 @@ For live, use the production target and complete every explicit cutover approval
 ```bash
 EPHINTA_RENDER_TARGET=production EPHINTA_LIVE_PROVIDER=paystack EPHINTA_LIVE_CUTOVER_APPROVED=YES EPHINTA_LIVE_PROVIDER_APPROVED=YES EPHINTA_LIVE_CREDENTIALS_VERIFIED=YES EPHINTA_LIVE_WEBHOOKS_VERIFIED=YES EPHINTA_LIVE_RECONCILIATION_VERIFIED=YES EPHINTA_LIVE_IDEMPOTENCY_VERIFIED=YES npm run payments:mode -- live
 ```
-The script accepts only Paystack or Flutterwave for live mode; OPay is sandbox-only, Cleva/Eversend adapters are not present, and Stripe checkout is disabled. It checks for the appropriate live secret-key prefix without printing the key. The script changes only the payment-mode, production-test opt-in and 1% commission variables, then requests a Render deploy.
+The script accepts only Paystack or Flutterwave for live mode; OPay is sandbox-only, Cleva/Eversend adapters are not present, and Stripe checkout is disabled. It checks for the appropriate live secret-key prefix without printing the key. The script changes payment mode, production-test opt-in, the legacy fallback, and both explicit 1% fee variables, then requests a Render deploy.
 
-**Fee-policy sign-off required before live:** the current backend uses `COMMISSION_BPS` both when crediting wallet top-ups and when calculating booking/vendor commission. Setting it to 100 bps may therefore withhold 1% at wallet funding and apply 1% again at booking settlement. The staging value is for sandbox verification only. Confirm whether EPHINTA should charge 1% on wallet top-ups, on completed bookings, or only once on the final customer payment; separate fee settings if it should not be charged twice.
+**Fee policy confirmed:** charge 1% separately on successful wallet top-ups and completed booking settlement. These are separate transaction events: a top-up fee reduces the net wallet credit, while the booking commission is withheld from the vendor's escrow release. Do not deduct the booking commission from the customer a second time at booking checkout. The two fee rates are independently configurable as `WALLET_TOPUP_FEE_BPS` and `BOOKING_COMMISSION_BPS`; both are set to 100 bps in staging. The fee policy is not a live-payment approval.
 
 A live cutover is a controlled backend configuration change, not a frontend switch:
 
