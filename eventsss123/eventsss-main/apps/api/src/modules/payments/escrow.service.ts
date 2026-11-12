@@ -3,44 +3,8 @@ import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../lib/errors";
 import { env } from "../../config/env";
 import { bookingCommissionMinor } from "./feePolicy";
+import { recordPlatformRevenue } from "./platformRevenue.service";
 import { assertEscrowReleaseAllowed } from "./escrowPolicy";
-
-/**
- * Record platform commission in its own currency-scoped revenue account.
- * The account balance update and append-only journal entry share the escrow
- * transaction, so a failed release cannot leave revenue partially posted.
- */
-async function recordPlatformCommission(
-  tx: Prisma.TransactionClient,
-  bookingId: string,
-  currency: string,
-  amountMinor: bigint,
-) {
-  if (amountMinor <= 0n) return;
-  const idempotencyKey = `platform_commission:${bookingId}`;
-  const existing = await tx.platformRevenueEntry.findUnique({ where: { idempotencyKey } });
-  if (existing) return;
-
-  const account = await tx.platformRevenueAccount.upsert({
-    where: { currency },
-    create: { currency, balanceMinor: 0n },
-    update: {},
-  });
-  const updatedAccount = await tx.platformRevenueAccount.update({
-    where: { id: account.id },
-    data: { balanceMinor: { increment: amountMinor } },
-  });
-  await tx.platformRevenueEntry.create({
-    data: {
-      accountId: account.id,
-      amountMinor,
-      balanceAfterMinor: updatedAccount.balanceMinor,
-      refType: "BOOKING",
-      refId: bookingId,
-      idempotencyKey,
-    },
-  });
-}
 
 /**
  * Release booking escrow to vendor (minus commission).
@@ -93,7 +57,7 @@ export async function releaseBookingEscrow(bookingId: string, actorUserId: strin
   // fulfilled booking created before this accounting correction.
   if (booking.status === BookingStatus.FULFILLED) {
     await prisma.$transaction(async (tx) => {
-      await recordPlatformCommission(tx, booking.id, currency, commission);
+      await recordPlatformRevenue(tx, { amountMinor: commission, currency, refType: "BOOKING", refId: booking.id, idempotencyKey: `platform_commission:${booking.id}` });
       if (booking.commissionMinor === 0n && commission > 0n) {
         await tx.booking.update({ where: { id: booking.id }, data: { commissionMinor: commission } });
       }
@@ -112,7 +76,7 @@ export async function releaseBookingEscrow(bookingId: string, actorUserId: strin
   await prisma.$transaction(async (tx) => {
     const existing = await tx.ledgerEntry.findUnique({ where: { idempotencyKey } });
     if (existing) {
-      await recordPlatformCommission(tx, booking.id, currency, commission);
+      await recordPlatformRevenue(tx, { amountMinor: commission, currency, refType: "BOOKING", refId: booking.id, idempotencyKey: `platform_commission:${booking.id}` });
       await tx.booking.update({
         where: { id: booking.id },
         data: { status: BookingStatus.FULFILLED, commissionMinor: commission },
@@ -174,7 +138,7 @@ export async function releaseBookingEscrow(bookingId: string, actorUserId: strin
 
     // This is a distinct platform asset/liability ledger, not a second
     // vendor-wallet debit or a customer checkout surcharge.
-    await recordPlatformCommission(tx, booking.id, currency, commission);
+    await recordPlatformRevenue(tx, { amountMinor: commission, currency, refType: "BOOKING", refId: booking.id, idempotencyKey: `platform_commission:${booking.id}` });
 
     await tx.booking.update({
       where: { id: booking.id },
