@@ -190,12 +190,36 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       const vendorWallet = await prisma.wallet.findUniqueOrThrow({
         where: { userId_currency: { userId: vendor.id, currency: "NGN" } },
       });
-      expect(vendorWallet.availableMinor).toBeGreaterThan(0n);
+      const expectedCommission = 1000n;
+      const platformAccount = await prisma.platformRevenueAccount.findUniqueOrThrow({ where: { currency: "NGN" } });
+      const platformEntry = await prisma.platformRevenueEntry.findUniqueOrThrow({
+        where: { idempotencyKey: `platform_commission:${booking.id}` },
+      });
+      expect(platformEntry.amountMinor).toBe(expectedCommission);
+      expect(platformAccount.balanceMinor).toBeGreaterThanOrEqual(expectedCommission);
+      expect(platformEntry.refType).toBe("BOOKING");
+      expect(platformEntry.refId).toBe(booking.id);
+      expect(await prisma.ledgerEntry.findUnique({ where: { idempotencyKey: `commission:${booking.id}` } })).toBeNull();
+      expect(vendorWallet.availableMinor).toBe(99000n);
+      const replayRelease = await request(app).post(`/api/v1/payments/bookings/${booking.id}/release`).set(auth(verifier.token)).send({});
+      expect(replayRelease.status).toBe(200);
+      expect(replayRelease.body.alreadyReleased).toBe(true);
+      expect(await prisma.platformRevenueEntry.count({ where: { idempotencyKey: `platform_commission:${booking.id}` } })).toBe(1);
       const releasedBudget = await request(app).get(`/api/v1/events/${eventId}/budget`).set(auth(planner.token));
       expect(releasedBudget.body.funding.bookingPaymentsHeldMinor).toBe("0");
     } finally {
-      // BookingItem references Listing with RESTRICT; remove the booking first.
-      if (bookingId) await prisma.booking.deleteMany({ where: { id: bookingId } });
+      // Keep the shared platform account balanced while removing this isolated fixture.
+      if (bookingId) {
+        const revenueEntry = await prisma.platformRevenueEntry.findUnique({ where: { idempotencyKey: `platform_commission:${bookingId}` } });
+        if (revenueEntry) {
+          await prisma.platformRevenueAccount.update({
+            where: { id: revenueEntry.accountId },
+            data: { balanceMinor: { decrement: revenueEntry.amountMinor } },
+          });
+          await prisma.platformRevenueEntry.delete({ where: { id: revenueEntry.id } });
+        }
+        await prisma.booking.deleteMany({ where: { id: bookingId } });
+      }
       await prisma.event.delete({ where: { id: eventId } });
       await prisma.listing.delete({ where: { id: listing.id } });
     }
