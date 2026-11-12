@@ -1,4 +1,5 @@
-import { BookingStatus, LedgerType, Prisma } from "@prisma/client";
+import { BookingStatus, LedgerType } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../lib/errors";
 import { env } from "../../config/env";
