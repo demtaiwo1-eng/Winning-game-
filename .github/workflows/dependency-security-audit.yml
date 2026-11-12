@@ -2,6 +2,13 @@ name: Dependency security audit
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "eventsss123/eventsss-main/package.json"
+      - "eventsss123/eventsss-main/package-lock.json"
+      - "eventsss123/eventsss-main/apps/**/package.json"
+      - ".github/workflows/dependency-security-audit.yml"
   push:
     branches:
       - main
