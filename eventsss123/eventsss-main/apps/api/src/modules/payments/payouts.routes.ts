@@ -7,7 +7,7 @@ import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { payoutFeeMinor } from "./feePolicy";
-import { getRuntimePaymentMode } from "./runtimePaymentMode";
+import { getRuntimePaymentMode, lockCurrentPaymentMode } from "./runtimePaymentMode";
 import { recordPlatformRevenue } from "./platformRevenue.service";
 import { assertOpayTransfersEnabled, maskAccount, normalizeOpayTransferStatus, opayCreateBankTransfer, opayGetBankTransferStatus, opayListBanks, opayResolveBankAccount } from "./opay-payouts.provider";
 
@@ -168,13 +168,16 @@ payoutsRouter.post(
     const reference = `ephinta_payout_${randomUUID().replace(/-/g, "").slice(0, 20)}`;
     // Create a processing marker before OPay account lookup. This prevents a
     // central mode switch while a payout request is in flight.
-    let payout = await prisma.payout.create({
+    let payout = await prisma.$transaction(async (tx) => {
+      await lockCurrentPaymentMode(tx);
+      return tx.payout.create({
       data: {
         userId: req.user!.id, walletId: wallet.id, provider: "opay", reference, idempotencyKey,
         amountMinor, feeMinor, netAmountMinor, currency: "NGN",
         bankCode, bankName: null, accountName: "Pending verification",
         maskedAccountNumber: maskAccount(accountNumber), status: PayoutStatus.PROCESSING,
       },
+      });
     });
 
     let accountName: string;
