@@ -1609,19 +1609,19 @@ function FinanceOperationsPanel() {
       {payments && <>
         <h3>Payment intents · {payments.total.toLocaleString()} records</h3>
         <div className="ess-metrics">
-          {payments.summary.map((row) => <Metric key={row.provider + row.currency + row.status} label={`${row.provider} · ${row.status}`} value={row.count.toLocaleString()} detail={financeAmount(row.amountMinor, row.currency)} />)}
+          {payments.summary.map((row) => <Metric key={row.provider + row.currency + row.status} label={`${row.provider === "opay" ? "OPay" : row.provider} · ${row.status}`} value={row.count.toLocaleString()} detail={financeAmount(row.amountMinor, row.currency)} />)}
         </div>
         <div style={{ overflowX: "auto" }}>
           <table><thead><tr><th>Created</th><th>Customer</th><th>Provider</th><th>Amount</th><th>Status</th><th>Reference</th></tr></thead>
-            <tbody>{payments.items.map((item) => <tr key={item.id}><td>{new Date(item.createdAt).toLocaleString()}</td><td>{item.user.name}</td><td>{item.provider}</td><td>{financeAmount(item.amountMinor, item.currency)}</td><td>{item.status}</td><td>{item.providerRef || item.id}</td></tr>)}</tbody>
+            <tbody>{payments.items.map((item) => <tr key={item.id}><td>{new Date(item.createdAt).toLocaleString()}</td><td>{item.user.name}</td><td>{item.provider === "opay" ? "OPay" : item.provider}</td><td>{financeAmount(item.amountMinor, item.currency)}</td><td>{item.status}</td><td>{item.providerRef || item.id}</td></tr>)}</tbody>
           </table>
         </div>
       </>}
       {ledger && <>
         <h3>Wallet ledger · {ledger.total.toLocaleString()} records</h3>
         <div style={{ overflowX: "auto" }}>
-          <table><thead><tr><th>Created</th><th>Wallet owner</th><th>Type</th><th>Amount</th><th>Balance after</th></tr></thead>
-            <tbody>{ledger.items.map((item) => <tr key={item.id}><td>{new Date(item.createdAt).toLocaleString()}</td><td>{item.wallet.user.name}</td><td>{item.type}</td><td>{financeAmount(item.amountMinor, item.wallet.currency)}</td><td>{financeAmount(item.balanceAfterMinor, item.wallet.currency)}</td></tr>)}</tbody>
+          <table><thead><tr><th>Created</th><th>Wallet owner</th><th>Type</th><th>Provider</th><th>Amount</th><th>Balance after</th></tr></thead>
+            <tbody>{ledger.items.map((item) => <tr key={item.id}><td>{new Date(item.createdAt).toLocaleString()}</td><td>{item.wallet.user.name}</td><td>{item.type}</td><td>{item.provider === "opay" ? "OPay" : item.provider === "internal" ? "EPHINTA wallet" : item.provider}</td><td>{financeAmount(item.amountMinor, item.wallet.currency)}</td><td>{financeAmount(item.balanceAfterMinor, item.wallet.currency)}</td></tr>)}</tbody>
           </table>
         </div>
       </>}
