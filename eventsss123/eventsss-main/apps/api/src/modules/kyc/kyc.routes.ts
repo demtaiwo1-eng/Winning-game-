@@ -4,7 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { hasRole, requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
-import { getKycProfile, listKycCountries, type DocType } from "../../lib/kyc-countries";
+import { getKycProfile, isSupportedKycDocument, listKycCountries, type DocType } from "../../lib/kyc-countries";
 import { readKycDocument, storeKycDocument } from "../../lib/kyc-storage";
 import { bytidRequest, verifyBytidWebhook } from "../../lib/bytid";
 
@@ -227,16 +227,13 @@ kycRouter.post(
     const kind: VerificationKind =
       req.body.kind === "IDENTITY" ? VerificationKind.IDENTITY : VerificationKind.BUSINESS;
 
-    const allowedDocTypes = kind === VerificationKind.IDENTITY ? profile.identityDocs : profile.businessDocs;
-    const primaryDocType = String(req.body.primaryDocType || allowedDocTypes[0] || "") as DocType;
-    const isAllowedDocType =
-      allowedDocTypes.includes(primaryDocType) ||
-      (kind === VerificationKind.IDENTITY && primaryDocType === "PASSPORT");
-    if (!isAllowedDocType) {
+    const recommendedDocTypes = kind === VerificationKind.IDENTITY ? profile.identityDocs : profile.businessDocs;
+    const primaryDocType = String(req.body.primaryDocType || recommendedDocTypes[0] || "").toUpperCase() as DocType;
+    if (!isSupportedKycDocument(req.body.kind, primaryDocType)) {
       throw new HttpError(
         400,
         "INVALID_DOC_TYPE",
-        `For ${profile.name}, accepted ${kind.toLowerCase()} docs: ${allowedDocTypes.join(", ")}`,
+        `Unsupported document type. Platform-supported ${kind.toLowerCase()} documents: ${(kind === VerificationKind.IDENTITY ? ["PASSPORT", "NATIONAL_ID", "DRIVERS_LICENSE", "RESIDENCE_PERMIT", "VOTER_ID", "TAX_ID"] : ["BUSINESS_REGISTRATION", "TRADE_LICENSE", "TAX_ID"]).join(", ")}`,
       );
     }
 
@@ -260,8 +257,8 @@ kycRouter.post(
         typeof req.body.addressDocUrl === "string" ? req.body.addressDocUrl.slice(0, 500) : null,
       businessDocUrl:
         typeof req.body.businessDocUrl === "string" ? req.body.businessDocUrl.slice(0, 500) : null,
-      requiredIdentityDocs: profile.identityDocs,
-      requiredBusinessDocs: kind === VerificationKind.BUSINESS ? profile.businessDocs : [],
+      recommendedIdentityDocs: profile.identityDocs,
+      recommendedBusinessDocs: kind === VerificationKind.BUSINESS ? profile.businessDocs : [],
     };
 
     const notesParts = [
