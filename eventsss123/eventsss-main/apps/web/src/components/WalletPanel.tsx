@@ -298,9 +298,9 @@ export default function WalletPanel({
             <div className="ess-wallet-rows">
               {ledgerEntries.map((entry) => (
                 <div key={entry.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--ess-border, #ddd)" }}>
-                  <span>{entry.type.replaceAll("_", " ")} · {entry.provider === "opay" ? "OPay" : entry.provider === "internal" ? "EPHINTA wallet" : entry.provider}</span>
+                  <span>{entry.type.replace(/_/g, " ")} · {entry.provider === "opay" ? "OPay" : entry.provider === "internal" ? "EPHINTA wallet" : entry.provider}</span>
                   <strong>{formatMoney(entry.amountMinor, ledgerCurrency, locale)}</strong>
-                  <small className="ess-muted">{entry.refType.replaceAll("_", " ")} · {new Date(entry.createdAt).toLocaleString()}</small>
+                  <small className="ess-muted">{entry.refType.replace(/_/g, " ")} · {new Date(entry.createdAt).toLocaleString()}</small>
                 </div>
               ))}
             </div>
