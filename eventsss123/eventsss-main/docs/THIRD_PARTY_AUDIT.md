@@ -9,6 +9,7 @@
 |---|---|---|
 | Project-level licence | No root or application-level `LICENSE` was present. The legal copyright holder has not been confirmed. | Do not invent a copyright owner or publish a misleading licence. Owner confirmation and legal review are still required. |
 | Third-party Remotion content | The product repository contained a large Remotion agent-skill/documentation bundle, with example code and sample assets. It is unrelated to EPHINTA's runtime/build. | Removed from this release branch: 284 skill/document/example files. |
+| Committed dependencies | A stale parent-level `eventsss123/node_modules` tree contained 2,431 tracked third-party dependency files, alongside an obsolete Vite 5 package manifest/lockfile. The maintained app has its own workspace lockfile under `eventsss123/eventsss-main`. | Removed the stale dependency tree and parent manifests; added repository-wide ignore rules and a CI gate against committed `node_modules`. |
 | Audio recordings | Six Wale Waves-labelled recordings existed twice (repository root and web public assets). No commercial distribution grant or master/composition rights record was found. | Removed all 12 tracked copies from this release branch. Audio playback now stays disabled unless an owner-configured, rights-cleared HTTPS source is supplied. |
 | YouTube playlist automation | OAuth scripts and a scheduled playlist-sync workflow existed, but the player did not use the generated catalogue. | Removed the unused Google OAuth/YouTube playlist automation, documentation, and workflow. |
 | Solidity escrow prototype | `contracts/EventEscrowVault.sol` carried an explicit `SPDX-License-Identifier: MIT` and was not imported or deployed by the application. | Removed the unused contract from the current application tree. This does not revoke permissions granted by earlier public MIT-labelled revisions. |
@@ -24,7 +25,8 @@
 3. Removed the unused Wale Waves YouTube OAuth bootstrap, playlist-sync script, workflow, and setup guide. This removes an unnecessary Google account/token/quota surface from the current product.
 4. Reworked the audio player so it makes no audio request, displays no consent prompt, and makes no claim of original music when no approved source is configured. A future source must be explicitly supplied via `VITE_EPHINTA_LICENSED_AUDIO_URL` or the component prop and must have a corresponding rights record.
 5. Removed the unused Solidity escrow prototype, which was separately labelled MIT. The production application continues to use its existing server-side wallet/ledger/escrow workflow; no deployed chain contract was found in the inspected app tree.
-6. Added automated checks to prevent unregistered bundled audio and the removed Remotion bundle from returning.
+6. Removed 2,431 tracked files from the stale parent-level `eventsss123/node_modules` tree and deleted its obsolete parent package manifest/lockfile. The maintained app uses the lockfile inside `eventsss123/eventsss-main`.
+7. Added automated checks to prevent unregistered bundled audio, the removed Remotion bundle, and committed `node_modules` directories from returning.
 
 ## Dependency licence inventory
 
