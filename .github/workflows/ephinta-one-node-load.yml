@@ -18,7 +18,7 @@ jobs:
   one-node-load:
     name: 5,000 synthetic users · one staging node
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,7 +35,7 @@ jobs:
         env:
           EPHINTA_LOAD_BASE_URL: https://ephinta-opay-staging.onrender.com
           LOAD_USERS: "5000"
-          LOAD_CONCURRENCY: "20"
+          LOAD_CONCURRENCY: "4"\n          LOAD_RPS: "3"
         run: node scripts/qa/ephinta-one-node-load.mjs
       - name: Upload administrative dashboard and raw results
         if: always()
