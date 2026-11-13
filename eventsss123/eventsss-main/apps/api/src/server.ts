@@ -21,13 +21,18 @@ async function startServer() {
           return;
         }
         reconciliationInProgress = true;
-        void Promise.all([reconcilePendingPayments(), reconcilePendingPayouts()])
-          .then(([payments, payouts]) => logger.info({ payments, payouts }, "Payment and OPay payout reconciliation completed"))
-          .catch((error: unknown) => {
-            logger.warn(
-              { errorType: error instanceof Error ? error.name : "UnknownError" },
-              "Payment and OPay payout reconciliation failed",
-            );
+        void Promise.allSettled([reconcilePendingPayments(), reconcilePendingPayouts()])
+          .then(([payments, payouts]) => {
+            if (payments.status === "fulfilled" && payouts.status === "fulfilled") {
+              logger.info({ payments: payments.value, payouts: payouts.value }, "Payment and OPay payout reconciliation completed");
+            } else {
+              logger.warn({
+                payments: payments.status,
+                payouts: payouts.status,
+                paymentError: payments.status === "rejected" ? (payments.reason instanceof Error ? payments.reason.name : "UnknownError") : undefined,
+                payoutError: payouts.status === "rejected" ? (payouts.reason instanceof Error ? payouts.reason.name : "UnknownError") : undefined,
+              }, "Payment and OPay payout reconciliation completed with errors");
+            }
           })
           .finally(() => {
             reconciliationInProgress = false;
