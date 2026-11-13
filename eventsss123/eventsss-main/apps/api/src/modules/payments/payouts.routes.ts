@@ -168,17 +168,29 @@ payoutsRouter.post(
     const reference = `ephinta_payout_${randomUUID().replace(/-/g, "").slice(0, 20)}`;
     // Create a processing marker before OPay account lookup. This prevents a
     // central mode switch while a payout request is in flight.
-    let payout = await prisma.$transaction(async (tx) => {
-      await lockCurrentPaymentMode(tx);
-      return tx.payout.create({
-      data: {
-        userId: req.user!.id, walletId: wallet.id, provider: "opay", reference, idempotencyKey,
-        amountMinor, feeMinor, netAmountMinor, currency: "NGN",
-        bankCode, bankName: null, accountName: "Pending verification",
-        maskedAccountNumber: maskAccount(accountNumber), status: PayoutStatus.PROCESSING,
-      },
+    let payout;
+    try {
+      payout = await prisma.$transaction(async (tx) => {
+        await lockCurrentPaymentMode(tx);
+        return tx.payout.create({
+          data: {
+            userId: req.user!.id, walletId: wallet.id, provider: "opay", reference, idempotencyKey,
+            amountMinor, feeMinor, netAmountMinor, currency: "NGN",
+            bankCode, bankName: null, accountName: "Pending verification",
+            maskedAccountNumber: maskAccount(accountNumber), status: PayoutStatus.PROCESSING,
+          },
+        });
       });
-    });
+    } catch (error) {
+      const replay = await prisma.payout.findUnique({ where: { idempotencyKey } });
+      if (replay) {
+        if (replay.userId !== req.user!.id || replay.amountMinor !== amountMinor || replay.bankCode !== bankCode || replay.maskedAccountNumber !== maskAccount(accountNumber)) {
+          throw new HttpError(409, "IDEMPOTENCY_KEY_CONFLICT", "This idempotency key was already used for a different payout.");
+        }
+        return res.status(200).json({ payout: publicPayout(replay), replayed: true });
+      }
+      throw error;
+    }
 
     let accountName: string;
     let bankName: string | null;
