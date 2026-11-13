@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { AsyncLocalStorage } from "node:async_hooks";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../lib/errors";
 
@@ -27,6 +28,17 @@ export async function refreshPaymentMode(): Promise<PaymentMode> {
 
 export function getRuntimePaymentMode(): PaymentMode {
   return requestMode.getStore() ?? activeMode;
+}
+
+/** Serialize transaction creation with ADMIN mode changes. */
+export async function lockCurrentPaymentMode(tx: Prisma.TransactionClient): Promise<PaymentMode> {
+  await tx.$queryRaw`SELECT "id" FROM "PlatformRuntimeSetting" WHERE "id" = 'global' FOR UPDATE`;
+  const setting = await tx.platformRuntimeSetting.findUnique({ where: { id: "global" }, select: { paymentMode: true } });
+  const requestModeSnapshot = getRuntimePaymentMode();
+  if (!setting || setting.paymentMode !== requestModeSnapshot) {
+    throw new HttpError(409, "PAYMENT_MODE_CHANGED_RETRY", "The global payment mode changed while this request was starting. Refresh and try again.");
+  }
+  return setting.paymentMode as PaymentMode;
 }
 
 export async function paymentModeGuard(_req: Request, res: Response, next: NextFunction) {
