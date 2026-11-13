@@ -6,6 +6,7 @@ import {
   constantTimeStringEqual,
   majorAmountToMinor,
   verifyPaystackSignature,
+  verifyPaystackWebhookSignature,
 } from "../src/modules/payments/webhookVerification";
 
 describe("payment webhook verification", () => {
@@ -23,6 +24,29 @@ describe("payment webhook verification", () => {
     expect(verifyPaystackSignature(raw, signature, "test-webhook-secret")).toBe(true);
     expect(verifyPaystackSignature(raw, `${signature}x`, "test-webhook-secret")).toBe(false);
     expect(verifyPaystackSignature(Buffer.from("{}"), signature, "test-webhook-secret")).toBe(false);
+  });
+
+  it("validates Paystack's timestamped webhook-signing-secret header", () => {
+    const raw = Buffer.from('{"event":"transfer.success","data":{"reference":"payout_123"}}');
+    const secret = "whsec_test_signing_secret";
+    const timestamp = 1_800_000_000;
+    const signature = createHmac("sha512", secret).update(`${timestamp}.`).update(raw).digest("hex");
+    const header = `t=${timestamp},v1=whk_abc123:${signature}`;
+    expect(verifyPaystackWebhookSignature(raw, header, secret, timestamp)).toBe(true);
+    expect(verifyPaystackWebhookSignature(raw, header, secret, timestamp + 301)).toBe(false);
+    expect(verifyPaystackWebhookSignature(raw, header, secret, timestamp - 301)).toBe(false);
+    expect(verifyPaystackWebhookSignature(Buffer.from("{}"), header, secret, timestamp)).toBe(false);
+    expect(verifyPaystackWebhookSignature(raw, header, "whsec_wrong", timestamp)).toBe(false);
+    expect(verifyPaystackWebhookSignature(raw, `t=${timestamp},v1=whk_abc123:bad`, secret, timestamp)).toBe(false);
+  });
+
+  it("accepts any valid v1 signature during Paystack signing-secret rotation", () => {
+    const raw = Buffer.from('{"event":"ping"}');
+    const secret = "whsec_current_secret";
+    const timestamp = 1_800_000_000;
+    const signature = createHmac("sha512", secret).update(`${timestamp}.`).update(raw).digest("hex");
+    const header = `t=${timestamp},v1=whk_oldkey:${"0".repeat(128)},v1=whk_newkey:${signature}`;
+    expect(verifyPaystackWebhookSignature(raw, header, secret, timestamp)).toBe(true);
   });
 
   it("compares Flutterwave secret hashes without timing-unsafe equality", () => {
