@@ -30,21 +30,31 @@ function assertOpayTransfers() {
   if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
     throw new HttpError(503, "PAYOUT_PROVIDER_NOT_CONFIGURED", "OPay merchant transfer credentials are not configured.");
   }
-  if (env.PAYMENT_MODE === "test" && !env.OPAY_TRANSFER_BASE_URL?.includes("sandbox-cashierapi.opayweb.com") && env.OPAY_TRANSFER_BASE_URL) {
-    throw new HttpError(503, "PAYOUT_KEY_MODE_MISMATCH", "OPay test mode must use the OPay sandbox transfer endpoint.");
-  }
-  if (env.PAYMENT_MODE === "live" && env.OPAY_TRANSFER_BASE_URL?.includes("sandbox-cashierapi.opayweb.com")) {
-    throw new HttpError(503, "PAYOUT_KEY_MODE_MISMATCH", "OPay live mode cannot use the sandbox transfer endpoint.");
-  }
   if (env.NODE_ENV === "production" && env.PAYMENT_MODE === "test" && env.ALLOW_PRODUCTION_TEST_MODE !== "true") {
     throw new HttpError(503, "PRODUCTION_TEST_MODE_DISABLED", "Sandbox withdrawals on the production API require ALLOW_PRODUCTION_TEST_MODE=true.");
   }
 }
 
 function baseUrl() {
-  return (env.OPAY_TRANSFER_BASE_URL || (env.PAYMENT_MODE === "test"
-    ? "https://sandbox-cashierapi.opayweb.com"
-    : "https://cashierapi.opayweb.com")).replace(/\/$/, "");
+  const expectedHost = env.PAYMENT_MODE === "test"
+    ? "sandbox-cashierapi.opayweb.com"
+    : "cashierapi.opayweb.com";
+  const configured = env.OPAY_TRANSFER_BASE_URL || `https://${expectedHost}`;
+  let parsed: URL;
+  try {
+    parsed = new URL(configured);
+  } catch {
+    throw new HttpError(503, "OPAY_TRANSFER_URL_INVALID", "The OPay transfer endpoint URL is invalid.");
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    parsed.hostname.toLowerCase() !== expectedHost ||
+    parsed.username || parsed.password || parsed.port ||
+    (parsed.pathname !== "/" && parsed.pathname !== "")
+  ) {
+    throw new HttpError(503, "OPAY_TRANSFER_URL_INVALID", "The OPay transfer endpoint must use the official HTTPS host for the selected payment mode.");
+  }
+  return `https://${expectedHost}`;
 }
 
 async function request<T>(path: string, payload: Record<string, unknown>, auth: "public" | "signature"): Promise<OpayEnvelope<T>> {
