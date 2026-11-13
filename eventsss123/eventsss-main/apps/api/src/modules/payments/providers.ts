@@ -92,11 +92,13 @@ export function selectProvider(currency: string, country?: string): ProviderName
   if (getRuntimePaymentMode() === "demo") return "demo";
 
   const c = currency.toUpperCase();
+  const countryCode = country?.toUpperCase();
+  if (countryCode === "NG" && c !== "NGN") {
+    throw new HttpError(400, "OPAY_CURRENCY_UNSUPPORTED", "OPay payments in Nigeria require NGN.");
+  }
   if (c !== "NGN") {
     throw new HttpError(400, "OPAY_CURRENCY_UNSUPPORTED", "OPay is the configured payment rail. Only NGN transactions are enabled until additional OPay markets are verified.");
   }
-  const countryCode = country?.toUpperCase();
-
   // EPHINTA's Nigerian payment rail is OPay only. Never silently route an
   // NGN deposit through another processor or a simulated checkout.
   if (c === "NGN" || countryCode === "NG") {
@@ -196,7 +198,7 @@ export async function initializeOpay(input: {
     cashierUrl.password ||
     cashierUrl.port
   ) {
-    throw new Error("OPay returned a cashier URL outside the approved host for the selected mode");
+    throw new Error("OPay returned a cashier URL outside the approved sandbox host or production host for the selected mode");
   }
 
   return {
