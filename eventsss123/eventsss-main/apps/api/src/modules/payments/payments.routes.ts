@@ -205,14 +205,17 @@ function verifyWebhookSignature(provider: string, req: import("express").Request
   if (!rawBody) throw new HttpError(400, "RAW_BODY_MISSING", "Webhook raw body is unavailable");
   if (provider === "paystack") {
     const timestampedSignature = String(req.headers["paystack-signature"] || "");
-    if (timestampedSignature) {
-      if (!env.PAYSTACK_WEBHOOK_SECRET) {
-        throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "Paystack webhook signing secret is not configured");
-      }
+    if (timestampedSignature && env.PAYSTACK_WEBHOOK_SECRET) {
       if (!verifyPaystackWebhookSignature(rawBody, timestampedSignature, env.PAYSTACK_WEBHOOK_SECRET)) {
         throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid Paystack webhook signature");
       }
       return;
+    }
+    // During migration, Paystack can send both headers. If the dedicated
+    // whsec_ secret has not yet been installed, retain the documented legacy
+    // signature check rather than rejecting a valid dual-signed delivery.
+    if (timestampedSignature && !env.PAYSTACK_WEBHOOK_SECRET && !req.headers["x-paystack-signature"]) {
+      throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "Paystack webhook signing secret is not configured");
     }
     // Backward compatibility for integrations that have not enabled the
     // dedicated whsec_ signing secret yet.
