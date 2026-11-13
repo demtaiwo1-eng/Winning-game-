@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Controlled single-node EPHINTA campaign.
- * 5,000 synthetic identities, bounded to 20 concurrent lightweight health probes.
+ * 5,000 synthetic identities, bounded to 4 concurrent lightweight health probes.
  * Payment values/modes are synthetic ledger calculations only: no payment API,
  * provider checkout, webhook, payout, wallet credit, or live-money operation.
  */
@@ -39,7 +39,14 @@ const finance = Object.fromEntries(modes.map((mode) => [mode, {
   settlementAllowed: mode !== "LIVE",
 }]));
 
-async function waitForRateSlot() {\n  const slot = nextRequestAt;\n  nextRequestAt += requestIntervalMs;\n  const waitMs = slot - Date.now();\n  if (waitMs > 0) await delay(waitMs);\n}\n\nasync function runOne(index) {
+async function waitForRateSlot() {
+  const slot = nextRequestAt;
+  nextRequestAt += requestIntervalMs;
+  const waitMs = slot - Date.now();
+  if (waitMs > 0) await delay(waitMs);
+}
+
+async function runOne(index) {
   const role = roles[index % roles.length];
   const mode = modes[index % modes.length];
   const amountNaira = highValuesNaira[index % highValuesNaira.length];
@@ -57,7 +64,6 @@ async function waitForRateSlot() {\n  const slot = nextRequestAt;\n  nextRequest
     bucket.outgoingFeeKobo += fee;
   }
   // LIVE is policy-checked only. It must never call a live provider in this campaign.
-  if (mode === "LIVE") bucket.providerCalls++;
   const started = Date.now();
   try {
     const response = await fetch(target, { method: "GET", headers: { "user-agent": "EPHINTA-OneNode-QA/1.0", "x-qa-persona": String(index + 1) }, signal: AbortSignal.timeout(timeoutMs) });
@@ -81,7 +87,6 @@ async function worker() {
 await Promise.all(Array.from({ length: concurrency }, () => worker()));
 const latencies = results.filter(Boolean).map((x) => x.latencyMs).sort((a, b) => a - b);
 const errors = results.filter((x) => !x?.ok);
-const countStatus = (code) => results.filter((x) => x?.status === code).length;
 const pct = (p) => latencies.length ? latencies[Math.min(latencies.length - 1, Math.ceil(latencies.length * p) - 1)] : null;
 const roleSummary = Object.fromEntries(roles.map((role) => [role, {
   users: results.filter((x) => x?.role === role).length,
