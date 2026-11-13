@@ -40,9 +40,9 @@ Set these on the API service only. Keep all values in Render secret settings; ne
 | `OPAY_TRANSFER_BASE_URL` | `https://sandbox-cashierapi.opayweb.com` | `https://cashierapi.opayweb.com` |
 | `PAYMENT_MODE` | `test` | `live` |
 | `ALLOW_PRODUCTION_TEST_MODE` | `true` only for an intentional sandbox test on the production API host | `false` |
-| `PAYOUT_FEE_BPS` | `200` | `200` |
+| Transaction fee | Fixed at 2% in the API | Fixed at 2% in the API |
 
-If `OPAY_TRANSFER_BASE_URL` is omitted, the API selects the sandbox host in test mode and production host in live mode. The transfer feature defaults to disabled. Do not enable it until OPay confirms that the merchant credentials are entitled to the Merchant Transfer API, sandbox bank transfers have passed joint testing, and the OPay merchant settlement account is funded.
+The outgoing transaction fee is fixed at 2% and is not overridden by Render environment variables. If `OPAY_TRANSFER_BASE_URL` is omitted, the API selects the sandbox host in test mode and production host in live mode. The transfer feature defaults to disabled. Do not enable it until OPay confirms that the merchant credentials are entitled to the Merchant Transfer API, sandbox bank transfers have passed joint testing, and the OPay merchant settlement account is funded.
 
 ## API
 
