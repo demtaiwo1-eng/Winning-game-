@@ -86,7 +86,7 @@ export default function WalletPanel({
 
   useEffect(() => {
     if (searchParams.get("payment") !== "return") return;
-    setMsg("Payment returned to ESS. Your wallet updates after the provider confirms the transaction.");
+    setMsg("Payment returned to EPHINTA. Your wallet updates after OPay confirms the transaction.");
     load();
     const next = new URLSearchParams(searchParams);
     next.delete("payment");
