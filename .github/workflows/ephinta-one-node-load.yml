@@ -35,7 +35,8 @@ jobs:
         env:
           EPHINTA_LOAD_BASE_URL: https://ephinta-opay-staging.onrender.com
           LOAD_USERS: "5000"
-          LOAD_CONCURRENCY: "4"\n          LOAD_RPS: "3"
+          LOAD_CONCURRENCY: "4"
+          LOAD_RPS: "3"
         run: node scripts/qa/ephinta-one-node-load.mjs
       - name: Upload administrative dashboard and raw results
         if: always()
