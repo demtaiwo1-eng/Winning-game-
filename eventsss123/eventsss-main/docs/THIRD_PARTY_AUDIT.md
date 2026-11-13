@@ -66,6 +66,10 @@ These are external services, not code that EPHINTA owns. Use the official docume
 
 Legacy Paystack/Flutterwave/Stripe adapters and webhook compatibility code remain in the source tree for historical/other-market records. The inspected provider selector routes NGN through OPay; do not configure or use other processors for new NGN traffic. Before removing legacy webhook compatibility, reconcile all outstanding intents and confirm no historical transaction still depends on it. If EPHINTA is to be OPay-only in every country/currency, that is a separate product/payment policy change and must be applied consistently to UI, API, reporting, and data migrations.
 
+## KYC country/document matrix risk
+
+The original country matrix described itself as “FATF-aligned” and exposed fixed jurisdiction document lists. That wording could be mistaken for a legal/compliance determination. It has been rewritten as an EPHINTA-maintained UX suggestion catalogue, and the API now accepts platform-supported document categories without rejecting a document solely because a country hint omits it. This is not a substitute for provider capability checks or local legal review. See `docs/KYC_COUNTRY_DATA_PROVENANCE.md`.
+
 ## Source and asset provenance still requiring owner evidence
 
 - EPHINTA logos, launcher icons, splash images, and three people/avatar SVGs appear to be product branding/illustration assets, but the Git tree alone does not prove who created them or which licences apply.
