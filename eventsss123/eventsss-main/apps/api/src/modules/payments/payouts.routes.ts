@@ -134,7 +134,7 @@ payoutsRouter.post(
   requireAuth,
   requireRole("VENDOR", "AFFILIATE", "ADMIN"),
   asyncHandler(async (req, res) => {
-const amountRaw = String(req.body.amountMinor ?? "");
+    const amountRaw = String(req.body.amountMinor ?? "");
     const accountNumber = String(req.body.accountNumber ?? "");
     const bankCode = String(req.body.bankCode ?? "");
     const confirmed = req.body.confirmAccountName === true;
