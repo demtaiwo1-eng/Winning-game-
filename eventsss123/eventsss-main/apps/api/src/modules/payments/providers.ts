@@ -133,8 +133,9 @@ export async function initializeOpay(input: {
   notifyUrl?: string;
 }): Promise<InitResult> {
   assertPaymentMode();
-  if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
-    throw new Error("OPay credentials are not configured");
+  const credentials = opayCredentials();
+  if (!credentials.merchantId || !credentials.publicKey || !credentials.secretKey) {
+    throw new Error("OPay credentials for the selected central mode are not configured");
   }
   if (input.currency.toUpperCase() !== "NGN") {
     throw new Error("OPay checkout currently supports NGN only");
@@ -210,8 +211,9 @@ export async function verifyOpay(reference: string): Promise<{
   reference?: string;
   raw: unknown;
 }> {
-  if (!env.OPAY_MERCHANT_ID || !env.OPAY_SECRET_KEY) {
-    throw new Error("OPay verification is not configured");
+  const credentials = opayCredentials();
+  if (!credentials.merchantId || !credentials.secretKey) {
+    throw new Error("OPay verification credentials for the selected central mode are not configured");
   }
   const requestBody = { country: "NG", reference };
   const body = JSON.stringify(requestBody);
