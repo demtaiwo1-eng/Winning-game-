@@ -12,7 +12,6 @@ const confirmation = process.env.QA_SCALE_CONFIRM;
 const databaseUrl = process.env.QA_DATABASE_URL || "";
 const count = Number(process.env.QA_USERS_PER_PORTAL || 1000);
 const roles = ["CLIENT", "ORGANIZATION", "VENDOR", "AFFILIATE", "CONSULTANT", "VERIFIER", "ADMIN"];
-const disabledRoles = ["RIDER"];
 
 if (confirmation !== "YES") {
   console.error("Refusing to seed. Set QA_SCALE_CONFIRM=YES after confirming this is a disposable local QA database.");
@@ -35,11 +34,7 @@ if (!Number.isInteger(count) || count < 1 || count > 1000) {
   console.error("QA_USERS_PER_PORTAL must be an integer from 1 to 1000.");
   process.exit(2);
 }
-const password = process.env.QA_PORTAL_PASSWORD || "";
-if (password.length < 12) {
-  console.error("Set QA_PORTAL_PASSWORD to a unique synthetic password of at least 12 characters.");
-  process.exit(2);
-}
+const password = process.env.QA_PORTAL_PASSWORD || randomBytes(32).toString("base64url");
 const prefix = process.env.QA_PORTAL_PREFIX || `qa-portal-${Date.now()}-${randomBytes(3).toString("hex")}`;
 if (!/^qa-portal-[a-z0-9-]{6,80}$/.test(prefix)) {
   console.error("QA_PORTAL_PREFIX must begin qa-portal- and contain only lowercase letters, numbers and hyphens.");
