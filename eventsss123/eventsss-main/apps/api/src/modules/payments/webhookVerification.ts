@@ -19,6 +19,47 @@ export function verifyPaystackSignature(rawBody: Buffer, received: string, secre
   return constantTimeStringEqual(received, expected);
 }
 
+/**
+ * Verify Paystack's timestamped webhook-signing-secret format.
+ * The legacy x-paystack-signature verifier above remains available while
+ * Paystack integrations migrate from API-secret signing.
+ */
+export function verifyPaystackWebhookSignature(
+  rawBody: Buffer,
+  received: string,
+  secret: string,
+  nowSeconds = Math.floor(Date.now() / 1000),
+  toleranceSeconds = 300,
+): boolean {
+  if (!Buffer.isBuffer(rawBody) || typeof received !== "string" || !received || !secret) return false;
+  let timestamp: number | undefined;
+  const signatures: string[] = [];
+  for (const part of received.split(",")) {
+    const separator = part.indexOf("=");
+    if (separator < 0) continue;
+    const key = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+    if (key === "t") {
+      if (timestamp !== undefined || !/^\d+$/.test(value)) return false;
+      timestamp = Number(value);
+    } else if (key === "v1") {
+      const colon = value.indexOf(":");
+      if (colon <= 0 || !/^whk_[A-Za-z0-9_-]+$/.test(value.slice(0, colon))) continue;
+      signatures.push(value.slice(colon + 1));
+    }
+  }
+  if (timestamp === undefined || !Number.isSafeInteger(timestamp) ||
+      Math.abs(nowSeconds - timestamp) > toleranceSeconds || signatures.length === 0) return false;
+  const expected = createHmac("sha512", secret)
+    .update(`${timestamp}.`)
+    .update(rawBody)
+    .digest();
+  return signatures.some((signature) => {
+    if (!/^[0-9a-f]{128}$/.test(signature)) return false;
+    return timingSafeEqual(expected, Buffer.from(signature, "hex"));
+  });
+}
+
 export function verifyFlutterwaveSignature(received: string, secret: string): boolean {
   return constantTimeStringEqual(received, secret);
 }

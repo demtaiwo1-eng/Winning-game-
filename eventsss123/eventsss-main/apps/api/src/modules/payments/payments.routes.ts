@@ -39,6 +39,7 @@ import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_M
 import {
   assertVerifiedPayment,
   verifyPaystackSignature,
+  verifyPaystackWebhookSignature,
   verifyFlutterwaveSignature,
   verifyStripeSignature,
   verifyOpayCallbackSignature,
@@ -47,6 +48,13 @@ import {
 
 export const paymentsRouter = Router();
 paymentsRouter.use(payoutsRouter);
+
+logger.info({
+  paystackSecretConfigured: Boolean(env.PAYSTACK_SECRET_KEY),
+  paystackWebhookSecretConfigured: Boolean(env.PAYSTACK_WEBHOOK_SECRET),
+  paystackTransfersEnabled: env.PAYSTACK_TRANSFERS_ENABLED === "true",
+  paymentMode: env.PAYMENT_MODE,
+}, "Paystack payout configuration readiness");
 
 
 /** Create payment intent to fund wallet */
@@ -202,12 +210,32 @@ function verifyWebhookSignature(provider: string, req: import("express").Request
     return;
   }
   if (!rawBody) throw new HttpError(400, "RAW_BODY_MISSING", "Webhook raw body is unavailable");
-  const secret = provider === "paystack" ? env.PAYSTACK_SECRET_KEY : provider === "flutterwave" ? env.FLUTTERWAVE_SECRET_KEY : env.STRIPE_WEBHOOK_SECRET;
-  if (!secret) throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "Webhook verification is not configured");
   if (provider === "paystack") {
-    const received = String(req.headers["x-paystack-signature"] || "");
-    if (!verifyPaystackSignature(rawBody, received, secret)) throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid Paystack webhook signature");
-  } else if (provider === "flutterwave") {
+    const timestampedSignature = String(req.headers["paystack-signature"] || "");
+    if (timestampedSignature && env.PAYSTACK_WEBHOOK_SECRET) {
+      if (!verifyPaystackWebhookSignature(rawBody, timestampedSignature, env.PAYSTACK_WEBHOOK_SECRET)) {
+        throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid Paystack webhook signature");
+      }
+      return;
+    }
+    // During migration, Paystack can send both headers. If the dedicated
+    // whsec_ secret has not yet been installed, retain the documented legacy
+    // signature check rather than rejecting a valid dual-signed delivery.
+    if (timestampedSignature && !env.PAYSTACK_WEBHOOK_SECRET && !req.headers["x-paystack-signature"]) {
+      throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "Paystack webhook signing secret is not configured");
+    }
+    // Backward compatibility for integrations that have not enabled the
+    // dedicated whsec_ signing secret yet.
+    if (!env.PAYSTACK_SECRET_KEY) throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "Paystack webhook verification is not configured");
+    const legacySignature = String(req.headers["x-paystack-signature"] || "");
+    if (!verifyPaystackSignature(rawBody, legacySignature, env.PAYSTACK_SECRET_KEY)) {
+      throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid Paystack webhook signature");
+    }
+    return;
+  }
+  const secret = provider === "flutterwave" ? env.FLUTTERWAVE_SECRET_KEY : env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "Webhook verification is not configured");
+  if (provider === "flutterwave") {
     const received = String(req.headers["verif-hash"] || "");
     if (!verifyFlutterwaveSignature(received, secret)) throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid Flutterwave webhook signature");
   } else {
@@ -223,6 +251,11 @@ paymentsRouter.post(
     const provider = (req.params.provider as string).toLowerCase();
     if (!["paystack", "flutterwave", "stripe", "opay"].includes(provider)) throw new HttpError(404, "UNKNOWN_PROVIDER", "Unsupported payment provider");
     verifyWebhookSignature(provider, req);
+
+    // Paystack endpoint health checks are signed ping events, not payments.
+    if (provider === "paystack" && String(req.body?.event || "") === "ping") {
+      return res.json({ ok: true, ping: true });
+    }
 
     // Transfer events are verified with the same Paystack HMAC signature,
     // but settle a Payout rather than a wallet-deposit PaymentIntent.
