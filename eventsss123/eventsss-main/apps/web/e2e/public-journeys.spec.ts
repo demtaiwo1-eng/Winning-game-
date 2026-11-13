@@ -988,9 +988,6 @@ test("Plan a Burial opens the burial planner and selects the burial soundtrack",
       priorities: "Guest experience",
     }));
   });
-  await page.route("**/data/wale-waves-playlists.json", async (route) => {
-    await route.fulfill({ status: 404, body: "not synced yet" });
-  });
   await page.goto("/");
   await page.getByRole("button", { name: "Plan a Burial" }).click();
   await expect(page).toHaveURL(/\/plan$/);
