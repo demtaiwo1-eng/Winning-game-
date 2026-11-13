@@ -11,6 +11,21 @@ import { getRuntimePaymentMode } from "./runtimePaymentMode";
 
 export type ProviderName = "paystack" | "flutterwave" | "stripe" | "opay" | "demo";
 
+function opayCredentials() {
+  if (getRuntimePaymentMode() === "live") {
+    return {
+      merchantId: env.OPAY_LIVE_MERCHANT_ID,
+      publicKey: env.OPAY_LIVE_PUBLIC_KEY,
+      secretKey: env.OPAY_LIVE_SECRET_KEY,
+    };
+  }
+  return {
+    merchantId: env.OPAY_TEST_MERCHANT_ID || env.OPAY_MERCHANT_ID,
+    publicKey: env.OPAY_TEST_PUBLIC_KEY || env.OPAY_PUBLIC_KEY,
+    secretKey: env.OPAY_TEST_SECRET_KEY || env.OPAY_SECRET_KEY,
+  };
+}
+
 export function canUseDemoPayments(
   options: { nodeEnv?: string; paymentMode?: string } = {},
 ): boolean {
@@ -84,7 +99,8 @@ export function selectProvider(currency: string, country?: string): ProviderName
     if (c !== "NGN") {
       throw new HttpError(400, "OPAY_CURRENCY_UNSUPPORTED", "OPay payments in Nigeria require NGN.");
     }
-    if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
+    const credentials = opayCredentials();
+    if (!credentials.merchantId || !credentials.publicKey || !credentials.secretKey) {
       throw new HttpError(503, "OPAY_NOT_CONFIGURED", "OPay is the required provider for NGN payments, but its merchant credentials are not configured.");
     }
     return "opay";
@@ -136,8 +152,8 @@ export async function initializeOpay(input: {
   const res = await fetch(`https://${apiHost}/api/v1/international/cashier/create`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.OPAY_PUBLIC_KEY}`,
-      MerchantId: env.OPAY_MERCHANT_ID,
+      Authorization: `Bearer ${credentials.publicKey}`,
+      MerchantId: credentials.merchantId,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -199,7 +215,7 @@ export async function verifyOpay(reference: string): Promise<{
   }
   const requestBody = { country: "NG", reference };
   const body = JSON.stringify(requestBody);
-  const signature = createHmac("sha512", env.OPAY_SECRET_KEY).update(body).digest("hex");
+  const signature = createHmac("sha512", credentials.secretKey).update(body).digest("hex");
   const apiHost = getRuntimePaymentMode() === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
   const res = await fetch(`https://${apiHost}/api/v1/international/cashier/status`, {
     method: "POST",
