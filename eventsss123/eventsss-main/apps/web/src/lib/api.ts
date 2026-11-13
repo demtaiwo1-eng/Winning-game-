@@ -180,6 +180,22 @@ export const kycApi = {
     }),
 };
 
+export type ApiPayout = {
+  id: string;
+  reference: string;
+  amountMinor: string;
+  feeMinor: string;
+  netAmountMinor: string;
+  currency: string;
+  bankName?: string | null;
+  accountName: string;
+  accountNumber: string;
+  status: "PENDING" | "PROCESSING" | "SUCCEEDED" | "FAILED" | "REVERSED";
+  failureReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export const paymentsApi = {
   createIntent: (body: { currency: string; amountMinor: string; country?: string; purpose?: string }) =>
     api<{
@@ -206,8 +222,20 @@ export const paymentsApi = {
     api(`/payments/bookings/${bookingId}/payment-requests/${requestId}/reject`, { method: "POST", body: "{}" }),
   release: (bookingId: string) =>
     api(`/payments/bookings/${bookingId}/release`, { method: "POST", body: "{}" }),
-  payout: (body: { currency: string; amountMinor: string; destination?: string }) =>
-    api("/payments/payouts", { method: "POST", body: JSON.stringify(body) }),
+  payoutBanks: () =>
+    api<{ items: Array<{ name: string; code: string; currency: "NGN" }> }>("/payments/payouts/banks"),
+  resolvePayoutAccount: (accountNumber: string, bankCode: string) =>
+    api<{ accountName: string; accountNumber: string; bankCode: string }>(
+      `/payments/payouts/resolve-account?${new URLSearchParams({ accountNumber, bankCode })}`,
+    ),
+  createPayout: (body: { amountMinor: string; accountNumber: string; bankCode: string; confirmAccountName: true }, idempotencyKey: string) =>
+    api<{ payout: ApiPayout; replayed: boolean; message?: string }>("/payments/payouts", {
+      method: "POST",
+      headers: { "Idempotency-Key": idempotencyKey },
+      body: JSON.stringify(body),
+    }),
+  payouts: () => api<{ items: ApiPayout[] }>("/payments/payouts"),
+  payout: (id: string) => api<{ payout: ApiPayout }>(`/payments/payouts/${encodeURIComponent(id)}`),
   bookings: (asVendor?: boolean) =>
     api<{ items: unknown[] }>(`/payments/bookings${asVendor ? "?as=vendor" : ""}`),
 };
