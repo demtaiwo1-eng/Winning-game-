@@ -23,3 +23,8 @@ export function walletTopupFeeMinor(amountMinor: bigint, config: PaymentFeeConfi
 export function bookingCommissionMinor(amountMinor: bigint, config: PaymentFeeConfig): bigint {
   return commissionMinor(amountMinor, bookingCommissionBps(config));
 }
+
+/** External withdrawal fee defaults to the platform commission rate. */
+export function payoutFeeMinor(amountMinor: bigint, config: PaymentFeeConfig & { PAYOUT_FEE_BPS?: number }): bigint {
+  return commissionMinor(amountMinor, config.PAYOUT_FEE_BPS ?? config.COMMISSION_BPS);
+}
