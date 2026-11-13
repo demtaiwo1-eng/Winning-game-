@@ -38,7 +38,7 @@ function sortKeys(value: unknown): unknown {
 export function assertOpayTransfersEnabled() {
   const credentials = opayCredentials();
   if (getRuntimePaymentMode() === "demo") throw new HttpError(409, "PAYOUTS_DISABLED_IN_DEMO", "External bank withdrawals are disabled in DEMO mode.");
-  if (getRuntimePaymentMode() === "live" && env.OPAY_LIVE_MODE_READY !== "true") throw new HttpError(503, "OPAY_LIVE_NOT_ATTESTED", "OPay live credentials and merchant access have not been verified.");
+  if (getRuntimePaymentMode() === "live" && (env.EPHINTA_ENVIRONMENT !== "production" || env.OPAY_LIVE_MODE_READY !== "true")) throw new HttpError(503, "OPAY_LIVE_NOT_ATTESTED", "OPay live credentials and merchant access have not been verified.");
   if (env.OPAY_TRANSFERS_ENABLED !== "true") {
     throw new HttpError(503, "PAYOUTS_DISABLED", "OPay bank transfers are not enabled for this merchant account yet.");
   }
