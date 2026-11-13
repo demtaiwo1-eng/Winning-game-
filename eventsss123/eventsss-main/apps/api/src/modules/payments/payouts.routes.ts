@@ -14,7 +14,7 @@ payoutsRouter.use(requireAuth);
 
 type PaystackEnvelope<T> = { status?: boolean; message?: string; data?: T };
 type PaystackBank = { name?: string; code?: string; active?: boolean; country?: string; currency?: string };
-type TransferData = { reference?: string; status?: string; transfer_code?: string; id?: number | string; recipient?: string };
+type TransferData = { reference?: string; status?: string; transfer_code?: string; id?: number | string; recipient?: string; amount?: number | string; currency?: string };
 
 function assertPayoutRail() {
   if (!env.PAYSTACK_SECRET_KEY) {
@@ -163,6 +163,12 @@ export async function processPaystackTransferWebhook(event: string, data: Transf
     create: { provider: "paystack", eventId, payload: { event, data } },
     update: { payload: { event, data } },
   });
+  const payout = await prisma.payout.findUnique({ where: { reference } });
+  if (!payout) throw new HttpError(404, "PAYOUT_NOT_FOUND", "No payout matches this Paystack transfer reference.");
+  if (data.reference !== reference || data.currency?.toUpperCase() !== payout.currency ||
+      data.amount === undefined || BigInt(String(data.amount)) !== payout.netAmountMinor) {
+    throw new HttpError(400, "PAYOUT_TRANSFER_MISMATCH", "Paystack transfer amount, currency, or reference does not match the reserved payout.");
+  }
   const status = event === "transfer.success" ? "success"
     : event === "transfer.reversed" ? "reversed" : "failed";
   const found = await completePayout(reference, status, data.transfer_code, data.id === undefined ? undefined : String(data.id));
@@ -286,16 +292,17 @@ payoutsRouter.post(
         }),
       });
       const data = transfer.data || {};
-      if (data.reference && data.reference !== reference) {
-        throw new Error("Paystack transfer reference did not match the submitted payout.");
+      if (data.reference !== reference || data.currency?.toUpperCase() !== "NGN" ||
+          data.amount === undefined || BigInt(String(data.amount)) !== netAmountMinor) {
+        throw new Error("Paystack transfer amount, currency, or reference did not match the submitted payout.");
       }
       if (data.status === "success") {
         await completePayout(reference, "success", data.transfer_code, data.id === undefined ? undefined : String(data.id));
       } else if (data.status === "failed") {
         await completePayout(reference, "failed", data.transfer_code, data.id === undefined ? undefined : String(data.id));
       } else {
-        await prisma.payout.update({
-          where: { id: payout.id },
+        await prisma.payout.updateMany({
+          where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
           data: {
             status: PayoutStatus.PROCESSING,
             providerTransferCode: data.transfer_code,
@@ -310,8 +317,8 @@ payoutsRouter.post(
       } else {
         // Do not refund on network/ambiguous errors: Paystack may have accepted
         // the transfer. Keep the amount reserved and reconcile by reference.
-        await prisma.payout.update({
-          where: { id: payout.id },
+        await prisma.payout.updateMany({
+          where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
           data: { status: PayoutStatus.PROCESSING, failureReason: "Provider response pending reconciliation." },
         });
       }
@@ -371,11 +378,14 @@ payoutsRouter.get(
       try {
         const verified = await paystack<TransferData>(`/transfer/verify/${encodeURIComponent(payout.reference)}`);
         const transfer = verified.data || {};
-        if (transfer.status === "success") {
+        const verifiedMatches = transfer.reference === payout.reference &&
+          transfer.currency?.toUpperCase() === payout.currency &&
+          transfer.amount !== undefined && BigInt(String(transfer.amount)) === payout.netAmountMinor;
+        if (verifiedMatches && transfer.status === "success") {
           await completePayout(payout.reference, "success", transfer.transfer_code, transfer.id === undefined ? undefined : String(transfer.id));
-        } else if (transfer.status === "failed" || transfer.status === "reversed") {
+        } else if (verifiedMatches && (transfer.status === "failed" || transfer.status === "reversed")) {
           await completePayout(payout.reference, transfer.status, transfer.transfer_code, transfer.id === undefined ? undefined : String(transfer.id));
-        } else if (transfer.transfer_code && transfer.transfer_code !== payout.providerTransferCode) {
+        } else if (verifiedMatches && transfer.transfer_code && transfer.transfer_code !== payout.providerTransferCode) {
           await prisma.payout.update({
             where: { id: payout.id },
             data: { status: PayoutStatus.PROCESSING, providerTransferCode: transfer.transfer_code, providerTransferId: transfer.id === undefined ? undefined : String(transfer.id) },
