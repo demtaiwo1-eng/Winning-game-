@@ -39,6 +39,12 @@ describe("Nigerian provider selection", () => {
     expect(selectProvider("NGN", "GH")).toBe("opay");
   });
 
+  it("does not let a legacy Paystack test key block OPay live-mode selection", () => {
+    env.PAYMENT_MODE = "live";
+    env.PAYSTACK_SECRET_KEY = "sk_test_legacy_key";
+    expect(selectProvider("NGN", "NG")).toBe("opay");
+  });
+
   it("fails closed instead of falling back to Paystack, Flutterwave or demo when OPay is missing", () => {
     env.OPAY_MERCHANT_ID = undefined;
     expect(() => selectProvider("NGN", "NG")).toThrow(/OPay is the required provider/);
