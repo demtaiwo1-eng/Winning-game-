@@ -10,7 +10,7 @@
 | Root project licence | No `LICENSE`, `COPYING`, or `NOTICE` file was present at the repository root or application root in the inspected tree | Action required |
 | Third-party notices | No project-level `THIRD_PARTY_NOTICES` or acknowledgements file was present at the application root | Action required |
 | Dependency licensing | The project uses npm workspaces and many third-party packages. Their individual package licences must be inventoried from the lockfile/package metadata and retained with distributed builds | Action required |
-| Media rights | Four MP3 files at the application root include the name “Wale Waves” in their filenames. The repository listing does not establish the recording/composition owner, licence, or distribution permission | Rights evidence required |
+| Media rights | Six MP3 files at the application root include the name “Wale Waves” in their filenames. The repository listing does not establish the recording/composition owner, licence, or distribution permission | Rights evidence required |
 | Code plagiarism | No finding of plagiarism can be made from filenames or repository metadata. A full public-code similarity scan and human review of flagged matches have not yet been performed | Not assessed |
 | Attribution | No central project-level acknowledgements/third-party notices file was found in the inspected root | Action required |
 
@@ -26,7 +26,7 @@ The inspected repository/application root contains package manifests, documentat
 
 ### 2. Bundled audio assets
 
-The application root contains files named:
+The application root contains six files named:
 
 - `Here we are-1 -Wale Waves_ESS_Wedding.mp3`
 - `Here we are-2 -Wale Waves_ESS_Wedding.mp3`
@@ -41,7 +41,7 @@ The names suggest a credited artist/creator, but names alone do not prove owners
 
 The application uses npm workspaces and dependencies including React, Express, Prisma, Capacitor, and related packages. A production distribution must preserve applicable licence texts and notices for direct and transitive dependencies.
 
-**Recommended automated check:** run a licence inventory against the exact lockfile used for each release, flag unknown/custom/restricted licences for manual review, and publish the generated inventory as a release artifact. A package's `license` field is a discovery signal, not a substitute for reading its actual licence text.
+**Lockfile snapshot (2026-11-13):** 750 third-party package entries were identified after excluding six internal EPHINTA workspace entries. Declared licence metadata: MIT 630, ISC 52, Apache-2.0 21, BSD-3-Clause 14, MPL-2.0 13, BlueOak-1.0.0 10, BSD-2-Clause 5, and five single-entry declarations (Unlicense, CC-BY-4.0, MIT-0, 0BSD, and MIT OR CC0-1.0). The six metadata-unknown entries were the three internal workspace packages and their linked workspace aliases, not third-party packages.\n\nA repeatable inventory generator now lives at `scripts/qa/ephinta-license-inventory.mjs`; run it with `node scripts/qa/ephinta-license-inventory.mjs`. It writes a Markdown inventory under `artifacts/`. The CI workflow uploads that inventory. A package's `license` field is a discovery signal, not a substitute for reading its actual licence text. Manually review attribution requirements (including CC-BY), source-distribution obligations (including MPL), and every package's shipped licence/NOTICE files.
 
 ### 4. Source similarity / plagiarism
 
@@ -60,10 +60,10 @@ This audit did not identify a specific copied work. It also did not run a compre
 
 - [ ] Rights holder confirms the EPHINTA copyright owner and approves the project licence.
 - [ ] Confirm written rights for all six MP3 files or remove assets without permission.
-- [ ] Generate a dependency licence inventory from the exact production lockfile.
+- [x] Generate a dependency licence inventory from the current application lockfile (repeat for every release lockfile).
 - [ ] Add `THIRD_PARTY_NOTICES.md` with dependency name, version, licence, and required attribution.
 - [ ] Run source and asset similarity review; record matches, URLs, licence compatibility, and disposition.
-- [ ] Add an automated CI gate for unknown/restricted dependency licences.
+- [x] Add an automated inventory CI workflow; restricted/custom licence review remains a manual release gate.
 - [ ] Obtain legal review before commercial distribution.
 
 ## Design inspiration and attribution
