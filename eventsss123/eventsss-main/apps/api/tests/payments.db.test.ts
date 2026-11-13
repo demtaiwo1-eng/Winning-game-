@@ -2,6 +2,8 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
+import { env } from "../src/config/env";
+import { bookingCommissionMinor, walletTopupFeeMinor } from "../src/modules/payments/feePolicy";
 
 const app = createApp();
 const run = process.env.RUN_DB_TESTS === "1";
@@ -19,6 +21,61 @@ async function register(tag: string, role: "CLIENT" | "VENDOR" | "VERIFIER" = "C
   return { token: response.body.accessToken as string, id: response.body.user.id as string };
 }
 const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
+
+describe.skipIf(!run)("platform revenue accounting (DB)", () => {
+  it("posts wallet top-up fees to platform revenue once without debiting the wallet twice", async () => {
+    const customer = await register("platform-topup-fee");
+    const intent = await prisma.paymentIntent.create({
+      data: {
+        userId: customer.id,
+        provider: "demo",
+        providerRef: `platform-topup-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        amountMinor: 100000n,
+        currency: "NGN",
+        purpose: "WALLET_DEPOSIT",
+        status: "PENDING",
+      },
+    });
+    try {
+      const settled = await request(app).post(`/api/v1/payments/demo-checkout/${intent.id}`)
+        .set(auth(customer.token)).send({});
+      expect(settled.status).toBe(200);
+      const wallet = await prisma.wallet.findUniqueOrThrow({
+        where: { userId_currency: { userId: customer.id, currency: "NGN" } },
+      });
+      const expectedTopupFee = walletTopupFeeMinor(100000n, env);
+      expect(wallet.availableMinor).toBe(100000n - expectedTopupFee);
+      const revenue = await prisma.platformRevenueEntry.findUniqueOrThrow({
+        where: { idempotencyKey: `platform_wallet_topup_fee:${intent.id}` },
+      });
+      expect(revenue.amountMinor).toBe(expectedTopupFee);
+      expect(revenue.refType).toBe("PAYMENT_INTENT");
+      expect(revenue.refId).toBe(intent.id);
+      expect(await prisma.ledgerEntry.findUnique({ where: { idempotencyKey: `pay_deposit_fee:${intent.id}` } })).toBeNull();
+
+      const replay = await request(app).post(`/api/v1/payments/demo-checkout/${intent.id}`)
+        .set(auth(customer.token)).send({});
+      expect(replay.status).toBe(200);
+      expect((await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } })).availableMinor).toBe(100000n - expectedTopupFee);
+      expect(await prisma.platformRevenueEntry.count({ where: { idempotencyKey: `platform_wallet_topup_fee:${intent.id}` } })).toBe(1);
+    } finally {
+      const revenue = await prisma.platformRevenueEntry.findUnique({
+        where: { idempotencyKey: `platform_wallet_topup_fee:${intent.id}` },
+      });
+      if (revenue) {
+        await prisma.platformRevenueAccount.update({
+          where: { id: revenue.accountId },
+          data: { balanceMinor: { decrement: revenue.amountMinor } },
+        });
+        await prisma.platformRevenueEntry.delete({ where: { id: revenue.id } });
+      }
+      await prisma.paymentIntent.deleteMany({ where: { id: intent.id } });
+      await prisma.ledgerEntry.deleteMany({ where: { wallet: { userId: customer.id } } });
+      await prisma.wallet.deleteMany({ where: { userId: customer.id } });
+      await prisma.user.deleteMany({ where: { id: customer.id } });
+    }
+  });
+});
 
 describe.skipIf(!run)("booking payment milestones (DB)", () => {
   it("holds a planner's initial payment, lets a vendor request milestones, and requires planner approval", async () => {
@@ -190,12 +247,36 @@ describe.skipIf(!run)("booking payment milestones (DB)", () => {
       const vendorWallet = await prisma.wallet.findUniqueOrThrow({
         where: { userId_currency: { userId: vendor.id, currency: "NGN" } },
       });
-      expect(vendorWallet.availableMinor).toBeGreaterThan(0n);
+      const expectedCommission = bookingCommissionMinor(100000n, env);
+      const platformAccount = await prisma.platformRevenueAccount.findUniqueOrThrow({ where: { currency: "NGN" } });
+      const platformEntry = await prisma.platformRevenueEntry.findUniqueOrThrow({
+        where: { idempotencyKey: `platform_commission:${booking.id}` },
+      });
+      expect(platformEntry.amountMinor).toBe(expectedCommission);
+      expect(platformAccount.balanceMinor).toBeGreaterThanOrEqual(expectedCommission);
+      expect(platformEntry.refType).toBe("BOOKING");
+      expect(platformEntry.refId).toBe(booking.id);
+      expect(await prisma.ledgerEntry.findUnique({ where: { idempotencyKey: `commission:${booking.id}` } })).toBeNull();
+      expect(vendorWallet.availableMinor).toBe(100000n - expectedCommission);
+      const replayRelease = await request(app).post(`/api/v1/payments/bookings/${booking.id}/release`).set(auth(verifier.token)).send({});
+      expect(replayRelease.status).toBe(200);
+      expect(replayRelease.body.alreadyReleased).toBe(true);
+      expect(await prisma.platformRevenueEntry.count({ where: { idempotencyKey: `platform_commission:${booking.id}` } })).toBe(1);
       const releasedBudget = await request(app).get(`/api/v1/events/${eventId}/budget`).set(auth(planner.token));
       expect(releasedBudget.body.funding.bookingPaymentsHeldMinor).toBe("0");
     } finally {
-      // BookingItem references Listing with RESTRICT; remove the booking first.
-      if (bookingId) await prisma.booking.deleteMany({ where: { id: bookingId } });
+      // Keep the shared platform account balanced while removing this isolated fixture.
+      if (bookingId) {
+        const revenueEntry = await prisma.platformRevenueEntry.findUnique({ where: { idempotencyKey: `platform_commission:${bookingId}` } });
+        if (revenueEntry) {
+          await prisma.platformRevenueAccount.update({
+            where: { id: revenueEntry.accountId },
+            data: { balanceMinor: { decrement: revenueEntry.amountMinor } },
+          });
+          await prisma.platformRevenueEntry.delete({ where: { id: revenueEntry.id } });
+        }
+        await prisma.booking.deleteMany({ where: { id: bookingId } });
+      }
       await prisma.event.delete({ where: { id: eventId } });
       await prisma.listing.delete({ where: { id: listing.id } });
     }
