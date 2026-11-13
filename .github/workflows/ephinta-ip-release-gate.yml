@@ -9,6 +9,9 @@ on:
       - "eventsss123/eventsss-main/apps/web/src/lib/music/**"
       - "eventsss123/eventsss-main/.agents/skills/**"
       - "eventsss123/eventsss-main/contracts/**"
+      - "**/node_modules/**"
+      - "eventsss123/package*.json"
+      - ".gitignore"
       - "eventsss123/eventsss-main/scripts/qa/ephinta-ip-release-gate.mjs"
       - ".github/workflows/ephinta-ip-release-gate.yml"
   workflow_dispatch:
