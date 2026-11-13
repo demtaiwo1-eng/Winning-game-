@@ -113,6 +113,23 @@ async function mockApi(page: Page, persona: Persona) {
 for (const persona of personas) {
   test(`payment + notification click journey: persona ${String(persona.index).padStart(3, "0")} (${persona.role})`, async ({ page }) => {
     await mockApi(page, persona);
+    await page.addInitScript((personaId) => {
+      document.addEventListener("click", (event) => {
+        const target = event.target instanceof Element
+          ? event.target.closest("button, a, input, select, label")
+          : null;
+        if (!target) return;
+        const label = target.getAttribute("aria-label")
+          || target.textContent?.trim().replace(/\\s+/g, " ").slice(0, 80)
+          || target.tagName;
+        console.log(`[QA-CLICK] persona ${personaId} -> ${label}`);
+      }, true);
+    }, persona.index);
+    page.on("console", (message) => {
+      if (message.type() === "log" && message.text().startsWith("[QA-CLICK]")) {
+        console.log(message.text());
+      }
+    });
     await page.route("https://sandbox-checkout.opayweb.com/**", (route) =>
       route.fulfill({ status: 200, contentType: "text/html", body: "<title>OPay sandbox checkout</title><main>Sandbox checkout test page</main>" }),
     );
