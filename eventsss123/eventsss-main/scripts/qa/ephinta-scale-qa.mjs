@@ -128,5 +128,51 @@ const reportDir = path.join(root, "artifacts");
 await mkdir(reportDir, { recursive: true });
 const reportPath = path.join(reportDir, "ephinta-scale-qa-report.json");
 await writeFile(reportPath, JSON.stringify(report, null, 2) + "\n");
-console.log(`\n[EPHINTA QA] ${report.status.toUpperCase()} — report: ${reportPath}`);
+
+const eventTypes = ["PERSONAL", "CORPORATE", "SOCIAL", "SPORTS", "CULTURAL", "RELIGIOUS", "ENTERTAINMENT", "EDUCATIONAL", "VIRTUAL"];
+const cities = ["Lagos", "Abuja", "Ibadan", "Port Harcourt", "Kano"];
+const vendorCategories = ["Venue", "Catering", "Photography", "Decor", "Production", "Transport", "Security", "Rentals"];
+const readinessStates = ["PENDING", "GREEN", "AMBER", "RED"];
+const personaLines = [
+  "EPHINTA SYNTHETIC PORTAL PERSONA REPORT",
+  `Run prefix: ${runPrefix}`,
+  `Generated: ${report.finishedAt}`,
+  `Overall QA status: ${report.status.toUpperCase()}`,
+  `Synthetic identities planned: ${totalUsers}`,
+  `Identities per active portal: ${usersPerPortal}`,
+  `Fixture lifecycle: ${report.fixtureStatus === "seeded" && report.cleanupStatus === "passed" ? "CREATED_AND_CLEANED" : report.fixtureStatus.toUpperCase()}`,
+  `Cleanup status: ${report.cleanupStatus || "NOT_COMPLETED"}`,
+  "Important: fixture creation is not a successful sign-in or browser journey.",
+  "Journey coverage is aggregate: 100 CLIENT + 100 VENDOR + 100 VERIFIER database journeys.",
+  "Other portal identities are fixture/boundary coverage only; they are not individually browser-tested.",
+  "",
+  "PERSONA DETAILS"
+];
+for (const role of portalRoles) {
+  for (let index = 1; index <= usersPerPortal; index += 1) {
+    const suffix = String(index).padStart(4, "0");
+    const email = `${runPrefix}-${role.toLowerCase()}-${suffix}@example.test`;
+    let scenario = "portal fixture; no individual end-to-end journey asserted";
+    if (role === "CLIENT") {
+      scenario = `eventType=${eventTypes[(index - 1) % eventTypes.length]}, city=${cities[(index - 1) % cities.length]}, guests=${30 + (((index - 1) * 17) % 970)}`;
+    } else if (role === "VENDOR") {
+      scenario = `vendorCategory=${vendorCategories[(index - 1) % vendorCategories.length]}`;
+    } else if (role === "VERIFIER") {
+      scenario = `readinessScenario=${readinessStates[(index - 1) % readinessStates.length]}`;
+    } else if (role === "ORGANIZATION") {
+      scenario = `organizationMode=${index % 2 === 0 ? "SERVICE_PROVIDER" : "EVENT_PLANNING"}`;
+    }
+    const journey = ["CLIENT", "VENDOR", "VERIFIER"].includes(role) && index <= 100
+      ? "included in aggregate database journey suite"
+      : "fixture only; not individually browser-tested";
+    const fixture = report.fixtureStatus === "seeded" && report.cleanupStatus === "passed"
+      ? "created then cleaned"
+      : report.fixtureStatus;
+    personaLines.push(`${role}-${suffix} | ${email} | ${scenario} | fixture=${fixture} | journey=${journey}`);
+  }
+}
+const personaReportPath = path.join(reportDir, "ephinta-scale-qa-personas.txt");
+await writeFile(personaReportPath, personaLines.join("\n") + "\n");
+console.log(`\n[EPHINTA QA] ${report.status.toUpperCase()} — JSON: ${reportPath}`);
+console.log(`[EPHINTA QA] Persona TXT: ${personaReportPath}`);
 if (report.status !== "passed") process.exit(1);
