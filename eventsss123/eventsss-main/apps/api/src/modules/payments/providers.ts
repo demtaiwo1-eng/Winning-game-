@@ -38,26 +38,23 @@ export function canUseProductionTestMode(
 }
 
 function assertPaymentMode() {
-  const keys: Array<[string, string | undefined, RegExp, RegExp]> = [
-    ["Paystack", env.PAYSTACK_SECRET_KEY, /^sk_test_/, /^sk_live_/],
-    ["Flutterwave", env.FLUTTERWAVE_SECRET_KEY, /^FLWSECK_TEST/, /^FLWSECK-/],
-    ["Stripe", env.STRIPE_SECRET_KEY, /^sk_test_/, /^sk_live_/],
-  ];
-
-  for (const [name, key, testPattern, livePattern] of keys) {
-    if (!key) continue;
-
-    if (env.PAYMENT_MODE === "test" && livePattern.test(key)) {
-      throw new Error(`${name} live key cannot be used while PAYMENT_MODE=test`);
-    }
-
-    if (env.PAYMENT_MODE === "live" && testPattern.test(key)) {
-      throw new Error(`${name} test key cannot be used while PAYMENT_MODE=live`);
-    }
-  }
-
   if (!canUseProductionTestMode()) {
     throw new Error("PAYMENT_MODE=test in production requires ALLOW_PRODUCTION_TEST_MODE=true; demo checkout remains disabled in production");
+  }
+}
+
+function assertProviderKeyMode(
+  name: string,
+  key: string | undefined,
+  testPattern: RegExp,
+  livePattern: RegExp,
+) {
+  if (!key) return;
+  if (env.PAYMENT_MODE === "test" && livePattern.test(key)) {
+    throw new Error(`${name} live key cannot be used while PAYMENT_MODE=test`);
+  }
+  if (env.PAYMENT_MODE === "live" && testPattern.test(key)) {
+    throw new Error(`${name} test key cannot be used while PAYMENT_MODE=live`);
   }
 }
 
@@ -103,7 +100,6 @@ export function selectProvider(currency: string, country?: string): ProviderName
 }
 
 /** Create an OPay cashier checkout. Keys are server-only; never expose them to the client. */
-/** Create an OPay cashier checkout. Keys are server-only; keep this adapter sandboxed. */
 export async function initializeOpay(input: {
   amountMinor: bigint;
   currency: string;
@@ -253,6 +249,7 @@ export async function initializePaystack(input: {
 }): Promise<InitResult> {
   assertPaymentMode();
 
+  assertProviderKeyMode("Paystack", env.PAYSTACK_SECRET_KEY, /^sk_test_/, /^sk_live_/);
   if (!env.PAYSTACK_SECRET_KEY) {
     return { provider: "demo", providerRef: input.reference, mode: "demo" };
   }
@@ -354,6 +351,7 @@ export async function initializeStripe(input: {
 }): Promise<InitResult> {
   assertPaymentMode();
 
+  assertProviderKeyMode("Stripe", env.STRIPE_SECRET_KEY, /^sk_test_/, /^sk_live_/);
   if (!env.STRIPE_SECRET_KEY) {
     return { provider: "demo", providerRef: input.reference, mode: "demo" };
   }
@@ -448,6 +446,7 @@ export async function initializeFlutterwave(input: {
 }): Promise<InitResult> {
   assertPaymentMode();
 
+  assertProviderKeyMode("Flutterwave", env.FLUTTERWAVE_SECRET_KEY, /^FLWSECK_TEST/, /^FLWSECK-/);
   if (!env.FLUTTERWAVE_SECRET_KEY) {
     return { provider: "demo", providerRef: input.reference, mode: "demo" };
   }
