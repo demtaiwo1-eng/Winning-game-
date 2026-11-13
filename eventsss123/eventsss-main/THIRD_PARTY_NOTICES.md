@@ -1,6 +1,6 @@
 # EPHINTA third-party notices
 
-This file records the third-party software and platform materials used by EPHINTA. It must be regenerated from the exact release lockfile and installed package contents for every commercial release.
+This file records the third-party software and platform materials used by EPHINTA. The obsolete parent-level `eventsss123/node_modules` tree and its stale package manifests were removed; the maintained application dependency source is `eventsss123/eventsss-main/package-lock.json`. It must be regenerated from that exact release lockfile and installed package contents for every commercial release.
 
 ## npm dependencies
 
