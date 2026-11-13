@@ -1,4 +1,4 @@
-name: EPHINTA 300-persona scale QA
+name: EPHINTA 7,000-portal-fixture scale QA
 
 on:
   pull_request:
@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   scale-qa:
-    name: 300 isolated personas + design and browser gates
+    name: 7,000 portal fixtures + 300-user journey, design and browser gates
     runs-on: ubuntu-latest
     timeout-minutes: 45
     services:
@@ -45,6 +45,7 @@ jobs:
       DATABASE_MODE: local
       DATABASE_URL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
       DATABASE_URL_LOCAL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
+      QA_DATABASE_URL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
       JWT_SECRET: e2e-only-secret-change-me-0123456789abcdef
       QA_SCALE_CONFIRM: "YES"
     steps:
@@ -71,7 +72,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ephinta-300-persona-qa-report
+          name: ephinta-7000-portal-fixture-qa-report
           path: |
             eventsss123/eventsss-main/artifacts/ephinta-scale-qa-report.json
             eventsss123/eventsss-main/apps/web/playwright-report/
