@@ -203,12 +203,24 @@ adminRouter.get("/finance/ledger", asyncHandler(async (req, res) => {
       },
     }),
   ]);
+  const intentIds = items
+    .filter((item) => item.refType === "PAYMENT_INTENT" && item.refId)
+    .map((item) => item.refId as string);
+  const paymentIntents = intentIds.length
+    ? await prisma.paymentIntent.findMany({ where: { id: { in: intentIds } }, select: { id: true, provider: true } })
+    : [];
+  const providerByIntent = new Map(paymentIntents.map((intent) => [intent.id, intent.provider]));
   res.json({
     page: params.page, limit: params.limit, total, pages: Math.ceil(total / params.limit),
     items: items.map((item) => ({
       ...item,
       amountMinor: item.amountMinor.toString(),
       balanceAfterMinor: item.balanceAfterMinor.toString(),
+      provider: item.refType === "PAYMENT_INTENT"
+        ? (item.refId ? providerByIntent.get(item.refId) || "unknown" : "unknown")
+        : ["BANK_PAYOUT", "PAYOUT_REFUND", "PAYOUT_REVERSAL"].includes(item.refType || "")
+          ? "opay"
+          : "internal",
     })),
   });
 }));
