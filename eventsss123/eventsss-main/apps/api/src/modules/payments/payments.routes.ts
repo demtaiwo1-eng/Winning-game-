@@ -53,11 +53,11 @@ paymentsRouter.use(paymentModeGuard);
 paymentsRouter.use(payoutsRouter);
 
 logger.info({
-  opayMerchantConfigured: Boolean(env.OPAY_MERCHANT_ID),
+  opayMerchantConfigured: Boolean(env.OPAY_TEST_MERCHANT_ID || env.OPAY_MERCHANT_ID),
   opayPublicKeyConfigured: Boolean(env.OPAY_TEST_PUBLIC_KEY || env.OPAY_PUBLIC_KEY),
   opaySecretConfigured: Boolean(env.OPAY_TEST_SECRET_KEY || env.OPAY_SECRET_KEY),
   opayTransfersEnabled: env.OPAY_TRANSFERS_ENABLED === "true",
-  paymentMode: env.PAYMENT_MODE,
+  paymentMode: getPaymentMode(),
 }, "OPay bank transfer configuration readiness");
 
 
