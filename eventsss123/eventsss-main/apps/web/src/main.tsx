@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, HashRouter } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
 import App from './EnterpriseApp';
+import EphintaHelpAssistant from "./components/EphintaHelpAssistant";
 import './styles/ephinta-global.css';
 import EphintaIntro from './components/branding/EphintaIntro';
 import AudioExperience from "./components/AudioExperience";
@@ -151,6 +152,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <OfflineStatus />
           <SyncConflictList />
           <RemoteUpdateNotice />
+          <EphintaHelpAssistant />
         </>
       </AppRouter>
     </StartupErrorBoundary>
