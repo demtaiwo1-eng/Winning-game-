@@ -1,3 +1,4 @@
+import AudioExperience from "./components/AudioExperience";
 // apps/web/src/App.tsx
 import DateWheelPicker from './components/DateWheelPicker';
 import React, { useState, useEffect, useRef } from 'react';
