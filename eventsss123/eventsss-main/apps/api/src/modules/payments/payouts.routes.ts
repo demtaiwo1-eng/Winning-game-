@@ -286,7 +286,7 @@ payoutsRouter.get(
 );
 
 
-export async function reconcilePendingPayouts(batchSize = 20) {
+export async function reconcilePendingPayouts(batchSize = 5) {
   if (env.OPAY_TRANSFERS_ENABLED !== "true") {
     return { checked: 0, succeeded: 0, failed: 0, reversed: 0, errors: 0, skipped: "OPAY_TRANSFERS_DISABLED" };
   }
@@ -297,7 +297,7 @@ export async function reconcilePendingPayouts(batchSize = 20) {
       updatedAt: { lte: cutoff },
     },
     orderBy: { updatedAt: "asc" },
-    take: Math.min(Math.max(batchSize, 1), 50),
+    take: Math.min(Math.max(batchSize, 1), 20),
   });
   const totals = { checked: 0, succeeded: 0, failed: 0, reversed: 0, errors: 0 };
   for (const payout of candidates) {
