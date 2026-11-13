@@ -178,6 +178,7 @@ for (const portal of portals) {
       await expect(page.getByText("8", { exact: true }).first()).toBeVisible();
       await page.getByRole("button", { name: "Refresh", exact: true }).first().click({ force: true });
       await expect(page.getByRole("heading", { name: "Platform operations" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Central payment mode" })).toBeVisible();
     }
 
     await page.evaluate(() => { localStorage.removeItem("ess_user"); localStorage.removeItem("ess_access_token"); localStorage.removeItem("ess_refresh_token"); });
