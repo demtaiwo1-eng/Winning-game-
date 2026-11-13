@@ -35,6 +35,7 @@ import {
 import { releaseBookingEscrow } from "./escrow.service";
 import { recordPlatformRevenue } from "./platformRevenue.service";
 import { payoutsRouter } from "./payouts.routes";
+import { paymentModeGuard } from "./runtimePaymentMode";
 import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_MS, RECONCILIATION_MAX_ATTEMPTS, RECONCILIATION_PROVIDER_MAX_WAIT_MS, RECONCILIATION_PROVIDER_MIN_INTERVAL_MS, reconciliationProviderNextAllowedAt } from "./reconciliationPolicy";
 import {
   assertVerifiedPayment,
@@ -47,6 +48,7 @@ import {
 
 
 export const paymentsRouter = Router();
+paymentsRouter.use(paymentModeGuard);
 paymentsRouter.use(payoutsRouter);
 
 logger.info({
