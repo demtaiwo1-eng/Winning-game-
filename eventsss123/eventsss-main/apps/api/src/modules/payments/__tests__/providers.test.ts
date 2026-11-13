@@ -1,20 +1,27 @@
 import { createHmac } from "node:crypto";
+const { findUnique } = vi.hoisted(() => ({ findUnique: vi.fn() }));
+vi.mock("../../../lib/prisma", () => ({ prisma: { platformRuntimeSetting: { findUnique } } }));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { env } from "../../../config/env";
 import { initializeOpay, selectProvider, verifyOpay } from "../providers";
+import { refreshPaymentMode } from "../runtimePaymentMode";
 
 const originalMerchantId = env.OPAY_MERCHANT_ID;
 const originalPublicKey = env.OPAY_PUBLIC_KEY;
 const originalSecretKey = env.OPAY_SECRET_KEY;
 const originalPaymentMode = env.PAYMENT_MODE;
 const originalNodeEnv = env.NODE_ENV;
+const originalLiveMerchantId = env.OPAY_LIVE_MERCHANT_ID;
+const originalLivePublicKey = env.OPAY_LIVE_PUBLIC_KEY;
+const originalLiveSecretKey = env.OPAY_LIVE_SECRET_KEY;
+const originalLiveReady = env.OPAY_LIVE_MODE_READY;
 
 
 describe("Nigerian provider selection", () => {
   const originalPaystack = env.PAYSTACK_SECRET_KEY;
   const originalFlutterwave = env.FLUTTERWAVE_SECRET_KEY;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     env.OPAY_MERCHANT_ID = "merchant";
     env.OPAY_PUBLIC_KEY = "public";
     env.OPAY_SECRET_KEY = "secret";
@@ -22,9 +29,11 @@ describe("Nigerian provider selection", () => {
     env.FLUTTERWAVE_SECRET_KEY = "FLWSECK_TEST_should_not_be_used_for_ngn";
     env.PAYMENT_MODE = "test";
     env.NODE_ENV = "test";
+    findUnique.mockResolvedValue({ paymentMode: "test" });
+    await refreshPaymentMode();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     env.PAYSTACK_SECRET_KEY = originalPaystack;
     env.FLUTTERWAVE_SECRET_KEY = originalFlutterwave;
     env.OPAY_MERCHANT_ID = originalMerchantId;
@@ -32,6 +41,12 @@ describe("Nigerian provider selection", () => {
     env.OPAY_SECRET_KEY = originalSecretKey;
     env.PAYMENT_MODE = originalPaymentMode;
     env.NODE_ENV = originalNodeEnv;
+    env.OPAY_LIVE_MERCHANT_ID = originalLiveMerchantId;
+    env.OPAY_LIVE_PUBLIC_KEY = originalLivePublicKey;
+    env.OPAY_LIVE_SECRET_KEY = originalLiveSecretKey;
+    env.OPAY_LIVE_MODE_READY = originalLiveReady;
+    findUnique.mockResolvedValue({ paymentMode: "test" });
+    await refreshPaymentMode();
   });
 
   it("selects OPay for every NGN transaction even when other providers are configured", () => {
@@ -41,6 +56,12 @@ describe("Nigerian provider selection", () => {
 
   it("does not let a legacy Paystack test key block OPay live-mode selection", () => {
     env.PAYMENT_MODE = "live";
+    env.OPAY_LIVE_MERCHANT_ID = "live-merchant";
+    env.OPAY_LIVE_PUBLIC_KEY = "live-public";
+    env.OPAY_LIVE_SECRET_KEY = "live-secret";
+    env.OPAY_LIVE_MODE_READY = "true";
+    findUnique.mockResolvedValue({ paymentMode: "live" });
+    await refreshPaymentMode();
     env.PAYSTACK_SECRET_KEY = "sk_test_legacy_key";
     expect(selectProvider("NGN", "NG")).toBe("opay");
   });
@@ -56,18 +77,25 @@ describe("Nigerian provider selection", () => {
 });
 
 describe("verifyOpay", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    env.PAYMENT_MODE = "test";
+    findUnique.mockResolvedValue({ paymentMode: "test" });
+    await refreshPaymentMode();
     env.OPAY_MERCHANT_ID = "sandbox-merchant";
     env.OPAY_SECRET_KEY = "sandbox-secret";
+    findUnique.mockResolvedValue({ paymentMode: "test" });
+    await refreshPaymentMode();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     env.OPAY_MERCHANT_ID = originalMerchantId;
     env.OPAY_PUBLIC_KEY = originalPublicKey;
     env.OPAY_SECRET_KEY = originalSecretKey;
     env.PAYMENT_MODE = originalPaymentMode;
     env.NODE_ENV = originalNodeEnv;
     vi.unstubAllGlobals();
+    findUnique.mockResolvedValue({ paymentMode: "test" });
+    await refreshPaymentMode();
   });
 
   it("uses the documented Nigeria test endpoint and signs the exact request body", async () => {
@@ -121,7 +149,7 @@ describe("verifyOpay", () => {
 
 
 describe("initializeOpay", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     env.NODE_ENV = "test";
     env.PAYMENT_MODE = "test";
     env.OPAY_MERCHANT_ID = "sandbox-merchant";
@@ -129,13 +157,15 @@ describe("initializeOpay", () => {
     env.OPAY_SECRET_KEY = "sandbox-secret";
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     env.OPAY_MERCHANT_ID = originalMerchantId;
     env.OPAY_PUBLIC_KEY = originalPublicKey;
     env.OPAY_SECRET_KEY = originalSecretKey;
     env.PAYMENT_MODE = originalPaymentMode;
     env.NODE_ENV = originalNodeEnv;
     vi.unstubAllGlobals();
+    findUnique.mockResolvedValue({ paymentMode: "test" });
+    await refreshPaymentMode();
   });
 
   it("creates a Nigeria cashier payment only against OPay's documented test endpoint", async () => {
@@ -230,6 +260,12 @@ describe("initializeOpay", () => {
 
   it("uses the OPay production endpoint only in live mode and validates the production cashier host", async () => {
     env.PAYMENT_MODE = "live";
+    env.OPAY_LIVE_MODE_READY = "true";
+    env.OPAY_LIVE_MERCHANT_ID = "live-merchant";
+    env.OPAY_LIVE_PUBLIC_KEY = "live-public";
+    env.OPAY_LIVE_SECRET_KEY = "live-secret";
+    findUnique.mockResolvedValue({ paymentMode: "live" });
+    await refreshPaymentMode();
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       code: "00000",
       data: {
