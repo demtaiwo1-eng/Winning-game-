@@ -54,8 +54,8 @@ adminRouter.patch("/runtime/payment-mode", asyncHandler(async (req, res) => {
         },
       });
     }
-    if (process.env.NODE_ENV !== "production") {
-      return res.status(409).json({ error: { code: "LIVE_MODE_REQUIRES_PRODUCTION", message: "LIVE mode can only be activated on the production API deployment." } });
+    if (process.env.NODE_ENV !== "production" || process.env.EPHINTA_ENVIRONMENT !== "production") {
+      return res.status(409).json({ error: { code: "LIVE_MODE_REQUIRES_PRODUCTION", message: "LIVE mode can only be activated on the explicitly identified production API deployment." } });
     }
   }
 
