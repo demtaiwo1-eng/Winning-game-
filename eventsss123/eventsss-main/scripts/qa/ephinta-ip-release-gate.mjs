@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -14,19 +15,6 @@ function check(ok, passMessage, failMessage) {
   if (ok) checks.push(passMessage);
   else failures.push(failMessage);
 }
-function findNodeModules(directory, relative = "") {
-  if (!fs.existsSync(directory)) return [];
-  const found = [];
-  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    if ([".git", ".next", "dist", "build", "coverage", "node_modules", ".secrets", "artifacts"].includes(entry.name)) {
-      if (entry.name === "node_modules" && entry.isDirectory()) found.push(path.posix.join(relative, entry.name));
-      continue;
-    }
-    if (entry.isDirectory()) found.push(...findNodeModules(path.join(directory, entry.name), path.posix.join(relative, entry.name)));
-  }
-  return found;
-}
-
 function findAudioFiles(directory, relative = "") {
   if (!fs.existsSync(directory)) return [];
   const found = [];
@@ -71,10 +59,13 @@ check(fs.existsSync(path.join(APP_ROOT, "THIRD_PARTY_NOTICES.md")),
   "Third-party notices index exists.",
   "THIRD_PARTY_NOTICES.md is missing.");
 
-const committedDependencyTrees = findNodeModules(REPO_ROOT);
-check(committedDependencyTrees.length === 0,
+const trackedFiles = spawnSync("git", ["ls-files"], { cwd: REPO_ROOT, encoding: "utf8" });
+const committedDependencyPaths = trackedFiles.status === 0
+  ? trackedFiles.stdout.split(/\\r?\\n/).filter((file) => file.split("/").includes("node_modules"))
+  : ["git ls-files failed: " + (trackedFiles.stderr || "unknown error")];
+check(trackedFiles.status === 0 && committedDependencyPaths.length === 0,
   "No node_modules directories are committed in the repository.",
-  "Tracked dependency install folders must not be committed: " + committedDependencyTrees.join(", "));
+  "Tracked dependency install files must not be committed: " + committedDependencyPaths.slice(0, 20).join(", "));
 
 const skillBundle = path.join(APP_ROOT, ".agents", "skills");
 const remotionPresent = fs.existsSync(skillBundle) && fs.readdirSync(skillBundle).some((name) => /remotion/i.test(name));
