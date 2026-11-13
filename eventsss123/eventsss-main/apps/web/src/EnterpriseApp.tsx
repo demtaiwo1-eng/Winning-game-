@@ -1544,7 +1544,7 @@ type FinancePaymentFeed = {
 };
 type FinanceLedgerFeed = {
   total: number;
-  items: Array<{ id: string; type: string; amountMinor: string; balanceAfterMinor: string; createdAt: string; wallet: { currency: string; user: { name: string; email: string } } }>;
+  items: Array<{ id: string; type: string; amountMinor: string; balanceAfterMinor: string; provider: string; createdAt: string; wallet: { currency: string; user: { name: string; email: string } } }>;
 };
 function financeAmount(amountMinor: string, currency: string) {
   const amount = Number(amountMinor) / 100;
