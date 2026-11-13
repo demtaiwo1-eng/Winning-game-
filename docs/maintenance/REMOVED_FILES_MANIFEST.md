@@ -13,6 +13,12 @@ The following eight maintenance scripts were copied byte-for-byte into `maintena
 | `eventsss123/eventsss-main/run-ess-app-force.sh` | `maintenance/quarantine/2026-11-14/original/eventsss123/eventsss-main/run-ess-app-force.sh` | `26db10601c0c19a68169b957440d2294ad26002c` | Force installer deletes lockfile and node_modules, runs npm install --force and automatic source repair |
 | `eventsss123/eventsss-main/ess-cleanup.sh` | `maintenance/quarantine/2026-11-14/original/eventsss123/eventsss-main/ess-cleanup.sh` | `25e5f0a117d6f5daa5a52fa1e9f5ab49ebe92d81` | Legacy interactive scanner for ESSAuthModal; unrelated to current EPHINTA runtime |
 
+
+| `eventsss123/eventsss-main/scripts/app-audit.mjs` | `maintenance/quarantine/2026-11-14/original/eventsss123/eventsss-main/scripts/app-audit.mjs` | `a1ebb7d4e7052b9f2a21eb9f8e9552bb1486dd8d` | Orphaned source-rewriting audit/repair script; its only callers were the quarantined legacy launchers and its `--fix` mode rewrites application source |
+| `scripts/ephinta-complete-verify.sh` | `maintenance/quarantine/2026-11-14/original/scripts/ephinta-complete-verify.sh` | `d17861fc036628693dc6240b6bac8caab6e76921` | Unreferenced one-off PR merger with stale default PR numbers 124/123; superseded by current GitHub Actions verification and explicit PR review |
+| `eventsss123/eventsss-main/setup-local-postgres.sh` | `maintenance/quarantine/2026-11-14/original/eventsss123/eventsss-main/setup-local-postgres.sh` | `4b23a5af03e1f1f5ac8182b908307ddc11f6ee51` | Unreferenced legacy DB setup script with hard-coded development password, source patching and npm install fallback; current `scripts/with-database.mjs` uses `compose.dev.yml` |
+| `eventsss123/eventsss-main/local-postgres.patch` | `maintenance/quarantine/2026-11-14/original/eventsss123/eventsss-main/local-postgres.patch` | `4bafba32972c1defb57ccc391af6fe3be543a62f` | Patch belonged only to the quarantined local DB script and creates a SQL path that is absent from the active tree |
+
 ## Verification policy
 
 1. The application source, package manifests, lockfile, workflows, payment adapters, migrations, native project, and data are unchanged by this script quarantine.
