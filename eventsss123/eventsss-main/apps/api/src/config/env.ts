@@ -11,7 +11,7 @@ const schema = z.object({
   CORS_ORIGINS: z.string().default("http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,https://localhost,http://localhost,capacitor://localhost"),
   ALLOW_CODESPACES: z.enum(["true", "false"]).default("false"),
   // Legacy fallback retained for existing deployments; new deployments should set both fee rates explicitly.
-  COMMISSION_BPS: z.coerce.number().int().min(0).max(5000).default(100),
+  COMMISSION_BPS: z.coerce.number().int().min(0).max(5000).default(200),
   WALLET_TOPUP_FEE_BPS: z.coerce.number().int().min(0).max(5000).optional(),
   BOOKING_COMMISSION_BPS: z.coerce.number().int().min(0).max(5000).optional(),
   DEFAULT_CURRENCY: z.string().length(3).default("NGN"),
