@@ -149,7 +149,7 @@ The CI dependency audit produced a full and production-only npm audit report:
 - An audit workflow passing means the report was generated successfully; it does not mean the full development tree has zero advisories.
 
 
-## 11. Dependency declaration cleanup candidates
+## 10. Dependency declaration cleanup candidates
 
 The following are findings from manifest and call-site review; they have not been silently changed during the file cleanup:
 
@@ -158,6 +158,6 @@ The following are findings from manifest and call-site review; they have not bee
 - The web workspace imports `@capacitor/core` in native capability checks, but its own manifest does not declare it; it currently resolves through the mobile workspace's dependency tree. Add `@capacitor/core` as a direct web dependency in the next dependency-manifest correction to avoid relying on npm hoisting.
 - `@capacitor/cli` is a mobile build-time dependency. Its security remediation requires a coordinated Capacitor major-version migration; do not treat it as a production runtime package or upgrade it in isolation.
 
-## 10. Maintenance policy
+## 11. Maintenance policy
 
 Before removing any file: identify its callers, imports, workflow references, package scripts, runtime route, migration/data dependencies and rollback path. Move candidates to a dated quarantine location, run relevant checks, then delete only after the quarantine build and the final deletion build both pass. Keep a path/SHA recovery manifest in the same pull request.
