@@ -11,6 +11,8 @@ import { getRuntimePaymentMode } from "./runtimePaymentMode";
 
 export type ProviderName = "paystack" | "flutterwave" | "stripe" | "opay" | "demo";
 
+export function getOpayWebhookSecret(): string | undefined { return opayCredentials().secretKey; }
+
 function opayCredentials() {
   if (getRuntimePaymentMode() === "live") {
     return {
@@ -54,6 +56,9 @@ export function canUseProductionTestMode(
 }
 
 function assertPaymentMode() {
+  if (getRuntimePaymentMode() === "live" && (env.OPAY_LIVE_MODE_READY !== "true" || !env.OPAY_LIVE_MERCHANT_ID || !env.OPAY_LIVE_PUBLIC_KEY || !env.OPAY_LIVE_SECRET_KEY)) {
+    throw new HttpError(503, "OPAY_LIVE_NOT_READY", "OPay production credentials and readiness attestation are required before LIVE transactions.");
+  }
   if (env.NODE_ENV === "production" && getRuntimePaymentMode() === "demo") {
     throw new Error("DEMO payment mode is disabled in production");
   }
