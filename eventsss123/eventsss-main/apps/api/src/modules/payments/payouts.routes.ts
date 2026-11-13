@@ -6,7 +6,7 @@ import { env } from "../../config/env";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
-import { payoutFeeMinor } from "./feePolicy";
+import { payoutFeeBps, payoutFeeMinor } from "./feePolicy";
 import { recordPlatformRevenue } from "./platformRevenue.service";
 import { assertOpayTransfersEnabled, maskAccount, normalizeOpayTransferStatus, opayCreateBankTransfer, opayGetBankTransferStatus, opayListBanks, opayResolveBankAccount } from "./opay-payouts.provider";
 
@@ -229,7 +229,7 @@ payoutsRouter.post(
     const finalPayout = await prisma.payout.findUniqueOrThrow({ where: { id: payout.id } });
     res.status(202).json({
       payout: publicPayout(finalPayout), replayed: false,
-      feePolicy: { rateBps: env.PAYOUT_FEE_BPS ?? env.COMMISSION_BPS, chargedOn: "gross wallet debit" },
+      feePolicy: { rateBps: payoutFeeBps(), chargedOn: "gross wallet debit" },
       message: "Withdrawal submitted to OPay. Funds remain reserved until OPay confirms the final bank-transfer status.",
     });
   }),
