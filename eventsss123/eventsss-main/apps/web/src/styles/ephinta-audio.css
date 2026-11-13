@@ -60,7 +60,6 @@
 .eph-audio__player-footer button { min-height:30px; }
 .eph-audio__player button:focus-visible,
 .eph-audio__player input:focus-visible,
-.eph-audio__player select:focus-visible { outline:2px solid #c4b5fd; outline-offset:3px; }
 @media (max-width:420px) {
   .eph-audio__player { right:max(8px,env(safe-area-inset-right)); bottom:max(8px,env(safe-area-inset-bottom)); width:calc(100vw - 16px); padding:10px; }
   .eph-audio__player-footer { gap:6px; }
