@@ -4,6 +4,7 @@ import { logger } from "./lib/logger";
 import { prisma } from "./lib/prisma";
 import { ensureReferenceData } from "./lib/reference-data";
 import { reconcilePendingPayments } from "./modules/payments/payments.routes";
+import { reconcilePendingPayouts } from "./modules/payments/payouts.routes";
 
 async function startServer() {
   await prisma.$connect();
@@ -20,12 +21,12 @@ async function startServer() {
           return;
         }
         reconciliationInProgress = true;
-        void reconcilePendingPayments()
-          .then((result) => logger.info(result, "Pending payment reconciliation completed"))
+        void Promise.all([reconcilePendingPayments(), reconcilePendingPayouts()])
+          .then(([payments, payouts]) => logger.info({ payments, payouts }, "Payment and OPay payout reconciliation completed"))
           .catch((error: unknown) => {
             logger.warn(
               { errorType: error instanceof Error ? error.name : "UnknownError" },
-              "Pending payment reconciliation failed",
+              "Payment and OPay payout reconciliation failed",
             );
           })
           .finally(() => {
