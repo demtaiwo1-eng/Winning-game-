@@ -212,7 +212,7 @@ export const paymentsApi = {
     api<{
       intent: { id: string; provider: string };
       checkoutUrl: string;
-      mode: "live" | "demo";
+      mode: "live" | "sandbox" | "demo";
     }>("/payments/intents", {
       method: "POST",
       body: JSON.stringify(body),
