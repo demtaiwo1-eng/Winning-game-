@@ -7,10 +7,14 @@
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 
 const baseUrl = (process.env.EPHINTA_LOAD_BASE_URL || "https://ephinta-opay-staging.onrender.com").replace(/\/$/, "");
 const totalUsers = Number(process.env.LOAD_USERS || 5000);
-const concurrency = Number(process.env.LOAD_CONCURRENCY || 20);
+const concurrency = Number(process.env.LOAD_CONCURRENCY || 4);
+const requestsPerSecond = Number(process.env.LOAD_RPS || 3);
+const requestIntervalMs = 1000 / requestsPerSecond;
+let nextRequestAt = Date.now();
 const timeoutMs = Number(process.env.LOAD_TIMEOUT_MS || 15000);
 const roles = ["CLIENT", "ORGANIZATION", "VENDOR", "VERIFIER", "ADMIN"];
 const modes = ["DEMO", "TEST", "LIVE"];
@@ -21,7 +25,8 @@ let cursor = 0;
 let completed = 0;
 
 if (!Number.isInteger(totalUsers) || totalUsers < 1 || totalUsers > 5000) throw new Error("LOAD_USERS must be 1..5000");
-if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 25) throw new Error("LOAD_CONCURRENCY must be 1..25 for the single free instance");
+if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new Error("LOAD_CONCURRENCY must be 1..4 for the single free instance");
+if (!Number.isFinite(requestsPerSecond) || requestsPerSecond <= 0 || requestsPerSecond > 3) throw new Error("LOAD_RPS must be between 0 and 3 to stay below the 300/min API limiter");
 const target = new URL("/health", baseUrl);
 if (target.protocol !== "https:") throw new Error("Load target must use HTTPS");
 
@@ -34,7 +39,7 @@ const finance = Object.fromEntries(modes.map((mode) => [mode, {
   settlementAllowed: mode !== "LIVE",
 }]));
 
-async function runOne(index) {
+async function waitForRateSlot() {\n  const slot = nextRequestAt;\n  nextRequestAt += requestIntervalMs;\n  const waitMs = slot - Date.now();\n  if (waitMs > 0) await delay(waitMs);\n}\n\nasync function runOne(index) {
   const role = roles[index % roles.length];
   const mode = modes[index % modes.length];
   const amountNaira = highValuesNaira[index % highValuesNaira.length];
@@ -101,9 +106,9 @@ const financeSummary = Object.fromEntries(Object.entries(finance).map(([mode, v]
 const report = {
   title: "EPHINTA single-node 5,000 synthetic-user campaign",
   startedAt, finishedAt: new Date().toISOString(), target: target.origin,
-  topology: { nodes: 1, maxConcurrentRequests: concurrency, totalSyntheticUsers: totalUsers, requestPath: "/health", requestPerUser: 1 },
-  disclaimer: "5,000 synthetic personas each made one lightweight health request. This is not 5,000 concurrent authenticated end-to-end users. Financial values are synthetic calculations, not real or provider-settled transactions. DEMO/TEST/LIVE are modeled as policy buckets; LIVE provider calls are deliberately zero.",
-  totals: { users: totalUsers, passed: totalUsers - errors.length, failed: errors.length, http2xx: results.filter((x) => x.status >= 200 && x.status < 300).length, http4xx: results.filter((x) => x.status >= 400 && x.status < 500).length, http5xx: results.filter((x) => x.status >= 500).length, networkErrors: results.filter((x) => x.status === 0).length, p50Ms: pct(0.50), p95Ms: pct(0.95), p99Ms: pct(0.99), maxMs: latencies.at(-1) ?? null },
+  topology: { nodes: 1, maxConcurrentRequests: concurrency, requestRatePerSecond: requestsPerSecond, requestRatePerMinute: requestsPerSecond * 60, totalSyntheticUsers: totalUsers, requestPath: "/health", requestPerUser: 1 },
+  disclaimer: "5,000 synthetic personas each made one lightweight health request. This is not 5,000 concurrent authenticated end-to-end users. Requests are globally paced below the API 300/minute limiter. Financial values are synthetic calculations, not real or provider-settled transactions. DEMO/TEST/LIVE are modeled as policy buckets; LIVE provider calls are deliberately zero.",
+  totals: { users: totalUsers, passed: totalUsers - errors.length, failed: errors.length, http2xx: results.filter((x) => x.status >= 200 && x.status < 300).length, http4xx: results.filter((x) => x.status >= 400 && x.status < 500).length, http429: results.filter((x) => x.status === 429).length, http5xx: results.filter((x) => x.status >= 500).length, networkErrors: results.filter((x) => x.status === 0).length, p50Ms: pct(0.50), p95Ms: pct(0.95), p99Ms: pct(0.99), maxMs: latencies.at(-1) ?? null },
   roleSummary, financeSummary,
   errors: errors.slice(0, 250),
 };
