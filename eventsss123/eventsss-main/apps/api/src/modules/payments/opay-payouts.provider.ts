@@ -23,7 +23,7 @@ function sortKeys(value: unknown): unknown {
     .map(([key, item]) => [key, sortKeys(item)]));
 }
 
-function assertOpayTransfers() {
+export function assertOpayTransfersEnabled() {
   if (env.OPAY_TRANSFERS_ENABLED !== "true") {
     throw new HttpError(503, "PAYOUTS_DISABLED", "OPay bank transfers are not enabled for this merchant account yet.");
   }
@@ -58,7 +58,7 @@ function baseUrl() {
 }
 
 async function request<T>(path: string, payload: Record<string, unknown>, auth: "public" | "signature"): Promise<OpayEnvelope<T>> {
-  assertOpayTransfers();
+  assertOpayTransfersEnabled();
   const body = JSON.stringify(sortKeys(payload));
   const token = auth === "public"
     ? env.OPAY_PUBLIC_KEY!
