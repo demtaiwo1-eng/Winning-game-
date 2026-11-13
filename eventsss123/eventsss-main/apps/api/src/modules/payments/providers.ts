@@ -60,10 +60,10 @@ function assertPaymentMode() {
     throw new HttpError(503, "OPAY_LIVE_NOT_READY", "OPay production credentials and readiness attestation are required before LIVE transactions.");
   }
   if (env.NODE_ENV === "production" && getRuntimePaymentMode() === "demo") {
-    throw new Error("DEMO payment mode is disabled in production");
+    throw new HttpError(503, "DEMO_MODE_NOT_ALLOWED", "DEMO payment mode is disabled in production.");
   }
   if (!canUseProductionTestMode()) {
-    throw new Error("PAYMENT_MODE=test in production requires ALLOW_PRODUCTION_TEST_MODE=true; demo checkout remains disabled in production");
+    throw new HttpError(503, "PRODUCTION_TEST_MODE_DISABLED", "TEST payments are not enabled on this production API deployment.");
   }
 }
 
