@@ -35,8 +35,8 @@ adminRouter.patch("/runtime/payment-mode", asyncHandler(async (req, res) => {
       !process.env.OPAY_LIVE_SECRET_KEY && "OPAY_LIVE_SECRET_KEY",
       process.env.OPAY_LIVE_MODE_READY !== "true" && "OPAY_LIVE_MODE_READY=true (after OPay production access verification)",
       process.env.OPAY_TRANSFERS_ENABLED !== "true" && "OPAY_TRANSFERS_ENABLED",
-      !process.env.OPAY_TRANSFER_BASE_URL && "OPAY_TRANSFER_BASE_URL",
-      (process.env.OPAY_TRANSFER_BASE_URL || "").trim() !== "https://cashierapi.opayweb.com" && "OPAY_TRANSFER_BASE_URL must be https://cashierapi.opayweb.com",
+      !process.env.OPAY_LIVE_TRANSFER_BASE_URL && "OPAY_LIVE_TRANSFER_BASE_URL",
+      (process.env.OPAY_LIVE_TRANSFER_BASE_URL || "").trim() !== "https://cashierapi.opayweb.com" && "OPAY_LIVE_TRANSFER_BASE_URL must be https://cashierapi.opayweb.com",
     ].filter(Boolean);
     if (missing.length) {
       return res.status(409).json({
