@@ -337,7 +337,7 @@ export default function WalletPanel({
         </div>
         {depositCurrency === "NGN" && Number(depositAmount) > 0 && Number.isFinite(Number(depositAmount)) && (
           <p className="ess-muted" style={{ marginTop: 10 }}>
-            OPay deposit · 2% platform fee: {formatMoney(String(Math.round(Number(depositAmount) * 2 * 100)), "NGN", locale)} ·
+            OPay deposit · 2% platform fee: {formatMoney(String(Math.round(Number(depositAmount) * 2)), "NGN", locale)} ·
             Wallet credit after fee: {formatMoney(String(Math.max(0, Math.round(Number(depositAmount) * 98))), "NGN", locale)}
           </p>
         )}
@@ -409,7 +409,7 @@ export default function WalletPanel({
             )}
             {Number(withdrawAmount) > 0 && Number.isFinite(Number(withdrawAmount)) && (
               <p className="ess-muted" style={{ marginTop: 12 }}>
-                Estimated fee: {formatMoney(String(Math.round(Number(withdrawAmount) * 2 * 100)), "NGN", locale)} ·
+                Estimated fee: {formatMoney(String(Math.round(Number(withdrawAmount) * 2)), "NGN", locale)} ·
                 Estimated bank transfer: {formatMoney(String(Math.max(0, Math.round(Number(withdrawAmount) * 98))), "NGN", locale)}
               </p>
             )}
