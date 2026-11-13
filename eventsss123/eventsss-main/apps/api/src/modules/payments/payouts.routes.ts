@@ -350,7 +350,12 @@ payoutsRouter.post(
       method: "POST", body: JSON.stringify({ transfer_code: payout.providerTransferCode, otp }),
     });
     const data = result.data || {};
+    const transferMatches = data.reference === payout.reference &&
+      data.currency?.toUpperCase() === payout.currency &&
+      data.amount !== undefined && BigInt(String(data.amount)) === payout.netAmountMinor;
+    if (!transferMatches) throw new HttpError(502, "PAYOUT_TRANSFER_MISMATCH", "Paystack's finalized transfer details do not match this payout.");
     if (data.status === "success") await completePayout(payout.reference, "success", data.transfer_code, data.id === undefined ? undefined : String(data.id));
+    else if (data.status === "failed") await completePayout(payout.reference, "failed", data.transfer_code, data.id === undefined ? undefined : String(data.id));
     const updated = await prisma.payout.findUniqueOrThrow({ where: { id: payout.id } });
     res.json({ payout: publicPayout(updated) });
   }),
