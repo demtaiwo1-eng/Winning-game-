@@ -31,8 +31,10 @@ export function getRuntimePaymentMode(): PaymentMode {
 
 export async function paymentModeGuard(_req: Request, res: Response, next: NextFunction) {
   if (process.env.NODE_ENV === "test") {
+    const requested = process.env.RUN_DB_TESTS === "1" ? _req.get("x-ephinta-test-payment-mode") : undefined;
+    const testMode = PAYMENT_MODES.includes(requested as PaymentMode) ? requested as PaymentMode : "test";
     res.setHeader("Cache-Control", "no-store");
-    requestMode.run("test", next);
+    requestMode.run(testMode, next);
     return;
   }
   try {
