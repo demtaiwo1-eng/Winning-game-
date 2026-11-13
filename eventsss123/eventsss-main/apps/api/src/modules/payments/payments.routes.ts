@@ -148,10 +148,8 @@ paymentsRouter.post(
       init = { provider: "demo", providerRef: reference, mode: "demo" };
     }
     } catch (error) {
-      await prisma.paymentIntent.updateMany({
-        where: { id: pendingIntent.id, status: PaymentStatus.PENDING },
-        data: { status: PaymentStatus.FAILED },
-      });
+      // Keep the intent pending on ambiguous provider failures/timeouts. An
+      // operator must reconcile it before the global mode can change.
       throw error;
     }
 
