@@ -39,6 +39,9 @@ export function canUseProductionTestMode(
 }
 
 function assertPaymentMode() {
+  if (env.NODE_ENV === "production" && getRuntimePaymentMode() === "demo") {
+    throw new Error("DEMO payment mode is disabled in production");
+  }
   if (!canUseProductionTestMode()) {
     throw new Error("PAYMENT_MODE=test in production requires ALLOW_PRODUCTION_TEST_MODE=true; demo checkout remains disabled in production");
   }
@@ -70,6 +73,9 @@ export function selectProvider(currency: string, country?: string): ProviderName
   if (getRuntimePaymentMode() === "demo") return "demo";
 
   const c = currency.toUpperCase();
+  if (c !== "NGN") {
+    throw new HttpError(400, "OPAY_CURRENCY_UNSUPPORTED", "OPay is the configured payment rail. Only NGN transactions are enabled until additional OPay markets are verified.");
+  }
   const countryCode = country?.toUpperCase();
 
   // EPHINTA's Nigerian payment rail is OPay only. Never silently route an
