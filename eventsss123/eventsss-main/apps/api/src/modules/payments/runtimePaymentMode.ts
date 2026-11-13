@@ -30,6 +30,11 @@ export function getRuntimePaymentMode(): PaymentMode {
 }
 
 export async function paymentModeGuard(_req: Request, res: Response, next: NextFunction) {
+  if (process.env.NODE_ENV === "test") {
+    res.setHeader("Cache-Control", "no-store");
+    requestMode.run("test", next);
+    return;
+  }
   try {
     const mode = await refreshPaymentMode();
     res.setHeader("Cache-Control", "no-store");
