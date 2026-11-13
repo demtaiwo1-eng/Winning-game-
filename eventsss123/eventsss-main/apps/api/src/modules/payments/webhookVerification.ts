@@ -40,7 +40,7 @@ export function verifyPaystackWebhookSignature(
     const key = part.slice(0, separator).trim();
     const value = part.slice(separator + 1).trim();
     if (key === "t") {
-      if (timestamp !== undefined || !/^\\d+$/.test(value)) return false;
+      if (timestamp !== undefined || !/^\d+$/.test(value)) return false;
       timestamp = Number(value);
     } else if (key === "v1") {
       const colon = value.indexOf(":");
