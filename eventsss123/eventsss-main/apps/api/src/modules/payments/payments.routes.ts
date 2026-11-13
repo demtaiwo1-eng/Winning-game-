@@ -50,11 +50,12 @@ export const paymentsRouter = Router();
 paymentsRouter.use(payoutsRouter);
 
 logger.info({
-  paystackSecretConfigured: Boolean(env.PAYSTACK_SECRET_KEY),
-  paystackWebhookSecretConfigured: Boolean(env.PAYSTACK_WEBHOOK_SECRET),
-  paystackTransfersEnabled: env.PAYSTACK_TRANSFERS_ENABLED === "true",
+  opayMerchantConfigured: Boolean(env.OPAY_MERCHANT_ID),
+  opayPublicKeyConfigured: Boolean(env.OPAY_PUBLIC_KEY),
+  opaySecretConfigured: Boolean(env.OPAY_SECRET_KEY),
+  opayTransfersEnabled: env.OPAY_TRANSFERS_ENABLED === "true",
   paymentMode: env.PAYMENT_MODE,
-}, "Paystack payout configuration readiness");
+}, "OPay bank transfer configuration readiness");
 
 
 /** Create payment intent to fund wallet */
