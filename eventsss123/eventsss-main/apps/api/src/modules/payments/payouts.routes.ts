@@ -10,7 +10,6 @@ import { payoutFeeMinor } from "./feePolicy";
 import { recordPlatformRevenue } from "./platformRevenue.service";
 
 export const payoutsRouter = Router();
-payoutsRouter.use(requireAuth);
 
 type PaystackEnvelope<T> = { status?: boolean; message?: string; data?: T };
 type PaystackBank = { name?: string; code?: string; active?: boolean; country?: string; currency?: string };
@@ -182,6 +181,7 @@ export async function processPaystackTransferWebhook(event: string, data: Transf
 
 payoutsRouter.get(
   "/payouts/banks",
+  requireAuth,
   asyncHandler(async (_req, res) => {
     const result = await paystack<PaystackBank[]>("/bank?country=nigeria&perPage=100");
     res.json({ items: (result.data || []).filter((b) => b.active !== false).map((b) => ({ name: b.name, code: b.code, currency: "NGN" })) });
@@ -190,6 +190,7 @@ payoutsRouter.get(
 
 payoutsRouter.get(
   "/payouts/resolve-account",
+  requireAuth,
   asyncHandler(async (req, res) => {
     const accountNumber = String(req.query.accountNumber || "");
     const bankCode = String(req.query.bankCode || "");
@@ -205,6 +206,7 @@ payoutsRouter.get(
 
 payoutsRouter.post(
   "/payouts",
+  requireAuth,
   requireRole("VENDOR", "AFFILIATE", "ADMIN"),
   asyncHandler(async (req, res) => {
     assertPayoutRail();
@@ -335,6 +337,7 @@ payoutsRouter.post(
 
 payoutsRouter.post(
   "/payouts/:id/finalize",
+  requireAuth,
   requireRole("ADMIN"),
   asyncHandler(async (req, res) => {
     assertPayoutRail();
@@ -355,6 +358,7 @@ payoutsRouter.post(
 
 payoutsRouter.get(
   "/payouts",
+  requireAuth,
   requireRole("VENDOR", "AFFILIATE", "ADMIN"),
   asyncHandler(async (req, res) => {
     const items = await prisma.payout.findMany({
@@ -367,6 +371,7 @@ payoutsRouter.get(
 
 payoutsRouter.get(
   "/payouts/:id",
+  requireAuth,
   requireRole("VENDOR", "AFFILIATE", "ADMIN"),
   asyncHandler(async (req, res) => {
     const payout = await prisma.payout.findFirst({
