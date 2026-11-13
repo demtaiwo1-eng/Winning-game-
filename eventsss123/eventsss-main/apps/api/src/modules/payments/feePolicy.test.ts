@@ -46,8 +46,9 @@ describe("separate payment fee policy", () => {
 
   it("uses exact minor-unit half-up rounding for small payments", () => {
     const config = { COMMISSION_BPS: 200, WALLET_TOPUP_FEE_BPS: 200, BOOKING_COMMISSION_BPS: 200 };
-    expect(walletTopupFeeMinor(49n, config)).toBe(0n);
-    expect(walletTopupFeeMinor(50n, config)).toBe(1n);
+    expect(walletTopupFeeMinor(24n, config)).toBe(0n);
+    expect(walletTopupFeeMinor(25n, config)).toBe(1n);
+    expect(walletTopupFeeMinor(49n, config)).toBe(1n);
     expect(bookingCommissionMinor(150n, config)).toBe(3n);
   });
 });
