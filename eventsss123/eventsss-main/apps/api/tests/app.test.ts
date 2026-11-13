@@ -167,6 +167,7 @@ describe("api foundation (DB-free)", () => {
     const res = await request(app)
       .post("/api/v1/payments/payouts")
       .set("Authorization", `Bearer ${token}`)
+      .set("Idempotency-Key", "test-payout-key-0001")
       .send({ amountMinor: "10000", accountNumber: "0123456789", bankCode: "058", confirmAccountName: true });
     expect(res.status).toBe(503);
     expect(res.body.error.code).toBe("PAYOUTS_DISABLED");
