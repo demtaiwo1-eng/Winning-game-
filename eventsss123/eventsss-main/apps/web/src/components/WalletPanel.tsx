@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { formatMoney, type CurrencyCode, type LocaleCode, t } from "../lib/i18n";
-import { walletApi, paymentsApi, type ApiWallet, type ApiPayout } from "../lib/api";
+import { walletApi, paymentsApi, type ApiWallet, type ApiPayout, type ApiLedgerEntry } from "../lib/api";
 
 type WalletBalance = {
   id?: string;
@@ -33,6 +33,9 @@ export default function WalletPanel({
   const [payouts, setPayouts] = useState<ApiPayout[]>([]);
   const [payoutError, setPayoutError] = useState("");
   const [payoutLoading, setPayoutLoading] = useState(false);
+  const [ledgerEntries, setLedgerEntries] = useState<ApiLedgerEntry[]>([]);
+  const [ledgerCurrency, setLedgerCurrency] = useState<CurrencyCode>("NGN");
+  const [ledgerLoaded, setLedgerLoaded] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const load = useCallback(() => {
@@ -265,9 +268,17 @@ export default function WalletPanel({
                   <button
                     className="ess-quiet-button"
                     type="button"
-                    onClick={() =>
-                      walletApi.ledger(b.id!).then(() => setMsg(`Ledger loaded for ${b.currency}`))
-                    }
+                    onClick={async () => {
+                      try {
+                        const result = await walletApi.ledger(b.id!);
+                        setLedgerEntries(result.items);
+                        setLedgerCurrency(b.currency);
+                        setLedgerLoaded(true);
+                        setMsg(`Transaction history loaded for ${b.currency}`);
+                      } catch (error) {
+                        setMsg(error instanceof Error ? error.message : "Unable to load transaction history.");
+                      }
+                    }}
                   >
                     View ledger
                   </button>
@@ -275,6 +286,25 @@ export default function WalletPanel({
               </div>
             </article>
           ))}
+        </div>
+      )}
+
+      {ledgerLoaded && (
+        <div className="ess-wallet-card" style={{ marginTop: 16 }}>
+          <strong>Transaction history · {ledgerCurrency}</strong>
+          {ledgerEntries.length === 0 ? (
+            <p className="ess-muted">No wallet transactions yet.</p>
+          ) : (
+            <div className="ess-wallet-rows">
+              {ledgerEntries.map((entry) => (
+                <div key={entry.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--ess-border, #ddd)" }}>
+                  <span>{entry.type.replaceAll("_", " ")} · {entry.provider === "opay" ? "OPay" : entry.provider === "internal" ? "EPHINTA wallet" : entry.provider}</span>
+                  <strong>{formatMoney(entry.amountMinor, ledgerCurrency, locale)}</strong>
+                  <small className="ess-muted">{entry.refType.replaceAll("_", " ")} · {new Date(entry.createdAt).toLocaleString()}</small>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -305,9 +335,15 @@ export default function WalletPanel({
             </select>
           </label>
         </div>
+        {depositCurrency === "NGN" && Number(depositAmount) > 0 && Number.isFinite(Number(depositAmount)) && (
+          <p className="ess-muted" style={{ marginTop: 10 }}>
+            OPay deposit · 2% platform fee: {formatMoney(String(Math.round(Number(depositAmount) * 2)), "NGN", locale)} ·
+            Wallet credit after fee: {formatMoney(String(Math.max(0, Math.round(Number(depositAmount) * 98))), "NGN", locale)}
+          </p>
+        )}
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
           <button className="ess-primary" type="button" onClick={addFunds}>
-            Deposit to wallet
+            Deposit to wallet with {depositCurrency === "NGN" ? "OPay" : "GHS provider"}
           </button>
         </div>
       </div>
