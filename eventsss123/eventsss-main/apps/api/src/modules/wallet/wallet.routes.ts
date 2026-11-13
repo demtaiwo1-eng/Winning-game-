@@ -74,7 +74,7 @@ walletRouter.get(
         idempotencyKey: e.idempotencyKey,
         provider: e.refType === "PAYMENT_INTENT"
           ? (e.refId ? providerByIntent.get(e.refId) || "unknown" : "unknown")
-          : ["BANK_PAYOUT", "PAYOUT_REFUND", "PAYOUT_REVERSAL"].includes(e.refType)
+          : ["BANK_PAYOUT", "PAYOUT_REFUND", "PAYOUT_REVERSAL"].includes(e.refType || "")
             ? "opay"
             : "internal",
         createdAt: e.createdAt,
