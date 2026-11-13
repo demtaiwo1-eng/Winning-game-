@@ -425,7 +425,7 @@ export default function WalletPanel({
               <div className="ess-wallet-rows">
                 {payouts.map((payout) => (
                   <div key={payout.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--ess-border, #ddd)" }}>
-                    <span>OPay bank transfer · {payout.accountName} · {payout.accountNumber} · {payout.status}</span>
+                    <span>{payout.provider === "opay" ? "OPay" : payout.provider} bank transfer · {payout.accountName} · {payout.accountNumber} · {payout.status}</span>
                     <strong>{formatMoney(payout.netAmountMinor, "NGN", locale)} sent</strong>
                     <small className="ess-muted">Fee {formatMoney(payout.feeMinor, "NGN", locale)} · {new Date(payout.createdAt).toLocaleString()}</small>
                     {["PENDING", "PROCESSING"].includes(payout.status) && (
