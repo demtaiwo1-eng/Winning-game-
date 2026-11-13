@@ -55,7 +55,7 @@ if (!process.env.QA_PORTAL_PASSWORD || process.env.QA_PORTAL_PASSWORD.length < 1
   process.exit(2);
 }
 const configuredUrl = process.env.DATABASE_URL || "";
-if (configuredUrl && /(render\\.com|neon\\.tech|supabase\\.(co|com))/i.test(configuredUrl)) {
+if (configuredUrl && /(render\.com|neon\.tech|supabase\.(co|com))/i.test(configuredUrl)) {
   console.error("Refusing a managed/production-style DATABASE_URL.");
   process.exit(2);
 }
@@ -91,7 +91,7 @@ const phases = [
 
 function execute(phase) {
   return new Promise((resolve) => {
-    console.log(`\\n[EPHINTA QA] ${phase.name}\\n> ${phase.command} ${phase.args.join(" ")}`);
+    console.log(`\n[EPHINTA QA] ${phase.name}\n> ${phase.command} ${phase.args.join(" ")}`);
     const child = spawn(phase.command, phase.args, {
       cwd: root,
       stdio: "inherit",
@@ -132,6 +132,6 @@ report.finishedAt = new Date().toISOString();
 const reportDir = path.join(root, "artifacts");
 await mkdir(reportDir, { recursive: true });
 const reportPath = path.join(reportDir, "ephinta-scale-qa-report.json");
-await writeFile(reportPath, JSON.stringify(report, null, 2) + "\\n");
-console.log(`\\n[EPHINTA QA] ${report.status.toUpperCase()} — report: ${reportPath}`);
+await writeFile(reportPath, JSON.stringify(report, null, 2) + "\n");
+console.log(`\n[EPHINTA QA] ${report.status.toUpperCase()} — report: ${reportPath}`);
 if (report.status !== "passed") process.exit(1);
