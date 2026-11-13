@@ -8,7 +8,7 @@ import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { payoutFeeMinor } from "./feePolicy";
 import { recordPlatformRevenue } from "./platformRevenue.service";
-import { maskAccount, normalizeOpayTransferStatus, opayCreateBankTransfer, opayGetBankTransferStatus, opayListBanks, opayResolveBankAccount } from "./opay-payouts.provider";
+import { assertOpayTransfersEnabled, maskAccount, normalizeOpayTransferStatus, opayCreateBankTransfer, opayGetBankTransferStatus, opayListBanks, opayResolveBankAccount } from "./opay-payouts.provider";
 
 export const payoutsRouter = Router();
 
@@ -134,6 +134,7 @@ payoutsRouter.post(
   requireAuth,
   requireRole("VENDOR", "AFFILIATE", "ADMIN"),
   asyncHandler(async (req, res) => {
+    assertOpayTransfersEnabled();
     const amountRaw = String(req.body.amountMinor ?? "");
     const accountNumber = String(req.body.accountNumber ?? "");
     const bankCode = String(req.body.bankCode ?? "");
