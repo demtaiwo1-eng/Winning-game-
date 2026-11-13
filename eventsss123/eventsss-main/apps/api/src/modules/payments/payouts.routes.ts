@@ -111,8 +111,8 @@ payoutsRouter.get(
   "/payouts/banks",
   requireAuth,
   asyncHandler(async (_req, res) => {
-    const result = await paystack<PaystackBank[]>("/bank?country=nigeria&perPage=100");
-    res.json({ items: (result.data || []).filter((b) => b.active !== false).map((b) => ({ name: b.name, code: b.code, currency: "NGN" })) });
+    const items = await opayListBanks();
+    res.json({ items });
   }),
 );
 
@@ -125,10 +125,8 @@ payoutsRouter.get(
     if (!/^\d{10}$/.test(accountNumber) || !/^\d{2,8}$/.test(bankCode)) {
       throw new HttpError(400, "INVALID_BANK_DETAILS", "Provide a valid 10-digit account number and bank code.");
     }
-    const query = new URLSearchParams({ account_number: accountNumber, bank_code: bankCode });
-    const result = await paystack<{ account_name?: string; account_number?: string }>(`/bank/resolve?${query.toString()}`);
-    if (!result.data?.account_name) throw new HttpError(422, "ACCOUNT_NOT_RESOLVED", "The bank account could not be verified.");
-    res.json({ accountName: result.data.account_name, accountNumber: maskAccount(accountNumber), bankCode });
+    const result = await opayResolveBankAccount(accountNumber, bankCode);
+    res.json(result);
   }),
 );
 
@@ -137,8 +135,7 @@ payoutsRouter.post(
   requireAuth,
   requireRole("VENDOR", "AFFILIATE", "ADMIN"),
   asyncHandler(async (req, res) => {
-    assertPayoutRail();
-    const amountRaw = String(req.body.amountMinor ?? "");
+const amountRaw = String(req.body.amountMinor ?? "");
     const accountNumber = String(req.body.accountNumber ?? "");
     const bankCode = String(req.body.bankCode ?? "");
     const confirmed = req.body.confirmAccountName === true;
@@ -165,16 +162,10 @@ payoutsRouter.post(
     });
     if (!wallet) throw new HttpError(404, "WALLET_NOT_FOUND", "Your NGN wallet was not found.");
 
-    const query = new URLSearchParams({ account_number: accountNumber, bank_code: bankCode });
-    const resolved = await paystack<{ account_name?: string }>(`/bank/resolve?${query.toString()}`);
-    const accountName = String(resolved.data?.account_name || "").trim();
-    if (!accountName) throw new HttpError(422, "ACCOUNT_NOT_RESOLVED", "The bank account could not be verified.");
-
-    const recipient = await paystack<{ recipient_code?: string; active?: boolean }>("/transferrecipient", {
-      method: "POST",
-      body: JSON.stringify({ type: "nuban", name: accountName, account_number: accountNumber, bank_code: bankCode, currency: "NGN" }),
-    });
-    if (!recipient.data?.recipient_code || recipient.data.active === false) throw new HttpError(502, "RECIPIENT_CREATION_FAILED", "Paystack did not create an active bank recipient.");
+    const resolved = await opayResolveBankAccount(accountNumber, bankCode);
+    const accountName = resolved.accountName;
+    const bankList = await opayListBanks();
+    const bankName = bankList.find((bank) => bank.code === bankCode)?.name || null;
 
     const reference = `ephinta_payout_${randomUUID().replace(/-/g, "").slice(0, 20)}`;
     let payout;
@@ -198,8 +189,7 @@ payoutsRouter.post(
           data: {
             userId: req.user!.id, walletId: wallet.id, reference, idempotencyKey,
             amountMinor, feeMinor, netAmountMinor, currency: "NGN",
-            bankCode, accountName, maskedAccountNumber: maskAccount(accountNumber),
-            providerRecipientCode: recipient.data!.recipient_code,
+            bankCode, bankName, accountName, maskedAccountNumber: maskAccount(accountNumber),
             status: PayoutStatus.PENDING,
           },
         });
@@ -268,8 +258,7 @@ payoutsRouter.post(
   requireAuth,
   requireRole("ADMIN"),
   asyncHandler(async (req, res) => {
-    assertPayoutRail();
-    const otp = String(req.body.otp || "");
+const otp = String(req.body.otp || "");
     if (!/^\d{4,8}$/.test(otp)) throw new HttpError(400, "INVALID_OTP", "Enter the 4–8 digit Paystack transfer OTP.");
     const payout = await prisma.payout.findFirst({ where: { id: req.params.id } });
     if (!payout || payout.userId !== req.user!.id && req.user!.role !== "ADMIN") throw new HttpError(404, "PAYOUT_NOT_FOUND", "Payout not found.");
