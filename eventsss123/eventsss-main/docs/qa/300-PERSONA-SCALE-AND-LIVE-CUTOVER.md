@@ -39,7 +39,7 @@ EPHINTA_RENDER_TARGET=production EPHINTA_LIVE_PROVIDER=paystack EPHINTA_LIVE_CUT
 ```
 The script accepts only Paystack or Flutterwave for live mode; OPay is sandbox-only, Cleva/Eversend adapters are not present, and Stripe checkout is disabled. It checks for the appropriate live secret-key prefix without printing the key. The script changes payment mode, production-test opt-in and the separate booking-commission setting, then requests a Render deploy. It does not change the fixed 2% incoming/outgoing transaction fees.
 
-**Fee policy confirmed:** charge 1% separately on successful wallet top-ups and completed booking settlement. These are separate transaction events: a top-up fee reduces the net wallet credit, while the booking commission is withheld from the vendor's escrow release. Do not deduct the booking commission from the customer a second time at booking checkout. The two fee rates are independently configurable as `WALLET_TOPUP_FEE_BPS` and `BOOKING_COMMISSION_BPS`; both are set to 100 bps in staging. The fee policy is not a live-payment approval.
+**Fee policy confirmed:** charge 2% separately on successful wallet top-ups and outgoing OPay bank withdrawals. A top-up fee reduces the net wallet credit; an outgoing payout fee is deducted from the gross wallet debit and the bank receives the remaining 98%. These transaction fees are fixed in the API and are not configurable through Render overrides. Booking commission is a separate escrow-settlement fee and remains independently configurable; do not deduct it from the customer a second time at booking checkout. The fee policy is not a live-payment approval.
 
 A live cutover is a controlled backend configuration change, not a frontend switch:
 
