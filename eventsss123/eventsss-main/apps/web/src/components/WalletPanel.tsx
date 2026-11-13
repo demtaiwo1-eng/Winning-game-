@@ -63,18 +63,18 @@ export default function WalletPanel({
   }, [load]);
 
   const loadPayouts = useCallback(async () => {
-    try {
-      const [bankResult, payoutResult] = await Promise.all([
-        paymentsApi.payoutBanks(),
-        paymentsApi.payouts(),
-      ]);
-      setBanks(bankResult.items);
-      setBankCode((current) => current || bankResult.items[0]?.code || "");
-      setPayouts(payoutResult.items);
+    const [bankResult, payoutResult] = await Promise.allSettled([
+      paymentsApi.payoutBanks(),
+      paymentsApi.payouts(),
+    ]);
+    if (bankResult.status === "fulfilled") {
+      setBanks(bankResult.value.items);
+      setBankCode((current) => current || bankResult.value.items[0]?.code || "");
       setPayoutError("");
-    } catch (error) {
-      setPayoutError(error instanceof Error ? error.message : "Bank withdrawals are not available yet.");
+    } else {
+      setPayoutError(bankResult.reason instanceof Error ? bankResult.reason.message : "Bank withdrawals are not available yet.");
     }
+    if (payoutResult.status === "fulfilled") setPayouts(payoutResult.value.items);
   }, []);
 
   useEffect(() => {
@@ -371,8 +371,8 @@ export default function WalletPanel({
             )}
             {Number(withdrawAmount) > 0 && Number.isFinite(Number(withdrawAmount)) && (
               <p className="ess-muted" style={{ marginTop: 12 }}>
-                Estimated fee: {formatMoney(String(Math.round(Number(withdrawAmount) * 200)), "NGN", locale)} ·
-                Estimated bank transfer: {formatMoney(String(Math.max(0, Math.round(Number(withdrawAmount) * 9800))), "NGN", locale)}
+                Estimated fee: {formatMoney(String(Math.round(Number(withdrawAmount) * 2)), "NGN", locale)} ·
+                Estimated bank transfer: {formatMoney(String(Math.max(0, Math.round(Number(withdrawAmount) * 98))), "NGN", locale)}
               </p>
             )}
             <button className="ess-primary" type="button" onClick={submitWithdrawal} disabled={payoutLoading || !accountConfirmed || !accountName || !withdrawAmount || !bankCode}>
