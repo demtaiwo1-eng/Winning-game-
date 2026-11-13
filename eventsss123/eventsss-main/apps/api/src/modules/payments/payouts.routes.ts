@@ -7,6 +7,7 @@ import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { payoutFeeMinor } from "./feePolicy";
+import { getRuntimePaymentMode } from "./runtimePaymentMode";
 import { recordPlatformRevenue } from "./platformRevenue.service";
 import { assertOpayTransfersEnabled, maskAccount, normalizeOpayTransferStatus, opayCreateBankTransfer, opayGetBankTransferStatus, opayListBanks, opayResolveBankAccount } from "./opay-payouts.provider";
 
@@ -135,6 +136,7 @@ payoutsRouter.post(
   requireAuth,
   requireRole("VENDOR", "AFFILIATE", "ADMIN"),
   asyncHandler(async (req, res) => {
+    if (getRuntimePaymentMode() === "demo") throw new HttpError(409, "PAYOUTS_DISABLED_IN_DEMO", "External bank withdrawals are disabled in DEMO mode.");
     assertOpayTransfersEnabled();
     const amountRaw = String(req.body.amountMinor ?? "");
     const accountNumber = String(req.body.accountNumber ?? "");
