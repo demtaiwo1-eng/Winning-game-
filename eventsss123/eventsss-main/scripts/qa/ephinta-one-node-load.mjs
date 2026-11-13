@@ -64,6 +64,7 @@ async function runOne(index) {
     bucket.outgoingFeeKobo += fee;
   }
   // LIVE is policy-checked only. It must never call a live provider in this campaign.
+  await waitForRateSlot();
   const started = Date.now();
   try {
     const response = await fetch(target, { method: "GET", headers: { "user-agent": "EPHINTA-OneNode-QA/1.0", "x-qa-persona": String(index + 1) }, signal: AbortSignal.timeout(timeoutMs) });
