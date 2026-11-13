@@ -11,7 +11,9 @@
     "test:e2e": "playwright test",
     "design:audit": "node scripts/design-quality-gate.mjs",
     "design:audit:strict": "node scripts/design-quality-gate.mjs --strict",
-    "audio:verify": "node scripts/verify-audio-platforms.mjs"
+    "audio:verify": "node scripts/verify-audio-platforms.mjs",
+    "test:worldwide": "playwright test e2e/worldwide-personas.spec.ts",
+    "test:payment-personas": "playwright test e2e/payment-notification-personas.spec.ts"
   },
   "dependencies": {
     "@capacitor/app": "^6.0.3",

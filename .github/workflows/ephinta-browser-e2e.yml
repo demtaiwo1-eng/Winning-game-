@@ -64,6 +64,10 @@ jobs:
           npm run db:seed -w apps/api
       - name: Run public and authenticated portal journeys
         run: npm run test:e2e -w apps/web
+      - name: Run 100 worldwide event-planner personas
+        run: npm run test:worldwide -w apps/web -- --workers=1 --reporter=line
+      - name: Run 100 payment and notification personas
+        run: npm run test:payment-personas -w apps/web -- --workers=1 --reporter=line
       - name: Upload Playwright diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
