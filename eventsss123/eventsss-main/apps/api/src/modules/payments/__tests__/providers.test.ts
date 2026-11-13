@@ -174,6 +174,7 @@ describe("initializeOpay", () => {
     env.OPAY_SECRET_KEY = originalSecretKey;
     env.PAYMENT_MODE = originalPaymentMode;
     env.NODE_ENV = originalNodeEnv;
+    env.EPHINTA_ENVIRONMENT = originalEphintaEnvironment;
     env.OPAY_LIVE_MERCHANT_ID = originalLiveMerchantId;
     env.OPAY_LIVE_PUBLIC_KEY = originalLivePublicKey;
     env.OPAY_LIVE_SECRET_KEY = originalLiveSecretKey;
