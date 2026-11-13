@@ -1,3 +1,4 @@
+// The player renders only when an owner-configured, rights-cleared audio source exists.
 import AudioExperience from "./components/AudioExperience";
 // apps/web/src/App.tsx
 import DateWheelPicker from './components/DateWheelPicker';
