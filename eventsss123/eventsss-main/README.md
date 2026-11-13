@@ -158,12 +158,16 @@ The requested commercial offer is **US$59.99** with access unlocked by a unique 
 - [Payment tests](./docs/PAYMENTS-TEST.md)
 - [Implementation report](./EPHINTA_IMPLEMENTATION_REPORT.md)
 - [Third-party and source-ownership audit](./docs/THIRD_PARTY_AUDIT.md)
+- [Third-party notices index](./THIRD_PARTY_NOTICES.md)
+- [Asset rights register](./docs/ASSET_RIGHTS_REGISTER.md)
+- [Contributor IP register](./docs/CONTRIBUTOR_IP_REGISTER.md)
+- [Project licence owner approval](./docs/PROJECT_LICENSE_PENDING_OWNER_APPROVAL.md)
 
 ## Third-party software, media, and acknowledgements
 
 EPHINTA uses third-party open-source packages and platform tooling. Each dependency remains governed by its own licence and notices. The repository-level third-party inventory and outstanding ownership checks are tracked in [`docs/THIRD_PARTY_AUDIT.md`](./docs/THIRD_PARTY_AUDIT.md).
 
-Audio and visual assets must only be distributed where EPHINTA has documented ownership, a suitable licence, or written permission. A filename or an attribution label alone is not proof of a distribution licence.
+**Audio is disabled by default** because the bundled recordings did not have a commercial distribution licence recorded in the repository. To enable music, the platform owner must provide a rights-cleared HTTPS source using `VITE_EPHINTA_LICENSED_AUDIO_URL` and record the asset in [`docs/assets/asset-rights.json`](./docs/assets/asset-rights.json). The player remains hidden and makes no audio request when no approved source is configured. See [`docs/ASSET_RIGHTS_REGISTER.md`](./docs/ASSET_RIGHTS_REGISTER.md) for the removed Wale Waves recordings and the evidence needed before restoring them.
 
 ## Licence
 
