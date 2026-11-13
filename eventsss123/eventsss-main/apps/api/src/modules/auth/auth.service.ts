@@ -78,7 +78,7 @@ export async function register(input: RegisterInput, userAgent?: string) {
         }
       }
       return u;
-    });
+    }, { maxWait: 15_000, timeout: 30_000 });
     const tokens = await issueTokens(user, userAgent);
     await recordSecurityEvent(user.id, "ACCOUNT_REGISTERED", userAgent);
     return { user, ...tokens };
