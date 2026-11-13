@@ -76,6 +76,17 @@ export type ApiWallet = {
   pendingMinor?: string;
 };
 
+export type ApiLedgerEntry = {
+  id: string;
+  type: string;
+  amountMinor: string;
+  balanceAfterMinor: string;
+  refType: string;
+  refId: string | null;
+  provider: string;
+  createdAt: string;
+};
+
 export type ApiPlan = {
   id: string;
   code: string;
@@ -117,7 +128,7 @@ export const feedbackApi = {
 export const walletApi = {
   list: () => api<{ items: ApiWallet[] }>("/wallet"),
   ledger: (walletId: string) =>
-    api<{ items: unknown[]; wallet: ApiWallet }>(`/wallet/${walletId}/ledger`),
+    api<{ items: ApiLedgerEntry[]; wallet: ApiWallet }>(`/wallet/${walletId}/ledger`),
   deposit: (body: { currency: string; amountMinor: string; idempotencyKey?: string }) =>
     api("/wallet/deposit", { method: "POST", body: JSON.stringify(body) }),
   escrowHold: (body: {
