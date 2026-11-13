@@ -1,47 +1,30 @@
-# Unused Files Audit
+# EPHINTA unused files and provenance audit
 
-This report is a practical cleanup review, not a destructive deletion checklist. It highlights files that look either legacy, generated, or otherwise non-core to the active application build. The goal is to reduce confusion during maintenance without deleting anything that might still be needed for local workflows or migration history.
+Updated: 2026-11-13
 
-## High-confidence candidates for review
+This file records cleanup decisions and items that still need a deliberate owner review. It is not a licence grant or a plagiarism certificate.
 
-These files appear to be local media or troubleshooting payloads rather than active application code:
+## Removed from the current release branch
 
-- Here we are-1 -Wale Waves_ESS_Wedding.mp3
-- Here we are-2 -Wale Waves_ESS_Wedding.mp3
-- Welcome, Little One-1-Wale Waves_ESS_Naming.mp3
-- Welcome, Little One-2-Wale Waves_ESS_Naming.mp3
-- You Will Live in Our Hearts-1-Wale Waves_ESS_Burials.mp3
-- You Will Live in Our Hearts-2-Wale Waves_ESS_Burials.mp3
+- 284 unused Remotion agent-skill, documentation, and example files that were unrelated to the EPHINTA runtime.
+- Six Wale Waves-labelled MP3 recordings in two tracked locations (12 copies total). No commercial distribution permission was evidenced, so the recordings are no longer bundled.
+- Unused Wale Waves YouTube playlist OAuth/sync scripts, setup documentation, and scheduled workflow.
+- The unused `contracts/EventEscrowVault.sol` prototype, which had an MIT SPDX identifier and was not referenced by the active app.
 
-These older scripts may still be useful for local repair workflows, but they should be reviewed before being retained permanently:
+The audio player is now disabled when no explicit rights-cleared source is configured. Do not restore removed media or integrations without recording provenance and permission in `docs/assets/asset-rights.json`.
 
-- apply-ephinta-ui-money-fixes.sh
-- ephinta-complete.sh
-- ephinta-fix.sh
-- ess-cleanup.sh
-- fix-ephinta-signing.sh
-- run-dev-safe.sh
-- run-ess-app-force.sh
-- run-ess-app.sh
-- search-code.sh
-- setup-local-postgres.sh
-- update-ephinta.sh
+## Keep under review
 
-## Generated or build artifacts to review separately
+- EPHINTA logo variants, favicons, launcher/splash images, and three avatar SVGs: confirm they were created for EPHINTA or licensed for commercial use.
+- Legacy Paystack/Flutterwave/Stripe adapters and webhooks: preserve historical settlement compatibility until pending intents are reconciled; only use providers for new traffic where the platform owner has valid merchant terms and explicitly enabled that market.
+- Bytid, OPay, Capgo, SMTP transport, and object storage integrations: keep provider contracts, API terms, privacy/DPA records, and account permissions in the private legal/operations register.
+- Contributor work by `deytaiwo2`: obtain written IP assignment or a sufficient commercial licence before claiming exclusive ownership of all contributions.
 
-The following are likely generated outputs and should be treated as build-side material unless deliberately versioned:
+## Generated files
 
-- apps/api/dist/
-- apps/api/node_modules/ (normally ignored by Git)
-- node_modules/ (workspace dependency install output)
+- `apps/api/dist/` and `node_modules/` are generated/install outputs and should not be treated as authored source.
+- Build artifacts should be excluded from source control unless a specific release workflow requires them.
 
-## Non-deletion conclusion
+## Release rule
 
-No active source file was identified as clearly orphaned by the app runtime itself. The main candidates are legacy media, local developer utilities, and generated artifacts. These should be reviewed manually before removal because some of them may still be part of migration, debugging, or deployment support workflows.
-
-## Recommended next action
-
-1. Keep the active product code and working tests in place.
-2. Archive or relocate legacy media and repair scripts only if they are no longer required.
-3. Treat generated build output as disposable, not product source.
-4. Keep the root docs and implementation reports as the source of truth for the current app state.
+Do not delete migration, payment, or deployment code solely because it appears old. First establish whether it supports historical records, rollback, reconciliation, or a live service. Record the decision and test the affected workflow.
