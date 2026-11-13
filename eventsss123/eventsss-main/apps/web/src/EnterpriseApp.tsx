@@ -1,4 +1,5 @@
-import { lazy, useEffect, useState, type FormEvent } from "react";
+import { lazy, useCallback, useEffect, useState, type FormEvent } from "react";
+import { App as CapacitorApp } from "@capacitor/app";
 import DateWheelPicker from './components/DateWheelPicker';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { APP_ROUTE_PATHS, dashboardRouteRedirect, legacyDashboardPath } from "./lib/appRoutes";
@@ -2171,14 +2172,50 @@ export default function EnterpriseApp() {
       );
     }
   };
-  const signOut = () => {
-    void unregisterPushDevice();
+  const signOut = useCallback(async () => {
+    try {
+      await unregisterPushDevice();
+    } catch (error) {
+      console.warn("Unable to unregister this device's push token during sign-out.", error);
+    }
     setSession(null);
     localStorage.removeItem("ess_access_token");
     localStorage.removeItem("ess_refresh_token");
     localStorage.removeItem("ess_user");
     navigate("/");
-  };
+  }, [navigate]);
+
+  // Android hardware Back is the app's normal exit gesture. Confirm before
+  // revoking the user's session; choosing No leaves the session untouched.
+  useEffect(() => {
+    if (!session) return;
+    const nativeApp = (window as Window & {
+      Capacitor?: { isNativePlatform?: () => boolean };
+    }).Capacitor?.isNativePlatform?.();
+    if (!nativeApp) return;
+
+    let disposed = false;
+    let listener: { remove: () => Promise<void> } | undefined;
+    void CapacitorApp.addListener("backButton", () => {
+      if (location.pathname.startsWith("/dashboard/")) {
+        if (window.confirm("Are you sure you want to log out of your EPHINTA account?")) {
+          void signOut().then(() => CapacitorApp.exitApp());
+        }
+        return;
+      }
+      navigate(-1);
+    }).then((handle) => {
+      if (disposed) void handle.remove();
+      else listener = handle;
+    }).catch((error) => {
+      console.error("Unable to register Android app-exit confirmation.", error);
+    });
+
+    return () => {
+      disposed = true;
+      void listener?.remove();
+    };
+  }, [session, location.pathname, navigate, signOut]);
   if (session && showOnboard) {
     return (
       <DeviceSecurityGate userId={session.id} onSignOut={signOut}>
