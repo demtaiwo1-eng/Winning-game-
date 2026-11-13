@@ -51,7 +51,7 @@ export function assertOpayTransfersEnabled() {
 }
 
 function baseUrl() {
-  const expectedHost = env.PAYMENT_MODE === "test"
+  const expectedHost = getRuntimePaymentMode() === "test"
     ? "sandbox-cashierapi.opayweb.com"
     : "cashierapi.opayweb.com";
   const configured = env.OPAY_TRANSFER_BASE_URL || `https://${expectedHost}`;
@@ -75,9 +75,10 @@ function baseUrl() {
 async function request<T>(path: string, payload: Record<string, unknown>, auth: "public" | "signature"): Promise<OpayEnvelope<T>> {
   assertOpayTransfersEnabled();
   const body = JSON.stringify(sortKeys(payload));
+  const credentials = opayCredentials();
   const token = auth === "public"
-    ? env.OPAY_PUBLIC_KEY!
-    : createHmac("sha512", env.OPAY_SECRET_KEY!).update(body).digest("hex");
+    ? credentials.publicKey!
+    : createHmac("sha512", credentials.secretKey!).update(body).digest("hex");
   const response = await fetch(`${baseUrl()}${path}`, {
     method: "POST",
     headers: {
