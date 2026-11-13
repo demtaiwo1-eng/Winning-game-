@@ -31,6 +31,7 @@ import {
   verifyPaystack,
   verifyStripe,
   verifyOpay,
+  getOpayWebhookSecret,
 } from "./providers";
 import { releaseBookingEscrow } from "./escrow.service";
 import { recordPlatformRevenue } from "./platformRevenue.service";
@@ -53,8 +54,8 @@ paymentsRouter.use(payoutsRouter);
 
 logger.info({
   opayMerchantConfigured: Boolean(env.OPAY_MERCHANT_ID),
-  opayPublicKeyConfigured: Boolean(env.OPAY_PUBLIC_KEY),
-  opaySecretConfigured: Boolean(env.OPAY_SECRET_KEY),
+  opayPublicKeyConfigured: Boolean(env.OPAY_TEST_PUBLIC_KEY || env.OPAY_PUBLIC_KEY),
+  opaySecretConfigured: Boolean(env.OPAY_TEST_SECRET_KEY || env.OPAY_SECRET_KEY),
   opayTransfersEnabled: env.OPAY_TRANSFERS_ENABLED === "true",
   paymentMode: env.PAYMENT_MODE,
 }, "OPay bank transfer configuration readiness");
@@ -203,11 +204,12 @@ paymentsRouter.post(
 function verifyWebhookSignature(provider: string, req: import("express").Request) {
   const rawBody = (req as import("express").Request & { rawBody?: Buffer }).rawBody;
   if (provider === "opay") {
-    if (!env.OPAY_SECRET_KEY) throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "OPay webhook verification is not configured");
+    const opayWebhookSecret = getOpayWebhookSecret();
+    if (!opayWebhookSecret) throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "OPay webhook verification is not configured for the selected mode");
     const payload = req.body?.payload;
     const received = String(req.body?.sha512 || "");
     if (req.body?.type !== "transaction-status" ||
-        !verifyOpayCallbackSignature(payload || {}, received, env.OPAY_SECRET_KEY)) {
+        !verifyOpayCallbackSignature(payload || {}, received, opayWebhookSecret)) {
       throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid OPay webhook signature");
     }
     return;
