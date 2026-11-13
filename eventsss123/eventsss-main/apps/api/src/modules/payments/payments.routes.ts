@@ -34,6 +34,7 @@ import {
 } from "./providers";
 import { releaseBookingEscrow } from "./escrow.service";
 import { recordPlatformRevenue } from "./platformRevenue.service";
+import { payoutsRouter, processPaystackTransferWebhook } from "./payouts.routes";
 import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_MS, RECONCILIATION_MAX_ATTEMPTS, RECONCILIATION_PROVIDER_MAX_WAIT_MS, RECONCILIATION_PROVIDER_MIN_INTERVAL_MS, reconciliationProviderNextAllowedAt } from "./reconciliationPolicy";
 import {
   assertVerifiedPayment,
@@ -45,6 +46,7 @@ import {
 
 
 export const paymentsRouter = Router();
+paymentsRouter.use(payoutsRouter);
 
 
 /** Create payment intent to fund wallet */
@@ -221,6 +223,16 @@ paymentsRouter.post(
     const provider = (req.params.provider as string).toLowerCase();
     if (!["paystack", "flutterwave", "stripe", "opay"].includes(provider)) throw new HttpError(404, "UNKNOWN_PROVIDER", "Unsupported payment provider");
     verifyWebhookSignature(provider, req);
+
+    // Transfer events are verified with the same Paystack HMAC signature,
+    // but settle a Payout rather than a wallet-deposit PaymentIntent.
+    if (provider === "paystack" && ["transfer.success", "transfer.failed", "transfer.reversed"].includes(String(req.body?.event || ""))) {
+      const event = String(req.body.event);
+      const transferData = req.body?.data || {};
+      const eventId = String(req.body?.id || `paystack:${event}:${transferData.reference || "unknown"}`);
+      const result = await processPaystackTransferWebhook(event, transferData, eventId);
+      return res.json({ ok: true, ...result });
+    }
 
     // OPay sends notifications for pending, failed and successful transactions.
     // Acknowledge non-success/refund events without attempting settlement.
@@ -988,20 +1000,6 @@ paymentsRouter.post(
   asyncHandler(async (req, res) => {
     const result = await releaseBookingEscrow(req.params.id, req.user!.id);
     res.json(result);
-  }),
-);
-
-/** External payouts are unavailable until a payout provider is integrated. */
-paymentsRouter.post(
-  "/payouts",
-  requireAuth,
-  requireRole("VENDOR", "AFFILIATE", "ADMIN"),
-  asyncHandler(async (req, res) => {
-    throw new HttpError(
-      501,
-      "PAYOUT_NOT_CONFIGURED",
-      "External payouts are not enabled; no wallet funds were moved.",
-    );
   }),
 );
 
