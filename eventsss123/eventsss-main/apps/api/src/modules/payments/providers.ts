@@ -7,6 +7,7 @@ import { createHmac } from "node:crypto";
 import { env } from "../../config/env";
 import { majorAmountToMinor } from "./webhookVerification";
 import { HttpError } from "../../lib/errors";
+import { getRuntimePaymentMode } from "./runtimePaymentMode";
 
 export type ProviderName = "paystack" | "flutterwave" | "stripe" | "opay" | "demo";
 
@@ -15,7 +16,7 @@ export function canUseDemoPayments(
 ): boolean {
   return (
     (options.nodeEnv ?? env.NODE_ENV) !== "production" &&
-    (options.paymentMode ?? env.PAYMENT_MODE) === "test"
+    (options.paymentMode ?? getRuntimePaymentMode()) === "demo"
   );
 }
 
@@ -32,7 +33,7 @@ export function canUseProductionTestMode(
 ): boolean {
   return (
     (options.nodeEnv ?? env.NODE_ENV) !== "production" ||
-    (options.paymentMode ?? env.PAYMENT_MODE) !== "test" ||
+    (options.paymentMode ?? getRuntimePaymentMode()) !== "test" ||
     (options.allowProductionTestMode ?? env.ALLOW_PRODUCTION_TEST_MODE) === "true"
   );
 }
@@ -50,21 +51,23 @@ function assertProviderKeyMode(
   livePattern: RegExp,
 ) {
   if (!key) return;
-  if (env.PAYMENT_MODE === "test" && livePattern.test(key)) {
+  if (getRuntimePaymentMode() === "test" && livePattern.test(key)) {
     throw new Error(`${name} live key cannot be used while PAYMENT_MODE=test`);
   }
-  if (env.PAYMENT_MODE === "live" && testPattern.test(key)) {
+  if (getRuntimePaymentMode() === "live" && testPattern.test(key)) {
     throw new Error(`${name} test key cannot be used while PAYMENT_MODE=live`);
   }
 }
 
 export function getPaymentMode() {
   assertPaymentMode();
-  return env.PAYMENT_MODE;
+  return getRuntimePaymentMode();
 }
 
 export function selectProvider(currency: string, country?: string): ProviderName {
   assertPaymentMode();
+
+  if (getRuntimePaymentMode() === "demo") return "demo";
 
   const c = currency.toUpperCase();
   const countryCode = country?.toUpperCase();
@@ -122,7 +125,7 @@ export async function initializeOpay(input: {
     throw new Error("OPay payment reference is required");
   }
 
-  const apiHost = env.PAYMENT_MODE === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
+  const apiHost = getRuntimePaymentMode() === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
   const cashierHost = env.PAYMENT_MODE === "test" ? "sandboxcashier.opaycheckout.com" : "cashier.opaycheckout.com";
   const res = await fetch(`https://${apiHost}/api/v1/international/cashier/create`, {
     method: "POST",
@@ -173,7 +176,7 @@ export async function initializeOpay(input: {
     provider: "opay",
     providerRef: data.data.reference || input.reference,
     authorizationUrl: cashierUrl.toString(),
-    mode: env.PAYMENT_MODE === "test" ? "sandbox" : "live",
+    mode: getRuntimePaymentMode() === "test" ? "sandbox" : "live",
   };
 }
 
