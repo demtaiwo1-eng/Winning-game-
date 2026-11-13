@@ -36,7 +36,7 @@ import {
 import { releaseBookingEscrow } from "./escrow.service";
 import { recordPlatformRevenue } from "./platformRevenue.service";
 import { payoutsRouter } from "./payouts.routes";
-import { paymentModeGuard } from "./runtimePaymentMode";
+import { paymentModeGuard, lockCurrentPaymentMode } from "./runtimePaymentMode";
 import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_MS, RECONCILIATION_MAX_ATTEMPTS, RECONCILIATION_PROVIDER_MAX_WAIT_MS, RECONCILIATION_PROVIDER_MIN_INTERVAL_MS, reconciliationProviderNextAllowedAt } from "./reconciliationPolicy";
 import {
   assertVerifiedPayment,
@@ -89,7 +89,9 @@ paymentsRouter.post(
     const reference = `${provider}_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
     // Persist the in-flight transaction before contacting OPay. The admin mode
     // switch refuses to proceed while this intent is pending.
-    const pendingIntent = await prisma.paymentIntent.create({
+    const pendingIntent = await prisma.$transaction(async (tx) => {
+      await lockCurrentPaymentMode(tx);
+      return tx.paymentIntent.create({
       data: {
         userId: req.user!.id,
         provider,
@@ -99,6 +101,7 @@ paymentsRouter.post(
         purpose,
         providerRef: reference,
       },
+      });
     });
     const callbackUrl = new URL(
       `/dashboard/${user.role.toLowerCase()}?tab=wallet&payment=return`,
