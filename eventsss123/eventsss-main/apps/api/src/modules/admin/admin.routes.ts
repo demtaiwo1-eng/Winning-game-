@@ -30,9 +30,10 @@ adminRouter.patch("/runtime/payment-mode", asyncHandler(async (req, res) => {
   const paymentMode = requested as typeof paymentModes[number];
   if (paymentMode === "live") {
     const missing = [
-      !process.env.OPAY_MERCHANT_ID && "OPAY_MERCHANT_ID",
-      !process.env.OPAY_PUBLIC_KEY && "OPAY_PUBLIC_KEY",
-      !process.env.OPAY_SECRET_KEY && "OPAY_SECRET_KEY",
+      !process.env.OPAY_LIVE_MERCHANT_ID && "OPAY_LIVE_MERCHANT_ID",
+      !process.env.OPAY_LIVE_PUBLIC_KEY && "OPAY_LIVE_PUBLIC_KEY",
+      !process.env.OPAY_LIVE_SECRET_KEY && "OPAY_LIVE_SECRET_KEY",
+      process.env.OPAY_LIVE_MODE_READY !== "true" && "OPAY_LIVE_MODE_READY=true (after OPay production access verification)",
       process.env.OPAY_TRANSFERS_ENABLED !== "true" && "OPAY_TRANSFERS_ENABLED",
       !process.env.OPAY_TRANSFER_BASE_URL && "OPAY_TRANSFER_BASE_URL",
       (process.env.OPAY_TRANSFER_BASE_URL || "").toLowerCase().includes("sandbox") && "OPAY_TRANSFER_BASE_URL must be production",
