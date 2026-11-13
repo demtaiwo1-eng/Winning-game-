@@ -14,6 +14,7 @@ const schema = z.object({
   COMMISSION_BPS: z.coerce.number().int().min(0).max(5000).default(200),
   WALLET_TOPUP_FEE_BPS: z.coerce.number().int().min(0).max(5000).optional(),
   BOOKING_COMMISSION_BPS: z.coerce.number().int().min(0).max(5000).optional(),
+  PAYOUT_FEE_BPS: z.coerce.number().int().min(0).max(5000).optional(),
   DEFAULT_CURRENCY: z.string().length(3).default("NGN"),
   APP_BASE_URL: z.string().url().default("http://localhost:4173"),
   API_BASE_URL: z.string().url().optional(),
