@@ -132,7 +132,7 @@ export async function initializeOpay(input: {
   }
 
   const apiHost = getRuntimePaymentMode() === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
-  const cashierHost = env.PAYMENT_MODE === "test" ? "sandboxcashier.opaycheckout.com" : "cashier.opaycheckout.com";
+  const cashierHost = getRuntimePaymentMode() === "test" ? "sandboxcashier.opaycheckout.com" : "cashier.opaycheckout.com";
   const res = await fetch(`https://${apiHost}/api/v1/international/cashier/create`, {
     method: "POST",
     headers: {
@@ -200,7 +200,7 @@ export async function verifyOpay(reference: string): Promise<{
   const requestBody = { country: "NG", reference };
   const body = JSON.stringify(requestBody);
   const signature = createHmac("sha512", env.OPAY_SECRET_KEY).update(body).digest("hex");
-  const apiHost = env.PAYMENT_MODE === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
+  const apiHost = getRuntimePaymentMode() === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
   const res = await fetch(`https://${apiHost}/api/v1/international/cashier/status`, {
     method: "POST",
     headers: {
