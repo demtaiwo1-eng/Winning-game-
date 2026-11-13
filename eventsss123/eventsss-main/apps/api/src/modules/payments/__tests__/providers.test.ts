@@ -96,6 +96,7 @@ describe("verifyOpay", () => {
     env.OPAY_SECRET_KEY = originalSecretKey;
     env.PAYMENT_MODE = originalPaymentMode;
     env.NODE_ENV = originalNodeEnv;
+    env.EPHINTA_ENVIRONMENT = originalEphintaEnvironment;
     env.OPAY_LIVE_MERCHANT_ID = originalLiveMerchantId;
     env.OPAY_LIVE_PUBLIC_KEY = originalLivePublicKey;
     env.OPAY_LIVE_SECRET_KEY = originalLiveSecretKey;
@@ -158,6 +159,7 @@ describe("verifyOpay", () => {
 describe("initializeOpay", () => {
   beforeEach(async () => {
     env.NODE_ENV = "test";
+    env.EPHINTA_ENVIRONMENT = "development";
     env.PAYMENT_MODE = "test";
     env.OPAY_MERCHANT_ID = "sandbox-merchant";
     env.OPAY_PUBLIC_KEY = "sandbox-public-key";
@@ -272,6 +274,7 @@ describe("initializeOpay", () => {
   });
 
   it("uses the OPay production endpoint only in live mode and validates the production cashier host", async () => {
+    env.EPHINTA_ENVIRONMENT = "production";
     env.PAYMENT_MODE = "live";
     env.OPAY_LIVE_MODE_READY = "true";
     env.OPAY_LIVE_MERCHANT_ID = "live-merchant";
