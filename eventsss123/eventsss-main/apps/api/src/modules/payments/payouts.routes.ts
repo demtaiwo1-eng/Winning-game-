@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { LedgerType, PayoutStatus } from "@prisma/client";
+import { LedgerType, PayoutStatus, type Payout } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { prisma } from "../../lib/prisma";
 import { env } from "../../config/env";
@@ -168,7 +168,7 @@ payoutsRouter.post(
     const reference = `ephinta_payout_${randomUUID().replace(/-/g, "").slice(0, 20)}`;
     // Create a processing marker before OPay account lookup. This prevents a
     // central mode switch while a payout request is in flight.
-    let payout;
+    let payout: Payout;
     try {
       payout = await prisma.$transaction(async (tx) => {
         await lockCurrentPaymentMode(tx);
