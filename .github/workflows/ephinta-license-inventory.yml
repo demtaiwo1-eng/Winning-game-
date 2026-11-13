@@ -1,4 +1,4 @@
-name: EPHINTA dependency licence inventory
+name: EPHINTA dependency licence inventory and notices
 
 on:
   pull_request:
@@ -14,6 +14,7 @@ permissions:
 jobs:
   inventory:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: eventsss123/eventsss-main
@@ -22,12 +23,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Generate dependency licence inventory
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - name: Install exact locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Generate dependency inventory and verbatim notices
         run: node scripts/qa/ephinta-license-inventory.mjs
-      - name: Upload licence inventory
+      - name: Upload licence inventory and notices
         uses: actions/upload-artifact@v4
         with:
           name: ephinta-dependency-license-inventory
-          path: eventsss123/eventsss-main/artifacts/ephinta-dependency-license-inventory.md
+          path: |
+            eventsss123/eventsss-main/artifacts/ephinta-dependency-license-inventory.md
+            eventsss123/eventsss-main/artifacts/ephinta-third-party-notices.md
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
