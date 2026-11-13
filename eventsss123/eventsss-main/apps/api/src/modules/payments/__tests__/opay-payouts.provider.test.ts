@@ -131,8 +131,9 @@ describe("OPay merchant bank transfers", () => {
     })).rejects.toMatchObject({ code: "OPAY_PAYOUT_DUPLICATE_REFERENCE" });
   });
 
-  it("treats OPay CLOSE as a final failed transfer", () => {
+  it("treats OPay CLOSE and CANCEL as final failed transfers", () => {
     expect(normalizeOpayTransferStatus("CLOSE")).toBe("failed");
+    expect(normalizeOpayTransferStatus("CANCEL")).toBe("failed");
   });
 
   it("classifies explicit OPay request rejection separately from transient errors", async () => {
