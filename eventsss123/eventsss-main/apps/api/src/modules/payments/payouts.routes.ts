@@ -76,21 +76,25 @@ export async function completePayout(reference: string, status: "success" | "fai
     if (!payout) return false;
 
     if (status === "success") {
-      if ([PayoutStatus.SUCCEEDED, PayoutStatus.REVERSED, PayoutStatus.FAILED].includes(payout.status)) return true;
+      const claim = await tx.payout.updateMany({
+        where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
+        data: { status: PayoutStatus.SUCCEEDED, providerTransferCode, providerTransferId, failureReason: null },
+      });
+      if (claim.count !== 1) return true;
       await recordPlatformRevenue(tx, {
         amountMinor: payout.feeMinor, currency: payout.currency,
         refType: "BANK_PAYOUT", refId: payout.id,
         idempotencyKey: `platform_payout_fee:${payout.id}`,
       });
-      await tx.payout.update({
-        where: { id: payout.id },
-        data: { status: PayoutStatus.SUCCEEDED, providerTransferCode, providerTransferId },
-      });
       return true;
     }
 
     if (status === "failed") {
-      if ([PayoutStatus.SUCCEEDED, PayoutStatus.FAILED, PayoutStatus.REVERSED].includes(payout.status)) return true;
+      const claim = await tx.payout.updateMany({
+        where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
+        data: { status: PayoutStatus.FAILED, failureReason: "The transfer provider reported a failed payout.", providerTransferCode, providerTransferId },
+      });
+      if (claim.count !== 1) return true;
       const wallet = await tx.wallet.update({
         where: { id: payout.walletId },
         data: { availableMinor: { increment: payout.amountMinor } },
@@ -103,16 +107,16 @@ export async function completePayout(reference: string, status: "success" | "fai
           idempotencyKey: `payout_refund:${payout.id}`,
         },
       });
-      await tx.payout.update({
-        where: { id: payout.id },
-        data: { status: PayoutStatus.FAILED, failureReason: "The transfer provider reported a failed payout.", providerTransferCode, providerTransferId },
-      });
       return true;
     }
 
-    // A reversal can arrive after an earlier success. Refund the full wallet
-    // debit and append a negative revenue journal entry to reverse the fee.
-    if (payout.status === PayoutStatus.REVERSED || payout.status === PayoutStatus.FAILED) return true;
+    // Claim a reversal once. It can follow a successful transfer or arrive
+    // before the success webhook if Paystack's events are delivered out of order.
+    const claim = await tx.payout.updateMany({
+      where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING, PayoutStatus.SUCCEEDED] } },
+      data: { status: PayoutStatus.REVERSED, failureReason: "The bank transfer was reversed by the provider.", providerTransferCode, providerTransferId },
+    });
+    if (claim.count !== 1) return true;
     const wallet = await tx.wallet.update({
       where: { id: payout.walletId },
       data: { availableMinor: { increment: payout.amountMinor } },
@@ -141,10 +145,6 @@ export async function completePayout(reference: string, status: "success" | "fai
         },
       });
     }
-    await tx.payout.update({
-      where: { id: payout.id },
-      data: { status: PayoutStatus.REVERSED, failureReason: "The bank transfer was reversed by the provider.", providerTransferCode, providerTransferId },
-    });
     return true;
   });
 }
