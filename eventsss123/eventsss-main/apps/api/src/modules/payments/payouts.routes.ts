@@ -283,15 +283,18 @@ payoutsRouter.post(
         }),
       });
       const data = transfer.data || {};
-      await prisma.payout.update({
-        where: { id: payout.id },
-        data: {
-          status: data.status === "success" ? PayoutStatus.SUCCEEDED : PayoutStatus.PROCESSING,
-          providerTransferCode: data.transfer_code,
-          providerTransferId: data.id === undefined ? undefined : String(data.id),
-        },
-      });
-      if (data.status === "success") await completePayout(reference, "success", data.transfer_code, data.id === undefined ? undefined : String(data.id));
+      if (data.status === "success") {
+        await completePayout(reference, "success", data.transfer_code, data.id === undefined ? undefined : String(data.id));
+      } else {
+        await prisma.payout.update({
+          where: { id: payout.id },
+          data: {
+            status: PayoutStatus.PROCESSING,
+            providerTransferCode: data.transfer_code,
+            providerTransferId: data.id === undefined ? undefined : String(data.id),
+          },
+        });
+      }
     } catch (error) {
       // Do not refund on network/ambiguous errors: Paystack may have accepted
       // the transfer. Keep the amount reserved for webhook/status reconciliation.
