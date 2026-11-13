@@ -1,0 +1,16 @@
+diff --git a/scripts/postgres/create-ess-db.sql b/scripts/postgres/create-ess-db.sql
+new file mode 100644
+--- /dev/null
++++ b/scripts/postgres/create-ess-db.sql
+@@ -0,0 +1,11 @@
++-- Creates the ESS role and database if they do not exist. Run with psql variables:
++--   psql -v db_user=... -v db_pass=... -v db_name=... -f create-ess-db.sql
++
++SELECT format('CREATE ROLE %I LOGIN PASSWORD %L CREATEDB', :'db_user', :'db_pass')
++WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'db_user') \gexec
++
++SELECT format('ALTER ROLE %I LOGIN PASSWORD %L CREATEDB', :'db_user', :'db_pass')
++WHERE EXISTS (SELECT FROM pg_roles WHERE rolname = :'db_user') \gexec
++
++SELECT format('CREATE DATABASE %I OWNER %I', :'db_name', :'db_user')
++WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'db_name') \gexec
