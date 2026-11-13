@@ -122,7 +122,7 @@ Run these from `eventsss123/eventsss-main`:
 | `npm run mobile:verify` | Run checks, build web assets, sync Capacitor, and verify Android |
 | `npm run qa:scale:plan` | Print the existing scale QA plan |
 | `npm run qa:scale` | Run the existing scale QA suite |
-| `node scripts/qa/ephinta-license-inventory.mjs` | Generate the npm dependency licence inventory |
+| `node scripts/qa/ephinta-license-inventory.mjs` | Generate the npm dependency licence inventory and verbatim package notices |\n| `npm run ip:verify` | Verify bundled assets have commercial rights records and removed third-party content stays absent |
 
 The bounded 5,000-identity single-node health campaign and the payment-functional simulation are QA tools. Their reports must clearly distinguish synthetic results from authenticated provider settlement and real customer activity.
 
@@ -149,7 +149,7 @@ The debug APK is generated under `apps/mobile/android/app/build/outputs/apk/debu
 
 ## Commercial access
 
-The requested commercial offer is **US$59.99** with access unlocked by a unique redemption code issued after verified purchase. This README records the intended offer; it does not claim that the paid-access gate, checkout, code issuance, or redemption flow is already deployed. Those controls must be implemented server-side, tested against replay/brute-force attempts, and connected to a verified payment method before customers are charged. The licence duration and whether the price is one-time or recurring must be stated in the checkout terms.
+The requested commercial offer is **US$59.99** with access unlocked by a unique redemption code issued after verified purchase. This README records the intended offer; it does not claim that the paid-access gate, checkout, code issuance, or redemption flow is already deployed. Those controls must be implemented server-side, tested against replay/brute-force attempts, and connected to a verified payment method before customers are charged. The licence duration and whether the price is one-time or recurring must be stated in the checkout terms. The GitHub source repository is currently public; make it private before treating source code as confidential or relying on the paid-access gate to protect source code.
 
 ## Documentation
 
