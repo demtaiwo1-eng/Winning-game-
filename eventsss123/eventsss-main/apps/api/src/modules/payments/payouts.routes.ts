@@ -26,6 +26,9 @@ function assertPayoutRail() {
   if (env.PAYMENT_MODE === "test" && !env.PAYSTACK_SECRET_KEY.startsWith("sk_test_")) {
     throw new HttpError(503, "PAYOUT_KEY_MODE_MISMATCH", "Test withdrawals require a Paystack test secret key.");
   }
+  if (env.NODE_ENV === "production" && env.PAYMENT_MODE === "test" && env.ALLOW_PRODUCTION_TEST_MODE !== "true") {
+    throw new HttpError(503, "PRODUCTION_TEST_MODE_DISABLED", "Sandbox withdrawals in production require ALLOW_PRODUCTION_TEST_MODE=true.");
+  }
   if (env.PAYMENT_MODE === "live" && !env.PAYSTACK_SECRET_KEY.startsWith("sk_live_")) {
     throw new HttpError(503, "PAYOUT_KEY_MODE_MISMATCH", "Live withdrawals require a Paystack live secret key.");
   }
@@ -283,8 +286,13 @@ payoutsRouter.post(
         }),
       });
       const data = transfer.data || {};
+      if (data.reference && data.reference !== reference) {
+        throw new Error("Paystack transfer reference did not match the submitted payout.");
+      }
       if (data.status === "success") {
         await completePayout(reference, "success", data.transfer_code, data.id === undefined ? undefined : String(data.id));
+      } else if (data.status === "failed") {
+        await completePayout(reference, "failed", data.transfer_code, data.id === undefined ? undefined : String(data.id));
       } else {
         await prisma.payout.update({
           where: { id: payout.id },
