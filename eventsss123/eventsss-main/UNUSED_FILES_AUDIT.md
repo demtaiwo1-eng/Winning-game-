@@ -7,6 +7,7 @@ This file records cleanup decisions and items that still need a deliberate owner
 ## Removed from the current release branch
 
 - 284 unused Remotion agent-skill, documentation, and example files that were unrelated to the EPHINTA runtime.
+- 2,431 tracked files from a stale parent-level `eventsss123/node_modules` installation, plus the obsolete parent-level package.json and package-lock.json. The maintained application has its own lockfile under `eventsss123/eventsss-main`.
 - Six Wale Waves-labelled MP3 recordings in two tracked locations (12 copies total). No commercial distribution permission was evidenced, so the recordings are no longer bundled.
 - Unused Wale Waves YouTube playlist OAuth/sync scripts, setup documentation, and scheduled workflow.
 - The unused `contracts/EventEscrowVault.sol` prototype, which had an MIT SPDX identifier and was not referenced by the active app.
@@ -24,6 +25,10 @@ The audio player is now disabled when no explicit rights-cleared source is confi
 
 - `apps/api/dist/` and `node_modules/` are generated/install outputs and should not be treated as authored source.
 - Build artifacts should be excluded from source control unless a specific release workflow requires them.
+
+## Dependency hygiene
+
+The repository-wide `.gitignore` now excludes `node_modules`, build outputs, and environment files at every directory level. The IP release gate fails if a dependency installation directory is committed again.
 
 ## Release rule
 
