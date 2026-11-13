@@ -69,7 +69,7 @@ export async function completePayout(reference: string, status: "success" | "fai
     }
 
     // Claim a reversal once. It can follow a successful transfer or arrive
-    // before the success webhook if Paystack's events are delivered out of order.
+    // before a later OPay status enquiry confirms settlement.
     const claim = await tx.payout.updateMany({
       where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING, PayoutStatus.SUCCEEDED] } },
       data: { status: PayoutStatus.REVERSED, failureReason: "The bank transfer was reversed by the provider.", providerTransferCode, providerTransferId },
@@ -201,45 +201,26 @@ const amountRaw = String(req.body.amountMinor ?? "");
       throw error;
     }
 
-    // The provider is funded from the merchant's Paystack balance. The
-    // customer wallet debit remains reserved until a signed final status arrives.
     try {
-      const transfer = await paystack<TransferData>("/transfer", {
-        method: "POST",
-        body: JSON.stringify({
-          source: "balance", amount: Number(netAmountMinor), recipient: recipient.data.recipient_code,
-          reference, currency: "NGN", reason: "EPHINTA vendor wallet withdrawal",
-        }),
+      const transfer = await opayCreateBankTransfer({
+        reference, amountMinor: netAmountMinor, accountNumber, bankCode, accountName,
+        reason: "EPHINTA vendor wallet withdrawal",
       });
-      const data = transfer.data || {};
-      if (data.reference !== reference || data.currency?.toUpperCase() !== "NGN" ||
-          data.amount === undefined || BigInt(String(data.amount)) !== netAmountMinor) {
-        throw new Error("Paystack transfer amount, currency, or reference did not match the submitted payout.");
-      }
-      if (data.status === "success") {
-        await completePayout(reference, "success", data.transfer_code, data.id === undefined ? undefined : String(data.id));
-      } else if (data.status === "failed") {
-        await completePayout(reference, "failed", data.transfer_code, data.id === undefined ? undefined : String(data.id));
-      } else {
-        await prisma.payout.updateMany({
-          where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
-          data: {
-            status: PayoutStatus.PROCESSING,
-            providerTransferCode: data.transfer_code,
-            providerTransferId: data.id === undefined ? undefined : String(data.id),
-          },
-        });
-      }
+      const status = normalizeOpayTransferStatus(transfer.status);
+      if (status === "success") await completePayout(reference, "success", undefined, String(transfer.orderNo));
+      else if (status === "failed") await completePayout(reference, "failed", undefined, String(transfer.orderNo));
+      else if (status === "reversed") await completePayout(reference, "reversed", undefined, String(transfer.orderNo));
+      else await prisma.payout.updateMany({
+        where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
+        data: { status: PayoutStatus.PROCESSING, providerTransferId: String(transfer.orderNo) },
+      });
     } catch (error) {
-      if (error instanceof HttpError && error.code === "PAYOUT_PROVIDER_ERROR") {
-        // A definite provider rejection means no transfer was queued.
+      if (error instanceof HttpError && error.code === "OPAY_PAYOUT_PROVIDER_ERROR") {
         await completePayout(reference, "failed");
       } else {
-        // Do not refund on network/ambiguous errors: Paystack may have accepted
-        // the transfer. Keep the amount reserved and reconcile by reference.
         await prisma.payout.updateMany({
           where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
-          data: { status: PayoutStatus.PROCESSING, failureReason: "Provider response pending reconciliation." },
+          data: { status: PayoutStatus.PROCESSING, failureReason: "OPay response pending status reconciliation." },
         });
       }
     }
@@ -248,33 +229,8 @@ const amountRaw = String(req.body.amountMinor ?? "");
     res.status(202).json({
       payout: publicPayout(finalPayout), replayed: false,
       feePolicy: { rateBps: env.PAYOUT_FEE_BPS ?? env.COMMISSION_BPS, chargedOn: "gross wallet debit" },
-      message: "Withdrawal submitted. Funds remain reserved until Paystack confirms the final bank-transfer status.",
+      message: "Withdrawal submitted to OPay. Funds remain reserved until OPay confirms the final bank-transfer status.",
     });
-  }),
-);
-
-payoutsRouter.post(
-  "/payouts/:id/finalize",
-  requireAuth,
-  requireRole("ADMIN"),
-  asyncHandler(async (req, res) => {
-const otp = String(req.body.otp || "");
-    if (!/^\d{4,8}$/.test(otp)) throw new HttpError(400, "INVALID_OTP", "Enter the 4–8 digit Paystack transfer OTP.");
-    const payout = await prisma.payout.findFirst({ where: { id: req.params.id } });
-    if (!payout || payout.userId !== req.user!.id && req.user!.role !== "ADMIN") throw new HttpError(404, "PAYOUT_NOT_FOUND", "Payout not found.");
-    if (!payout.providerTransferCode) throw new HttpError(409, "TRANSFER_NOT_READY", "The transfer is not awaiting OTP approval.");
-    const result = await paystack<TransferData>("/transfer/finalize_transfer", {
-      method: "POST", body: JSON.stringify({ transfer_code: payout.providerTransferCode, otp }),
-    });
-    const data = result.data || {};
-    const transferMatches = data.reference === payout.reference &&
-      data.currency?.toUpperCase() === payout.currency &&
-      data.amount !== undefined && BigInt(String(data.amount)) === payout.netAmountMinor;
-    if (!transferMatches) throw new HttpError(502, "PAYOUT_TRANSFER_MISMATCH", "Paystack's finalized transfer details do not match this payout.");
-    if (data.status === "success") await completePayout(payout.reference, "success", data.transfer_code, data.id === undefined ? undefined : String(data.id));
-    else if (data.status === "failed") await completePayout(payout.reference, "failed", data.transfer_code, data.id === undefined ? undefined : String(data.id));
-    const updated = await prisma.payout.findUniqueOrThrow({ where: { id: payout.id } });
-    res.json({ payout: publicPayout(updated) });
   }),
 );
 
@@ -302,25 +258,22 @@ payoutsRouter.get(
     if (!payout) throw new HttpError(404, "PAYOUT_NOT_FOUND", "Payout not found.");
     let current = payout;
     if (payout.status === PayoutStatus.PENDING || payout.status === PayoutStatus.PROCESSING) {
+      if (!payout.providerTransferId) return res.json({ payout: publicPayout(current) });
       try {
-        const verified = await paystack<TransferData>(`/transfer/verify/${encodeURIComponent(payout.reference)}`);
-        const transfer = verified.data || {};
-        const verifiedMatches = transfer.reference === payout.reference &&
-          transfer.currency?.toUpperCase() === payout.currency &&
-          transfer.amount !== undefined && BigInt(String(transfer.amount)) === payout.netAmountMinor;
-        if (verifiedMatches && transfer.status === "success") {
-          await completePayout(payout.reference, "success", transfer.transfer_code, transfer.id === undefined ? undefined : String(transfer.id));
-        } else if (verifiedMatches && (transfer.status === "failed" || transfer.status === "reversed")) {
-          await completePayout(payout.reference, transfer.status, transfer.transfer_code, transfer.id === undefined ? undefined : String(transfer.id));
-        } else if (verifiedMatches && transfer.transfer_code && transfer.transfer_code !== payout.providerTransferCode) {
-          await prisma.payout.update({
-            where: { id: payout.id },
-            data: { status: PayoutStatus.PROCESSING, providerTransferCode: transfer.transfer_code, providerTransferId: transfer.id === undefined ? undefined : String(transfer.id) },
-          });
+        const transfer = await opayGetBankTransferStatus(payout.reference, payout.providerTransferId);
+        if (transfer.amount !== undefined && BigInt(String(transfer.amount)) !== payout.netAmountMinor) {
+          throw new HttpError(502, "OPAY_PAYOUT_AMOUNT_MISMATCH", "OPay's transfer amount does not match this withdrawal.");
+        }
+        if (transfer.currency && transfer.currency.toUpperCase() !== payout.currency) {
+          throw new HttpError(502, "OPAY_PAYOUT_CURRENCY_MISMATCH", "OPay's transfer currency does not match this withdrawal.");
+        }
+        const status = normalizeOpayTransferStatus(transfer.status);
+        if (status === "success" || status === "failed" || status === "reversed") {
+          await completePayout(payout.reference, status, undefined, payout.providerTransferId);
         }
         current = await prisma.payout.findUniqueOrThrow({ where: { id: payout.id } });
       } catch {
-        // Status polling is best-effort; the signed webhook remains authoritative.
+        // OPay merchant transfers are reconciled through provider status enquiries.
       }
     }
     res.json({ payout: publicPayout(current) });
