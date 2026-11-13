@@ -76,7 +76,13 @@ async function request<T>(path: string, payload: Record<string, unknown>, auth: 
   });
   const result = await response.json().catch(() => ({})) as OpayEnvelope<T>;
   if (!response.ok || result.code !== "00000") {
-    throw new HttpError(502, result.code === "20000" ? "OPAY_PAYOUT_DUPLICATE_REFERENCE" : "OPAY_PAYOUT_PROVIDER_ERROR", result.message || `OPay transfer request failed (${response.status}).`);
+    const providerCode = String(result.code || "");
+    const errorCode = ["00005", "20000"].includes(providerCode)
+      ? "OPAY_PAYOUT_DUPLICATE_REFERENCE"
+      : ["00004", "02000", "02001", "02002", "02003", "02007", "C1004", "C1009", "C_1111"].includes(providerCode)
+        ? "OPAY_PAYOUT_PROVIDER_REJECTED"
+        : "OPAY_PAYOUT_PROVIDER_ERROR";
+    throw new HttpError(502, errorCode, result.message || "OPay transfer request failed.");
   }
   return result;
 }
