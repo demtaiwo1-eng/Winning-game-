@@ -192,7 +192,7 @@ export async function initializeOpay(input: {
     cashierUrl.password ||
     cashierUrl.port
   ) {
-    throw new Error("OPay returned a cashier URL outside the approved sandbox host");
+    throw new Error("OPay returned a cashier URL outside the approved host for the selected mode");
   }
 
   return {
@@ -223,7 +223,7 @@ export async function verifyOpay(reference: string): Promise<{
     method: "POST",
     headers: {
       Authorization: `Bearer ${signature}`,
-      MerchantId: env.OPAY_MERCHANT_ID,
+      MerchantId: credentials.merchantId,
       "Content-Type": "application/json",
     },
     body,
