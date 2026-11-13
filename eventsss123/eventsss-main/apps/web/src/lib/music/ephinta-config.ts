@@ -1,22 +1,28 @@
-export const EPHINTA_MUSIC = {
-  priorityTracks: [
-    "/audio/Here%20we%20are-1%20-Wale%20Waves_ESS_Wedding.mp3",
-    "/audio/Here%20we%20are-2%20-Wale%20Waves_ESS_Wedding.mp3",
-    "/audio/Welcome,%20Little%20One-1-Wale%20Waves_ESS_Naming.mp3",
-    "/audio/Welcome,%20Little%20One-2-Wale%20Waves_ESS_Naming.mp3",
-    "/audio/You%20Will%20Live%20in%20Our%20Hearts-1-Wale%20Waves_ESS_Burials.mp3",
-    "/audio/You%20Will%20Live%20in%20Our%20Hearts-2-Wale%20Waves_ESS_Burials.mp3",
-  ],
-  categoryTracks: {
-    wedding: ["/audio/Here%20we%20are-1%20-Wale%20Waves_ESS_Wedding.mp3", "/audio/Here%20we%20are-2%20-Wale%20Waves_ESS_Wedding.mp3"],
-    naming: ["/audio/Welcome,%20Little%20One-1-Wale%20Waves_ESS_Naming.mp3", "/audio/Welcome,%20Little%20One-2-Wale%20Waves_ESS_Naming.mp3"],
-    burial: ["/audio/You%20Will%20Live%20in%20Our%20Hearts-1-Wale%20Waves_ESS_Burials.mp3", "/audio/You%20Will%20Live%20in%20Our%20Hearts-2-Wale%20Waves_ESS_Burials.mp3"],
-  },
-} as const;
-export function safeEphintaPlaylistUrl(value: string): string | null {
+/**
+ * Audio may only be enabled when the platform owner configures a source that
+ * EPHINTA has permission to stream commercially. No third-party recordings are
+ * bundled or selected by default.
+ */
+export function safeLicensedAudioUrl(value: string): string | null {
+  const candidate = value.trim();
+  if (!candidate || candidate.startsWith("//")) return null;
   try {
-    const url = new URL(value);
-    return url.protocol === "https:" && url.hostname === "music.youtube.com" &&
-      url.pathname === "/playlist" && url.searchParams.has("list") ? url.toString() : null;
-  } catch { return null; }
+    const url = new URL(candidate, "https://ephinta.invalid");
+    if (url.protocol !== "https:") return null;
+    if (url.origin === "https://ephinta.invalid") {
+      return url.pathname.startsWith("/") ? url.pathname + url.search + url.hash : null;
+    }
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
+
+const configuredAudioUrl =
+  typeof import.meta !== "undefined" && import.meta.env
+    ? import.meta.env.VITE_EPHINTA_LICENSED_AUDIO_URL || ""
+    : "";
+
+export const EPHINTA_MUSIC = {
+  licensedAudioUrl: safeLicensedAudioUrl(configuredAudioUrl),
+} as const;
