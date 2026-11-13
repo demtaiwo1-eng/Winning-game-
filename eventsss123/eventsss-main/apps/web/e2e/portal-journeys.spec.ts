@@ -182,6 +182,9 @@ for (const portal of portals) {
       await page.getByRole("button", { name: "Refresh", exact: true }).first().click({ force: true });
       await expect(page.getByRole("heading", { name: "Platform operations" })).toBeVisible();
       await expect(page.getByRole("heading", { name: "Central payment mode" })).toBeVisible();
+      await page.getByRole("radio", { name: /DEMO/ }).check();
+      await page.getByRole("button", { name: "Apply globally" }).click();
+      await expect(page.getByRole("status").filter({ hasText: /Central payment mode changed to DEMO/ })).toBeVisible();
     }
 
     await page.evaluate(() => { localStorage.removeItem("ess_user"); localStorage.removeItem("ess_access_token"); localStorage.removeItem("ess_refresh_token"); });
