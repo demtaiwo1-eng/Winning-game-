@@ -6,3 +6,5 @@ These are preserved copies moved out of the active application tree for a verifi
 Do not run these copies from this folder. Some were one-off repair/install scripts and can rewrite source files, delete local dependency state, or depend on obsolete Codespaces/Codex workflows.
 
 After the staged-cleanup CI passes, the originals are removed in a separate commit. The quarantine copies remain available for recovery/review in this maintenance branch until the owner approves final removal.
+
+The Android cleanup verification workflow uses the preinstalled runner Android SDK directly; it does not invoke a redundant SDK setup action that attempts to install the removed legacy `tools` package.
