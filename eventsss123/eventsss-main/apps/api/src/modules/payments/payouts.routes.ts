@@ -284,3 +284,59 @@ payoutsRouter.get(
     res.json({ payout: publicPayout(current) });
   }),
 );
+
+
+export async function reconcilePendingPayouts(batchSize = 20) {
+  if (env.OPAY_TRANSFERS_ENABLED !== "true") {
+    return { checked: 0, succeeded: 0, failed: 0, reversed: 0, errors: 0, skipped: "OPAY_TRANSFERS_DISABLED" };
+  }
+  const cutoff = new Date(Date.now() - 30_000);
+  const candidates = await prisma.payout.findMany({
+    where: {
+      status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] },
+      updatedAt: { lte: cutoff },
+    },
+    orderBy: { updatedAt: "asc" },
+    take: Math.min(Math.max(batchSize, 1), 50),
+  });
+  const totals = { checked: 0, succeeded: 0, failed: 0, reversed: 0, errors: 0 };
+  for (const payout of candidates) {
+    totals.checked += 1;
+    try {
+      const transfer = await opayGetBankTransferStatus(payout.reference, payout.providerTransferId ?? undefined);
+      if (transfer.amount !== undefined && BigInt(String(transfer.amount)) !== payout.netAmountMinor) {
+        throw new HttpError(502, "OPAY_PAYOUT_AMOUNT_MISMATCH", "OPay transfer amount did not match the reserved payout.");
+      }
+      if (transfer.currency && transfer.currency.toUpperCase() !== payout.currency) {
+        throw new HttpError(502, "OPAY_PAYOUT_CURRENCY_MISMATCH", "OPay transfer currency did not match the reserved payout.");
+      }
+      if (transfer.orderNo && transfer.orderNo !== payout.providerTransferId) {
+        await prisma.payout.updateMany({
+          where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
+          data: { status: PayoutStatus.PROCESSING, providerTransferId: transfer.orderNo },
+        });
+      }
+      const status = normalizeOpayTransferStatus(transfer.status);
+      if (status === "success" || status === "failed" || status === "reversed") {
+        await completePayout(payout.reference, status, undefined, transfer.orderNo || payout.providerTransferId || undefined);
+        if (status === "success") totals.succeeded += 1;
+        else if (status === "failed") totals.failed += 1;
+        else totals.reversed += 1;
+      } else {
+        await prisma.payout.updateMany({
+          where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
+          data: { status: PayoutStatus.PROCESSING, updatedAt: new Date() },
+        });
+      }
+    } catch {
+      totals.errors += 1;
+      // Back off this item until the next reconciliation interval; never refund on an ambiguous enquiry failure.
+      await prisma.payout.updateMany({
+        where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
+        data: { updatedAt: new Date() },
+      }).catch(() => undefined);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  return totals;
+}
