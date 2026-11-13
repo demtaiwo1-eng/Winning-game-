@@ -83,7 +83,6 @@ function assertProviderKeyMode(
 }
 
 export function getPaymentMode() {
-  assertPaymentMode();
   return getRuntimePaymentMode();
 }
 
