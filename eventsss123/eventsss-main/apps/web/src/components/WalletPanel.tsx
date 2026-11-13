@@ -104,12 +104,12 @@ export default function WalletPanel({
         amountMinor,
         purpose: "WALLET_DEPOSIT",
       });
-      if (mode === "live") {
+      if (mode === "live" || mode === "sandbox") {
         const providerUrl = new URL(checkoutUrl);
         if (providerUrl.protocol !== "https:") {
           throw new Error("Payment provider returned an insecure checkout URL.");
         }
-        setMsg(`Redirecting to ${intent.provider} secure checkout…`);
+        setMsg(`Redirecting to ${intent.provider === "opay" ? "OPay" : intent.provider} secure checkout…`);
         window.location.assign(providerUrl.toString());
         return;
       }
@@ -191,7 +191,7 @@ export default function WalletPanel({
   return (
     <section className="ess-panel ess-wallet-panel">
       <div className="ess-wallet-badge" style={{ marginBottom: 12 }}>
-        Wallet deposits use the configured payment provider. Simulated deposits are available only in non-production test mode.
+        OPay is EPHINTA's Nigerian payment provider. NGN deposits and Nigerian bank withdrawals use OPay; payments are credited only after provider confirmation.
       </div>
       <div className="ess-wallet-head">
         <div>
@@ -281,7 +281,9 @@ export default function WalletPanel({
       <div className="ess-wallet-card" style={{ marginTop: 16 }}>
         <strong>Add funds</strong>
         <p className="ess-muted" style={{ margin: "6px 0 12px" }}>
-          Use the configured payment provider. Simulated deposits are restricted to non-production test mode.
+          {depositCurrency === "NGN"
+            ? "Pay securely with OPay. Your wallet is credited after OPay confirms the deposit."
+            : "GHS deposits use the configured Ghana payment rail. Select NGN to use OPay."}
         </p>
         <div className="ess-form-grid">
           <label>
@@ -387,7 +389,7 @@ export default function WalletPanel({
               <div className="ess-wallet-rows">
                 {payouts.map((payout) => (
                   <div key={payout.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--ess-border, #ddd)" }}>
-                    <span>{payout.accountName} · {payout.accountNumber} · {payout.status}</span>
+                    <span>OPay bank transfer · {payout.accountName} · {payout.accountNumber} · {payout.status}</span>
                     <strong>{formatMoney(payout.netAmountMinor, "NGN", locale)} sent</strong>
                     <small className="ess-muted">Fee {formatMoney(payout.feeMinor, "NGN", locale)} · {new Date(payout.createdAt).toLocaleString()}</small>
                     {["PENDING", "PROCESSING"].includes(payout.status) && (
