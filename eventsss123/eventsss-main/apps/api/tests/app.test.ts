@@ -171,7 +171,7 @@ describe("api foundation (DB-free)", () => {
       .send({ amountMinor: "10000", accountNumber: "0123456789", bankCode: "058", confirmAccountName: true });
     expect(res.status).toBe(503);
     expect(res.body.error.code).toBe("PAYOUTS_DISABLED");
-    expect(res.body.error.message).toContain("not configured");
+    expect(res.body.error.message).toContain("not enabled");
   });
   it("protects vendor listing availability from unauthenticated and non-vendor access", async () => {
     const path = "/api/v1/vendor/listings/listing-id/availability";
