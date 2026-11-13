@@ -77,7 +77,7 @@ async function request<T>(path: string, payload: Record<string, unknown>, auth: 
   const result = await response.json().catch(() => ({})) as OpayEnvelope<T>;
   if (!response.ok || result.code !== "00000") {
     const providerCode = String(result.code || "");
-    const errorCode = ["00005", "20000"].includes(providerCode)
+    const errorCode = ["00005", "02004", "20000"].includes(providerCode)
       ? "OPAY_PAYOUT_DUPLICATE_REFERENCE"
       : ["00004", "02000", "02001", "02002", "02003", "02007", "C1004", "C1009", "C_1111"].includes(providerCode)
         ? "OPAY_PAYOUT_PROVIDER_REJECTED"
@@ -154,7 +154,7 @@ export async function opayGetBankTransferStatus(reference: string, orderNo?: str
 export function normalizeOpayTransferStatus(status: string | undefined): "success" | "failed" | "reversed" | "processing" {
   const normalized = String(status || "").toUpperCase();
   if (["SUCCESS", "SUCCEEDED", "COMPLETED"].includes(normalized)) return "success";
-  if (["FAIL", "FAILED", "REJECTED", "CANCELLED"].includes(normalized)) return "failed";
+  if (["FAIL", "FAILED", "REJECTED", "CANCELLED", "CLOSE"].includes(normalized)) return "failed";
   if (["REVERSED", "REVERSAL"].includes(normalized)) return "reversed";
   return "processing";
 }

@@ -5,6 +5,7 @@ import { prisma } from "./lib/prisma";
 import { ensureReferenceData } from "./lib/reference-data";
 import { reconcilePendingPayments } from "./modules/payments/payments.routes";
 import { reconcilePendingPayouts } from "./modules/payments/payouts.routes";
+import { opayListBanks } from "./modules/payments/opay-payouts.provider";
 
 async function startServer() {
   await prisma.$connect();
@@ -12,6 +13,14 @@ async function startServer() {
   logger.info("EPHINTA reference categories and plans are ready");
 
   const server = createApp().listen(env.PORT, () => logger.info(`ESS API listening on :${env.PORT}`));
+  if (env.OPAY_TRANSFERS_ENABLED === "true") {
+    void opayListBanks()
+      .then((banks) => logger.info({ opayTransferBankCount: banks.length }, "OPay Merchant Transfer API connectivity check passed"))
+      .catch((error: unknown) => logger.warn({
+        errorType: error instanceof Error ? error.name : "UnknownError",
+        errorCode: typeof error === "object" && error !== null && "code" in error ? String(error.code) : undefined,
+      }, "OPay Merchant Transfer API connectivity check failed"));
+  }
   let reconciliationInProgress = false;
   const reconciliationTimer = env.NODE_ENV === "test"
     ? undefined
