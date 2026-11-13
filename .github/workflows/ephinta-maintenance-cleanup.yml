@@ -3,6 +3,7 @@ name: EPHINTA staged cleanup full verification
 on:
   pull_request:
     branches:
+      - main
       - release/paid-access-readme-payment-audit-20261113
     paths:
       - "maintenance/quarantine/**"
