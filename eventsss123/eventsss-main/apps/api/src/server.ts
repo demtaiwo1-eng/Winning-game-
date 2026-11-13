@@ -4,6 +4,7 @@ import { logger } from "./lib/logger";
 import { prisma } from "./lib/prisma";
 import { ensureReferenceData } from "./lib/reference-data";
 import { reconcilePendingPayments } from "./modules/payments/payments.routes";
+import { reconcilePendingPayouts } from "./modules/payments/payouts.routes";
 
 async function startServer() {
   await prisma.$connect();
@@ -20,13 +21,18 @@ async function startServer() {
           return;
         }
         reconciliationInProgress = true;
-        void reconcilePendingPayments()
-          .then((result) => logger.info(result, "Pending payment reconciliation completed"))
-          .catch((error: unknown) => {
-            logger.warn(
-              { errorType: error instanceof Error ? error.name : "UnknownError" },
-              "Pending payment reconciliation failed",
-            );
+        void Promise.allSettled([reconcilePendingPayments(), reconcilePendingPayouts()])
+          .then(([payments, payouts]) => {
+            if (payments.status === "fulfilled" && payouts.status === "fulfilled") {
+              logger.info({ payments: payments.value, payouts: payouts.value }, "Payment and OPay payout reconciliation completed");
+            } else {
+              logger.warn({
+                payments: payments.status,
+                payouts: payouts.status,
+                paymentError: payments.status === "rejected" ? (payments.reason instanceof Error ? payments.reason.name : "UnknownError") : undefined,
+                payoutError: payouts.status === "rejected" ? (payouts.reason instanceof Error ? payouts.reason.name : "UnknownError") : undefined,
+              }, "Payment and OPay payout reconciliation completed with errors");
+            }
           })
           .finally(() => {
             reconciliationInProgress = false;

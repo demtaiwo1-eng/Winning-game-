@@ -34,7 +34,7 @@ import {
 } from "./providers";
 import { releaseBookingEscrow } from "./escrow.service";
 import { recordPlatformRevenue } from "./platformRevenue.service";
-import { payoutsRouter, processPaystackTransferWebhook } from "./payouts.routes";
+import { payoutsRouter } from "./payouts.routes";
 import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_MS, RECONCILIATION_MAX_ATTEMPTS, RECONCILIATION_PROVIDER_MAX_WAIT_MS, RECONCILIATION_PROVIDER_MIN_INTERVAL_MS, reconciliationProviderNextAllowedAt } from "./reconciliationPolicy";
 import {
   assertVerifiedPayment,
@@ -50,11 +50,12 @@ export const paymentsRouter = Router();
 paymentsRouter.use(payoutsRouter);
 
 logger.info({
-  paystackSecretConfigured: Boolean(env.PAYSTACK_SECRET_KEY),
-  paystackWebhookSecretConfigured: Boolean(env.PAYSTACK_WEBHOOK_SECRET),
-  paystackTransfersEnabled: env.PAYSTACK_TRANSFERS_ENABLED === "true",
+  opayMerchantConfigured: Boolean(env.OPAY_MERCHANT_ID),
+  opayPublicKeyConfigured: Boolean(env.OPAY_PUBLIC_KEY),
+  opaySecretConfigured: Boolean(env.OPAY_SECRET_KEY),
+  opayTransfersEnabled: env.OPAY_TRANSFERS_ENABLED === "true",
   paymentMode: env.PAYMENT_MODE,
-}, "Paystack payout configuration readiness");
+}, "OPay bank transfer configuration readiness");
 
 
 /** Create payment intent to fund wallet */
@@ -255,16 +256,6 @@ paymentsRouter.post(
     // Paystack endpoint health checks are signed ping events, not payments.
     if (provider === "paystack" && String(req.body?.event || "") === "ping") {
       return res.json({ ok: true, ping: true });
-    }
-
-    // Transfer events are verified with the same Paystack HMAC signature,
-    // but settle a Payout rather than a wallet-deposit PaymentIntent.
-    if (provider === "paystack" && ["transfer.success", "transfer.failed", "transfer.reversed"].includes(String(req.body?.event || ""))) {
-      const event = String(req.body.event);
-      const transferData = req.body?.data || {};
-      const eventId = String(req.body?.id || `paystack:${event}:${transferData.reference || "unknown"}`);
-      const result = await processPaystackTransferWebhook(event, transferData, eventId);
-      return res.json({ ok: true, ...result });
     }
 
     // OPay sends notifications for pending, failed and successful transactions.
