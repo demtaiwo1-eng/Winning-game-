@@ -162,14 +162,14 @@ describe("api foundation (DB-free)", () => {
     expect(res.status).toBe(403);
     expect(res.body.error.code).toBe("FORBIDDEN");
   });
-  it("keeps external bank payouts disabled until Paystack credentials are configured", async () => {
+  it("keeps external bank payouts disabled until OPay merchant transfers are enabled", async () => {
     const token = jwt.sign({ role: "VENDOR" }, env.JWT_SECRET, { subject: "vendor-user" });
     const res = await request(app)
       .post("/api/v1/payments/payouts")
       .set("Authorization", `Bearer ${token}`)
       .send({ amountMinor: "10000", accountNumber: "0123456789", bankCode: "058", confirmAccountName: true });
     expect(res.status).toBe(503);
-    expect(res.body.error.code).toBe("PAYOUT_PROVIDER_NOT_CONFIGURED");
+    expect(res.body.error.code).toBe("PAYOUTS_DISABLED");
     expect(res.body.error.message).toContain("not configured");
   });
   it("protects vendor listing availability from unauthenticated and non-vendor access", async () => {
