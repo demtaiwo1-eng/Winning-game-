@@ -520,10 +520,8 @@ const personas: Persona[] = locations.map(([country, city], index) => ({
 }));
 
 test.describe("Worldwide event-planner personas (100 countries)", () => {
-  // Run sequentially so the visible headed run is easy to follow and does not
-  // overwhelm the local API or browser with 100 simultaneous journeys.
-  test.describe.configure({ mode: "serial" });
-
+  // The package scripts set --workers=1 for a visible, sequential run.
+  // Keep tests independent so a single persona failure never skips the other 99.
   for (const persona of personas) {
     test(`persona ${String(persona.index).padStart(3, "0")} — ${persona.country}: ${persona.occasion}`, async ({ page }) => {
       const eventName = `QA ${String(persona.index).padStart(3, "0")} — ${persona.occasion} — ${persona.country}`;
