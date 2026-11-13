@@ -120,8 +120,8 @@ const summary = {
   users: USERS,
   passed: results.length,
   failed: 0,
-  assertionsPerUser: 11,
-  totalAssertions: USERS * 11,
+  assertionsPerUser: 12,
+  totalAssertions: USERS * 12,
   feePolicyBps: Number(BPS),
   modes: Object.fromEntries(Object.entries(byMode).map(([mode, item]) => [mode, {
     users: item.users,
