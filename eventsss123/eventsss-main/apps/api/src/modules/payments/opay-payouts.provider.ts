@@ -1,8 +1,20 @@
 import { createHmac } from "node:crypto";
 import { env } from "../../config/env";
 import { HttpError } from "../../lib/errors";
+import { getRuntimePaymentMode } from "./runtimePaymentMode";
 
 type OpayEnvelope<T> = { code?: string; message?: string; data?: T };
+
+function opayCredentials() {
+  if (getRuntimePaymentMode() === "live") {
+    return { merchantId: env.OPAY_LIVE_MERCHANT_ID, publicKey: env.OPAY_LIVE_PUBLIC_KEY, secretKey: env.OPAY_LIVE_SECRET_KEY };
+  }
+  return {
+    merchantId: env.OPAY_TEST_MERCHANT_ID || env.OPAY_MERCHANT_ID,
+    publicKey: env.OPAY_TEST_PUBLIC_KEY || env.OPAY_PUBLIC_KEY,
+    secretKey: env.OPAY_TEST_SECRET_KEY || env.OPAY_SECRET_KEY,
+  };
+}
 export type OpayBank = { name?: string; code?: string };
 export type OpayTransfer = {
   reference?: string;
@@ -24,25 +36,31 @@ function sortKeys(value: unknown): unknown {
 }
 
 export function assertOpayTransfersEnabled() {
+  const credentials = opayCredentials();
+  if (getRuntimePaymentMode() === "demo") throw new HttpError(409, "PAYOUTS_DISABLED_IN_DEMO", "External bank withdrawals are disabled in DEMO mode.");
+  if (getRuntimePaymentMode() === "live" && (env.EPHINTA_ENVIRONMENT !== "production" || env.OPAY_LIVE_MODE_READY !== "true")) throw new HttpError(503, "OPAY_LIVE_NOT_ATTESTED", "OPay live credentials and merchant access have not been verified.");
   if (env.OPAY_TRANSFERS_ENABLED !== "true") {
     throw new HttpError(503, "PAYOUTS_DISABLED", "OPay bank transfers are not enabled for this merchant account yet.");
   }
-  if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
+  if (!credentials.merchantId || !credentials.publicKey || !credentials.secretKey) {
     throw new HttpError(503, "PAYOUT_PROVIDER_NOT_CONFIGURED", "OPay merchant transfer credentials are not configured.");
   }
-  if (env.NODE_ENV === "production" && env.PAYMENT_MODE === "test" && env.ALLOW_PRODUCTION_TEST_MODE !== "true") {
+  if (env.NODE_ENV === "production" && getRuntimePaymentMode() === "test" && env.ALLOW_PRODUCTION_TEST_MODE !== "true") {
     throw new HttpError(503, "PRODUCTION_TEST_MODE_DISABLED", "Sandbox withdrawals on the production API require ALLOW_PRODUCTION_TEST_MODE=true.");
   }
 }
 
 function baseUrl() {
-  const expectedHost = env.PAYMENT_MODE === "test"
+  const expectedHost = getRuntimePaymentMode() === "test"
     ? "sandbox-cashierapi.opayweb.com"
     : "cashierapi.opayweb.com";
-  const configured = env.OPAY_TRANSFER_BASE_URL || `https://${expectedHost}`;
+  const configured = getRuntimePaymentMode() === "live"
+    ? env.OPAY_LIVE_TRANSFER_BASE_URL
+    : env.OPAY_TEST_TRANSFER_BASE_URL || env.OPAY_TRANSFER_BASE_URL;
+  const endpoint = configured || `https://${expectedHost}`;
   let parsed: URL;
   try {
-    parsed = new URL(configured);
+    parsed = new URL(endpoint);
   } catch {
     throw new HttpError(503, "OPAY_TRANSFER_URL_INVALID", "The OPay transfer endpoint URL is invalid.");
   }
@@ -60,14 +78,15 @@ function baseUrl() {
 async function request<T>(path: string, payload: Record<string, unknown>, auth: "public" | "signature"): Promise<OpayEnvelope<T>> {
   assertOpayTransfersEnabled();
   const body = JSON.stringify(sortKeys(payload));
+  const credentials = opayCredentials();
   const token = auth === "public"
-    ? env.OPAY_PUBLIC_KEY!
-    : createHmac("sha512", env.OPAY_SECRET_KEY!).update(body).digest("hex");
+    ? credentials.publicKey!
+    : createHmac("sha512", credentials.secretKey!).update(body).digest("hex");
   const response = await fetch(`${baseUrl()}${path}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      MerchantId: env.OPAY_MERCHANT_ID!,
+      MerchantId: credentials.merchantId!,
       "Content-Type": "application/json",
       Accept: "application/json",
     },

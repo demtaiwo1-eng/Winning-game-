@@ -1108,3 +1108,14 @@ model Payout {
   @@index([userId, createdAt])
   @@index([status, updatedAt])
 }
+
+
+/// Single source of truth for platform-wide runtime payment mode.
+model PlatformRuntimeSetting {
+  id          String   @id
+  paymentMode String   @default("test")
+  changedById String?
+  updatedAt   DateTime @updatedAt
+
+  @@index([updatedAt])
+}

@@ -7,8 +7,8 @@ export interface PaymentFeeConfig {
 }
 
 /** Incoming NGN wallet deposits default to the agreed 2% transaction fee. */
-export function walletTopupFeeBps(config: PaymentFeeConfig): number {
-  return config.WALLET_TOPUP_FEE_BPS ?? 200;
+export function walletTopupFeeBps(_config: PaymentFeeConfig): number {
+  return 200;
 }
 
 /** Explicit booking commission wins; otherwise retain the legacy setting. */
@@ -25,6 +25,6 @@ export function bookingCommissionMinor(amountMinor: bigint, config: PaymentFeeCo
 }
 
 /** Outgoing OPay bank withdrawals default to the agreed 2% transaction fee. */
-export function payoutFeeMinor(amountMinor: bigint, config: PaymentFeeConfig & { PAYOUT_FEE_BPS?: number }): bigint {
-  return commissionMinor(amountMinor, config.PAYOUT_FEE_BPS ?? 200);
+export function payoutFeeMinor(amountMinor: bigint, _config: PaymentFeeConfig & { PAYOUT_FEE_BPS?: number }): bigint {
+  return commissionMinor(amountMinor, 200);
 }

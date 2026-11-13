@@ -8,9 +8,9 @@ describe("external bank payout fee policy", () => {
     expect(100000n - payoutFeeMinor(100000n, config)).toBe(98000n);
   });
 
-  it("honours an explicit payout fee override, including zero", () => {
-    expect(payoutFeeMinor(100000n, { COMMISSION_BPS: 200, PAYOUT_FEE_BPS: 0 })).toBe(0n);
-    expect(payoutFeeMinor(100000n, { COMMISSION_BPS: 200, PAYOUT_FEE_BPS: 350 })).toBe(3500n);
+  it("enforces the agreed 2% payout fee regardless of legacy overrides", () => {
+    expect(payoutFeeMinor(100000n, { COMMISSION_BPS: 200, PAYOUT_FEE_BPS: 0 })).toBe(2000n);
+    expect(payoutFeeMinor(100000n, { COMMISSION_BPS: 200, PAYOUT_FEE_BPS: 350 })).toBe(2000n);
   });
 
   it("uses exact minor-unit half-up rounding", () => {

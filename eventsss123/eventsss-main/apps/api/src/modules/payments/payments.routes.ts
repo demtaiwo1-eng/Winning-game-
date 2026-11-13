@@ -31,10 +31,12 @@ import {
   verifyPaystack,
   verifyStripe,
   verifyOpay,
+  getOpayWebhookSecret,
 } from "./providers";
 import { releaseBookingEscrow } from "./escrow.service";
 import { recordPlatformRevenue } from "./platformRevenue.service";
 import { payoutsRouter } from "./payouts.routes";
+import { paymentModeGuard, lockCurrentPaymentMode } from "./runtimePaymentMode";
 import { reconciliationBackoffMs, reconciliationErrorCode, RECONCILIATION_LOCK_MS, RECONCILIATION_MAX_ATTEMPTS, RECONCILIATION_PROVIDER_MAX_WAIT_MS, RECONCILIATION_PROVIDER_MIN_INTERVAL_MS, reconciliationProviderNextAllowedAt } from "./reconciliationPolicy";
 import {
   assertVerifiedPayment,
@@ -47,14 +49,15 @@ import {
 
 
 export const paymentsRouter = Router();
+paymentsRouter.use(paymentModeGuard);
 paymentsRouter.use(payoutsRouter);
 
 logger.info({
-  opayMerchantConfigured: Boolean(env.OPAY_MERCHANT_ID),
-  opayPublicKeyConfigured: Boolean(env.OPAY_PUBLIC_KEY),
-  opaySecretConfigured: Boolean(env.OPAY_SECRET_KEY),
+  opayMerchantConfigured: Boolean(env.OPAY_TEST_MERCHANT_ID || env.OPAY_MERCHANT_ID),
+  opayPublicKeyConfigured: Boolean(env.OPAY_TEST_PUBLIC_KEY || env.OPAY_PUBLIC_KEY),
+  opaySecretConfigured: Boolean(env.OPAY_TEST_SECRET_KEY || env.OPAY_SECRET_KEY),
   opayTransfersEnabled: env.OPAY_TRANSFERS_ENABLED === "true",
-  paymentMode: env.PAYMENT_MODE,
+  paymentMode: getPaymentMode(),
 }, "OPay bank transfer configuration readiness");
 
 
@@ -84,12 +87,29 @@ paymentsRouter.post(
     const user = await prisma.user.findUniqueOrThrow({ where: { id: req.user!.id } });
     const provider = selectProvider(currency, req.body.country || user.country || undefined);
     const reference = `${provider}_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
+    // Persist the in-flight transaction before contacting OPay. The admin mode
+    // switch refuses to proceed while this intent is pending.
+    const pendingIntent = await prisma.$transaction(async (tx) => {
+      await lockCurrentPaymentMode(tx);
+      return tx.paymentIntent.create({
+      data: {
+        userId: req.user!.id,
+        provider,
+        amountMinor,
+        currency,
+        status: PaymentStatus.PENDING,
+        purpose,
+        providerRef: reference,
+      },
+      });
+    });
     const callbackUrl = new URL(
       `/dashboard/${user.role.toLowerCase()}?tab=wallet&payment=return`,
       env.APP_BASE_URL,
     ).toString();
 
     let init: { provider: string; providerRef: string; authorizationUrl?: string; mode: string };
+    try {
     if (provider === "paystack") {
       init = await initializePaystack({
         email: user.email,
@@ -130,6 +150,12 @@ paymentsRouter.post(
     } else {
       init = { provider: "demo", providerRef: reference, mode: "demo" };
     }
+    } catch (error) {
+      // Keep the intent pending on ambiguous provider failures/timeouts. An
+      // operator must reconcile it before the global mode can change.
+      throw error;
+    }
+
     if (init.authorizationUrl) {
       let checkout: URL;
       try {
@@ -142,16 +168,9 @@ paymentsRouter.post(
       }
     }
 
-    const intent = await prisma.paymentIntent.create({
-      data: {
-        userId: req.user!.id,
-        provider: init.provider,
-        amountMinor,
-        currency,
-        status: PaymentStatus.PENDING,
-        purpose,
-        providerRef: init.providerRef,
-      },
+    const intent = await prisma.paymentIntent.update({
+      where: { id: pendingIntent.id },
+      data: { provider: init.provider, providerRef: init.providerRef },
     });
 
     const checkoutUrl =
@@ -201,11 +220,12 @@ paymentsRouter.post(
 function verifyWebhookSignature(provider: string, req: import("express").Request) {
   const rawBody = (req as import("express").Request & { rawBody?: Buffer }).rawBody;
   if (provider === "opay") {
-    if (!env.OPAY_SECRET_KEY) throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "OPay webhook verification is not configured");
+    const opayWebhookSecret = getOpayWebhookSecret();
+    if (!opayWebhookSecret) throw new HttpError(503, "WEBHOOK_SECRET_MISSING", "OPay webhook verification is not configured for the selected mode");
     const payload = req.body?.payload;
     const received = String(req.body?.sha512 || "");
     if (req.body?.type !== "transaction-status" ||
-        !verifyOpayCallbackSignature(payload || {}, received, env.OPAY_SECRET_KEY)) {
+        !verifyOpayCallbackSignature(payload || {}, received, opayWebhookSecret)) {
       throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid OPay webhook signature");
     }
     return;

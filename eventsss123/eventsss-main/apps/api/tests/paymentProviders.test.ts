@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { canCompleteDemoCheckout, canUseDemoPayments } from "../src/modules/payments/providers";
 
 describe("payment provider mode guards", () => {
-  it("only allows simulated checkout for pending demo intents in non-production test mode", () => {
+  it("only allows simulated checkout for pending demo intents in DEMO mode", () => {
     expect(
       canCompleteDemoCheckout("demo", "PENDING", {
         nodeEnv: "development",
-        paymentMode: "test",
+        paymentMode: "demo",
       }),
     ).toBe(true);
     expect(
@@ -30,6 +30,7 @@ describe("payment provider mode guards", () => {
   });
 
   it("does not enable simulated checkout in live payment mode", () => {
+    expect(canUseDemoPayments({ nodeEnv: "development", paymentMode: "test" })).toBe(false);
     expect(canUseDemoPayments({ nodeEnv: "development", paymentMode: "live" })).toBe(false);
   });
 });

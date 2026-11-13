@@ -38,7 +38,7 @@ describe.skipIf(!run)("platform revenue accounting (DB)", () => {
     });
     try {
       const settled = await request(app).post(`/api/v1/payments/demo-checkout/${intent.id}`)
-        .set(auth(customer.token)).send({});
+        .set(auth(customer.token)).set("x-ephinta-test-payment-mode", "demo").send({});
       expect(settled.status).toBe(200);
       const wallet = await prisma.wallet.findUniqueOrThrow({
         where: { userId_currency: { userId: customer.id, currency: "NGN" } },
@@ -54,7 +54,7 @@ describe.skipIf(!run)("platform revenue accounting (DB)", () => {
       expect(await prisma.ledgerEntry.findUnique({ where: { idempotencyKey: `pay_deposit_fee:${intent.id}` } })).toBeNull();
 
       const replay = await request(app).post(`/api/v1/payments/demo-checkout/${intent.id}`)
-        .set(auth(customer.token)).send({});
+        .set(auth(customer.token)).set("x-ephinta-test-payment-mode", "demo").send({});
       expect(replay.status).toBe(200);
       expect((await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } })).availableMinor).toBe(100000n - expectedTopupFee);
       expect(await prisma.platformRevenueEntry.count({ where: { idempotencyKey: `platform_wallet_topup_fee:${intent.id}` } })).toBe(1);

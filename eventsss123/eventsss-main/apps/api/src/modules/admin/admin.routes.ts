@@ -2,10 +2,96 @@ import { Router, type Request } from "express";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../lib/async";
+import { HttpError } from "../../lib/errors";
 import { requireAuth, requireRole } from "../../middleware/auth";
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireRole("ADMIN"));
+
+
+const paymentModes = ["demo", "test", "live"] as const;
+
+/** Shared payment mode consumed by every app instance and installed client. */
+adminRouter.get("/runtime/payment-mode", asyncHandler(async (_req, res) => {
+  let setting = await prisma.platformRuntimeSetting.findUnique({ where: { id: "global" } });
+  if (!setting) {
+    setting = await prisma.platformRuntimeSetting.create({
+      data: { id: "global", paymentMode: "test" },
+    });
+  }
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ paymentMode: setting.paymentMode, updatedAt: setting.updatedAt });
+}));
+
+adminRouter.patch("/runtime/payment-mode", asyncHandler(async (req, res) => {
+  const requested = typeof req.body.paymentMode === "string" ? req.body.paymentMode.toLowerCase() : "";
+  if (!paymentModes.includes(requested as typeof paymentModes[number])) {
+    return res.status(400).json({ error: { code: "INVALID_PAYMENT_MODE", message: "Choose DEMO, TEST, or LIVE." } });
+  }
+  const paymentMode = requested as typeof paymentModes[number];
+  if (paymentMode === "demo" && process.env.NODE_ENV === "production") {
+    return res.status(409).json({ error: { code: "DEMO_MODE_NOT_ALLOWED", message: "DEMO mode is restricted to non-production deployments." } });
+  }
+  if (paymentMode === "test" && process.env.NODE_ENV === "production" && process.env.ALLOW_PRODUCTION_TEST_MODE !== "true") {
+    return res.status(409).json({ error: { code: "PRODUCTION_TEST_MODE_DISABLED", message: "TEST mode is not enabled for this production API deployment." } });
+  }
+  if (paymentMode === "live") {
+    const missing = [
+      !process.env.OPAY_LIVE_MERCHANT_ID && "OPAY_LIVE_MERCHANT_ID",
+      !process.env.OPAY_LIVE_PUBLIC_KEY && "OPAY_LIVE_PUBLIC_KEY",
+      !process.env.OPAY_LIVE_SECRET_KEY && "OPAY_LIVE_SECRET_KEY",
+      process.env.OPAY_LIVE_MODE_READY !== "true" && "OPAY_LIVE_MODE_READY=true (after OPay production access verification)",
+      process.env.OPAY_TRANSFERS_ENABLED !== "true" && "OPAY_TRANSFERS_ENABLED",
+      !process.env.OPAY_LIVE_TRANSFER_BASE_URL && "OPAY_LIVE_TRANSFER_BASE_URL",
+      (process.env.OPAY_LIVE_TRANSFER_BASE_URL || "").trim() !== "https://cashierapi.opayweb.com" && "OPAY_LIVE_TRANSFER_BASE_URL must be https://cashierapi.opayweb.com",
+    ].filter(Boolean);
+    if (missing.length) {
+      return res.status(409).json({
+        error: {
+          code: "LIVE_MODE_NOT_READY",
+          message: "LIVE mode is locked until OPay production checkout and payout configuration is complete.",
+          missingConfiguration: missing,
+        },
+      });
+    }
+    if (process.env.NODE_ENV !== "production" || process.env.EPHINTA_ENVIRONMENT !== "production") {
+      return res.status(409).json({ error: { code: "LIVE_MODE_REQUIRES_PRODUCTION", message: "LIVE mode can only be activated on the explicitly identified production API deployment." } });
+    }
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "PlatformRuntimeSetting" WHERE "id" = 'global' FOR UPDATE`;
+    const previous = await tx.platformRuntimeSetting.findUnique({ where: { id: "global" } });
+    if ((previous?.paymentMode ?? "test") !== paymentMode) {
+      const [pendingPayments, pendingPayouts] = await Promise.all([
+        tx.paymentIntent.count({ where: { status: "PENDING" } }),
+        tx.payout.count({ where: { status: { in: ["PENDING", "PROCESSING"] } } }),
+      ]);
+      if (pendingPayments || pendingPayouts) {
+        throw new HttpError(409, "MODE_SWITCH_BLOCKED_PENDING_TRANSACTIONS",
+          "Reconcile all pending transactions before switching modes (" + pendingPayments + " pending payments, " + pendingPayouts + " pending payouts).");
+      }
+    }
+    const setting = await tx.platformRuntimeSetting.upsert({
+      where: { id: "global" },
+      create: { id: "global", paymentMode, changedById: req.user!.id },
+      update: { paymentMode, changedById: req.user!.id },
+    });
+    await tx.auditLog.create({
+      data: {
+        actorId: req.user!.id,
+        action: "GLOBAL_PAYMENT_MODE_CHANGED",
+        entity: "PlatformRuntimeSetting",
+        entityId: "global",
+        ip: req.ip ?? "unknown",
+        meta: { from: previous?.paymentMode ?? "test", to: paymentMode },
+      },
+    });
+    return setting;
+  });
+  res.setHeader("Cache-Control", "no-store");
+  return res.json({ paymentMode: result.paymentMode, updatedAt: result.updatedAt });
+}));
 
 adminRouter.patch("/listings/:listingId/moderation", asyncHandler(async (req, res) => {
   const status = req.body.status;

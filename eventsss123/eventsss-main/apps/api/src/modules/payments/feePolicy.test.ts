@@ -33,17 +33,17 @@ describe("separate payment fee policy", () => {
     expect(100000n - payoutFeeMinor(100000n, config)).toBe(98000n);
   });
 
-  it("preserves an explicitly configured zero outgoing fee", () => {
-    expect(payoutFeeMinor(100000n, { COMMISSION_BPS: 500, PAYOUT_FEE_BPS: 0 })).toBe(0n);
+  it("keeps the agreed 2% outgoing fee even when legacy overrides are zero", () => {
+    expect(payoutFeeMinor(100000n, { COMMISSION_BPS: 500, PAYOUT_FEE_BPS: 0 })).toBe(2000n);
   });
 
-  it("preserves an explicitly configured zero fee instead of falling back", () => {
+  it("keeps the agreed 2% incoming fee even when a legacy override is zero", () => {
     const config = {
       COMMISSION_BPS: 500,
       WALLET_TOPUP_FEE_BPS: 0,
       BOOKING_COMMISSION_BPS: 0,
     };
-    expect(walletTopupFeeMinor(100000n, config)).toBe(0n);
+    expect(walletTopupFeeMinor(100000n, config)).toBe(2000n);
     expect(bookingCommissionMinor(100000n, config)).toBe(0n);
   });
 

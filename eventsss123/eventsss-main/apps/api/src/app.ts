@@ -54,6 +54,17 @@ export function createApp() {
   }));
   app.use(rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: true, legacyHeaders: false }));
 
+  app.get("/api/v1/runtime/config", async (_req, res, next) => {
+    try {
+      const setting = await prisma.platformRuntimeSetting.findUnique({
+        where: { id: "global" },
+        select: { paymentMode: true, updatedAt: true },
+      });
+      res.setHeader("Cache-Control", "no-store");
+      res.json({ paymentMode: setting?.paymentMode ?? "test", updatedAt: setting?.updatedAt ?? null });
+    } catch (error) { next(error); }
+  });
+
   app.get("/health", (_req, res) => {
     res.json({ status: "ok", uptime: process.uptime() });
   });

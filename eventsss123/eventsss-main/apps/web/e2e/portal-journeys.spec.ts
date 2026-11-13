@@ -24,7 +24,10 @@ async function unlockDeviceGate(page: Page) {
   const title = await securityDialog.locator("h1").textContent();
   await securityDialog.getByLabel("Six-digit PIN").fill("123456");
   if (title?.includes("Set your device PIN")) {
-    await securityDialog.getByLabel("Confirm PIN").fill("123456");
+    const confirmPin = page.locator("#ephinta-device-pin-confirm");
+    await expect(confirmPin).toBeVisible();
+    await page.waitForTimeout(150);
+    await confirmPin.fill("123456", { force: true });
     await securityDialog.getByRole("button", { name: "Set PIN and continue" }).click();
   } else {
     await securityDialog.getByRole("button", { name: "Unlock EPHINTA" }).click();
@@ -91,6 +94,10 @@ async function installRoleApiFixtures(page: Page, portal: PortalCase, options: {
     if (path.endsWith("/vendor/profile")) return json({ profile: { id: "qa-profile", businessName: "QA Services", country: "NG", city: "Ibadan" } });
     if (path.endsWith("/readiness/queue")) return json({ items: [] });
     if (path.endsWith("/readiness/mine")) return json({ items: [] });
+    if (path.endsWith("/admin/runtime/payment-mode")) {
+      const mode = request.method() === "PATCH" ? (request.postDataJSON() as { paymentMode?: string }).paymentMode || "test" : "test";
+      return json({ paymentMode: mode, updatedAt: "2026-11-13T00:00:00.000Z" });
+    }
     if (path.endsWith("/admin/approvals")) return json({ items: [] });
     if (path.includes("/admin/finance/reconciliation")) return json({
       generatedAt: "2026-11-03T00:00:00.000Z", olderThanMinutes: 10,
@@ -110,6 +117,25 @@ async function installRoleApiFixtures(page: Page, portal: PortalCase, options: {
     }
     return json({ items: [], total: 0, pages: 0, summary: [] });
   });
+
+  // The ADMIN dashboard mounts several live panels behind the local device
+  // gate. Seed an already-configured test PIN so this journey tests unlock,
+  // not the first-run PIN-setup transition while those panels initialize.
+  if (portal.role === "ADMIN") {
+    await page.goto("/");
+    await page.evaluate(async () => {
+      const salt = Uint8Array.from({ length: 16 }, (_, index) => index + 1);
+      const material = await crypto.subtle.importKey("raw", new TextEncoder().encode("123456"), "PBKDF2", false, ["deriveBits"]);
+      const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 310_000 }, material, 256);
+      const bytes = new Uint8Array(bits);
+      let binary = "";
+      bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+      const saltBytes = Array.from(salt, (byte) => String.fromCharCode(byte)).join("");
+      localStorage.setItem("ephinta:device-pin:v1:qa-admin", JSON.stringify({
+        salt: btoa(saltBytes), hash: btoa(binary), version: 1,
+      }));
+    });
+  }
 }
 
 for (const portal of portals) {
@@ -155,6 +181,10 @@ for (const portal of portals) {
       await expect(page.getByText("8", { exact: true }).first()).toBeVisible();
       await page.getByRole("button", { name: "Refresh", exact: true }).first().click({ force: true });
       await expect(page.getByRole("heading", { name: "Platform operations" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Central payment mode" })).toBeVisible();
+      await page.getByRole("radio", { name: /DEMO/ }).check();
+      await page.getByRole("button", { name: "Apply globally" }).click();
+      await expect(page.getByRole("status").filter({ hasText: /Central payment mode changed to DEMO/ })).toBeVisible();
     }
 
     await page.evaluate(() => { localStorage.removeItem("ess_user"); localStorage.removeItem("ess_access_token"); localStorage.removeItem("ess_refresh_token"); });

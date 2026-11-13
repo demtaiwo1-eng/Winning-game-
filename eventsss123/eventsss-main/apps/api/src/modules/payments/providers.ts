@@ -7,15 +7,33 @@ import { createHmac } from "node:crypto";
 import { env } from "../../config/env";
 import { majorAmountToMinor } from "./webhookVerification";
 import { HttpError } from "../../lib/errors";
+import { getRuntimePaymentMode } from "./runtimePaymentMode";
 
 export type ProviderName = "paystack" | "flutterwave" | "stripe" | "opay" | "demo";
+
+export function getOpayWebhookSecret(): string | undefined { return opayCredentials().secretKey; }
+
+function opayCredentials() {
+  if (getRuntimePaymentMode() === "live") {
+    return {
+      merchantId: env.OPAY_LIVE_MERCHANT_ID,
+      publicKey: env.OPAY_LIVE_PUBLIC_KEY,
+      secretKey: env.OPAY_LIVE_SECRET_KEY,
+    };
+  }
+  return {
+    merchantId: env.OPAY_TEST_MERCHANT_ID || env.OPAY_MERCHANT_ID,
+    publicKey: env.OPAY_TEST_PUBLIC_KEY || env.OPAY_PUBLIC_KEY,
+    secretKey: env.OPAY_TEST_SECRET_KEY || env.OPAY_SECRET_KEY,
+  };
+}
 
 export function canUseDemoPayments(
   options: { nodeEnv?: string; paymentMode?: string } = {},
 ): boolean {
   return (
     (options.nodeEnv ?? env.NODE_ENV) !== "production" &&
-    (options.paymentMode ?? env.PAYMENT_MODE) === "test"
+    (options.paymentMode ?? getRuntimePaymentMode()) === "demo"
   );
 }
 
@@ -32,14 +50,20 @@ export function canUseProductionTestMode(
 ): boolean {
   return (
     (options.nodeEnv ?? env.NODE_ENV) !== "production" ||
-    (options.paymentMode ?? env.PAYMENT_MODE) !== "test" ||
+    (options.paymentMode ?? getRuntimePaymentMode()) !== "test" ||
     (options.allowProductionTestMode ?? env.ALLOW_PRODUCTION_TEST_MODE) === "true"
   );
 }
 
 function assertPaymentMode() {
+  if (getRuntimePaymentMode() === "live" && (env.EPHINTA_ENVIRONMENT !== "production" || env.OPAY_LIVE_MODE_READY !== "true" || !env.OPAY_LIVE_MERCHANT_ID || !env.OPAY_LIVE_PUBLIC_KEY || !env.OPAY_LIVE_SECRET_KEY)) {
+    throw new HttpError(503, "OPAY_LIVE_NOT_READY", "OPay production credentials and readiness attestation are required before LIVE transactions.");
+  }
+  if (env.NODE_ENV === "production" && getRuntimePaymentMode() === "demo") {
+    throw new HttpError(503, "DEMO_MODE_NOT_ALLOWED", "DEMO payment mode is disabled in production.");
+  }
   if (!canUseProductionTestMode()) {
-    throw new Error("PAYMENT_MODE=test in production requires ALLOW_PRODUCTION_TEST_MODE=true; demo checkout remains disabled in production");
+    throw new HttpError(503, "PRODUCTION_TEST_MODE_DISABLED", "TEST payments are not enabled on this production API deployment.");
   }
 }
 
@@ -50,32 +74,39 @@ function assertProviderKeyMode(
   livePattern: RegExp,
 ) {
   if (!key) return;
-  if (env.PAYMENT_MODE === "test" && livePattern.test(key)) {
+  if (getRuntimePaymentMode() === "test" && livePattern.test(key)) {
     throw new Error(`${name} live key cannot be used while PAYMENT_MODE=test`);
   }
-  if (env.PAYMENT_MODE === "live" && testPattern.test(key)) {
+  if (getRuntimePaymentMode() === "live" && testPattern.test(key)) {
     throw new Error(`${name} test key cannot be used while PAYMENT_MODE=live`);
   }
 }
 
 export function getPaymentMode() {
-  assertPaymentMode();
-  return env.PAYMENT_MODE;
+  return getRuntimePaymentMode();
 }
 
 export function selectProvider(currency: string, country?: string): ProviderName {
   assertPaymentMode();
 
+  if (getRuntimePaymentMode() === "demo") return "demo";
+
   const c = currency.toUpperCase();
   const countryCode = country?.toUpperCase();
-
+  if (countryCode === "NG" && c !== "NGN") {
+    throw new HttpError(400, "OPAY_CURRENCY_UNSUPPORTED", "OPay payments in Nigeria require NGN.");
+  }
+  if (c !== "NGN") {
+    throw new HttpError(400, "OPAY_CURRENCY_UNSUPPORTED", "OPay is the configured payment rail. Only NGN transactions are enabled until additional OPay markets are verified.");
+  }
   // EPHINTA's Nigerian payment rail is OPay only. Never silently route an
   // NGN deposit through another processor or a simulated checkout.
   if (c === "NGN" || countryCode === "NG") {
     if (c !== "NGN") {
       throw new HttpError(400, "OPAY_CURRENCY_UNSUPPORTED", "OPay payments in Nigeria require NGN.");
     }
-    if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
+    const credentials = opayCredentials();
+    if (!credentials.merchantId || !credentials.publicKey || !credentials.secretKey) {
       throw new HttpError(503, "OPAY_NOT_CONFIGURED", "OPay is the required provider for NGN payments, but its merchant credentials are not configured.");
     }
     return "opay";
@@ -108,8 +139,9 @@ export async function initializeOpay(input: {
   notifyUrl?: string;
 }): Promise<InitResult> {
   assertPaymentMode();
-  if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
-    throw new Error("OPay credentials are not configured");
+  const credentials = opayCredentials();
+  if (!credentials.merchantId || !credentials.publicKey || !credentials.secretKey) {
+    throw new Error("OPay credentials for the selected central mode are not configured");
   }
   if (input.currency.toUpperCase() !== "NGN") {
     throw new Error("OPay checkout currently supports NGN only");
@@ -122,13 +154,13 @@ export async function initializeOpay(input: {
     throw new Error("OPay payment reference is required");
   }
 
-  const apiHost = env.PAYMENT_MODE === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
-  const cashierHost = env.PAYMENT_MODE === "test" ? "sandboxcashier.opaycheckout.com" : "cashier.opaycheckout.com";
+  const apiHost = getRuntimePaymentMode() === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
+  const cashierHost = getRuntimePaymentMode() === "test" ? "sandboxcashier.opaycheckout.com" : "cashier.opaycheckout.com";
   const res = await fetch(`https://${apiHost}/api/v1/international/cashier/create`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.OPAY_PUBLIC_KEY}`,
-      MerchantId: env.OPAY_MERCHANT_ID,
+      Authorization: `Bearer ${credentials.publicKey}`,
+      MerchantId: credentials.merchantId,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -166,14 +198,14 @@ export async function initializeOpay(input: {
     cashierUrl.password ||
     cashierUrl.port
   ) {
-    throw new Error("OPay returned a cashier URL outside the approved sandbox host");
+    throw new Error("OPay returned a cashier URL outside the approved sandbox host or production host for the selected mode");
   }
 
   return {
     provider: "opay",
     providerRef: data.data.reference || input.reference,
     authorizationUrl: cashierUrl.toString(),
-    mode: env.PAYMENT_MODE === "test" ? "sandbox" : "live",
+    mode: getRuntimePaymentMode() === "test" ? "sandbox" : "live",
   };
 }
 
@@ -185,18 +217,19 @@ export async function verifyOpay(reference: string): Promise<{
   reference?: string;
   raw: unknown;
 }> {
-  if (!env.OPAY_MERCHANT_ID || !env.OPAY_SECRET_KEY) {
-    throw new Error("OPay verification is not configured");
+  const credentials = opayCredentials();
+  if (!credentials.merchantId || !credentials.secretKey) {
+    throw new Error("OPay verification credentials for the selected central mode are not configured");
   }
   const requestBody = { country: "NG", reference };
   const body = JSON.stringify(requestBody);
-  const signature = createHmac("sha512", env.OPAY_SECRET_KEY).update(body).digest("hex");
-  const apiHost = env.PAYMENT_MODE === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
+  const signature = createHmac("sha512", credentials.secretKey).update(body).digest("hex");
+  const apiHost = getRuntimePaymentMode() === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
   const res = await fetch(`https://${apiHost}/api/v1/international/cashier/status`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${signature}`,
-      MerchantId: env.OPAY_MERCHANT_ID,
+      MerchantId: credentials.merchantId,
       "Content-Type": "application/json",
     },
     body,
