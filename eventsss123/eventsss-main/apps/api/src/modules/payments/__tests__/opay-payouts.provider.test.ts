@@ -113,4 +113,12 @@ describe("OPay merchant bank transfers", () => {
     env.OPAY_TRANSFERS_ENABLED = "false";
     await expect(opayListBanks()).rejects.toMatchObject({ code: "PAYOUTS_DISABLED" });
   });
+
+  it("rejects non-OPay transfer hosts before sending credentials", async () => {
+    env.OPAY_TRANSFER_BASE_URL = "https://sandbox-cashierapi.opayweb.com.attacker.example";
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(opayListBanks()).rejects.toMatchObject({ code: "OPAY_TRANSFER_URL_INVALID" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
