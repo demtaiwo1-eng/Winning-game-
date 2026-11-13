@@ -159,6 +159,8 @@ describe("initializeOpay", () => {
     env.OPAY_MERCHANT_ID = "sandbox-merchant";
     env.OPAY_PUBLIC_KEY = "sandbox-public-key";
     env.OPAY_SECRET_KEY = "sandbox-secret";
+    findUnique.mockResolvedValue({ paymentMode: "test" });
+    await refreshPaymentMode();
   });
 
   afterEach(async () => {
