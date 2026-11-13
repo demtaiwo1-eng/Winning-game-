@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const findUnique = vi.fn();
+const { findUnique } = vi.hoisted(() => ({ findUnique: vi.fn() }));
 vi.mock("../../lib/prisma", () => ({
   prisma: { platformRuntimeSetting: { findUnique } },
 }));
