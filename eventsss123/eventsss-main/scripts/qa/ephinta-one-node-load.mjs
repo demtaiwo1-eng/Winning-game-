@@ -64,14 +64,25 @@ async function runOne(index) {
     bucket.outgoingFeeKobo += fee;
   }
   // LIVE is policy-checked only. It must never call a live provider in this campaign.
-  await waitForRateSlot();
   const started = Date.now();
+  let response;
+  let body = "";
+  let errorMessage = null;
+  let rateLimitRetries = 0;
   try {
-    const response = await fetch(target, { method: "GET", headers: { "user-agent": "EPHINTA-OneNode-QA/1.0", "x-qa-persona": String(index + 1) }, signal: AbortSignal.timeout(timeoutMs) });
-    const body = await response.text();
-    results[index] = { user: index + 1, role, mode, status: response.status, ok: response.ok, latencyMs: Date.now() - started, error: response.ok ? null : body.slice(0, 240) };
+    for (let attempt = 0; attempt < 4; attempt++) {
+      await waitForRateSlot();
+      response = await fetch(target, { method: "GET", headers: { "user-agent": "EPHINTA-OneNode-QA/1.0", "x-qa-persona": String(index + 1) }, signal: AbortSignal.timeout(timeoutMs) });
+      body = await response.text();
+      if (response.status !== 429 || attempt === 3) break;
+      rateLimitRetries++;
+      const retryAfter = Number(response.headers.get("retry-after") || response.headers.get("ratelimit-reset") || "2");
+      await delay(Math.max(1000, retryAfter * 1000));
+    }
+    results[index] = { user: index + 1, role, mode, status: response.status, ok: response.ok, latencyMs: Date.now() - started, rateLimitRetries, error: response.ok ? null : body.slice(0, 240) };
   } catch (error) {
-    results[index] = { user: index + 1, role, mode, status: 0, ok: false, latencyMs: Date.now() - started, error: String(error?.message || error).slice(0, 240) };
+    errorMessage = String(error?.message || error).slice(0, 240);
+    results[index] = { user: index + 1, role, mode, status: 0, ok: false, latencyMs: Date.now() - started, rateLimitRetries, error: errorMessage };
   }
   completed++;
   if (completed % 250 === 0 || completed === totalUsers) process.stdout.write(`Completed ${completed}/${totalUsers} synthetic user probes\n`);
@@ -114,7 +125,7 @@ const report = {
   startedAt, finishedAt: new Date().toISOString(), target: target.origin,
   topology: { nodes: 1, maxConcurrentRequests: concurrency, requestRatePerSecond: requestsPerSecond, requestRatePerMinute: requestsPerSecond * 60, totalSyntheticUsers: totalUsers, requestPath: "/health", requestPerUser: 1 },
   disclaimer: "5,000 synthetic personas each made one lightweight health request. This is not 5,000 concurrent authenticated end-to-end users. Requests are globally paced below the API 300/minute limiter. Financial values are synthetic calculations, not real or provider-settled transactions. DEMO/TEST/LIVE are modeled as policy buckets; LIVE provider calls are deliberately zero.",
-  totals: { users: totalUsers, passed: totalUsers - errors.length, failed: errors.length, http2xx: results.filter((x) => x.status >= 200 && x.status < 300).length, http4xx: results.filter((x) => x.status >= 400 && x.status < 500).length, http429: results.filter((x) => x.status === 429).length, http5xx: results.filter((x) => x.status >= 500).length, networkErrors: results.filter((x) => x.status === 0).length, p50Ms: pct(0.50), p95Ms: pct(0.95), p99Ms: pct(0.99), maxMs: latencies.at(-1) ?? null },
+  totals: { users: totalUsers, passed: totalUsers - errors.length, failed: errors.length, http2xx: results.filter((x) => x.status >= 200 && x.status < 300).length, http4xx: results.filter((x) => x.status >= 400 && x.status < 500).length, http429: results.filter((x) => x.status === 429).length, http5xx: results.filter((x) => x.status >= 500).length, networkErrors: results.filter((x) => x.status === 0).length, rateLimitRetries: results.reduce((n, x) => n + (x?.rateLimitRetries || 0), 0), p50Ms: pct(0.50), p95Ms: pct(0.95), p99Ms: pct(0.99), maxMs: latencies.at(-1) ?? null },
   roleSummary, financeSummary,
   errors: errors.slice(0, 250),
 };
@@ -129,7 +140,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta n
 <div class="card"><div class="muted">Latency p95</div><div class="metric">${report.totals.p95Ms ?? "—"} ms</div></div></section>
 <section class="panel"><h2>Environment and transaction simulation</h2><p class="muted">Illustrative NGN totals calculated at 2% incoming and 2% outgoing. No real transaction was submitted.</p><table><thead><tr><th>Mode</th><th>Incoming gross</th><th>Incoming fee</th><th>Outgoing gross</th><th>Outgoing fee</th><th>Provider calls</th></tr></thead><tbody>${Object.entries(financeSummary).map(([mode,v])=>`<tr><td><b>${mode}</b>${mode==="LIVE"?" · locked":""}</td><td>${v.incomingGross}</td><td>${v.incomingFee}</td><td>${v.outgoingGross}</td><td>${v.outgoingFee}</td><td>${v.providerCalls}</td></tr>`).join("")}</tbody></table></section>
 <section class="panel"><h2>Role coverage</h2><table><thead><tr><th>Role</th><th>Users</th><th>Passed</th><th>Failed</th></tr></thead><tbody>${Object.entries(roleSummary).map(([role,v])=>`<tr><td>${role}</td><td>${v.users}</td><td class="good">${v.passed}</td><td class="bad">${v.failed}</td></tr>`).join("")}</tbody></table></section>
-<section class="panel"><h2>Latency and HTTP errors</h2><p>p50: ${report.totals.p50Ms} ms · p95: ${report.totals.p95Ms} ms · p99: ${report.totals.p99Ms} ms · max: ${report.totals.maxMs} ms</p><p>HTTP 4xx: ${report.totals.http4xx} · HTTP 5xx: ${report.totals.http5xx} · Network/timeouts: ${report.totals.networkErrors}</p><h3>Errors (first 250)</h3><pre>${JSON.stringify(report.errors,null,2).replaceAll("&","&amp;").replaceAll("<","&lt;")}</pre></section>
+<section class="panel"><h2>Latency and HTTP errors</h2><p>p50: ${report.totals.p50Ms} ms · p95: ${report.totals.p95Ms} ms · p99: ${report.totals.p99Ms} ms · max: ${report.totals.maxMs} ms</p><p>HTTP 4xx: ${report.totals.http4xx} · 429 retries: ${report.totals.rateLimitRetries} · HTTP 5xx: ${report.totals.http5xx} · Network/timeouts: ${report.totals.networkErrors}</p><h3>Errors (first 250)</h3><pre>${JSON.stringify(report.errors,null,2).replaceAll("&","&amp;").replaceAll("<","&lt;")}</pre></section>
 <section class="panel"><b>Interpretation</b><p>This test validates one-node health endpoint responsiveness under a bounded 20-request concurrency cap. It does not establish 5,000 simultaneous authenticated user sessions, payment settlement, or one-million-user capacity. LIVE mode remains a zero-provider-call policy simulation.</p></section></main></body></html>`;
 await writeFile(path.join(outDir, "ephinta-one-node-5000-dashboard.html"), html);
 console.log(JSON.stringify({status: errors.length ? "failed" : "passed", report: "artifacts/ephinta-one-node-5000-report.json", dashboard: "artifacts/ephinta-one-node-5000-dashboard.html", totals: report.totals, financeSummary}, null, 2));
