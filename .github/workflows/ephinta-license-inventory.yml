@@ -27,9 +27,23 @@ jobs:
           cache-dependency-path: eventsss123/eventsss-main/package-lock.json
       - name: Install exact locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Fetch pinned SPDX standard licence texts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/spdx-license-texts
+          SPDX_COMMIT=31846481de7ea17d92f2f46fad76abe58b2e9bb0
+          for license in MIT ISC Apache-2.0 BSD-2-Clause BSD-3-Clause MPL-2.0 BlueOak-1.0.0 Unlicense CC-BY-4.0 MIT-0 0BSD CC0-1.0; do
+            curl --fail --silent --show-error --location \
+              "https://raw.githubusercontent.com/spdx/license-list-data/${SPDX_COMMIT}/text/${license}.txt" \
+              --output "artifacts/spdx-license-texts/${license}.txt"
+          done
       - name: Generate dependency inventory and verbatim notices
+        env:
+          SPDX_LICENSE_TEXT_DIR: artifacts/spdx-license-texts
         run: node scripts/qa/ephinta-license-inventory.mjs
       - name: Upload licence inventory and notices
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ephinta-dependency-license-inventory
