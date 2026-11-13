@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const REPO_ROOT = path.resolve(APP_ROOT, "../..");
 const manifestPath = path.join(APP_ROOT, "docs", "assets", "asset-rights.json");
 const audioExtensions = new Set([".mp3", ".m4a", ".wav", ".ogg", ".flac", ".aac"]);
 const failures = [];
@@ -13,6 +14,19 @@ function check(ok, passMessage, failMessage) {
   if (ok) checks.push(passMessage);
   else failures.push(failMessage);
 }
+function findNodeModules(directory, relative = "") {
+  if (!fs.existsSync(directory)) return [];
+  const found = [];
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if ([".git", ".next", "dist", "build", "coverage", "node_modules", ".secrets", "artifacts"].includes(entry.name)) {
+      if (entry.name === "node_modules" && entry.isDirectory()) found.push(path.posix.join(relative, entry.name));
+      continue;
+    }
+    if (entry.isDirectory()) found.push(...findNodeModules(path.join(directory, entry.name), path.posix.join(relative, entry.name)));
+  }
+  return found;
+}
+
 function findAudioFiles(directory, relative = "") {
   if (!fs.existsSync(directory)) return [];
   const found = [];
@@ -56,6 +70,11 @@ check(audioFiles.length === 0 || audioFiles.every((assetPath) => {
 check(fs.existsSync(path.join(APP_ROOT, "THIRD_PARTY_NOTICES.md")),
   "Third-party notices index exists.",
   "THIRD_PARTY_NOTICES.md is missing.");
+
+const committedDependencyTrees = findNodeModules(REPO_ROOT);
+check(committedDependencyTrees.length === 0,
+  "No node_modules directories are committed in the repository.",
+  "Tracked dependency install folders must not be committed: " + committedDependencyTrees.join(", "));
 
 const skillBundle = path.join(APP_ROOT, ".agents", "skills");
 const remotionPresent = fs.existsSync(skillBundle) && fs.readdirSync(skillBundle).some((name) => /remotion/i.test(name));
