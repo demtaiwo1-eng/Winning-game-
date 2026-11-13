@@ -296,12 +296,17 @@ payoutsRouter.post(
         });
       }
     } catch (error) {
-      // Do not refund on network/ambiguous errors: Paystack may have accepted
-      // the transfer. Keep the amount reserved for webhook/status reconciliation.
-      await prisma.payout.update({
-        where: { id: payout.id },
-        data: { status: PayoutStatus.PROCESSING, failureReason: "Provider response pending reconciliation." },
-      });
+      if (error instanceof HttpError && error.code === "PAYOUT_PROVIDER_ERROR") {
+        // A definite provider rejection means no transfer was queued.
+        await completePayout(reference, "failed");
+      } else {
+        // Do not refund on network/ambiguous errors: Paystack may have accepted
+        // the transfer. Keep the amount reserved and reconcile by reference.
+        await prisma.payout.update({
+          where: { id: payout.id },
+          data: { status: PayoutStatus.PROCESSING, failureReason: "Provider response pending reconciliation." },
+        });
+      }
     }
 
     const finalPayout = await prisma.payout.findUniqueOrThrow({ where: { id: payout.id } });
@@ -353,6 +358,26 @@ payoutsRouter.get(
       where: req.user!.role === "ADMIN" ? { id: req.params.id } : { id: req.params.id, userId: req.user!.id },
     });
     if (!payout) throw new HttpError(404, "PAYOUT_NOT_FOUND", "Payout not found.");
-    res.json({ payout: publicPayout(payout) });
+    let current = payout;
+    if ([PayoutStatus.PENDING, PayoutStatus.PROCESSING].includes(payout.status)) {
+      try {
+        const verified = await paystack<TransferData>(`/transfer/verify/${encodeURIComponent(payout.reference)}`);
+        const transfer = verified.data || {};
+        if (transfer.status === "success") {
+          await completePayout(payout.reference, "success", transfer.transfer_code, transfer.id === undefined ? undefined : String(transfer.id));
+        } else if (transfer.status === "failed" || transfer.status === "reversed") {
+          await completePayout(payout.reference, transfer.status, transfer.transfer_code, transfer.id === undefined ? undefined : String(transfer.id));
+        } else if (transfer.transfer_code && transfer.transfer_code !== payout.providerTransferCode) {
+          await prisma.payout.update({
+            where: { id: payout.id },
+            data: { status: PayoutStatus.PROCESSING, providerTransferCode: transfer.transfer_code, providerTransferId: transfer.id === undefined ? undefined : String(transfer.id) },
+          });
+        }
+        current = await prisma.payout.findUniqueOrThrow({ where: { id: payout.id } });
+      } catch {
+        // Status polling is best-effort; the signed webhook remains authoritative.
+      }
+    }
+    res.json({ payout: publicPayout(current) });
   }),
 );
