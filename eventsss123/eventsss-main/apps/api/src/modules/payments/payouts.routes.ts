@@ -384,7 +384,7 @@ payoutsRouter.get(
     });
     if (!payout) throw new HttpError(404, "PAYOUT_NOT_FOUND", "Payout not found.");
     let current = payout;
-    if ([PayoutStatus.PENDING, PayoutStatus.PROCESSING].includes(payout.status)) {
+    if (payout.status === PayoutStatus.PENDING || payout.status === PayoutStatus.PROCESSING) {
       try {
         const verified = await paystack<TransferData>(`/transfer/verify/${encodeURIComponent(payout.reference)}`);
         const transfer = verified.data || {};
