@@ -54,10 +54,13 @@ function baseUrl() {
   const expectedHost = getRuntimePaymentMode() === "test"
     ? "sandbox-cashierapi.opayweb.com"
     : "cashierapi.opayweb.com";
-  const configured = env.OPAY_TRANSFER_BASE_URL || `https://${expectedHost}`;
+  const configured = getRuntimePaymentMode() === "live"
+    ? env.OPAY_LIVE_TRANSFER_BASE_URL
+    : env.OPAY_TEST_TRANSFER_BASE_URL || env.OPAY_TRANSFER_BASE_URL;
+  const endpoint = configured || `https://${expectedHost}`;
   let parsed: URL;
   try {
-    parsed = new URL(configured);
+    parsed = new URL(endpoint);
   } catch {
     throw new HttpError(503, "OPAY_TRANSFER_URL_INVALID", "The OPay transfer endpoint URL is invalid.");
   }
