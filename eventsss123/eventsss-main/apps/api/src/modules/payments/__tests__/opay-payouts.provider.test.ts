@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { env } from "../../../config/env";
 import {
+  normalizeOpayTransferStatus,
   opayCreateBankTransfer,
   opayGetBankTransferStatus,
   opayListBanks,
@@ -122,12 +123,16 @@ describe("OPay merchant bank transfers", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
   it("classifies duplicate OPay references as ambiguous, not safe-to-refund failures", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "00005", message: "Duplicate business order number" }), { status: 200 }));
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "02004", message: "Duplicate reference" }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     await expect(opayCreateBankTransfer({
       reference: "already-submitted", amountMinor: 10000n, accountNumber: "0123456789",
       bankCode: "058", accountName: "Verified Vendor", reason: "EPHINTA vendor wallet withdrawal",
     })).rejects.toMatchObject({ code: "OPAY_PAYOUT_DUPLICATE_REFERENCE" });
+  });
+
+  it("treats OPay CLOSE as a final failed transfer", () => {
+    expect(normalizeOpayTransferStatus("CLOSE")).toBe("failed");
   });
 
   it("classifies explicit OPay request rejection separately from transient errors", async () => {
