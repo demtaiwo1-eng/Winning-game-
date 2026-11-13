@@ -39,7 +39,7 @@ check(Boolean(manifest && manifest.schemaVersion === 1 && Array.isArray(manifest
   "Asset rights manifest must contain schemaVersion=1 and an assets array.");
 
 const audioFiles = [
-  ...findAudioFiles(APP_ROOT, ""),
+  ...findAudioFiles(REPO_ROOT, ""),
 ].filter((name) => !name.startsWith("node_modules/"));
 const rightsRecords = new Map((manifest?.assets || []).map((item) => [item.path, item]));
 for (const assetPath of audioFiles) {
@@ -67,11 +67,11 @@ check(trackedFiles.status === 0 && committedDependencyPaths.length === 0,
   "No node_modules directories are committed in the repository.",
   "Tracked dependency install files must not be committed: " + committedDependencyPaths.slice(0, 20).join(", "));
 
-const skillBundle = path.join(APP_ROOT, ".agents", "skills");
-const remotionPresent = fs.existsSync(skillBundle) && fs.readdirSync(skillBundle).some((name) => /remotion/i.test(name));
-check(!remotionPresent,
+const trackedPaths = trackedFiles.status === 0 ? trackedFiles.stdout.split(/\r?\n/) : [];
+const remotionPaths = trackedPaths.filter((file) => /(^|\/)remotion([-/]|\/|$)/i.test(file) || file.includes(".agents/skills/"));
+check(trackedFiles.status === 0 && remotionPaths.length === 0,
   "Unused third-party Remotion agent bundle is absent.",
-  "Unused Remotion agent-skill material has been reintroduced into the product repository.");
+  "Third-party Remotion/agent-skill files have been reintroduced: " + remotionPaths.slice(0, 20).join(", "));
 
 check(!fs.existsSync(path.join(APP_ROOT, "contracts", "EventEscrowVault.sol")),
   "Unused MIT-labelled escrow prototype is absent from the product tree.",
