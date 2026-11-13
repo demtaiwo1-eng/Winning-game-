@@ -35,3 +35,14 @@ The repository-wide `.gitignore` now excludes `node_modules`, build outputs, and
 ## Release rule
 
 Do not delete migration, payment, or deployment code solely because it appears old. First establish whether it supports historical records, rollback, reconciliation, or a live service. Record the decision and test the affected workflow.
+
+
+## Additional staged maintenance-script cleanup (2026-11-14)
+
+Eight old maintenance scripts were copied byte-for-byte into `maintenance/quarantine/2026-11-14/original/` and then removed from the active application workspace. They are being tested in the quarantined state before their copies are removed. Their original blob SHAs, paths, reasons and rollback procedure are recorded in [the staged cleanup manifest](../../docs/maintenance/REMOVED_FILES_MANIFEST.md).
+
+The quarantined files are legacy Codespaces/Codex completion flows, stale generic build/deploy helpers, a one-time source-rewriting patch, an outdated development launcher, two installers that delete the lockfile/dependency directory and reinstall non-reproducibly, and an ESSAuthModal-only cleanup scanner. Code search found no active package-script or workflow invocation for these names. Current application source, dependency manifests/lockfile, database schema, payments, authentication, web/mobile runtime and deployment configuration were not edited by this quarantine.
+
+The complete direct dependency and service classification is maintained in [SOFTWARE_AND_SERVICE_INVENTORY.md](./docs/SOFTWARE_AND_SERVICE_INVENTORY.md). The authoritative lockfile remains unchanged; regenerate the full transitive package/licence inventory from that lockfile on every release.
+
+Do not remove legacy payment-provider adapters, KYC/provider integration packages, Android signing recovery, local database setup, or active verification scripts without a separate call-site, data-history and workflow audit.
