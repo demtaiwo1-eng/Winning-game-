@@ -87,12 +87,26 @@ paymentsRouter.post(
     const user = await prisma.user.findUniqueOrThrow({ where: { id: req.user!.id } });
     const provider = selectProvider(currency, req.body.country || user.country || undefined);
     const reference = `${provider}_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
+    // Persist the in-flight transaction before contacting OPay. The admin mode
+    // switch refuses to proceed while this intent is pending.
+    const pendingIntent = await prisma.paymentIntent.create({
+      data: {
+        userId: req.user!.id,
+        provider,
+        amountMinor,
+        currency,
+        status: PaymentStatus.PENDING,
+        purpose,
+        providerRef: reference,
+      },
+    });
     const callbackUrl = new URL(
       `/dashboard/${user.role.toLowerCase()}?tab=wallet&payment=return`,
       env.APP_BASE_URL,
     ).toString();
 
     let init: { provider: string; providerRef: string; authorizationUrl?: string; mode: string };
+    try {
     if (provider === "paystack") {
       init = await initializePaystack({
         email: user.email,
@@ -133,6 +147,14 @@ paymentsRouter.post(
     } else {
       init = { provider: "demo", providerRef: reference, mode: "demo" };
     }
+    } catch (error) {
+      await prisma.paymentIntent.updateMany({
+        where: { id: pendingIntent.id, status: PaymentStatus.PENDING },
+        data: { status: PaymentStatus.FAILED },
+      });
+      throw error;
+    }
+
     if (init.authorizationUrl) {
       let checkout: URL;
       try {
@@ -145,16 +167,9 @@ paymentsRouter.post(
       }
     }
 
-    const intent = await prisma.paymentIntent.create({
-      data: {
-        userId: req.user!.id,
-        provider: init.provider,
-        amountMinor,
-        currency,
-        status: PaymentStatus.PENDING,
-        purpose,
-        providerRef: init.providerRef,
-      },
+    const intent = await prisma.paymentIntent.update({
+      where: { id: pendingIntent.id },
+      data: { provider: init.provider, providerRef: init.providerRef },
     });
 
     const checkoutUrl =
