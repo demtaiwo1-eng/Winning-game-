@@ -13,7 +13,7 @@ The adapter follows the OPay Merchant Transfer SDK contract:
 
 The sandbox base URL is `https://sandbox-cashierapi.opayweb.com`; production base URL is `https://cashierapi.opayweb.com`. The adapter uses HTTPS and signs the exact recursively key-sorted JSON request body. It does not log or return credentials.
 
-OPay's merchant transfer integration does not use the Paystack transfer webhook. EPHINTA stores OPay's transfer order number and queries OPay's transfer-status endpoint from the API's existing once-per-minute background reconciliation loop (bounded to 20 pending payouts per tick), as well as on individual payout status reads. Funds remain reserved until a final provider status is confirmed.
+OPay's merchant transfer integration does not use the Paystack transfer webhook. EPHINTA stores OPay's transfer order number and queries OPay's transfer-status endpoint from the API's existing once-per-minute background reconciliation loop (bounded to 5 pending payouts per tick), as well as on individual payout status reads. Funds remain reserved until a final provider status is confirmed.
 
 ## Wallet and fee safety
 
