@@ -16,10 +16,16 @@ async function startServer() {
   if (env.OPAY_TRANSFERS_ENABLED === "true") {
     void opayListBanks()
       .then((banks) => logger.info({ opayTransferBankCount: banks.length }, "OPay Merchant Transfer API connectivity check passed"))
-      .catch((error: unknown) => logger.warn({
-        errorType: error instanceof Error ? error.name : "UnknownError",
-        errorCode: typeof error === "object" && error !== null && "code" in error ? String(error.code) : undefined,
-      }, "OPay Merchant Transfer API connectivity check failed"));
+      .catch((error: unknown) => {
+        const detail = error instanceof Error ? error as Error & { cause?: { code?: string; message?: string } } : undefined;
+        logger.warn({
+          errorType: detail?.name || "UnknownError",
+          errorMessage: detail?.message?.slice(0, 180),
+          causeCode: detail?.cause?.code,
+          causeMessage: detail?.cause?.message?.slice(0, 180),
+          errorCode: typeof error === "object" && error !== null && "code" in error ? String(error.code) : undefined,
+        }, "OPay Merchant Transfer API connectivity check failed");
+      });
   }
   let reconciliationInProgress = false;
   const reconciliationTimer = env.NODE_ENV === "test"

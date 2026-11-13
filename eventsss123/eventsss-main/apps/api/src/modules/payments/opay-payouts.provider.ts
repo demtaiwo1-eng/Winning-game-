@@ -154,7 +154,7 @@ export async function opayGetBankTransferStatus(reference: string, orderNo?: str
 export function normalizeOpayTransferStatus(status: string | undefined): "success" | "failed" | "reversed" | "processing" {
   const normalized = String(status || "").toUpperCase();
   if (["SUCCESS", "SUCCEEDED", "COMPLETED"].includes(normalized)) return "success";
-  if (["FAIL", "FAILED", "REJECTED", "CANCELLED", "CLOSE"].includes(normalized)) return "failed";
+  if (["FAIL", "FAILED", "REJECTED", "CANCELLED", "CANCEL", "CLOSE"].includes(normalized)) return "failed";
   if (["REVERSED", "REVERSAL"].includes(normalized)) return "reversed";
   return "processing";
 }
