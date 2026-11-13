@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { formatMoney, type CurrencyCode, type LocaleCode, t } from "../lib/i18n";
-import { walletApi, paymentsApi, type ApiWallet } from "../lib/api";
+import { walletApi, paymentsApi, type ApiWallet, type ApiPayout } from "../lib/api";
 
 type WalletBalance = {
   id?: string;
@@ -24,6 +24,15 @@ export default function WalletPanel({
   const [msg, setMsg] = useState("");
   const [depositAmount, setDepositAmount] = useState("50000");
   const [depositCurrency, setDepositCurrency] = useState<CurrencyCode>("NGN");
+  const [banks, setBanks] = useState<Array<{ name: string; code: string }>>([]);
+  const [bankCode, setBankCode] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [accountConfirmed, setAccountConfirmed] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [payouts, setPayouts] = useState<ApiPayout[]>([]);
+  const [payoutError, setPayoutError] = useState("");
+  const [payoutLoading, setPayoutLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const load = useCallback(() => {
@@ -52,6 +61,25 @@ export default function WalletPanel({
   useEffect(() => {
     load();
   }, [load]);
+
+  const loadPayouts = useCallback(async () => {
+    const [bankResult, payoutResult] = await Promise.allSettled([
+      paymentsApi.payoutBanks(),
+      paymentsApi.payouts(),
+    ]);
+    if (bankResult.status === "fulfilled") {
+      setBanks(bankResult.value.items);
+      setBankCode((current) => current || bankResult.value.items[0]?.code || "");
+      setPayoutError("");
+    } else {
+      setPayoutError(bankResult.reason instanceof Error ? bankResult.reason.message : "Bank withdrawals are not available yet.");
+    }
+    if (payoutResult.status === "fulfilled") setPayouts(payoutResult.value.items);
+  }, []);
+
+  useEffect(() => {
+    if (role === "VENDOR") void loadPayouts();
+  }, [loadPayouts, role]);
 
   useEffect(() => {
     if (searchParams.get("payment") !== "return") return;
@@ -93,6 +121,68 @@ export default function WalletPanel({
       load();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Deposit failed");
+    }
+  };
+
+  const resolveBankAccount = async () => {
+    setMsg("");
+    setAccountName("");
+    setAccountConfirmed(false);
+    if (!/^\d{10}$/.test(accountNumber) || !bankCode) {
+      setMsg("Enter a valid 10-digit account number and choose a bank.");
+      return;
+    }
+    setPayoutLoading(true);
+    try {
+      const result = await paymentsApi.resolvePayoutAccount(accountNumber, bankCode);
+      setAccountName(result.accountName);
+      setMsg("Bank account verified. Confirm the account name before continuing.");
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : "Unable to verify this bank account.");
+    } finally {
+      setPayoutLoading(false);
+    }
+  };
+
+  const submitWithdrawal = async () => {
+    setMsg("");
+    const major = Number(withdrawAmount);
+    if (!Number.isFinite(major) || major <= 0 || !Number.isSafeInteger(Math.round(major * 100))) {
+      setMsg("Enter a valid withdrawal amount.");
+      return;
+    }
+    if (!accountName || !accountConfirmed) {
+      setMsg("Verify and confirm the bank account name first.");
+      return;
+    }
+    setPayoutLoading(true);
+    try {
+      const amountMinor = String(Math.round(major * 100));
+      const idempotencyKey = "web_payout_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+      const result = await paymentsApi.createPayout({
+        amountMinor, accountNumber, bankCode, confirmAccountName: true,
+      }, idempotencyKey);
+      setMsg("Withdrawal " + result.payout.status.toLowerCase() + ": " + formatMoney(result.payout.netAmountMinor, "NGN", locale) + " is being sent to " + result.payout.accountName + ".");
+      setWithdrawAmount("");
+      setAccountNumber("");
+      setAccountName("");
+      setAccountConfirmed(false);
+      await Promise.all([load(), loadPayouts()]);
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : "Withdrawal could not be submitted.");
+    } finally {
+      setPayoutLoading(false);
+    }
+  };
+
+  const refreshPayout = async (id: string) => {
+    try {
+      const result = await paymentsApi.payout(id);
+      setPayouts((current) => current.map((item) => item.id === id ? result.payout : item));
+      setMsg("Withdrawal status: " + result.payout.status.toLowerCase() + ".");
+      if (["SUCCEEDED", "FAILED", "REVERSED"].includes(result.payout.status)) load();
+    } catch (error) {
+      setPayoutError(error instanceof Error ? error.message : "Unable to refresh payout status.");
     }
   };
 
@@ -220,13 +310,96 @@ export default function WalletPanel({
         </div>
       </div>
 
-      {(role === "VENDOR") && (
-        <div className="ess-wallet-card" style={{ marginTop: 16 }}>
-          <strong>Receive payments</strong>
-          <p className="ess-muted" style={{ margin: "6px 0 12px" }}>
-            The payer's funds stay protected in platform-controlled escrow until the event ends, every service check is green, and the event's assigned lead verifier authorizes release. Released funds are added to your wallet. External bank and mobile-money withdrawals are not yet enabled.
-          </p>
-        </div>
+      {role === "VENDOR" && (
+        <>
+          <div className="ess-wallet-card" style={{ marginTop: 16 }}>
+            <strong>Receive payments</strong>
+            <p className="ess-muted" style={{ margin: "6px 0 12px" }}>
+              The payer's funds stay protected in platform-controlled escrow until the event ends, every service check is green, and the event's assigned lead verifier authorizes release. Released funds are added to your wallet.
+            </p>
+          </div>
+          <div className="ess-wallet-card" style={{ marginTop: 16 }}>
+            <strong>Withdraw to a Nigerian bank</strong>
+            <p className="ess-muted" style={{ margin: "6px 0 12px" }}>
+              Withdraw from your available NGN balance. A 2% platform fee is deducted from the gross amount; the remaining 98% is sent to your verified bank account. Funds are reserved until the transfer is confirmed.
+            </p>
+            {payoutError && <p className="ess-form-error" role="alert">{payoutError}</p>}
+            <div className="ess-form-grid">
+              <label>
+                Withdrawal amount (NGN)
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  placeholder="e.g. 10000"
+                />
+              </label>
+              <label>
+                Destination bank
+                <select value={bankCode} onChange={(e) => { setBankCode(e.target.value); setAccountName(""); setAccountConfirmed(false); }}>
+                  <option value="">Select a bank</option>
+                  {banks.map((bank) => <option key={bank.code} value={bank.code}>{bank.name}</option>)}
+                </select>
+              </label>
+              <label>
+                Account number
+                <input
+                  value={accountNumber}
+                  onChange={(e) => { setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10)); setAccountName(""); setAccountConfirmed(false); }}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="10-digit account number"
+                />
+              </label>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+              <button className="ess-quiet-button" type="button" onClick={resolveBankAccount} disabled={payoutLoading || !bankCode || accountNumber.length !== 10}>
+                {payoutLoading ? "Please wait…" : "Verify bank account"}
+              </button>
+            </div>
+            {accountName && (
+              <div style={{ marginTop: 12 }}>
+                <p><strong>Verified account name:</strong> {accountName}</p>
+                <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input type="checkbox" checked={accountConfirmed} onChange={(e) => setAccountConfirmed(e.target.checked)} />
+                  I confirm this is the correct bank account.
+                </label>
+              </div>
+            )}
+            {Number(withdrawAmount) > 0 && Number.isFinite(Number(withdrawAmount)) && (
+              <p className="ess-muted" style={{ marginTop: 12 }}>
+                Estimated fee: {formatMoney(String(Math.round(Number(withdrawAmount) * 2)), "NGN", locale)} ·
+                Estimated bank transfer: {formatMoney(String(Math.max(0, Math.round(Number(withdrawAmount) * 98))), "NGN", locale)}
+              </p>
+            )}
+            <button className="ess-primary" type="button" onClick={submitWithdrawal} disabled={payoutLoading || !accountConfirmed || !accountName || !withdrawAmount || !bankCode}>
+              {payoutLoading ? "Submitting…" : "Withdraw to bank"}
+            </button>
+          </div>
+          <div className="ess-wallet-card" style={{ marginTop: 16 }}>
+            <strong>Withdrawal history</strong>
+            {payouts.length === 0 ? (
+              <p className="ess-muted">No bank withdrawals yet.</p>
+            ) : (
+              <div className="ess-wallet-rows">
+                {payouts.map((payout) => (
+                  <div key={payout.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--ess-border, #ddd)" }}>
+                    <span>{payout.accountName} · {payout.accountNumber} · {payout.status}</span>
+                    <strong>{formatMoney(payout.netAmountMinor, "NGN", locale)} sent</strong>
+                    <small className="ess-muted">Fee {formatMoney(payout.feeMinor, "NGN", locale)} · {new Date(payout.createdAt).toLocaleString()}</small>
+                    {["PENDING", "PROCESSING"].includes(payout.status) && (
+                      <button className="ess-quiet-button" type="button" onClick={() => refreshPayout(payout.id)}>Refresh status</button>
+                    )}
+                    {payout.failureReason && <small className="ess-form-error">{payout.failureReason}</small>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       <div className="ess-escrow-explainer">
