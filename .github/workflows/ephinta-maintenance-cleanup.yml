@@ -48,6 +48,9 @@ jobs:
       DATABASE_URL_LOCAL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
       DATABASE_URL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
       JWT_SECRET: ci-only-secret-change-me-0123456789abcdef0123456789abcdef
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -170,7 +173,6 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: gradle
-      - uses: android-actions/setup-android@v3
       - name: Accept Android SDK licences and install build tools
         shell: bash
         run: |
