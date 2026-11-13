@@ -163,6 +163,7 @@ The requested commercial offer is **US$59.99** with access unlocked by a unique 
 - [Asset rights register](./docs/ASSET_RIGHTS_REGISTER.md)
 - [Contributor IP register](./docs/CONTRIBUTOR_IP_REGISTER.md)
 - [Project licence owner approval](./docs/PROJECT_LICENSE_PENDING_OWNER_APPROVAL.md)
+- [KYC country data provenance](./docs/KYC_COUNTRY_DATA_PROVENANCE.md)
 
 ## Third-party software, media, and acknowledgements
 
