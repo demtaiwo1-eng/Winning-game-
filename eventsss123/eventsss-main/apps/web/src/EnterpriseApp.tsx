@@ -27,6 +27,7 @@ import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from "./lib/rol
 import NotificationsPanel from "./components/NotificationsPanel";
 import MarketplaceAdStrip from "./components/MarketplaceAdStrip";
 import DeviceSecurityGate from "./components/DeviceSecurityGate";
+import GlobalPaymentModePanel from "./components/GlobalPaymentModePanel";
 // All application styles are imported through the single global stylesheet in main.tsx.
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
@@ -1898,6 +1899,7 @@ function AdminPortal() {
           </section>
         </>
       )}
+      <GlobalPaymentModePanel />
       <FinanceOperationsPanel />
       <AdminControlsPanel />
       <PromotionsPanel mode="admin" />
