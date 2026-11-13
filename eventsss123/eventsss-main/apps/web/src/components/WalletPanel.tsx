@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { formatMoney, type CurrencyCode, type LocaleCode, t } from "../lib/i18n";
-import { walletApi, paymentsApi, type ApiWallet } from "../lib/api";
+import { walletApi, paymentsApi, type ApiWallet, type ApiPayout } from "../lib/api";
 
 type WalletBalance = {
   id?: string;
@@ -24,6 +24,15 @@ export default function WalletPanel({
   const [msg, setMsg] = useState("");
   const [depositAmount, setDepositAmount] = useState("50000");
   const [depositCurrency, setDepositCurrency] = useState<CurrencyCode>("NGN");
+  const [banks, setBanks] = useState<Array<{ name: string; code: string }>>([]);
+  const [bankCode, setBankCode] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [accountConfirmed, setAccountConfirmed] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [payouts, setPayouts] = useState<ApiPayout[]>([]);
+  const [payoutError, setPayoutError] = useState("");
+  const [payoutLoading, setPayoutLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const load = useCallback(() => {
@@ -52,6 +61,25 @@ export default function WalletPanel({
   useEffect(() => {
     load();
   }, [load]);
+
+  const loadPayouts = useCallback(async () => {
+    try {
+      const [bankResult, payoutResult] = await Promise.all([
+        paymentsApi.payoutBanks(),
+        paymentsApi.payouts(),
+      ]);
+      setBanks(bankResult.items);
+      setBankCode((current) => current || bankResult.items[0]?.code || "");
+      setPayouts(payoutResult.items);
+      setPayoutError("");
+    } catch (error) {
+      setPayoutError(error instanceof Error ? error.message : "Bank withdrawals are not available yet.");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (role === "VENDOR") void loadPayouts();
+  }, [loadPayouts, role]);
 
   useEffect(() => {
     if (searchParams.get("payment") !== "return") return;
@@ -93,6 +121,68 @@ export default function WalletPanel({
       load();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Deposit failed");
+    }
+  };
+
+  const resolveBankAccount = async () => {
+    setMsg("");
+    setAccountName("");
+    setAccountConfirmed(false);
+    if (!/^\d{10}$/.test(accountNumber) || !bankCode) {
+      setMsg("Enter a valid 10-digit account number and choose a bank.");
+      return;
+    }
+    setPayoutLoading(true);
+    try {
+      const result = await paymentsApi.resolvePayoutAccount(accountNumber, bankCode);
+      setAccountName(result.accountName);
+      setMsg("Bank account verified. Confirm the account name before continuing.");
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : "Unable to verify this bank account.");
+    } finally {
+      setPayoutLoading(false);
+    }
+  };
+
+  const submitWithdrawal = async () => {
+    setMsg("");
+    const major = Number(withdrawAmount);
+    if (!Number.isFinite(major) || major <= 0 || !Number.isSafeInteger(Math.round(major * 100))) {
+      setMsg("Enter a valid withdrawal amount.");
+      return;
+    }
+    if (!accountName || !accountConfirmed) {
+      setMsg("Verify and confirm the bank account name first.");
+      return;
+    }
+    setPayoutLoading(true);
+    try {
+      const amountMinor = String(Math.round(major * 100));
+      const idempotencyKey = "web_payout_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+      const result = await paymentsApi.createPayout({
+        amountMinor, accountNumber, bankCode, confirmAccountName: true,
+      }, idempotencyKey);
+      setMsg("Withdrawal " + result.payout.status.toLowerCase() + ": " + formatMoney(result.payout.netAmountMinor, "NGN", locale) + " is being sent to " + result.payout.accountName + ".");
+      setWithdrawAmount("");
+      setAccountNumber("");
+      setAccountName("");
+      setAccountConfirmed(false);
+      await Promise.all([load(), loadPayouts()]);
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : "Withdrawal could not be submitted.");
+    } finally {
+      setPayoutLoading(false);
+    }
+  };
+
+  const refreshPayout = async (id: string) => {
+    try {
+      const result = await paymentsApi.payout(id);
+      setPayouts((current) => current.map((item) => item.id === id ? result.payout : item));
+      setMsg("Withdrawal status: " + result.payout.status.toLowerCase() + ".");
+      if (["SUCCEEDED", "FAILED", "REVERSED"].includes(result.payout.status)) load();
+    } catch (error) {
+      setPayoutError(error instanceof Error ? error.message : "Unable to refresh payout status.");
     }
   };
 
