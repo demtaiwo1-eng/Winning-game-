@@ -94,19 +94,20 @@ for (const [lockPath, entry] of entries) {
   const missingIds = ids.filter((id) => !spdxTexts.has(id));
   const unknownMetadata = license === "UNKNOWN" || license === "UNLICENSED" || license.includes("SEE LICENSE IN");
   const fallbackIds = ids.filter((id) => spdxTexts.has(id));
-  if (!licenseFiles.length && fallbackIds.length) {
+  const hasLicenseText = licenseFiles.some((fileName) => /^(LICENSE|LICENCE|COPYING)/i.test(fileName));
+  if (!hasLicenseText && fallbackIds.length) {
     spdxFallbackPackages.push({ name, version, license, ids: fallbackIds });
   }
   for (const id of fallbackIds) addText(spdxTexts.get(id), packageRef + " (SPDX " + id + " standard text)", "SPDX " + id);
   if (unknownMetadata) unknown.push({ name, version, license, repository });
-  if (!licenseFiles.length && !fallbackIds.length || missingIds.length) {
+  if (!hasLicenseText && !fallbackIds.length || missingIds.length) {
     missingText.push({ name, version, license, repository, missingIds });
   }
 
   const item = {
     name, version, license, repository,
     files: licenseFiles,
-    spdxFallback: !licenseFiles.length && fallbackIds.length > 0,
+    spdxFallback: !hasLicenseText && fallbackIds.length > 0,
   };
   packages.push(item);
   if (!byLicense.has(license)) byLicense.set(license, []);
