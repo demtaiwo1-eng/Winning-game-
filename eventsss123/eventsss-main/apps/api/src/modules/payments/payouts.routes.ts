@@ -165,13 +165,30 @@ payoutsRouter.post(
     });
     if (!wallet) throw new HttpError(404, "WALLET_NOT_FOUND", "Your NGN wallet was not found.");
 
-    const resolved = await opayResolveBankAccount(accountNumber, bankCode);
-    const accountName = resolved.accountName;
-    const bankList = await opayListBanks();
-    const bankName = bankList.find((bank) => bank.code === bankCode)?.name || null;
-
     const reference = `ephinta_payout_${randomUUID().replace(/-/g, "").slice(0, 20)}`;
-    let payout;
+    // Create a processing marker before OPay account lookup. This prevents a
+    // central mode switch while a payout request is in flight.
+    let payout = await prisma.payout.create({
+      data: {
+        userId: req.user!.id, walletId: wallet.id, provider: "opay", reference, idempotencyKey,
+        amountMinor, feeMinor, netAmountMinor, currency: "NGN",
+        bankCode, bankName: null, accountName: "Pending verification",
+        maskedAccountNumber: maskAccount(accountNumber), status: PayoutStatus.PROCESSING,
+      },
+    });
+
+    let accountName: string;
+    let bankName: string | null;
+    try {
+      const resolved = await opayResolveBankAccount(accountNumber, bankCode);
+      accountName = resolved.accountName;
+      const bankList = await opayListBanks();
+      bankName = bankList.find((bank) => bank.code === bankCode)?.name || null;
+    } catch (error) {
+      await prisma.payout.deleteMany({ where: { id: payout.id, status: PayoutStatus.PROCESSING } });
+      throw error;
+    }
+
     try {
       payout = await prisma.$transaction(async (tx) => {
         const debit = await tx.wallet.updateMany({
@@ -188,17 +205,13 @@ payoutsRouter.post(
             idempotencyKey: `payout_debit:${reference}`,
           },
         });
-        return tx.payout.create({
-          data: {
-            userId: req.user!.id, walletId: wallet.id, provider: "opay", reference, idempotencyKey,
-            amountMinor, feeMinor, netAmountMinor, currency: "NGN",
-            bankCode, bankName, accountName, maskedAccountNumber: maskAccount(accountNumber),
-            status: PayoutStatus.PENDING,
-          },
+        return tx.payout.update({
+          where: { id: payout.id },
+          data: { accountName, bankName, status: PayoutStatus.PENDING },
         });
       });
     } catch (error) {
-      if (error instanceof HttpError) throw error;
+      await prisma.payout.deleteMany({ where: { id: payout.id, status: PayoutStatus.PROCESSING } });
       const replay = await prisma.payout.findUnique({ where: { idempotencyKey } });
       if (replay) return res.status(200).json({ payout: publicPayout(replay), replayed: true });
       throw error;
