@@ -215,7 +215,7 @@ payoutsRouter.post(
         data: { status: PayoutStatus.PROCESSING, providerTransferId: String(transfer.orderNo) },
       });
     } catch (error) {
-      if (error instanceof HttpError && error.code === "OPAY_PAYOUT_PROVIDER_ERROR") {
+      if (error instanceof HttpError && error.code === "OPAY_PAYOUT_PROVIDER_REJECTED") {
         await completePayout(reference, "failed");
       } else {
         await prisma.payout.updateMany({
