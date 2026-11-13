@@ -1,12 +1,11 @@
 /**
- * Global KYC document matrix for 170+ markets.
+ * EPHINTA's non-authoritative KYC document suggestion catalogue.
  *
- * Design (FATF-aligned, modular by jurisdiction):
- * - Every ISO country gets a region + default acceptable ID set.
- * - Higher-assurance markets can require national ID numbers + address proof.
- * - Business KYC always needs a registry/trade document in addition to personal ID.
- * - Production: plug OCR / Sumsub / Onfido / Smile ID / HyperVerge per region;
- *   this module only encodes *what* to collect so the UX works worldwide.
+ * These country and document suggestions are UI guidance only. They are not
+ * official legal requirements, a FATF certification, a provider capability
+ * matrix, or a substitute for local legal/compliance review. Provider-specific
+ * country/document support and applicable law must be checked before enabling
+ * verification or payouts in a market.
  */
 
 export type KycRegion =
@@ -209,7 +208,7 @@ const OVERRIDES: Record<string, Partial<CountryKycProfile>> = {
   },
 };
 
-/** ISO 3166-1 alpha-2 coverage list (170+) with region + default currency */
+/** Supported-market seed list with illustrative currency defaults; not an official or complete ISO registry. */
 const COUNTRY_SEED: Array<{ code: string; name: string; region: KycRegion; currency: string }> = [
   // Africa
   { code: "NG", name: "Nigeria", region: "AFRICA", currency: "NGN" },
@@ -422,4 +421,33 @@ export function getKycProfile(countryCode: string): CountryKycProfile {
 
 export function listKycCountries(region?: KycRegion) {
   return region ? KYC_COUNTRIES.filter((c) => c.region === region) : KYC_COUNTRIES;
+}
+
+/**
+ * Document types accepted by the EPHINTA upload workflow.
+ * Country profiles recommend document choices but must not reject a valid
+ * platform-supported document solely because a hard-coded country hint omits it.
+ * The verification provider and authorised reviewer determine whether a
+ * document is acceptable for the applicable jurisdiction and use case.
+ */
+const SUPPORTED_IDENTITY_DOCUMENTS = new Set<DocType>([
+  "PASSPORT",
+  "NATIONAL_ID",
+  "DRIVERS_LICENSE",
+  "RESIDENCE_PERMIT",
+  "VOTER_ID",
+  "TAX_ID",
+]);
+
+const SUPPORTED_BUSINESS_DOCUMENTS = new Set<DocType>([
+  "BUSINESS_REGISTRATION",
+  "TRADE_LICENSE",
+  "TAX_ID",
+]);
+
+export function isSupportedKycDocument(kind: "IDENTITY" | "BUSINESS", documentType: string): documentType is DocType {
+  const normalised = documentType.toUpperCase() as DocType;
+  return kind === "IDENTITY"
+    ? SUPPORTED_IDENTITY_DOCUMENTS.has(normalised)
+    : SUPPORTED_BUSINESS_DOCUMENTS.has(normalised);
 }
