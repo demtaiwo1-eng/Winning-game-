@@ -8,6 +8,7 @@ This file records cleanup decisions and items that still need a deliberate owner
 
 - 284 unused Remotion agent-skill, documentation, and example files that were unrelated to the EPHINTA runtime.
 - 2,431 tracked files from a stale parent-level `eventsss123/node_modules` installation, plus the obsolete parent-level package.json and package-lock.json. The maintained application has its own lockfile under `eventsss123/eventsss-main`.
+- The old repository-root Vite 5 dependency manifest/lockfile and stale helper scripts (`finish-opay.sh`, empty `install-postgres16.sh`) were removed. The root package.json is now a dependency-free command wrapper.
 - Six Wale Waves-labelled MP3 recordings in two tracked locations (12 copies total). No commercial distribution permission was evidenced, so the recordings are no longer bundled.
 - Unused Wale Waves YouTube playlist OAuth/sync scripts, setup documentation, and scheduled workflow.
 - The unused `contracts/EventEscrowVault.sol` prototype, which had an MIT SPDX identifier and was not referenced by the active app.
