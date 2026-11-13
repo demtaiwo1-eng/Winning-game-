@@ -46,7 +46,7 @@ try {
   await run(
     "docker",
     ["compose", "-f", "compose.dev.yml", "up", "-d", "postgres"],
-    "Start the local disposable PostgreSQL service",
+    "Start the local PostgreSQL service",
   );
   await run(npm, ["run", "prisma:generate"], "Generate the Prisma client");
   await run(npm, ["run", "db:deploy", "-w", "apps/api"], "Apply local database migrations");
