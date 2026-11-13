@@ -6,6 +6,7 @@
 import { createHmac } from "node:crypto";
 import { env } from "../../config/env";
 import { majorAmountToMinor } from "./webhookVerification";
+import { HttpError } from "../../lib/errors";
 
 export type ProviderName = "paystack" | "flutterwave" | "stripe" | "opay" | "demo";
 
@@ -37,26 +38,23 @@ export function canUseProductionTestMode(
 }
 
 function assertPaymentMode() {
-  const keys: Array<[string, string | undefined, RegExp, RegExp]> = [
-    ["Paystack", env.PAYSTACK_SECRET_KEY, /^sk_test_/, /^sk_live_/],
-    ["Flutterwave", env.FLUTTERWAVE_SECRET_KEY, /^FLWSECK_TEST/, /^FLWSECK-/],
-    ["Stripe", env.STRIPE_SECRET_KEY, /^sk_test_/, /^sk_live_/],
-  ];
-
-  for (const [name, key, testPattern, livePattern] of keys) {
-    if (!key) continue;
-
-    if (env.PAYMENT_MODE === "test" && livePattern.test(key)) {
-      throw new Error(`${name} live key cannot be used while PAYMENT_MODE=test`);
-    }
-
-    if (env.PAYMENT_MODE === "live" && testPattern.test(key)) {
-      throw new Error(`${name} test key cannot be used while PAYMENT_MODE=live`);
-    }
-  }
-
   if (!canUseProductionTestMode()) {
     throw new Error("PAYMENT_MODE=test in production requires ALLOW_PRODUCTION_TEST_MODE=true; demo checkout remains disabled in production");
+  }
+}
+
+function assertProviderKeyMode(
+  name: string,
+  key: string | undefined,
+  testPattern: RegExp,
+  livePattern: RegExp,
+) {
+  if (!key) return;
+  if (env.PAYMENT_MODE === "test" && livePattern.test(key)) {
+    throw new Error(`${name} live key cannot be used while PAYMENT_MODE=test`);
+  }
+  if (env.PAYMENT_MODE === "live" && testPattern.test(key)) {
+    throw new Error(`${name} test key cannot be used while PAYMENT_MODE=live`);
   }
 }
 
@@ -69,46 +67,39 @@ export function selectProvider(currency: string, country?: string): ProviderName
   assertPaymentMode();
 
   const c = currency.toUpperCase();
+  const countryCode = country?.toUpperCase();
 
-  // The OPay adapter is deliberately sandbox-only. Never select it while the
-  // application is configured for live payments.
-  if (
-    c === "NGN" &&
-    env.PAYMENT_MODE === "test" &&
-    env.OPAY_MERCHANT_ID &&
-    env.OPAY_PUBLIC_KEY &&
-    env.OPAY_SECRET_KEY
-  ) return "opay";
+  // EPHINTA's Nigerian payment rail is OPay only. Never silently route an
+  // NGN deposit through another processor or a simulated checkout.
+  if (c === "NGN" || countryCode === "NG") {
+    if (c !== "NGN") {
+      throw new HttpError(400, "OPAY_CURRENCY_UNSUPPORTED", "OPay payments in Nigeria require NGN.");
+    }
+    if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
+      throw new HttpError(503, "OPAY_NOT_CONFIGURED", "OPay is the required provider for NGN payments, but its merchant credentials are not configured.");
+    }
+    return "opay";
+  }
 
-  if (["NGN", "GHS"].includes(c)) {
+  // OPay's current merchant checkout integration is enabled for NGN. Keep
+  // other supported markets on their own configured local payment rails.
+  if (c === "GHS" || countryCode === "GH") {
+    if (env.FLUTTERWAVE_SECRET_KEY) return "flutterwave";
     if (env.PAYSTACK_SECRET_KEY) return "paystack";
+  }
+  if (countryCode && ["KE", "UG", "TZ", "ZA", "RW"].includes(countryCode)) {
     if (env.FLUTTERWAVE_SECRET_KEY) return "flutterwave";
   }
-
-  if (country && ["NG", "GH"].includes(country.toUpperCase())) {
-    if (env.PAYSTACK_SECRET_KEY) return "paystack";
-    if (env.FLUTTERWAVE_SECRET_KEY) return "flutterwave";
-  }
-
-  if (country && ["KE", "UG", "TZ", "ZA", "RW"].includes(country.toUpperCase())) {
-    if (env.FLUTTERWAVE_SECRET_KEY) return "flutterwave";
-  }
-
-  if (env.PAYSTACK_SECRET_KEY) return "paystack";
   if (env.FLUTTERWAVE_SECRET_KEY) return "flutterwave";
-
+  if (env.PAYSTACK_SECRET_KEY) return "paystack";
   if (env.STRIPE_SECRET_KEY) {
     throw new Error("Stripe is configured, but its checkout adapter is not enabled");
   }
-
   if (canUseDemoPayments()) return "demo";
-
-  throw new Error(
-    "No payment provider is configured; demo payments are disabled in live/production mode",
-  );
+  throw new Error("No payment provider is configured; demo payments are disabled in live/production mode");
 }
 
-/** Create an OPay cashier checkout. Keys are server-only; keep this adapter sandboxed. */
+/** Create an OPay cashier checkout. Keys are server-only; never expose them to the client. */
 export async function initializeOpay(input: {
   amountMinor: bigint;
   currency: string;
@@ -117,9 +108,6 @@ export async function initializeOpay(input: {
   notifyUrl?: string;
 }): Promise<InitResult> {
   assertPaymentMode();
-  if (env.PAYMENT_MODE !== "test") {
-    throw new Error("OPay checkout is sandbox-only; live OPay processing is not enabled");
-  }
   if (!env.OPAY_MERCHANT_ID || !env.OPAY_PUBLIC_KEY || !env.OPAY_SECRET_KEY) {
     throw new Error("OPay credentials are not configured");
   }
@@ -134,7 +122,9 @@ export async function initializeOpay(input: {
     throw new Error("OPay payment reference is required");
   }
 
-  const res = await fetch("https://testapi.opaycheckout.com/api/v1/international/cashier/create", {
+  const apiHost = env.PAYMENT_MODE === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
+  const cashierHost = env.PAYMENT_MODE === "test" ? "sandboxcashier.opaycheckout.com" : "cashier.opaycheckout.com";
+  const res = await fetch(`https://${apiHost}/api/v1/international/cashier/create`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${env.OPAY_PUBLIC_KEY}`,
@@ -171,7 +161,7 @@ export async function initializeOpay(input: {
   }
   if (
     cashierUrl.protocol !== "https:" ||
-    cashierUrl.hostname.toLowerCase() !== "sandboxcashier.opaycheckout.com" ||
+    cashierUrl.hostname.toLowerCase() !== cashierHost ||
     cashierUrl.username ||
     cashierUrl.password ||
     cashierUrl.port
@@ -183,8 +173,7 @@ export async function initializeOpay(input: {
     provider: "opay",
     providerRef: data.data.reference || input.reference,
     authorizationUrl: cashierUrl.toString(),
-    // This adapter targets OPay's test endpoint; report sandbox explicitly.
-    mode: "sandbox",
+    mode: env.PAYMENT_MODE === "test" ? "sandbox" : "live",
   };
 }
 
@@ -202,7 +191,8 @@ export async function verifyOpay(reference: string): Promise<{
   const requestBody = { country: "NG", reference };
   const body = JSON.stringify(requestBody);
   const signature = createHmac("sha512", env.OPAY_SECRET_KEY).update(body).digest("hex");
-  const res = await fetch("https://testapi.opaycheckout.com/api/v1/international/cashier/status", {
+  const apiHost = env.PAYMENT_MODE === "test" ? "testapi.opaycheckout.com" : "liveapi.opaycheckout.com";
+  const res = await fetch(`https://${apiHost}/api/v1/international/cashier/status`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${signature}`,
@@ -259,6 +249,7 @@ export async function initializePaystack(input: {
 }): Promise<InitResult> {
   assertPaymentMode();
 
+  assertProviderKeyMode("Paystack", env.PAYSTACK_SECRET_KEY, /^sk_test_/, /^sk_live_/);
   if (!env.PAYSTACK_SECRET_KEY) {
     return { provider: "demo", providerRef: input.reference, mode: "demo" };
   }
@@ -360,6 +351,7 @@ export async function initializeStripe(input: {
 }): Promise<InitResult> {
   assertPaymentMode();
 
+  assertProviderKeyMode("Stripe", env.STRIPE_SECRET_KEY, /^sk_test_/, /^sk_live_/);
   if (!env.STRIPE_SECRET_KEY) {
     return { provider: "demo", providerRef: input.reference, mode: "demo" };
   }
@@ -454,6 +446,7 @@ export async function initializeFlutterwave(input: {
 }): Promise<InitResult> {
   assertPaymentMode();
 
+  assertProviderKeyMode("Flutterwave", env.FLUTTERWAVE_SECRET_KEY, /^FLWSECK_TEST/, /^FLWSECK-/);
   if (!env.FLUTTERWAVE_SECRET_KEY) {
     return { provider: "demo", providerRef: input.reference, mode: "demo" };
   }

@@ -1,13 +1,59 @@
 import { createHmac } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { env } from "../../../config/env";
-import { initializeOpay, verifyOpay } from "../providers";
+import { initializeOpay, selectProvider, verifyOpay } from "../providers";
 
 const originalMerchantId = env.OPAY_MERCHANT_ID;
 const originalPublicKey = env.OPAY_PUBLIC_KEY;
 const originalSecretKey = env.OPAY_SECRET_KEY;
 const originalPaymentMode = env.PAYMENT_MODE;
 const originalNodeEnv = env.NODE_ENV;
+
+
+describe("Nigerian provider selection", () => {
+  const originalPaystack = env.PAYSTACK_SECRET_KEY;
+  const originalFlutterwave = env.FLUTTERWAVE_SECRET_KEY;
+
+  beforeEach(() => {
+    env.OPAY_MERCHANT_ID = "merchant";
+    env.OPAY_PUBLIC_KEY = "public";
+    env.OPAY_SECRET_KEY = "secret";
+    env.PAYSTACK_SECRET_KEY = "sk_test_should_not_be_used_for_ngn";
+    env.FLUTTERWAVE_SECRET_KEY = "FLWSECK_TEST_should_not_be_used_for_ngn";
+    env.PAYMENT_MODE = "test";
+    env.NODE_ENV = "test";
+  });
+
+  afterEach(() => {
+    env.PAYSTACK_SECRET_KEY = originalPaystack;
+    env.FLUTTERWAVE_SECRET_KEY = originalFlutterwave;
+    env.OPAY_MERCHANT_ID = originalMerchantId;
+    env.OPAY_PUBLIC_KEY = originalPublicKey;
+    env.OPAY_SECRET_KEY = originalSecretKey;
+    env.PAYMENT_MODE = originalPaymentMode;
+    env.NODE_ENV = originalNodeEnv;
+  });
+
+  it("selects OPay for every NGN transaction even when other providers are configured", () => {
+    expect(selectProvider("NGN", "NG")).toBe("opay");
+    expect(selectProvider("NGN", "GH")).toBe("opay");
+  });
+
+  it("does not let a legacy Paystack test key block OPay live-mode selection", () => {
+    env.PAYMENT_MODE = "live";
+    env.PAYSTACK_SECRET_KEY = "sk_test_legacy_key";
+    expect(selectProvider("NGN", "NG")).toBe("opay");
+  });
+
+  it("fails closed instead of falling back to Paystack, Flutterwave or demo when OPay is missing", () => {
+    env.OPAY_MERCHANT_ID = undefined;
+    expect(() => selectProvider("NGN", "NG")).toThrow(/OPay is the required provider/);
+  });
+
+  it("does not silently accept non-NGN currency for a Nigerian customer", () => {
+    expect(() => selectProvider("GHS", "NG")).toThrow(/require NGN/);
+  });
+});
 
 describe("verifyOpay", () => {
   beforeEach(() => {
@@ -182,17 +228,28 @@ describe("initializeOpay", () => {
     })).rejects.toThrow("reference does not match");
   });
 
-  it("does not initialize OPay when live payments are selected", async () => {
+  it("uses the OPay production endpoint only in live mode and validates the production cashier host", async () => {
     env.PAYMENT_MODE = "live";
-    const fetchMock = vi.fn();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      code: "00000",
+      data: {
+        reference: "ephinta-live-reference",
+        cashierUrl: "https://cashier.opaycheckout.com/apiCashier/redirect/payment/checkout?orderToken=live-token",
+      },
+    }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(initializeOpay({
+    const result = await initializeOpay({
       amountMinor: 12500n,
       currency: "NGN",
-      reference: "ephinta-create-reference",
+      reference: "ephinta-live-reference",
       callbackUrl: "https://ephinta.example.test/payment/return",
-    })).rejects.toThrow("sandbox-only");
-    expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://liveapi.opaycheckout.com/api/v1/international/cashier/create",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(result).toMatchObject({ provider: "opay", mode: "live" });
   });
 });

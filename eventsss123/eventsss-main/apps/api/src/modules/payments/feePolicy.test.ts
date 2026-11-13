@@ -4,6 +4,7 @@ import {
   bookingCommissionMinor,
   walletTopupFeeBps,
   walletTopupFeeMinor,
+  payoutFeeMinor,
 } from "./feePolicy";
 
 describe("separate payment fee policy", () => {
@@ -26,6 +27,16 @@ describe("separate payment fee policy", () => {
     expect(100000n - bookingCommissionMinor(100000n, config)).toBe(98000n);
   });
 
+  it("deducts exactly 2% from outgoing OPay bank withdrawals", () => {
+    const config = { COMMISSION_BPS: 500, PAYOUT_FEE_BPS: 200 };
+    expect(payoutFeeMinor(100000n, config)).toBe(2000n);
+    expect(100000n - payoutFeeMinor(100000n, config)).toBe(98000n);
+  });
+
+  it("preserves an explicitly configured zero outgoing fee", () => {
+    expect(payoutFeeMinor(100000n, { COMMISSION_BPS: 500, PAYOUT_FEE_BPS: 0 })).toBe(0n);
+  });
+
   it("preserves an explicitly configured zero fee instead of falling back", () => {
     const config = {
       COMMISSION_BPS: 500,
@@ -36,12 +47,13 @@ describe("separate payment fee policy", () => {
     expect(bookingCommissionMinor(100000n, config)).toBe(0n);
   });
 
-  it("uses the legacy commission rate only when an explicit rate is absent", () => {
-    const config = { COMMISSION_BPS: 200 };
+  it("keeps incoming and outgoing transaction fees at 2% even when legacy commission differs", () => {
+    const config = { COMMISSION_BPS: 500 };
     expect(walletTopupFeeBps(config)).toBe(200);
-    expect(bookingCommissionBps(config)).toBe(200);
+    expect(bookingCommissionBps(config)).toBe(500);
     expect(walletTopupFeeMinor(100000n, config)).toBe(2000n);
-    expect(bookingCommissionMinor(100000n, config)).toBe(2000n);
+    expect(payoutFeeMinor(100000n, config)).toBe(2000n);
+    expect(bookingCommissionMinor(100000n, config)).toBe(5000n);
   });
 
   it("uses exact minor-unit half-up rounding for small payments", () => {

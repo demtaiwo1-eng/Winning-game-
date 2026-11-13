@@ -46,6 +46,28 @@ walletRouter.get(
       take: 100,
     });
 
+    const paymentIntentIds = entries
+      .filter((entry) => entry.refType === "PAYMENT_INTENT" && entry.refId)
+      .map((entry) => entry.refId as string);
+    const paymentIntents = paymentIntentIds.length
+      ? await prisma.paymentIntent.findMany({
+          where: { id: { in: paymentIntentIds } },
+          select: { id: true, provider: true },
+        })
+      : [];
+    const providerByIntent = new Map(paymentIntents.map((intent) => [intent.id, intent.provider]));
+    const payoutReferences = entries
+      .filter((entry) => ["BANK_PAYOUT", "PAYOUT_REFUND", "PAYOUT_REVERSAL"].includes(entry.refType || "") && entry.refId)
+      .map((entry) => entry.refId as string);
+    const payouts = payoutReferences.length
+      ? await prisma.payout.findMany({
+          where: { OR: [{ reference: { in: payoutReferences } }, { id: { in: payoutReferences } }] },
+          select: { id: true, reference: true, provider: true },
+        })
+      : [];
+    const payoutProviderByReference = new Map(payouts.map((payout) => [payout.reference, payout.provider]));
+    const payoutProviderById = new Map(payouts.map((payout) => [payout.id, payout.provider]));
+
     res.json({
       wallet: {
         id: wallet.id,
@@ -61,6 +83,11 @@ walletRouter.get(
         refType: e.refType,
         refId: e.refId,
         idempotencyKey: e.idempotencyKey,
+        provider: e.refType === "PAYMENT_INTENT"
+          ? (e.refId ? providerByIntent.get(e.refId) || "unknown" : "unknown")
+          : ["BANK_PAYOUT", "PAYOUT_REFUND", "PAYOUT_REVERSAL"].includes(e.refType || "")
+            ? (e.refId ? payoutProviderByReference.get(e.refId) || payoutProviderById.get(e.refId) || "unknown" : "unknown")
+            : "internal",
         createdAt: e.createdAt,
       })),
     });

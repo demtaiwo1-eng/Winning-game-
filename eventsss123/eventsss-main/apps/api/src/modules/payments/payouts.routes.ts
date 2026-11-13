@@ -13,13 +13,14 @@ import { assertOpayTransfersEnabled, maskAccount, normalizeOpayTransferStatus, o
 export const payoutsRouter = Router();
 
 function publicPayout(p: {
-  id: string; reference: string; amountMinor: bigint; feeMinor: bigint;
+  id: string; reference: string; provider: string; amountMinor: bigint; feeMinor: bigint;
   netAmountMinor: bigint; currency: string; bankName: string | null;
   accountName: string; maskedAccountNumber: string; status: PayoutStatus;
   failureReason: string | null; createdAt: Date; updatedAt: Date;
 }) {
   return {
-    id: p.id, reference: p.reference, amountMinor: p.amountMinor.toString(),
+    id: p.id, reference: p.reference, provider: p.provider,
+    amountMinor: p.amountMinor.toString(),
     feeMinor: p.feeMinor.toString(), netAmountMinor: p.netAmountMinor.toString(),
     currency: p.currency, bankName: p.bankName, accountName: p.accountName,
     accountNumber: p.maskedAccountNumber, status: p.status,
@@ -187,7 +188,7 @@ payoutsRouter.post(
         });
         return tx.payout.create({
           data: {
-            userId: req.user!.id, walletId: wallet.id, reference, idempotencyKey,
+            userId: req.user!.id, walletId: wallet.id, provider: "opay", reference, idempotencyKey,
             amountMinor, feeMinor, netAmountMinor, currency: "NGN",
             bankCode, bankName, accountName, maskedAccountNumber: maskAccount(accountNumber),
             status: PayoutStatus.PENDING,

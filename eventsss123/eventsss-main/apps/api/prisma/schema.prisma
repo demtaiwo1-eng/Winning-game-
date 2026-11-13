@@ -1084,7 +1084,7 @@ model Payout {
   id                    String       @id @default(uuid())
   userId                String
   walletId              String
-  provider              String       @default("paystack")
+  provider              String       @default("opay")
   reference             String       @unique
   idempotencyKey        String       @unique
   amountMinor           BigInt
