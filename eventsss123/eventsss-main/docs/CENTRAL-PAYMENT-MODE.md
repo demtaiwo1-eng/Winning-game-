@@ -1,6 +1,6 @@
 # Central EPHINTA payment mode
 
-The platform payment mode is stored in the shared PostgreSQL `PlatformRuntimeSetting` row with ID `global`. The ADMIN dashboard exposes DEMO, TEST and LIVE. The API reads this shared row before every payment/payout request, so separate Render instances and connected web/PWA/native clients use the same server-side policy.
+The platform payment mode is stored in the shared PostgreSQL `PlatformRuntimeSetting` row with ID `global`. The ADMIN dashboard exposes DEMO, TEST and LIVE. The API reads this shared row before every payment/payout request. It refuses a mode change while pending payment intents or pending/processing payouts exist, so a transaction is never verified against credentials for a different mode. The API so separate Render instances and connected web/PWA/native clients use the same server-side policy.
 
 ## Modes
 
@@ -8,7 +8,7 @@ The platform payment mode is stored in the shared PostgreSQL `PlatformRuntimeSet
 - **TEST**: OPay sandbox checkout and transfer endpoints. Production API test operation additionally requires `ALLOW_PRODUCTION_TEST_MODE=true`.
 - **LIVE**: OPay production checkout and transfers. The API refuses this mode unless the dedicated `OPAY_LIVE_MERCHANT_ID`, `OPAY_LIVE_PUBLIC_KEY`, `OPAY_LIVE_SECRET_KEY`, `OPAY_LIVE_MODE_READY=true`, `OPAY_TRANSFERS_ENABLED=true`, production `NODE_ENV`, and exact production transfer endpoint are configured.
 
-Use separate `OPAY_TEST_*` and `OPAY_LIVE_*` credentials. Legacy `OPAY_MERCHANT_ID`, `OPAY_PUBLIC_KEY` and `OPAY_SECRET_KEY` are fallback credentials for TEST only; they are never used for LIVE. Keep all secrets in Render environment settings, never in source control or chat. `OPAY_LIVE_MODE_READY=true` is an explicit operational attestation and must only be set after OPay confirms production merchant access, checkout, transfers, callbacks/webhooks and reconciliation.
+Use separate `OPAY_TEST_*` and `OPAY_LIVE_*` credentials and separate `OPAY_TEST_TRANSFER_BASE_URL` / `OPAY_LIVE_TRANSFER_BASE_URL` endpoints. Legacy `OPAY_MERCHANT_ID`, `OPAY_PUBLIC_KEY` and `OPAY_SECRET_KEY` are fallback credentials for TEST only; they are never used for LIVE. Keep all secrets in Render environment settings, never in source control or chat. `OPAY_LIVE_MODE_READY=true` is an explicit operational attestation and must only be set after OPay confirms production merchant access, checkout, transfers, callbacks/webhooks and reconciliation.
 
 ## Rollout
 
