@@ -54,7 +54,7 @@ describe("Nigerian provider selection", () => {
     expect(selectProvider("NGN", "GH")).toBe("opay");
   });
 
-  it("does not let a legacy Paystack test key block OPay live-mode selection", () => {
+  it("does not let a legacy Paystack test key block OPay live-mode selection", async () => {
     env.PAYMENT_MODE = "live";
     env.OPAY_LIVE_MERCHANT_ID = "live-merchant";
     env.OPAY_LIVE_PUBLIC_KEY = "live-public";
@@ -93,6 +93,10 @@ describe("verifyOpay", () => {
     env.OPAY_SECRET_KEY = originalSecretKey;
     env.PAYMENT_MODE = originalPaymentMode;
     env.NODE_ENV = originalNodeEnv;
+    env.OPAY_LIVE_MERCHANT_ID = originalLiveMerchantId;
+    env.OPAY_LIVE_PUBLIC_KEY = originalLivePublicKey;
+    env.OPAY_LIVE_SECRET_KEY = originalLiveSecretKey;
+    env.OPAY_LIVE_MODE_READY = originalLiveReady;
     vi.unstubAllGlobals();
     findUnique.mockResolvedValue({ paymentMode: "test" });
     await refreshPaymentMode();
@@ -163,6 +167,10 @@ describe("initializeOpay", () => {
     env.OPAY_SECRET_KEY = originalSecretKey;
     env.PAYMENT_MODE = originalPaymentMode;
     env.NODE_ENV = originalNodeEnv;
+    env.OPAY_LIVE_MERCHANT_ID = originalLiveMerchantId;
+    env.OPAY_LIVE_PUBLIC_KEY = originalLivePublicKey;
+    env.OPAY_LIVE_SECRET_KEY = originalLiveSecretKey;
+    env.OPAY_LIVE_MODE_READY = originalLiveReady;
     vi.unstubAllGlobals();
     findUnique.mockResolvedValue({ paymentMode: "test" });
     await refreshPaymentMode();
