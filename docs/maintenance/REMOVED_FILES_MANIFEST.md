@@ -19,6 +19,30 @@ The following eight maintenance scripts were copied byte-for-byte into `maintena
 | `eventsss123/eventsss-main/setup-local-postgres.sh` | `maintenance/quarantine/2026-11-14/original/eventsss123/eventsss-main/setup-local-postgres.sh` | `4b23a5af03e1f1f5ac8182b908307ddc11f6ee51` | Unreferenced legacy DB setup script with hard-coded development password, source patching and npm install fallback; current `scripts/with-database.mjs` uses `compose.dev.yml` |
 | `eventsss123/eventsss-main/local-postgres.patch` | `maintenance/quarantine/2026-11-14/original/eventsss123/eventsss-main/local-postgres.patch` | `4bafba32972c1defb57ccc391af6fe3be543a62f` | Patch belonged only to the quarantined local DB script and creates a SQL path that is absent from the active tree |
 
+
+## Final disposition — quarantine stage passed, copies removed
+
+**Quarantine-stage verification passed before deletion** on commit `a0aef084ea04c98939ac9910119752588df8f1a8`:
+
+- API/type/unit and KYC research checks passed.
+- Production API/web builds and browser desktop/mobile journeys passed.
+- Database integration and the 300-user workflow regression passed.
+- 7,000 portal fixtures (1,000 per active role) seeded and cleaned successfully.
+- Strict responsive/design audit passed at 390px, 768px and 1440px.
+- Windows verification and iOS Simulator build passed.
+- Android Gradle lint, unit tests and debug APK assembly passed; no physical Android device was connected for install/launch verification.
+- 5,000 mocked payment journeys passed (60,000 assertions; 2% fee policy; zero provider calls and no real-money movement).
+- IP/asset rights gate and dependency licence inventory passed.
+- The separate 5,000 one-node health-probe campaign remains a staging health check, not authenticated end-to-end users or real financial transactions.
+
+After those checks, the 12 quarantine copies and the quarantine README were removed in follow-up commits on the final cleanup branch. The original blob SHAs above remain in Git history and are the recovery source. Example recovery command:
+
+```bash
+git show <original-blob-sha> > <original-repository-path>
+```
+
+No active application imports or package/workflow references were found for the removed paths. The active application source, package manifests/lockfile, migrations, provider adapters, secrets and customer data were not changed by this final copy removal.
+
 ## Verification policy
 
 1. The application source, package manifests, lockfile, workflows, payment adapters, migrations, native project, and data are unchanged by this script quarantine.
