@@ -2,6 +2,7 @@ import { Router, type Request } from "express";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../lib/async";
+import { HttpError } from "../../lib/errors";
 import { requireAuth, requireRole } from "../../middleware/auth";
 
 export const adminRouter = Router();
@@ -34,23 +35,6 @@ adminRouter.patch("/runtime/payment-mode", asyncHandler(async (req, res) => {
   if (paymentMode === "test" && process.env.NODE_ENV === "production" && process.env.ALLOW_PRODUCTION_TEST_MODE !== "true") {
     return res.status(409).json({ error: { code: "PRODUCTION_TEST_MODE_DISABLED", message: "TEST mode is not enabled for this production API deployment." } });
   }
-  const current = await prisma.platformRuntimeSetting.findUnique({ where: { id: "global" } });
-  if ((current?.paymentMode ?? "test") !== paymentMode) {
-    const [pendingPayments, pendingPayouts] = await Promise.all([
-      prisma.paymentIntent.count({ where: { status: "PENDING" } }),
-      prisma.payout.count({ where: { status: { in: ["PENDING", "PROCESSING"] } } }),
-    ]);
-    if (pendingPayments || pendingPayouts) {
-      return res.status(409).json({
-        error: {
-          code: "MODE_SWITCH_BLOCKED_PENDING_TRANSACTIONS",
-          message: "Reconcile or complete all pending payments and payouts before changing the global mode. This prevents switching provider credentials while transactions are in flight.",
-          pendingPayments,
-          pendingPayouts,
-        },
-      });
-    }
-  }
   if (paymentMode === "live") {
     const missing = [
       !process.env.OPAY_LIVE_MERCHANT_ID && "OPAY_LIVE_MERCHANT_ID",
@@ -76,7 +60,18 @@ adminRouter.patch("/runtime/payment-mode", asyncHandler(async (req, res) => {
   }
 
   const result = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "PlatformRuntimeSetting" WHERE "id" = 'global' FOR UPDATE`;
     const previous = await tx.platformRuntimeSetting.findUnique({ where: { id: "global" } });
+    if ((previous?.paymentMode ?? "test") !== paymentMode) {
+      const [pendingPayments, pendingPayouts] = await Promise.all([
+        tx.paymentIntent.count({ where: { status: "PENDING" } }),
+        tx.payout.count({ where: { status: { in: ["PENDING", "PROCESSING"] } } }),
+      ]);
+      if (pendingPayments || pendingPayouts) {
+        throw new HttpError(409, "MODE_SWITCH_BLOCKED_PENDING_TRANSACTIONS",
+          "Reconcile all pending transactions before switching modes (" + pendingPayments + " pending payments, " + pendingPayouts + " pending payouts).");
+      }
+    }
     const setting = await tx.platformRuntimeSetting.upsert({
       where: { id: "global" },
       create: { id: "global", paymentMode, changedById: req.user!.id },
