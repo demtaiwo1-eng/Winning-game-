@@ -49,6 +49,13 @@ import {
 export const paymentsRouter = Router();
 paymentsRouter.use(payoutsRouter);
 
+logger.info({
+  paystackSecretConfigured: Boolean(env.PAYSTACK_SECRET_KEY),
+  paystackWebhookSecretConfigured: Boolean(env.PAYSTACK_WEBHOOK_SECRET),
+  paystackTransfersEnabled: env.PAYSTACK_TRANSFERS_ENABLED === "true",
+  paymentMode: env.PAYMENT_MODE,
+}, "Paystack payout configuration readiness");
+
 
 /** Create payment intent to fund wallet */
 paymentsRouter.post(
