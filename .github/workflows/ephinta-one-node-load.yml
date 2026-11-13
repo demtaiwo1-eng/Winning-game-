@@ -27,7 +27,7 @@ jobs:
       - name: Confirm target is the isolated staging API
         run: |
           test "${EPHINTA_LOAD_BASE_URL}" = "https://ephinta-opay-staging.onrender.com"
-          echo "Target: one staging service; one request per synthetic identity; concurrency capped at 20."
+          echo "Target: one staging service; one request per synthetic identity; concurrency capped at 4; request rate capped at 3/second."
         env:
           EPHINTA_LOAD_BASE_URL: https://ephinta-opay-staging.onrender.com
       - name: Run bounded 5,000-user campaign and financial mode simulation
