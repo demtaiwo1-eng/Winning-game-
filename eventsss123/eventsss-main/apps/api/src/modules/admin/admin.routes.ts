@@ -28,6 +28,29 @@ adminRouter.patch("/runtime/payment-mode", asyncHandler(async (req, res) => {
     return res.status(400).json({ error: { code: "INVALID_PAYMENT_MODE", message: "Choose DEMO, TEST, or LIVE." } });
   }
   const paymentMode = requested as typeof paymentModes[number];
+  if (paymentMode === "demo" && process.env.NODE_ENV === "production") {
+    return res.status(409).json({ error: { code: "DEMO_MODE_NOT_ALLOWED", message: "DEMO mode is restricted to non-production deployments." } });
+  }
+  if (paymentMode === "test" && process.env.NODE_ENV === "production" && process.env.ALLOW_PRODUCTION_TEST_MODE !== "true") {
+    return res.status(409).json({ error: { code: "PRODUCTION_TEST_MODE_DISABLED", message: "TEST mode is not enabled for this production API deployment." } });
+  }
+  const current = await prisma.platformRuntimeSetting.findUnique({ where: { id: "global" } });
+  if ((current?.paymentMode ?? "test") !== paymentMode) {
+    const [pendingPayments, pendingPayouts] = await Promise.all([
+      prisma.paymentIntent.count({ where: { status: "PENDING" } }),
+      prisma.payout.count({ where: { status: { in: ["PENDING", "PROCESSING"] } } }),
+    ]);
+    if (pendingPayments || pendingPayouts) {
+      return res.status(409).json({
+        error: {
+          code: "MODE_SWITCH_BLOCKED_PENDING_TRANSACTIONS",
+          message: "Reconcile or complete all pending payments and payouts before changing the global mode. This prevents switching provider credentials while transactions are in flight.",
+          pendingPayments,
+          pendingPayouts,
+        },
+      });
+    }
+  }
   if (paymentMode === "live") {
     const missing = [
       !process.env.OPAY_LIVE_MERCHANT_ID && "OPAY_LIVE_MERCHANT_ID",
