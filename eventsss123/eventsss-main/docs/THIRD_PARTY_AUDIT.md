@@ -1,73 +1,98 @@
 # EPHINTA third-party, source-ownership, and licence audit
 
-**Audit date:** 2026-11-13  
-**Scope:** Repository metadata and tracked application paths in `eventsss123/eventsss-main`. This is a first-pass repository audit, not a legal opinion or a full source-code similarity scan.
+**Updated:** 2026-11-13  
+**Scope:** Git tree, source references, package-lock metadata, media paths, commit history, and build/runtime references in `eventsss123/eventsss-main`. This is a technical due-diligence audit, not a legal opinion or a complete public/proprietary code-similarity scan.
 
 ## Executive result
 
-| Area | Finding | Status |
+| Area | Finding | Current action |
 |---|---|---|
-| Root project licence | No `LICENSE`, `COPYING`, or `NOTICE` file was present at the repository root or application root in the inspected tree | Action required |
-| Third-party notices | No project-level `THIRD_PARTY_NOTICES` or acknowledgements file was present at the application root | Action required |
-| Dependency licensing | The project uses npm workspaces and many third-party packages. Their individual package licences must be inventoried from the lockfile/package metadata and retained with distributed builds | Action required |
-| Media rights | Six MP3 files at the application root include the name “Wale Waves” in their filenames. The repository listing does not establish the recording/composition owner, licence, or distribution permission | Rights evidence required |
-| Code plagiarism | No finding of plagiarism can be made from filenames or repository metadata. A full public-code similarity scan and human review of flagged matches have not yet been performed | Not assessed |
-| Attribution | No central project-level acknowledgements/third-party notices file was found in the inspected root | Action required |
+| Project-level licence | No root or application-level `LICENSE` was present. The legal copyright holder has not been confirmed. | Do not invent a copyright owner or publish a misleading licence. Owner confirmation and legal review are still required. |
+| Third-party Remotion content | The product repository contained a large Remotion agent-skill/documentation bundle, with example code and sample assets. It is unrelated to EPHINTA's runtime/build. | Removed from this release branch: 284 skill/document/example files. |
+| Audio recordings | Six Wale Waves-labelled recordings existed twice (repository root and web public assets). No commercial distribution grant or master/composition rights record was found. | Removed all 12 tracked copies from this release branch. Audio playback now stays disabled unless an owner-configured, rights-cleared HTTPS source is supplied. |
+| YouTube playlist automation | OAuth scripts and a scheduled playlist-sync workflow existed, but the player did not use the generated catalogue. | Removed the unused Google OAuth/YouTube playlist automation, documentation, and workflow. |
+| Solidity escrow prototype | `contracts/EventEscrowVault.sol` carried an explicit `SPDX-License-Identifier: MIT` and was not imported or deployed by the application. | Removed the unused contract from the current application tree. This does not revoke permissions granted by earlier public MIT-labelled revisions. |
+| npm dependencies | The lockfile snapshot contains 750 third-party package entries across 12 declared licence expressions; no third-party package had unknown/unlicensed metadata in the recorded inventory. | Keep package licences and notices separate from EPHINTA's own commercial terms; regenerate for each release. |
+| Other integrations | OPay, Bytid KYC, Capacitor/Capgo updater, SMTP/Nodemailer, and S3-compatible storage are service/provider integrations. | Keep only under valid provider terms, keys, consent, privacy disclosures, and operational controls. These integrations are not evidence of copied source code. |
+| Contributor ownership | Git history includes contributions by `demtaiwo1-eng` and `deytaiwo2`. The repository owner previously identified `deytaiwo2` as a collaborator. | Obtain written IP assignment or a commercial licence covering collaborator contributions before claiming exclusive ownership of all code. |
+| Plagiarism certification | No specific copied EPHINTA application source file has been proven by this audit. | A complete similarity scan against public and proprietary code databases and manual review of flagged matches remain outstanding. |
 
-## Evidence and observations
+## Remediation already applied in this branch
 
-### 1. Missing project-level licence and notices
+1. Removed the unused Remotion agent-skill bundle. It contained video, mapping, multimedia, and SaaS examples that were not imported by the EPHINTA app.
+2. Removed the six Wale Waves recordings from both the repository root and web public folder (12 tracked files total). Their ownership/licensing was not evidenced in the repository.
+3. Removed the unused Wale Waves YouTube OAuth bootstrap, playlist-sync script, workflow, and setup guide. This removes an unnecessary Google account/token/quota surface from the current product.
+4. Reworked the audio player so it makes no audio request, displays no consent prompt, and makes no claim of original music when no approved source is configured. A future source must be explicitly supplied via `VITE_EPHINTA_LICENSED_AUDIO_URL` or the component prop and must have a corresponding rights record.
+5. Removed the unused Solidity escrow prototype, which was separately labelled MIT. The production application continues to use its existing server-side wallet/ledger/escrow workflow; no deployed chain contract was found in the inspected app tree.
+6. Added automated checks to prevent unregistered bundled audio and the removed Remotion bundle from returning.
 
-The inspected repository/application root contains package manifests, documentation, source folders, and media assets, but no project-level `LICENSE`, `COPYING`, `NOTICE`, or `THIRD_PARTY_NOTICES.md` file was found in the tree queried for this audit.
+## Dependency licence inventory
 
-**Impact:** absence of a licence does not make third-party dependencies unlicensed, and it does not automatically grant permission to copy or redistribute the application. It also means users should not infer an open-source licence from the repository being visible on GitHub.
+The current lockfile inventory recorded:
 
-**Recommended action:** have the actual rights holder approve a proprietary commercial licence for EPHINTA, and maintain a separate third-party notices inventory. Do not replace dependency licences with the EPHINTA commercial terms.
+- 750 third-party package entries.
+- 12 declared licence types/expressions.
+- Zero third-party package entries with unknown or unlicensed metadata in that snapshot.
+- Licence families include MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, MPL-2.0, BlueOak-1.0.0, Unlicense, CC-BY-4.0, MIT-0, 0BSD, and a dual MIT OR CC0-1.0 expression.
 
-### 2. Bundled audio assets
+Important:
+- Package metadata is not a substitute for reading the actual licence and notice files.
+- CC-BY-4.0 has attribution requirements; MPL-2.0 has source/notice obligations for covered files; Apache-2.0 requires preserving notices and applicable patent/trademark terms.
+- Do not apply EPHINTA's proprietary terms to third-party packages.
+- Generate the release notice bundle from the exact installed dependency tree and retain each package's actual licence and NOTICE files.
+- Gradle wrapper scripts include their upstream Apache-2.0 notice in their headers; keep those headers intact.
 
-The application root contains six files named:
+Run:
 
-- `Here we are-1 -Wale Waves_ESS_Wedding.mp3`
-- `Here we are-2 -Wale Waves_ESS_Wedding.mp3`
-- `Welcome, Little One-1-Wale Waves_ESS_Naming.mp3`
-- `Welcome, Little One-2-Wale Waves_ESS_Naming.mp3`
-- `You Will Live in Our Hearts-1-Wale Waves_ESS_Burials.mp3`
-- `You Will Live in Our Hearts-2-Wale Waves_ESS_Burials.mp3`
+```bash
+npm ci
+node scripts/qa/ephinta-license-inventory.mjs
+```
 
-The names suggest a credited artist/creator, but names alone do not prove ownership or permission. Confirm the master recording and composition rights, territory, term, commercial use, in-app streaming/download rights, and any attribution wording. Keep written licences or releases in a private legal-records location; do not commit contracts or personal information to the public repository.
+The script and CI workflow produce the package inventory and third-party notice report. Review any package with missing text or unusual licence expressions before distributing a release.
 
-### 3. Dependency licensing
+## Provider and service integrations
 
-The application uses npm workspaces and dependencies including React, Express, Prisma, Capacitor, and related packages. A production distribution must preserve applicable licence texts and notices for direct and transitive dependencies.
+These are external services, not code that EPHINTA owns. Use the official documented APIs and do not copy provider SDK code or branding outside the permitted integration:
 
-**Lockfile snapshot (2026-11-13):** 750 third-party package entries were identified after excluding six internal EPHINTA workspace entries. Declared licence metadata: MIT 630, ISC 52, Apache-2.0 21, BSD-3-Clause 14, MPL-2.0 13, BlueOak-1.0.0 10, BSD-2-Clause 5, and five single-entry declarations (Unlicense, CC-BY-4.0, MIT-0, 0BSD, and MIT OR CC0-1.0). The six metadata-unknown entries were the three internal workspace packages and their linked workspace aliases, not third-party packages.\n\nA repeatable inventory generator now lives at `scripts/qa/ephinta-license-inventory.mjs`; run it with `node scripts/qa/ephinta-license-inventory.mjs`. It writes a Markdown inventory under `artifacts/`. The CI workflow uploads that inventory. A package's `license` field is a discovery signal, not a substitute for reading its actual licence text. Manually review attribution requirements (including CC-BY), source-distribution obligations (including MPL), and every package's shipped licence/NOTICE files.
+| Integration | Purpose | Required controls |
+|---|---|---|
+| OPay | NGN wallet deposits and supported payout workflows | Merchant approval, sandbox/live separation, webhook signature checks, idempotency, payout permission, reconciliation, fee disclosure |
+| Bytid | Hosted identity/KYC verification | Provider contract, privacy/DPA review, explicit user consent, data minimisation, retention controls, verified webhook |
+| Capacitor / Android / iOS | Native application shell | Preserve upstream licence notices and comply with platform terms |
+| Capgo updater | Optional mobile update delivery | Service terms, privacy/security review, signed release policy, rollback controls |
+| SMTP / Nodemailer | Email delivery | SMTP provider terms, anti-abuse controls, transactional email policy |
+| S3-compatible storage | KYC/document/object storage | Provider terms, encryption, access control, retention/deletion and regional data-transfer review |
 
-### 4. Source similarity / plagiarism
+Legacy Paystack/Flutterwave/Stripe adapters and webhook compatibility code remain in the source tree for historical/other-market records. The inspected provider selector routes NGN through OPay; do not configure or use other processors for new NGN traffic. Before removing legacy webhook compatibility, reconcile all outstanding intents and confirm no historical transaction still depends on it. If EPHINTA is to be OPay-only in every country/currency, that is a separate product/payment policy change and must be applied consistently to UI, API, reporting, and data migrations.
 
-This audit did not identify a specific copied work. It also did not run a comprehensive code-search comparison against public repositories, proprietary code databases, design marketplaces, or stock-media catalogues. Therefore, it cannot certify that every source file or asset is original.
+## Source and asset provenance still requiring owner evidence
 
-**Recommended review workflow:**
+- EPHINTA logos, launcher icons, splash images, and three people/avatar SVGs appear to be product branding/illustration assets, but the Git tree alone does not prove who created them or which licences apply.
+- The collaborator's contributions need a signed assignment or a sufficiently broad commercial licence if the platform owner intends to own and commercially sublicense the complete application.
+- Confirm the legal person or company that owns EPHINTA and use that exact name in the proprietary licence and copyright notices.
+- If the repository remains public, GitHub's terms allow viewing and forking; a proprietary commercial licence does not make a public repository private. Move the source to a private repository before relying on source confidentiality.
 
-1. Record source and author for code/assets brought in from outside the project.
-2. Compare suspicious long/unique code fragments against their claimed upstream source.
-3. Review generated/copied CSS and UI components for attribution and licence compatibility.
-4. Inspect image/audio metadata and original purchase/licence records.
-5. For every potential match, compare context and licence terms; do not treat generic patterns, framework boilerplate, or similarity-tool output alone as proof of infringement.
-6. Remove or replace material only after preserving the evidence and confirming the rights issue.
+## What this audit does not prove
 
-## Required release actions
+- It is not a legal opinion and does not certify regulatory compliance.
+- It does not compare every source file with every public repository or proprietary code database.
+- It does not prove the owner of any logo, image, font, recording, or contributor-authored code.
+- Removing files from the current branch does not erase prior public Git history, forks, caches, or copies already obtained.
+- Passing the dependency inventory does not automatically satisfy every notice, attribution, source-disclosure, patent, trademark, or redistribution obligation.
 
-- [ ] Rights holder confirms the EPHINTA copyright owner and approves the project licence.
-- [ ] Confirm written rights for all six MP3 files or remove assets without permission.
-- [x] Generate a dependency licence inventory from the current application lockfile (repeat for every release lockfile).
-- [ ] Add `THIRD_PARTY_NOTICES.md` with dependency name, version, licence, and required attribution.
-- [ ] Run source and asset similarity review; record matches, URLs, licence compatibility, and disposition.
-- [x] Add an automated inventory CI workflow; restricted/custom licence review remains a manual release gate.
-- [ ] Obtain legal review before commercial distribution.
+## Release checklist
 
-## Design inspiration and attribution
-
-The README uses a clean editorial hierarchy, compact navigation, scannable feature tables, restrained badges/visual blocks, and copyable quick-start instructions. These are general documentation conventions, not copied Pinterest assets or a reproduction of Pinterest's product UI. Pinterest's developer guidelines prohibit unauthorized scraping and imitation of Pinterest's visual design; EPHINTA should use inspiration as a starting point, not reproduce Pinterest's layouts or materials.
-
-Reference: https://policy.pinterest.com/en-gb/developer-guidelines
+- [x] Remove unused third-party Remotion agent content from the product branch.
+- [x] Remove audio recordings without a documented commercial distribution grant from the current release tree.
+- [x] Disable default audio playback until a rights-cleared source is explicitly configured.
+- [x] Remove unused YouTube playlist OAuth automation.
+- [x] Remove the unused MIT-labelled Solidity prototype from the current app tree.
+- [x] Add automated audio/third-party-content release checks.
+- [x] Inventory declared npm dependency licences from the lockfile.
+- [ ] Generate and retain the complete per-package licence/NOTICE bundle for every release.
+- [ ] Confirm rights for EPHINTA brand logos and remaining SVG illustrations.
+- [ ] Obtain signed IP assignment/commercial licence covering collaborator contributions.
+- [ ] Confirm the legal copyright holder and approve a proprietary EPHINTA licence.
+- [ ] Move the source repository to private before treating the code as confidential.
+- [ ] Complete an independent code-similarity review and legal review before commercial distribution.
