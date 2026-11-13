@@ -121,7 +121,8 @@ Run these from `eventsss123/eventsss-main`:
 | `npm run build:web` | Build the web application |
 | `npm run mobile:verify` | Run checks, build web assets, sync Capacitor, and verify Android |
 | `npm run qa:scale:plan` | Print the existing scale QA plan |
-| `npm run qa:scale` | Run the existing scale QA suite |\n| `node scripts/qa/ephinta-license-inventory.mjs` | Generate the npm dependency licence inventory |
+| `npm run qa:scale` | Run the existing scale QA suite |
+| `node scripts/qa/ephinta-license-inventory.mjs` | Generate the npm dependency licence inventory |
 
 The bounded 5,000-identity single-node health campaign and the payment-functional simulation are QA tools. Their reports must clearly distinguish synthetic results from authenticated provider settlement and real customer activity.
 
