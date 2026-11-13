@@ -257,9 +257,14 @@ payoutsRouter.get(
     if (!payout) throw new HttpError(404, "PAYOUT_NOT_FOUND", "Payout not found.");
     let current = payout;
     if (payout.status === PayoutStatus.PENDING || payout.status === PayoutStatus.PROCESSING) {
-      if (!payout.providerTransferId) return res.json({ payout: publicPayout(current) });
       try {
-        const transfer = await opayGetBankTransferStatus(payout.reference, payout.providerTransferId);
+        const transfer = await opayGetBankTransferStatus(payout.reference, payout.providerTransferId || undefined);
+        if (transfer.orderNo && transfer.orderNo !== payout.providerTransferId) {
+          await prisma.payout.updateMany({
+            where: { id: payout.id, status: { in: [PayoutStatus.PENDING, PayoutStatus.PROCESSING] } },
+            data: { status: PayoutStatus.PROCESSING, providerTransferId: transfer.orderNo },
+          });
+        }
         if (transfer.amount !== undefined && BigInt(String(transfer.amount)) !== payout.netAmountMinor) {
           throw new HttpError(502, "OPAY_PAYOUT_AMOUNT_MISMATCH", "OPay's transfer amount does not match this withdrawal.");
         }
