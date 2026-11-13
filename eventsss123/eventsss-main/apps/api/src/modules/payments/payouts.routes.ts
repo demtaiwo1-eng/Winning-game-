@@ -273,7 +273,7 @@ payoutsRouter.get(
         }
         const status = normalizeOpayTransferStatus(transfer.status);
         if (status === "success" || status === "failed" || status === "reversed") {
-          await completePayout(payout.reference, status, undefined, payout.providerTransferId);
+          await completePayout(payout.reference, status, undefined, payout.providerTransferId ?? undefined);
         }
         current = await prisma.payout.findUniqueOrThrow({ where: { id: payout.id } });
       } catch {
