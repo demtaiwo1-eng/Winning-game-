@@ -122,14 +122,14 @@ export async function opayCreateBankTransfer(input: {
   return transfer;
 }
 
-export async function opayGetBankTransferStatus(reference: string, orderNo: string) {
+export async function opayGetBankTransferStatus(reference: string, orderNo?: string) {
   const result = await request<OpayTransfer>("/api/v3/transfer/status/toBank", {
-    orderNo,
+    orderNo: orderNo || "",
     reference,
   }, "signature");
   const transfer = result.data;
   if (!transfer || (transfer.reference && transfer.reference !== reference) ||
-      (transfer.orderNo && transfer.orderNo !== orderNo)) {
+      (orderNo && transfer.orderNo && transfer.orderNo !== orderNo)) {
     throw new HttpError(502, "OPAY_PAYOUT_STATUS_MISMATCH", "OPay's transfer status did not match this withdrawal.");
   }
   return transfer;
