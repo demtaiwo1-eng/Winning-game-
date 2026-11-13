@@ -1,6 +1,6 @@
 # Central EPHINTA payment mode
 
-The platform payment mode is stored in the shared PostgreSQL `PlatformRuntimeSetting` row with ID `global`. The ADMIN dashboard exposes DEMO, TEST and LIVE. The API reads this shared row before every payment/payout request. It refuses a mode change while pending payment intents or pending/processing payouts exist, so a transaction is never verified against credentials for a different mode. The API so separate Render instances and connected web/PWA/native clients use the same server-side policy.
+The platform payment mode is stored in the shared PostgreSQL `PlatformRuntimeSetting` row with ID `global`. The ADMIN dashboard exposes DEMO, TEST and LIVE. The API reads this shared row before every payment/payout request. It refuses a mode change while pending payment intents or pending/processing payouts exist, so a transaction is never verified against credentials for a different mode. This ensures separate Render instances and connected web/PWA/native clients use the same server-side policy.
 
 ## Modes
 
