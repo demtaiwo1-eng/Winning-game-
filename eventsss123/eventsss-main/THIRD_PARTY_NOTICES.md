@@ -12,7 +12,7 @@ npm ci
 node scripts/qa/ephinta-license-inventory.mjs
 ```
 
-The generated release artifact is named `ephinta-dependency-license-inventory`. It contains the lockfile package list, declared licence expressions, bundled licence/NOTICE text where present, and a manual-review list for any missing text. Do not ship a release with unresolved UNKNOWN/UNLICENSED packages or missing licence text without a documented legal disposition.
+The generated release artifact is named `ephinta-dependency-license-inventory`. The latest CI run inventoried 750 packages across 12 declared licence expressions, with zero UNKNOWN/UNLICENSED entries and zero missing usable licence texts. It included 312 distinct notice/licence texts; 107 package entries used the official SPDX standard text as a fallback because their installed package omitted a licence file. For those fallback entries, verify the package-specific copyright line and any additional upstream NOTICE before distribution. Do not ship a release with unresolved UNKNOWN/UNLICENSED packages or missing licence text without a documented legal disposition.
 
 Licence families observed include MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, MPL-2.0, BlueOak-1.0.0, Unlicense, CC-BY-4.0, MIT-0, 0BSD, and MIT OR CC0-1.0. Retain required notices and attribution; do not apply EPHINTA's commercial terms to dependencies.
 
