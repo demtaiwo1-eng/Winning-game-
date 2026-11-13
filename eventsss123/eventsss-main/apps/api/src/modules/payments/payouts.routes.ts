@@ -11,49 +11,7 @@ import { recordPlatformRevenue } from "./platformRevenue.service";
 
 export const payoutsRouter = Router();
 
-type PaystackEnvelope<T> = { status?: boolean; message?: string; data?: T };
-type PaystackBank = { name?: string; code?: string; active?: boolean; country?: string; currency?: string };
-type TransferData = { reference?: string; status?: string; transfer_code?: string; id?: number | string; recipient?: string; amount?: number | string; currency?: string };
-
-function assertPayoutRail() {
-  if (!env.PAYSTACK_SECRET_KEY) {
-    throw new HttpError(503, "PAYOUT_PROVIDER_NOT_CONFIGURED", "Bank withdrawals are not configured yet.");
-  }
-  if (env.PAYSTACK_TRANSFERS_ENABLED !== "true") {
-    throw new HttpError(503, "PAYOUTS_DISABLED", "Bank withdrawals are disabled until Paystack transfer access is enabled.");
-  }
-  if (env.PAYMENT_MODE === "test" && !env.PAYSTACK_SECRET_KEY.startsWith("sk_test_")) {
-    throw new HttpError(503, "PAYOUT_KEY_MODE_MISMATCH", "Test withdrawals require a Paystack test secret key.");
-  }
-  if (env.NODE_ENV === "production" && env.PAYMENT_MODE === "test" && env.ALLOW_PRODUCTION_TEST_MODE !== "true") {
-    throw new HttpError(503, "PRODUCTION_TEST_MODE_DISABLED", "Sandbox withdrawals in production require ALLOW_PRODUCTION_TEST_MODE=true.");
-  }
-  if (env.PAYMENT_MODE === "live" && !env.PAYSTACK_SECRET_KEY.startsWith("sk_live_")) {
-    throw new HttpError(503, "PAYOUT_KEY_MODE_MISMATCH", "Live withdrawals require a Paystack live secret key.");
-  }
-}
-
-async function paystack<T>(path: string, init: RequestInit = {}): Promise<PaystackEnvelope<T>> {
-  assertPayoutRail();
-  const response = await fetch(`https://api.paystack.co${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${env.PAYSTACK_SECRET_KEY}`,
-      "Content-Type": "application/json",
-      ...(init.headers || {}),
-    },
-    signal: AbortSignal.timeout(20_000),
-  });
-  const payload = await response.json().catch(() => ({})) as PaystackEnvelope<T>;
-  if (!response.ok || payload.status !== true) {
-    throw new HttpError(502, "PAYOUT_PROVIDER_ERROR", payload.message || `Paystack request failed (${response.status})`);
-  }
-  return payload;
-}
-
-function maskAccount(accountNumber: string) {
-  return `${"*".repeat(Math.max(0, accountNumber.length - 4))}${accountNumber.slice(-4)}`;
-}
+import { maskAccount, normalizeOpayTransferStatus, opayCreateBankTransfer, opayGetBankTransferStatus, opayListBanks, opayResolveBankAccount } from "./opay-payouts.provider";
 
 function publicPayout(p: {
   id: string; reference: string; amountMinor: bigint; feeMinor: bigint;
@@ -147,36 +105,6 @@ export async function completePayout(reference: string, status: "success" | "fai
     }
     return true;
   });
-}
-
-/** Verified Paystack transfer webhooks share the existing /webhooks/paystack endpoint. */
-export async function processPaystackTransferWebhook(event: string, data: TransferData, eventId: string) {
-  const reference = String(data.reference || "");
-  if (!reference) throw new HttpError(400, "PAYOUT_REFERENCE_MISSING", "Paystack transfer webhook is missing its reference.");
-  const existing = await prisma.webhookEvent.findUnique({
-    where: { provider_eventId: { provider: "paystack", eventId } },
-  });
-  if (existing?.processedAt) return { replayed: true };
-  await prisma.webhookEvent.upsert({
-    where: { provider_eventId: { provider: "paystack", eventId } },
-    create: { provider: "paystack", eventId, payload: { event, data } },
-    update: { payload: { event, data } },
-  });
-  const payout = await prisma.payout.findUnique({ where: { reference } });
-  if (!payout) throw new HttpError(404, "PAYOUT_NOT_FOUND", "No payout matches this Paystack transfer reference.");
-  if (data.reference !== reference || data.currency?.toUpperCase() !== payout.currency ||
-      data.amount === undefined || BigInt(String(data.amount)) !== payout.netAmountMinor) {
-    throw new HttpError(400, "PAYOUT_TRANSFER_MISMATCH", "Paystack transfer amount, currency, or reference does not match the reserved payout.");
-  }
-  const status = event === "transfer.success" ? "success"
-    : event === "transfer.reversed" ? "reversed" : "failed";
-  const found = await completePayout(reference, status, data.transfer_code, data.id === undefined ? undefined : String(data.id));
-  if (!found) throw new HttpError(404, "PAYOUT_NOT_FOUND", "No payout matches this Paystack transfer reference.");
-  await prisma.webhookEvent.update({
-    where: { provider_eventId: { provider: "paystack", eventId } },
-    data: { processedAt: new Date() },
-  });
-  return { replayed: false };
 }
 
 payoutsRouter.get(
