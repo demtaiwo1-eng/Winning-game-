@@ -50,10 +50,6 @@ if (!["localhost", "127.0.0.1", "::1"].includes(parsed.hostname)) {
   console.error("Refusing remote/managed database. QA_DATABASE_URL must use localhost/127.0.0.1/::1.");
   process.exit(2);
 }
-if (!process.env.QA_PORTAL_PASSWORD || process.env.QA_PORTAL_PASSWORD.length < 12) {
-  console.error("Set QA_PORTAL_PASSWORD to a synthetic password of at least 12 characters.");
-  process.exit(2);
-}
 const configuredUrl = process.env.DATABASE_URL || "";
 if (configuredUrl && /(render\.com|neon\.tech|supabase\.(co|com))/i.test(configuredUrl)) {
   console.error("Refusing a managed/production-style DATABASE_URL.");
@@ -73,7 +69,6 @@ const report = {
 const commonEnv = {
   QA_SCALE_CONFIRM: "YES",
   QA_DATABASE_URL: qaUrl,
-  QA_PORTAL_PASSWORD: process.env.QA_PORTAL_PASSWORD,
   QA_PORTAL_PREFIX: runPrefix,
   DATABASE_URL: qaUrl,
   DATABASE_URL_LOCAL: qaUrl,
