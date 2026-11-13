@@ -1,0 +1,33 @@
+name: EPHINTA dependency licence inventory
+
+on:
+  pull_request:
+    paths:
+      - "eventsss123/eventsss-main/package-lock.json"
+      - "eventsss123/eventsss-main/scripts/qa/ephinta-license-inventory.mjs"
+      - ".github/workflows/ephinta-license-inventory.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Generate dependency licence inventory
+        run: node scripts/qa/ephinta-license-inventory.mjs
+      - name: Upload licence inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-dependency-license-inventory
+          path: eventsss123/eventsss-main/artifacts/ephinta-dependency-license-inventory.md
+          if-no-files-found: error
+          retention-days: 30
