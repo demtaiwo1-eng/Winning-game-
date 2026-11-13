@@ -34,6 +34,8 @@ adminRouter.patch("/runtime/payment-mode", asyncHandler(async (req, res) => {
       !process.env.OPAY_PUBLIC_KEY && "OPAY_PUBLIC_KEY",
       !process.env.OPAY_SECRET_KEY && "OPAY_SECRET_KEY",
       process.env.OPAY_TRANSFERS_ENABLED !== "true" && "OPAY_TRANSFERS_ENABLED",
+      !process.env.OPAY_TRANSFER_BASE_URL && "OPAY_TRANSFER_BASE_URL",
+      (process.env.OPAY_TRANSFER_BASE_URL || "").toLowerCase().includes("sandbox") && "OPAY_TRANSFER_BASE_URL must be production",
     ].filter(Boolean);
     if (missing.length) {
       return res.status(409).json({
