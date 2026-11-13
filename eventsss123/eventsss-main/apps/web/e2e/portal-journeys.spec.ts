@@ -24,7 +24,10 @@ async function unlockDeviceGate(page: Page) {
   const title = await securityDialog.locator("h1").textContent();
   await securityDialog.getByLabel("Six-digit PIN").fill("123456");
   if (title?.includes("Set your device PIN")) {
-    await securityDialog.getByLabel("Confirm PIN").fill("123456");
+    const confirmPin = page.locator("#ephinta-device-pin-confirm");
+    await expect(confirmPin).toBeVisible();
+    await page.waitForTimeout(150);
+    await confirmPin.fill("123456", { force: true });
     await securityDialog.getByRole("button", { name: "Set PIN and continue" }).click();
   } else {
     await securityDialog.getByRole("button", { name: "Unlock EPHINTA" }).click();
