@@ -29,6 +29,7 @@ const schema = z.object({
   OPAY_MERCHANT_ID: z.string().optional(),
   OPAY_PUBLIC_KEY: z.string().optional(),
   OPAY_SECRET_KEY: z.string().optional(),
+  PAYSTACK_TRANSFERS_ENABLED: z.enum(["true", "false"]).default("false"),
   PAYMENT_MODE: z.enum(["test", "live"]).default("test"),
   ALLOW_PRODUCTION_TEST_MODE: z.enum(["true", "false"]).default("false"),
   AWS_ACCESS_KEY_ID: z.string().optional(),
