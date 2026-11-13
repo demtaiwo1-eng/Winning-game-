@@ -194,6 +194,7 @@ export const kycApi = {
 export type ApiPayout = {
   id: string;
   reference: string;
+  provider: string;
   amountMinor: string;
   feeMinor: string;
   netAmountMinor: string;
