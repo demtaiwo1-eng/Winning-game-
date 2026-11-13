@@ -43,7 +43,8 @@
     "device-security:verify:full": "node scripts/verify-device-security.mjs --full",
     "qa:scale:plan": "node scripts/qa/ephinta-scale-qa.mjs --plan-only",
     "qa:scale": "node scripts/qa/ephinta-scale-qa.mjs",
-    "payments:mode": "node scripts/payments/set-render-payment-mode.mjs"
+    "payments:mode": "node scripts/payments/set-render-payment-mode.mjs",
+    "qa:seed:portals": "node scripts/qa/seed-portal-personas.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.4",

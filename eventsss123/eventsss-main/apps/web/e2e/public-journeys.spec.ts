@@ -1015,3 +1015,25 @@ test("Plan a Naming Ceremony selects the naming soundtrack", async ({ page }) =>
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:music-category"))).toBe("naming");
   await expect(page.locator("audio")).toHaveAttribute("src", /Naming/);
 });
+
+
+test("EPHINTA Guide opens, maximizes, restores and minimizes accessibly", async ({ page }) => {
+  await page.goto("/");
+  const launcher = page.getByRole("button", { name: "Open EPHINTA Guide" });
+  await expect(launcher).toBeVisible();
+  await launcher.click();
+
+  const chat = page.getByRole("region", { name: "EPHINTA Guide chat" });
+  await expect(chat).toBeVisible();
+  await expect(chat.getByText("I’m EPHINTA Guide")).toBeVisible();
+
+  await chat.getByRole("button", { name: "Maximize chat" }).click();
+  await expect(page.locator(".ephinta-guide-root")).toHaveClass(/is-maximized/);
+
+  await chat.getByRole("button", { name: "Restore chat size" }).click();
+  await expect(page.locator(".ephinta-guide-root")).not.toHaveClass(/is-maximized/);
+
+  await chat.getByRole("button", { name: "Minimize chat" }).click();
+  await expect(chat).toBeHidden();
+  await expect(launcher).toBeVisible();
+});

@@ -1,0 +1,23 @@
+.ephinta-guide-root{position:fixed;left:22px;right:auto;bottom:22px;z-index:900;font-family:inherit;color:#21143b}
+.ephinta-guide-launcher{display:flex;align-items:center;gap:9px;min-height:54px;padding:0 19px;border:0;border-radius:999px;background:linear-gradient(135deg,#6d35c7,#a14be8);color:#fff;font-weight:800;box-shadow:0 12px 34px #30105245;cursor:pointer}
+.ephinta-guide-launcher-icon{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#ffffff2b;font-size:20px}
+.ephinta-guide-panel{display:flex;flex-direction:column;width:min(390px,calc(100vw - 28px));height:min(620px,calc(100dvh - 44px));overflow:hidden;border:1px solid #e7def4;border-radius:22px;background:#fff;box-shadow:0 22px 70px #1b103b35}
+.ephinta-guide-root.is-maximized{inset:12px;right:12px;bottom:12px;left:12px}
+.ephinta-guide-root.is-maximized .ephinta-guide-panel{width:100%;height:100%;max-width:none;border-radius:20px}
+.ephinta-guide-header{display:flex;align-items:center;gap:10px;padding:14px 15px;background:linear-gradient(110deg,#261044,#512080);color:#fff}
+.ephinta-guide-avatar{display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:#ffffff22;font-weight:900;font-size:19px}
+.ephinta-guide-heading{display:flex;flex:1;flex-direction:column;gap:2px}.ephinta-guide-heading strong{font-size:14px}.ephinta-guide-heading small{font-size:11px;color:#e2d5f5}
+.ephinta-guide-header button{width:34px;height:34px;border:1px solid #ffffff3d;border-radius:10px;background:#ffffff15;color:#fff;font-size:20px;cursor:pointer}
+.ephinta-guide-messages{display:flex;flex:1;flex-direction:column;gap:12px;overflow:auto;padding:16px;background:#fbf9fe}
+.ephinta-guide-message{max-width:92%;padding:12px 13px;border-radius:15px;font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+.ephinta-guide-message p{margin:0}.ephinta-guide-assistant{align-self:flex-start;background:#fff;border:1px solid #eee7f6;border-top-left-radius:5px}.ephinta-guide-user{align-self:flex-end;background:#efe5fb;color:#32135b;border-top-right-radius:5px}
+.ephinta-guide-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.ephinta-guide-actions button,.ephinta-guide-suggestions button{border:1px solid #d9c7ed;border-radius:999px;background:#fff;color:#57228b;padding:7px 10px;font-size:11px;font-weight:750;cursor:pointer}
+.ephinta-guide-suggestions{display:flex;gap:7px;overflow-x:auto;padding:10px 12px;border-top:1px solid #f0eaf7}.ephinta-guide-suggestions button{white-space:nowrap}
+.ephinta-guide-form{display:flex;gap:8px;padding:11px 12px;border-top:1px solid #eee8f4;background:#fff}.ephinta-guide-form input{min-width:0;flex:1;height:44px;padding:0 13px;border:1px solid #ded3ea;border-radius:13px;outline:none;font:inherit;font-size:13px}.ephinta-guide-form input:focus{border-color:#8b4ac5;box-shadow:0 0 0 3px #8b4ac51c}.ephinta-guide-form button{width:46px;border:0;border-radius:13px;background:#7137aa;color:#fff;font-size:18px;cursor:pointer}.ephinta-guide-form button:disabled{opacity:.45;cursor:not-allowed}
+.ephinta-guide-disclaimer{margin:0;padding:0 12px 10px;text-align:center;color:#857a91;font-size:10px}
+.ephinta-guide-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:600px){.ephinta-guide-root{left:12px;right:auto;bottom:12px}.ephinta-guide-panel{width:calc(100vw - 24px);height:min(72dvh,620px);border-radius:18px}.ephinta-guide-root.is-maximized{inset:0}.ephinta-guide-root.is-maximized .ephinta-guide-panel{border-radius:0}.ephinta-guide-launcher{min-height:50px;padding:0 16px}}
+@media(prefers-reduced-motion:no-preference){.ephinta-guide-panel{animation:ephinta-guide-enter .18s ease-out}@keyframes ephinta-guide-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}}
+
+/* Keep the helper clear of the floating audio controls and startup overlays. */
+.ephinta-guide-root{pointer-events:none}.ephinta-guide-launcher,.ephinta-guide-panel{pointer-events:auto}
