@@ -22,7 +22,7 @@ jobs:
   scale-qa:
     name: 7,000 portal fixtures + 300-user journey, design and browser gates
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:16
@@ -68,6 +68,12 @@ jobs:
         working-directory: eventsss123/eventsss-main/apps/web
       - name: Run one-command scale, design and browser QA
         run: npm run qa:scale
+      - name: Run bounded 5,000-user campaign against one staging node
+        env:
+          EPHINTA_LOAD_BASE_URL: https://ephinta-opay-staging.onrender.com
+          LOAD_USERS: "5000"
+          LOAD_CONCURRENCY: "20"
+        run: node scripts/qa/ephinta-one-node-load.mjs
       - name: Upload QA and Playwright reports
         if: always()
         uses: actions/upload-artifact@v4
