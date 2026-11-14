@@ -109,7 +109,9 @@ export default function RemoteUpdateNotice() {
         const bundle = await CapacitorUpdater.download({ version: update.version, url: bundleUrl });
         await CapacitorUpdater.set(bundle);
         localStorage.setItem("ephinta:installed-version", update.version);
-        setUpdate(null);
+        // Activate the downloaded web bundle inside this installed Capacitor app now.
+        // Native code/plugins still require a newly signed APK.
+        await CapacitorUpdater.reload();
         return;
       }
 
