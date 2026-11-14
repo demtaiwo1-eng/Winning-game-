@@ -12,7 +12,6 @@ set +x
 
 REPO="demtaiwo1-eng/winning-game-"
 WORKFLOW=".github/workflows/ephinta-production-apk.yml"
-SETUP="scripts/setup-android-signing-github.sh"
 BACKUP="$HOME/.ephinta-android-signing/ephinta-release.jks.enc"
 BACKUP_SHA256="$BACKUP.sha256"
 
@@ -35,7 +34,6 @@ CURRENT_BRANCH="$(git branch --show-current)"
 [[ -f "$WORKFLOW" ]] || fail "Production workflow is missing: $WORKFLOW"
 [[ -z "$(git status --porcelain)" ]] || fail "Commit or discard local changes before dispatching the production workflow."
 git ls-remote --exit-code origin "refs/heads/$CURRENT_BRANCH" >/dev/null 2>&1 || fail "The current branch is not available on origin. Push it before dispatching the workflow."
-[[ -f "$SETUP" ]] || fail "Signing setup script is missing: $SETUP"
 gh auth status >/dev/null 2>&1 || fail "GitHub CLI is not authenticated. Run gh auth login and authorize repository access."
 
 step "2/5 — Inspect signing configuration without revealing values"
