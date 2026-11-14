@@ -86,7 +86,7 @@ export default function WalletPanel({
 
   useEffect(() => {
     if (searchParams.get("payment") !== "return") return;
-    setMsg("Payment returned to ESS. Your wallet updates after the provider confirms the transaction.");
+    setMsg("Payment returned to EPHINTA. Your wallet updates after the payment provider confirms the transaction.");
     load();
     const next = new URLSearchParams(searchParams);
     next.delete("payment");
@@ -205,7 +205,7 @@ export default function WalletPanel({
               : "Funds & protection"}
           </h2>
           <p className="ess-muted">
-            Wallet balances are loaded from ESS · append-only ledger · minor-unit precision.
+            Wallet balances are loaded from EPHINTA · append-only ledger · minor-unit precision.
           </p>
         </div>
         {totalEscrow > 0 && (
