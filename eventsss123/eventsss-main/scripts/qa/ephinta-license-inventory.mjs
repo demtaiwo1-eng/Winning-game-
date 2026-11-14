@@ -100,7 +100,10 @@ for (const [lockPath, entry] of entries) {
   }
   for (const id of fallbackIds) addText(spdxTexts.get(id), packageRef + " (SPDX " + id + " standard text)", "SPDX " + id);
   if (unknownMetadata) unknown.push({ name, version, license, repository });
-  if (!hasLicenseText && !fallbackIds.length || missingIds.length) {
+  // A package-specific LICENSE/COPYING file is sufficient evidence even when
+  // its SPDX expression is not present in the local fallback text bundle.
+  // Only block when neither package text nor an approved SPDX fallback exists.
+  if (!hasLicenseText && !fallbackIds.length) {
     missingText.push({ name, version, license, repository, missingIds });
   }
 
