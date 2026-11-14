@@ -68,7 +68,21 @@ jobs:
       - name: Install dependencies from lockfile
         run: npm ci
 
+      - name: Fetch pinned SPDX standard licence texts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/spdx-license-texts
+          SPDX_COMMIT=31846481de7ea17d92f2f46fad76abe58b2e9bb0
+          for license in MIT ISC Apache-2.0 BSD-2-Clause BSD-3-Clause MPL-2.0 BlueOak-1.0.0 Unlicense CC-BY-4.0 MIT-0 0BSD CC0-1.0; do
+            curl --fail --silent --show-error --location \
+              "https://raw.githubusercontent.com/spdx/license-list-data/${SPDX_COMMIT}/text/${license}.txt" \
+              --output "artifacts/spdx-license-texts/${license}.txt"
+          done
+
       - name: Run complete acceptance runner
+        env:
+          SPDX_LICENSE_TEXT_DIR: artifacts/spdx-license-texts
         run: node scripts/release/ephinta-hardcore-acceptance.mjs
 
       - name: Upload acceptance report and build outputs
