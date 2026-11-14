@@ -1,0 +1,101 @@
+name: EPHINTA non-payment release verification
+
+on:
+  push:
+    branches:
+      - fix/ephinta-nonpayment-release-gates-20261114
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ephinta-nonpayment-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  security:
+    name: Security gates before release verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+
+      - name: Install locked dependencies
+        working-directory: eventsss123/eventsss-main
+        run: npm ci --include=dev
+
+      - name: Block high and critical production dependency vulnerabilities
+        working-directory: eventsss123/eventsss-main
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Scan repository history for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  verify-nonpayment:
+    name: Run non-payment release script
+    needs: security
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install browser runtime dependencies
+        working-directory: eventsss123/eventsss-main
+        run: |
+          npm ci
+          npm exec --workspace @ess/web -- playwright install --with-deps chromium
+
+      - name: Execute non-payment release verification on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: bash eventsss123/eventsss-main/scripts/release/verify-nonpayment-release.sh
+        env:
+          EPHINTA_RUN_ANDROID_BUILD: 'true'
+          EPHINTA_INSTALL_ANDROID: 'true'
+
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-nonpayment-release-verification
+          path: eventsss123/eventsss-main/artifacts/nonpayment-release-verification.txt
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,3 +1,25 @@
-
-.env
+# Environment and secret material
+**/.env
+**/.env.*
+!**/.env.example
 .secrets/
+**/.secrets/
+
+# Dependencies and generated build output
+**/node_modules/
+/package-lock.json
+**/dist/
+**/build/
+**/.vite/
+**/.turbo/
+**/.next/
+**/coverage/
+**/*.tsbuildinfo
+
+# Exclude the unused third-party Remotion skill bundle; EPHINTA source is maintained separately.
+/eventsss123/eventsss-main/.agents/skills/remotion-best-practices/
+
+# Local files and diagnostics
+**/*.log
+**/*.pem
+**/.DS_Store

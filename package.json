@@ -1,24 +1,17 @@
 {
-  "name": "@ess/web",
+  "name": "ephinta-repo-tools",
   "private": true,
-  "version": "0.1.0",
-  "type": "module",
+  "version": "1.0.0",
   "scripts": {
     "dev": "cd eventsss123/eventsss-main && npm run dev",
     "dev:quick": "cd eventsss123/eventsss-main && npm run dev",
     "dev:landing": "cd eventsss123/eventsss-main && npm run dev:web",
-    "build": "cd eventsss123/eventsss-main && npm run build:web",
+    "build": "cd eventsss123/eventsss-main && npm run build",
+    "build:web": "cd eventsss123/eventsss-main && npm run build:web",
+    "check": "cd eventsss123/eventsss-main && npm run check",
+    "mobile:verify": "cd eventsss123/eventsss-main && npm run mobile:verify",
+    "ip:verify": "cd eventsss123/eventsss-main && npm run ip:verify",
+    "licence:inventory": "cd eventsss123/eventsss-main && npm run licence:inventory",
     "preview": "cd eventsss123/eventsss-main && npm run preview -w apps/web -- --host 0.0.0.0 --port 5173"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.10"
   }
 }

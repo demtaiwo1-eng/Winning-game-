@@ -25,30 +25,31 @@ The runner then executes API/web checks, the production web build, strict design
 - It creates synthetic accounts and events, then removes the generated user rows after the database test.
 - This is a functional/concurrency smoke test, **not** a 50-million-transaction capacity certification. That requires a dedicated load-test environment, provider-approved traffic, capacity targets, observability, and an agreed ramp schedule.
 
-## Demo-to-live payment mode
+## Payment mode and current fee policy
 
-The API uses server-side `PAYMENT_MODE=test|live`. EPHINTA's confirmed fee policy is two independent 1% fees: `WALLET_TOPUP_FEE_BPS=100` on successful wallet funding, and `BOOKING_COMMISSION_BPS=100` on completed booking settlement (100 basis points = 1% each). The legacy `COMMISSION_BPS` remains a fallback for existing deployments only. Staging is configured for test mode; the guarded mode-switch script sets both explicit fee variables to 100. Production settings remain unchanged until a separately approved live cutover.
+The shared PostgreSQL `PlatformRuntimeSetting` row controls DEMO, TEST and LIVE for every connected web, PWA and native client. The API refreshes this setting before payment/payout requests and fails closed if it cannot verify the setting. See [CENTRAL-PAYMENT-MODE.md](../CENTRAL-PAYMENT-MODE.md).
 
-Use the guarded one-command Render switch from the repository root. Set `RENDER_API_KEY` in a private shell/CI secret store; never commit it:
-```bash
-EPHINTA_RENDER_TARGET=staging npm run payments:mode -- demo
-```
-For live, use the production target and complete every explicit cutover approval required by the script:
-```bash
-EPHINTA_RENDER_TARGET=production EPHINTA_LIVE_PROVIDER=paystack EPHINTA_LIVE_CUTOVER_APPROVED=YES EPHINTA_LIVE_PROVIDER_APPROVED=YES EPHINTA_LIVE_CREDENTIALS_VERIFIED=YES EPHINTA_LIVE_WEBHOOKS_VERIFIED=YES EPHINTA_LIVE_RECONCILIATION_VERIFIED=YES EPHINTA_LIVE_IDEMPOTENCY_VERIFIED=YES npm run payments:mode -- live
-```
-The script accepts only Paystack or Flutterwave for live mode; OPay is sandbox-only, Cleva/Eversend adapters are not present, and Stripe checkout is disabled. It checks for the appropriate live secret-key prefix without printing the key. The script changes payment mode, production-test opt-in, the legacy fallback, and both explicit 1% fee variables, then requests a Render deploy.
+**Current fee requirements in code:**
+- Incoming NGN wallet deposits: fixed 2% fee (200 basis points).
+- Outgoing OPay bank withdrawals: fixed 2% fee (200 basis points); the bank receives the net amount.
+- Booking commission is a separate business rule and must not be conflated with the wallet-deposit or bank-withdrawal fee.
+- Fees are recorded in the platform revenue ledger only at the appropriate confirmed transaction state. Failed or reversed payouts must reverse the associated ledger effects idempotently.
 
-**Fee policy confirmed:** charge 1% separately on successful wallet top-ups and completed booking settlement. These are separate transaction events: a top-up fee reduces the net wallet credit, while the booking commission is withheld from the vendor's escrow release. Do not deduct the booking commission from the customer a second time at booking checkout. The two fee rates are independently configurable as `WALLET_TOPUP_FEE_BPS` and `BOOKING_COMMISSION_BPS`; both are set to 100 bps in staging. The fee policy is not a live-payment approval.
+**Provider status:**
+- Nigeria NGN collection and bank payouts are routed to OPay; the NGN path must not silently fall back to Paystack, Flutterwave or DEMO.
+- OPay has separate TEST and LIVE credential/configuration paths. LIVE is rejected unless the production environment, dedicated OPay live credentials, readiness attestation and approved transfer endpoint are configured.
+- OPay's presence in code and mocked tests does not prove merchant approval, live credentials, funded settlement balance or successful real settlement.
+- Cleva and Eversend are not implemented in the current provider registry. Keep them disabled until the account owner obtains the exact official API contract, account approval, sandbox credentials and webhook specifications.
+- Do not use the legacy payment-mode switching script described in older project notes to activate a different provider or overwrite the agreed fee policy. Use the shared ADMIN payment-mode control only after the provider-specific release gates are satisfied.
 
-A live cutover is a controlled backend configuration change, not a frontend switch:
+A live cutover requires, at minimum:
+1. OPay confirms that the EPHINTA merchant account is enabled for the exact collection and bank-transfer products.
+2. The owner configures dedicated OPay production credentials and approved production endpoint in Render API secrets/settings; never put them in Vite variables, Git, CI logs or chat.
+3. Signed callback/webhook verification, replay protection, server-to-server status reconciliation, idempotent ledger effects, failure refunds, reversals and currency validation pass against OPay's official sandbox test vectors.
+4. The owner approves production activation and OPay confirms settlement funding.
+5. A low-value, provider-approved live transaction is completed and reconciled against the EPHINTA ledger before broader traffic is enabled.
 
-1. Confirm a live-capable provider adapter is implemented and approved. OPay in this repository is explicitly sandbox-only; it must not be treated as a live provider.
-2. Configure that provider's live credentials as Render backend secrets (never as `VITE_*` variables).
-3. Set the Render API service environment variable `PAYMENT_MODE=live` and redeploy the API.
-4. Run a low-value provider-approved live verification and reconcile the provider transaction against the EPHINTA ledger before opening traffic.
-
-A single environment variable selects the backend mode, but it does not make an unsupported provider live-capable. Do not switch production to live until the provider adapter, webhook verification, idempotency, reconciliation, refund and payout paths are independently verified.
+Never infer production readiness from a mock, synthetic journey, browser redirect, successful CI build or ADMIN mode toggle. Keep real-money movement disabled until every provider-specific acceptance item is evidenced.
 
 ## Capacity target: 50 million transactions
 
