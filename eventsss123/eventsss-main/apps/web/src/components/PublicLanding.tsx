@@ -875,13 +875,13 @@ export default function PublicLanding({
             <div>
               <span className="eph-promo-kicker">DISCOVER THE EPHINTA MARKETPLACE</span>
               <h2>Find the people and services behind your next big moment.</h2>
-              <p>Browse event venues, catering, photography, décor and trusted event professionals. Featured vendor campaigns appear here when approved and active.</p>
+              <p>{isNativeApp ? "Browse event venues, catering, photography, décor and trusted local event professionals." : "Browse event venues, catering, photography, décor and trusted event professionals. Featured vendor campaigns appear here when approved and active."}</p>
             </div>
             <button type="button" className="eph-promo-marketplace-cta" onClick={() => exploreMarketplace()}>
               Explore marketplace <span aria-hidden="true">→</span>
             </button>
           </div>
-          <div className="eph-ad-scroll" role="list" aria-label="Horizontally scrollable marketplace categories and sponsored offers">
+          <div className="eph-ad-scroll" role="list" aria-label={isNativeApp ? "Marketplace service categories" : "Horizontally scrollable marketplace categories and sponsored offers"}>
             {!isNativeApp && promotions.map((promotion) => (
               <article className="eph-ad-card eph-ad-card-sponsored" role="listitem" key={promotion.id}>
                 <small>Sponsored · Featured vendor</small>
@@ -906,7 +906,7 @@ export default function PublicLanding({
             ))}
           </div>
           <div className="eph-promo-footer">
-            <span>{promotions.length ? `${promotions.length} approved vendor promotion${promotions.length === 1 ? '' : 's'} currently featured` : 'Marketplace categories are ready to explore. Vendor promotions will appear here after approval.'}</span>
+            <span>{isNativeApp ? "Explore service categories and local professionals." : promotions.length ? `${promotions.length} approved vendor promotion${promotions.length === 1 ? "" : "s"} currently featured` : "Marketplace categories are ready to explore. Vendor promotions will appear here after approval."}</span>
             <span className="eph-promo-scroll-hint">Swipe or scroll to see more <span aria-hidden="true">→</span></span>
           </div>
         </div>
