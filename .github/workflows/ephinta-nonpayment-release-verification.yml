@@ -78,12 +78,18 @@ jobs:
           npm ci
           npm exec --workspace @ess/web -- playwright install --with-deps chromium
 
-      - name: Execute non-payment release verification script
-        working-directory: .
+      - name: Execute non-payment release verification on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: bash eventsss123/eventsss-main/scripts/release/verify-nonpayment-release.sh
         env:
           EPHINTA_RUN_ANDROID_BUILD: 'true'
-          EPHINTA_INSTALL_ANDROID: 'false'
-        run: bash eventsss123/eventsss-main/scripts/release/verify-nonpayment-release.sh
+          EPHINTA_INSTALL_ANDROID: 'true'
 
       - name: Upload verification report
         if: always()
