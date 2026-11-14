@@ -7,6 +7,7 @@ on:
       - "eventsss123/eventsss-main/docs/ASSET_RIGHTS_REGISTER.md"
       - "eventsss123/eventsss-main/apps/web/public/**"
       - "eventsss123/eventsss-main/apps/web/src/lib/music/**"
+      - "eventsss123/eventsss-main/apps/web/src/components/AudioExperience.tsx"
       - "eventsss123/eventsss-main/.agents/skills/**"
       - "eventsss123/eventsss-main/contracts/**"
       - "**/node_modules/**"
