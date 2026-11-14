@@ -82,9 +82,8 @@ test("landing page actions navigate in-app without restarting or starting music"
     localStorage.setItem("ephinta:sound", "off");
   });
   await page.goto("/");
-  let mainFrameNavigations = 0;
-  page.on("framenavigated", (frame) => {
-    if (frame === page.mainFrame()) mainFrameNavigations += 1;
+  await page.evaluate(() => {
+    (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe = "loaded";
   });
 
   await expect(page.getByRole("button", { name: "Plan a Naming Ceremony" })).toHaveCount(0);
@@ -94,18 +93,17 @@ test("landing page actions navigate in-app without restarting or starting music"
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
   await expect.poll(() => page.locator("audio").evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(true);
-  expect(mainFrameNavigations).toBe(0);
+  await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
 
 test("landing marketplace actions open the customer marketplace sign-in route in-app", async ({ page }) => {
   await page.goto("/");
-  let mainFrameNavigations = 0;
-  page.on("framenavigated", (frame) => {
-    if (frame === page.mainFrame()) mainFrameNavigations += 1;
+  await page.evaluate(() => {
+    (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe = "loaded";
   });
   await page.locator(".eph-promo-marketplace-cta").click();
   await expect(page).toHaveURL(/\/auth\/signin\?role=CLIENT&returnTo=%2Fmarketplace$/);
-  expect(mainFrameNavigations).toBe(0);
+  await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
 
 test("signed-out marketplace deep links return to the marketplace after sign-in", async ({ page }) => {
@@ -304,14 +302,13 @@ test("customer dashboard marketplace carousel navigates in-app without reloading
   const explore = page.locator(".eph-portal-marketplace-cta");
   await expect(explore).toBeVisible();
 
-  let mainFrameNavigations = 0;
-  page.on("framenavigated", (frame) => {
-    if (frame === page.mainFrame()) mainFrameNavigations += 1;
+  await page.evaluate(() => {
+    (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe = "loaded";
   });
   await explore.click();
   await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
   await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
-  expect(mainFrameNavigations).toBe(0);
+  await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
 
 test("signed-in event planners can open the modern planner route", async ({ page }) => {
