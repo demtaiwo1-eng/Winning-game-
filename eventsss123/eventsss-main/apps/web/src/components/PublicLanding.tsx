@@ -248,6 +248,7 @@ export default function PublicLanding({
 
 
   useEffect(() => {
+    if (isNativeApp) return;
     let cancelled = false;
 
     fetch(apiUrl('/billing/public-promotions'))
@@ -263,7 +264,7 @@ export default function PublicLanding({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isNativeApp]);
 
   useEffect(() => {
     try { localStorage.setItem('ess:eventDraft', JSON.stringify(draft)); } catch { /* storage may be disabled */ }
