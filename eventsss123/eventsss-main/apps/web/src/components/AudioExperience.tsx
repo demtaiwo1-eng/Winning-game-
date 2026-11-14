@@ -40,7 +40,8 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   });
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [expanded, setExpanded] = useState(true);
+  // Keep the music controls compact after the visitor has made a choice.
+  const [expanded, setExpanded] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [status, setStatus] = useState("");
@@ -108,7 +109,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     // Browsers and Android WebView may reject background autoplay. The visible
     // play control remains available and the rejection is reported accessibly.
     void audio.play().catch(() => setStatus("Tap Play to start music; this browser requires a user gesture."));
-  }, [autoPlay, consent, preferencesLoaded, source]);
+  }, [autoPlay, consent, preferencesLoaded]);
 
   useEffect(() => () => { audioRef.current?.pause(); }, []);
 
@@ -127,6 +128,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
 
   function chooseConsent(accepted: boolean): void {
     setConsent(accepted);
+    setExpanded(false);
     writePreference("ephinta:sound", accepted ? "on" : "off");
     if (accepted) { skipNextAutoPlay.current = true; void play(); }
     else {
