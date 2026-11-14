@@ -2304,6 +2304,7 @@ export default function EnterpriseApp() {
         } catch { /* */ }
       }}
       onStartBuilder={startEventBuilder}
+      onExploreMarketplace={() => navigate("/marketplace")}
     />
   );
   if (!session) {
