@@ -19,14 +19,16 @@
 
 set -Eeuo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-cd "$REPO_ROOT"
+GIT_ROOT="$(git rev-parse --show-toplevel)"
+APP_ROOT="$GIT_ROOT/eventsss123/eventsss-main"
+[[ -f "$APP_ROOT/package.json" ]] || { echo "::error::EPHINTA app root not found at $APP_ROOT" >&2; exit 1; }
+cd "$APP_ROOT"
 
 BASE_BRANCH="${BASE_BRANCH:-main}"
 INTEGRATION_BRANCH="${INTEGRATION_BRANCH:-integration/ephinta-release-candidate-final-20261114}"
 SKIP_ANDROID="${SKIP_ANDROID:-false}"
 MAX_BRANCHES="${MAX_BRANCHES:-0}"
-REPORT_DIR="${REPORT_DIR:-$REPO_ROOT/artifacts}"
+REPORT_DIR="${REPORT_DIR:-$APP_ROOT/artifacts}"
 REPORT_FILE="$REPORT_DIR/branch-consolidation-report.tsv"
 
 die() { echo "::error::$*" >&2; exit 1; }
