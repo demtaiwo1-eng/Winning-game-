@@ -77,6 +77,37 @@ test("legacy forgot-password and planner continuation URLs resolve to active scr
   await expect(page.locator("#eph-auth-dialog")).toBeVisible();
 });
 
+test("landing page actions navigate in-app without restarting or starting music", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ephinta:sound", "off");
+  });
+  await page.goto("/");
+  let mainFrameNavigations = 0;
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) mainFrameNavigations += 1;
+  });
+
+  await expect(page.getByRole("button", { name: "Plan a Naming Ceremony" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Plan a Burial" })).toHaveCount(0);
+
+  await page.locator(".ephinta-marketing-zone__cta").click();
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect.poll(() => page.locator("audio").evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(true);
+  expect(mainFrameNavigations).toBe(0);
+});
+
+test("landing marketplace actions open the customer marketplace sign-in route in-app", async ({ page }) => {
+  await page.goto("/");
+  let mainFrameNavigations = 0;
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) mainFrameNavigations += 1;
+  });
+  await page.locator(".eph-promo-marketplace-cta").click();
+  await expect(page).toHaveURL(/\/auth\/signin\?role=CLIENT&returnTo=%2Fmarketplace$/);
+  expect(mainFrameNavigations).toBe(0);
+});
+
 test("signed-out marketplace deep links return to the marketplace after sign-in", async ({ page }) => {
   await page.route("**/api/v1/auth/login", async (route) => {
     await route.fulfill({
@@ -129,6 +160,10 @@ test("marketplace deep links open the marketplace tab in an authenticated custom
   await unlockDeviceGate(page);
   await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
   await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Your city" })).toBeVisible();
+  await page.getByRole("textbox", { name: "Your city" }).fill("Ibadan");
+  await expect(page.getByRole("status").filter({ hasText: "Prioritising vendors in Ibadan" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Use my location" })).toBeVisible();
 });
 
 test("guest RSVP deep links are public and show a safe unavailable state for an invalid token", async ({ page }) => {
