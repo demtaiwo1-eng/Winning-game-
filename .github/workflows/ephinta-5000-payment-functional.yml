@@ -1,0 +1,41 @@
+name: EPHINTA 5,000 payment functional simulation
+
+on:
+  pull_request:
+    paths:
+      - "eventsss123/eventsss-main/scripts/qa/ephinta-5000-payment-functional.mjs"
+      - ".github/workflows/ephinta-5000-payment-functional.yml"
+  workflow_dispatch:
+    inputs:
+      users:
+        description: Number of synthetic payment journeys
+        required: false
+        default: "5000"
+
+permissions:
+  contents: read
+
+jobs:
+  payment-functional:
+    name: 5,000 mocked payment journeys
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run payment functional simulation
+        env:
+          PAYMENT_TEST_USERS: ${{ github.event.inputs.users || '5000' }}
+        run: node scripts/qa/ephinta-5000-payment-functional.mjs
+      - name: Upload payment test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-5000-payment-functional-report
+          path: eventsss123/eventsss-main/artifacts/ephinta-5000-payment-functional-report.json
+          if-no-files-found: error
+          retention-days: 30
