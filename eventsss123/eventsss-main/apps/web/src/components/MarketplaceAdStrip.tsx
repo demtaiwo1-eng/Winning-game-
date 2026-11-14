@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "../lib/api";
 
 type PublicPromotion = {
@@ -12,19 +12,20 @@ type PublicPromotion = {
 };
 
 const MARKETPLACE_CATEGORIES = [
-  { id: "venues", icon: "⌂", eyebrow: "VENUES & SPACES", title: "Find a setting that fits your occasion", description: "Explore event spaces, halls, outdoor venues and locations for gatherings of every size." },
-  { id: "catering", icon: "✦", eyebrow: "FOOD & EXPERIENCES", title: "Bring everyone together around the table", description: "Discover catering teams, cakes, drinks and hospitality services for your event." },
-  { id: "photography", icon: "◉", eyebrow: "PHOTO & VIDEO", title: "Keep the moments worth remembering", description: "Find photographers, videographers and creative teams to capture your occasion." },
-  { id: "production", icon: "◇", eyebrow: "DECOR & PRODUCTION", title: "Give your ideas a memorable finish", description: "Browse décor, rentals, sound, lighting, staging and event production services." },
+  { id: "venues", icon: "⌂", eyebrow: "VENUES", title: "Venues & spaces", description: "Find a setting that fits your occasion." },
+  { id: "catering", icon: "✦", eyebrow: "FOOD & EXPERIENCES", title: "Catering & treats", description: "Bring everyone together around the table." },
+  { id: "photography", icon: "◉", eyebrow: "PHOTO & VIDEO", title: "Capture the moments", description: "Find photographers and creative teams." },
+  { id: "production", icon: "◇", eyebrow: "DECOR & PRODUCTION", title: "Decor & production", description: "Browse decor, rentals, sound and lighting." },
 ] as const;
 
 function locationLabel(city?: string | null, country?: string | null): string {
   return [city, country].filter(Boolean).join(", ");
 }
 
-/** Shared Marketplace advertising strip for every authenticated workspace. */
+/** Compact, touch-friendly Marketplace and approved-promotion carousel. */
 export default function MarketplaceAdStrip() {
   const [promotions, setPromotions] = useState<PublicPromotion[]>([]);
+  const rail = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,26 +38,32 @@ export default function MarketplaceAdStrip() {
           : [];
         if (!cancelled) setPromotions(Array.isArray(items) ? items as PublicPromotion[] : []);
       })
-      .catch(() => {
-        if (!cancelled) setPromotions([]);
-      });
+      .catch(() => { if (!cancelled) setPromotions([]); });
     return () => { cancelled = true; };
   }, []);
 
+  const move = (direction: -1 | 1) => {
+    rail.current?.scrollBy({ left: direction * Math.max(220, rail.current.clientWidth * 0.72), behavior: "smooth" });
+  };
+
   return (
-    <section className="eph-portal-marketplace" aria-label="EPHINTA Marketplace promotions">
+    <section className="eph-portal-marketplace eph-portal-marketplace-compact" aria-label="EPHINTA Marketplace and featured advertising">
       <div className="eph-portal-marketplace-heading">
         <div>
           <span className="eph-portal-marketplace-kicker">DISCOVER · CONNECT · CELEBRATE</span>
-          <h2>Explore the EPHINTA Marketplace</h2>
-          <p>Discover event professionals, useful services and featured vendor offers.</p>
+          <h2>Discover the EPHINTA Marketplace</h2>
+          <p>Featured services and approved vendor promotions.</p>
         </div>
-        <a href="/" className="eph-portal-marketplace-cta">Explore EPHINTA <span aria-hidden="true">→</span></a>
+        <a href="/marketplace" className="eph-portal-marketplace-cta">Explore <span aria-hidden="true">→</span></a>
       </div>
-      <div className="eph-portal-ad-scroll" role="list" aria-label="Horizontally scrollable Marketplace categories and sponsored offers">
+      <div className="eph-portal-carousel-controls" aria-label="Marketplace carousel controls">
+        <button type="button" onClick={() => move(-1)} aria-label="Previous Marketplace cards">‹</button>
+        <button type="button" onClick={() => move(1)} aria-label="Next Marketplace cards">›</button>
+      </div>
+      <div ref={rail} className="eph-portal-ad-scroll eph-portal-ad-carousel" role="list" aria-label="Swipe or scroll through Marketplace categories and sponsored offers">
         {promotions.map((promotion) => (
           <article className="eph-portal-ad-card eph-portal-ad-card-sponsored" role="listitem" key={promotion.id}>
-            <small>Sponsored · Approved vendor</small>
+            <small>SPONSORED · APPROVED VENDOR</small>
             <strong>{promotion.title}</strong>
             <p>{promotion.description || `${promotion.vendorName} is featuring an event service on EPHINTA.`}</p>
             <div className="eph-portal-ad-meta">
@@ -64,7 +71,7 @@ export default function MarketplaceAdStrip() {
               {promotion.listingTitle && <span>{promotion.listingTitle}</span>}
               {locationLabel(promotion.city, promotion.country) && <span>{locationLabel(promotion.city, promotion.country)}</span>}
             </div>
-            <a href="/">Discover offer <span aria-hidden="true">→</span></a>
+            <a href="/marketplace">View offer <span aria-hidden="true">→</span></a>
           </article>
         ))}
         {MARKETPLACE_CATEGORIES.map((item) => (
@@ -73,13 +80,13 @@ export default function MarketplaceAdStrip() {
             <small>{item.eyebrow}</small>
             <strong>{item.title}</strong>
             <p>{item.description}</p>
-            <a href="/">Explore services <span aria-hidden="true">→</span></a>
+            <a href="/marketplace">Explore <span aria-hidden="true">→</span></a>
           </article>
         ))}
       </div>
       <div className="eph-portal-marketplace-footer">
-        <span>{promotions.length ? `${promotions.length} approved vendor promotion${promotions.length === 1 ? "" : "s"} currently featured` : "Marketplace categories are available; approved vendor campaigns appear here when active."}</span>
-        <span>Swipe or scroll to see more →</span>
+        <span>{promotions.length ? `${promotions.length} approved vendor promotion${promotions.length === 1 ? "" : "s"} featured` : "Explore Marketplace categories; approved vendor campaigns appear when active."}</span>
+        <span>Swipe to browse</span>
       </div>
     </section>
   );
