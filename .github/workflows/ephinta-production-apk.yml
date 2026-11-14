@@ -7,6 +7,7 @@ on:
       - ".github/workflows/initialize-ephinta-android-signing.yml"
       - "scripts/complete-production-apk.sh"
       - "scripts/setup-android-signing-github.sh"
+      - "eventsss123/eventsss-main/apps/mobile/android/app/build.gradle"
   workflow_dispatch:
     inputs:
       minimum_version_code:
