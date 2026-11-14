@@ -1,0 +1,35 @@
+name: EPHINTA intellectual-property release gate
+
+on:
+  pull_request:
+    paths:
+      - "eventsss123/eventsss-main/docs/assets/asset-rights.json"
+      - "eventsss123/eventsss-main/docs/ASSET_RIGHTS_REGISTER.md"
+      - "eventsss123/eventsss-main/apps/web/public/**"
+      - "eventsss123/eventsss-main/apps/web/src/lib/music/**"
+      - "eventsss123/eventsss-main/.agents/skills/**"
+      - "eventsss123/eventsss-main/contracts/**"
+      - "**/node_modules/**"
+      - "eventsss123/package*.json"
+      - ".gitignore"
+      - "eventsss123/eventsss-main/scripts/qa/ephinta-ip-release-gate.mjs"
+      - ".github/workflows/ephinta-ip-release-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  asset-rights:
+    name: Check source and asset rights gates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify commercial asset and source gates
+        run: node scripts/qa/ephinta-ip-release-gate.mjs
