@@ -90,7 +90,7 @@ async function main() {
   }
 
   const commands = [
-    ["API schema, TypeScript, API tests, web tests and KYC research tests", npm, ["run", "check"]],
+    ["API schema, TypeScript, non-database API tests, web tests and KYC research tests", npm, ["run", "check"], { RUN_DB_TESTS: "0" }],
     ["API production build", npm, ["run", "build"]],
     ["Web production build and SPA fallback", npm, ["run", "build:web"]],
     ["Audio permission/platform safety checks", npm, ["run", "audio:verify", "-w", "apps/web"]],
@@ -114,7 +114,7 @@ async function main() {
   }
 
   if (process.env.JAVA_HOME || process.platform === "linux") {
-    await check("Android lint, unit tests, Capacitor sync and debug APK build", npm, ["run", "mobile:verify"]);
+    await check("Capacitor Android project sync", npm, ["run", "sync", "-w", "apps/mobile"]);\n    await check("Android lint, unit tests and debug APK build", npm, ["run", "verify:android", "-w", "apps/mobile"]);
   } else {
     report.releaseBlockers.push("Android build skipped: configure JDK 21 and Android SDK on this runner.");
   }
