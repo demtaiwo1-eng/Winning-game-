@@ -96,6 +96,8 @@ async function main() {
     report.releaseBlockers.push("Database integration suite not run in this invocation; CI must provide a disposable PostgreSQL service with RUN_DB_TESTS=1.");
   }
 
+  await check("Install Chromium and Linux browser dependencies for browser-backed audits", npm, ["exec", "-w", "apps/web", "--", "playwright", "install", "--with-deps", "chromium"]);
+
   const commands = [
     ["API schema, TypeScript, non-database API tests, web tests and KYC research tests", npm, ["run", "check"], { RUN_DB_TESTS: "0" }],
     ["API production build", npm, ["run", "build"]],
