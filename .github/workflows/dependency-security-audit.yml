@@ -3,25 +3,30 @@ name: Dependency security audit
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - integration/ephinta-release-candidate-final-20261114
     paths:
       - "eventsss123/eventsss-main/package.json"
       - "eventsss123/eventsss-main/package-lock.json"
       - "eventsss123/eventsss-main/apps/**/package.json"
-      - ".github/workflows/dependency-security-audit.yml"
+      - ".github/workflows/**"
   push:
     branches:
       - main
-      - security/dependency-audit-report
+      - integration/ephinta-release-candidate-final-20261114
+      - fix/ephinta-nonpayment-release-gates-20261114
   schedule:
     - cron: "23 8 * * 1"
 
 permissions:
   contents: read
+  pull-requests: read
+  security-events: write
 
 jobs:
   audit:
-    name: Report npm dependency advisories
+    name: Dependency vulnerability gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -30,7 +35,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: eventsss123/eventsss-main/package-lock.json
 
@@ -38,7 +43,11 @@ jobs:
         working-directory: eventsss123/eventsss-main
         run: npm ci --include=dev
 
-      - name: Capture full and production dependency reports
+      - name: Block vulnerable production dependencies
+        working-directory: eventsss123/eventsss-main
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Capture complete dependency audit reports
         working-directory: eventsss123/eventsss-main
         run: |
           mkdir -p "$RUNNER_TEMP/npm-audit"
@@ -54,22 +63,44 @@ jobs:
           ]) {
             let report = {};
             try { report = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")); }
-            catch (error) {
-              console.log(`${label}: audit report could not be parsed: ${error.message}`);
-              continue;
-            }
+            catch (error) { throw new Error(`${label} audit JSON invalid: ${error.message}`); }
             const v = report.metadata?.vulnerabilities || {};
-            const total = v.total ?? "unknown";
-            console.log(`${label}: ${total} total; critical=${v.critical ?? 0}, high=${v.high ?? 0}, moderate=${v.moderate ?? 0}, low=${v.low ?? 0}`);
-            const summary = `- **${label}:** ${total} total; critical ${v.critical ?? 0}, high ${v.high ?? 0}, moderate ${v.moderate ?? 0}, low ${v.low ?? 0}\n`;
-            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+            const line = `${label}: total=${v.total ?? "unknown"}; critical=${v.critical ?? 0}; high=${v.high ?? 0}; moderate=${v.moderate ?? 0}; low=${v.low ?? 0}`;
+            console.log(line);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `- ${line}\n`);
           }
           NODE
 
       - name: Upload dependency audit reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: npm-dependency-audit
           path: ${{ runner.temp }}/npm-audit/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
+
+  secret-scan:
+    name: Detect committed secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan repository for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-review:
+    name: Review new pull-request dependencies
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check dependency changes for known vulnerabilities
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: always
