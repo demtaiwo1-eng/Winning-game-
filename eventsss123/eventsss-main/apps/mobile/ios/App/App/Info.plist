@@ -24,6 +24,8 @@
 	<string>EPHINTA uses Face ID to securely unlock your account on this device.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>EPHINTA uses the camera for identity document capture and live facial verification.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>EPHINTA uses your approximate location to prioritise event vendors in your city. Your coordinates are not stored.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
