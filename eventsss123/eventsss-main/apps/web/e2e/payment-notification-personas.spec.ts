@@ -144,7 +144,7 @@ for (const persona of personas) {
 
     if (persona.role === "CLIENT") {
       await expect(page).toHaveURL(/\/dashboard\/client$/);
-      await page.getByRole("button", { name: "Open payments and wallet" }).click();
+      await page.getByRole("button", { name: "Open Payments & finances" }).click();
       await expect(page.getByText("OPay deposit · 2% platform fee", { exact: false })).toBeVisible();
       await page.getByLabel("Amount (major units)").fill("10000");
       await expect(page.getByText(/2% platform fee/)).toBeVisible();
