@@ -44,6 +44,7 @@ jobs:
       CI: "1"
       NODE_ENV: test
       DATABASE_URL: postgresql://ephinta:ephinta_ci_only_password@localhost:5432/ephinta_ci?schema=public
+      DATABASE_URL_LOCAL: postgresql://ephinta:ephinta_ci_only_password@localhost:5432/ephinta_ci?schema=public
       JWT_SECRET: ephinta-ci-only-secret-0123456789abcdef0123456789abcdef
       APP_BASE_URL: http://localhost:3000
       RUN_DB_TESTS: "1"
