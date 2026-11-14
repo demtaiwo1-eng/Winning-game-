@@ -76,6 +76,8 @@ async function runOne(index) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     attempts = attempt + 1;
     await waitForRateSlot();
+    response = null;
+    body = "";
     try {
       response = await fetch(target, { method: "GET", headers: { "user-agent": "EPHINTA-OneNode-QA/1.0", "x-qa-persona": String(index + 1) }, signal: AbortSignal.timeout(timeoutMs) });
       body = await response.text();
