@@ -18,6 +18,11 @@ test("EPHINTA landing page responsive UX audit and screenshots", async ({ page }
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await page.goto("/", { waitUntil: "networkidle" });
       await expect(page.locator("body")).toBeVisible();
+      const brand = page.locator(".eph-brand");
+      await expect(brand).toBeVisible();
+      await expect(brand.locator("span")).toBeVisible();
+      const brandTextSize = await brand.locator("span").evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize));
+      expect(brandTextSize, "EPHINTA brand text must remain legible on every screen").toBeGreaterThanOrEqual(17);
 
       const metrics = await page.evaluate(() => {
         const root = document.documentElement;
