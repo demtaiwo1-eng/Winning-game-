@@ -102,6 +102,14 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   }, []);
 
   useEffect(() => {
+    const promptOpen = showPrompt && preferencesLoaded && consent === null && !authDialogOpen;
+    if (!promptOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [showPrompt, preferencesLoaded, consent, authDialogOpen]);
+
+  useEffect(() => {
     if (!autoPlay || consent !== true || !preferencesLoaded) return;
     if (skipNextAutoPlay.current) { skipNextAutoPlay.current = false; return; }
     const audio = audioRef.current;
