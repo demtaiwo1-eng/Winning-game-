@@ -50,12 +50,11 @@ for name in "${required[@]}"; do
 done
 
 if (( present == 0 )); then
-  step "3/5 — Create the permanent release key and configure GitHub secrets"
-  bash "$SETUP"
+  fail "No Android signing secrets exist. Do NOT generate a new key: it cannot update the existing Build 869 installation. Recover the original private keystore used to sign the installed app, then register its four secrets and matching ANDROID_CERT_SHA256 fingerprint in GitHub Settings."
 elif (( present != ${#required[@]} )); then
   fail "Only some signing secrets exist. For safety, this script will not replace or rotate a partially configured key. Ask a repository admin to repair the missing secret names: ${missing[*]}"
 else
-  printf 'All four signing secret names are present. Values were not read or displayed.\n'
+  printf 'All four signing secret names are present. Values were not read or displayed.\\n'
 fi
 
 VARIABLES="$(gh api --paginate "repos/$REPO/actions/variables" --jq '.variables[].name')"
