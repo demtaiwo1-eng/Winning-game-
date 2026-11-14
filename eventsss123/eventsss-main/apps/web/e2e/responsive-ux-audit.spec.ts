@@ -18,6 +18,11 @@ test("EPHINTA landing page responsive UX audit and screenshots", async ({ page }
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await page.goto("/", { waitUntil: "networkidle" });
       await expect(page.locator("body")).toBeVisible();
+      const consent = page.getByRole("dialog", { name: "Enjoy background music?" });
+      if (await consent.isVisible()) {
+        await consent.getByRole("button", { name: "No, thanks" }).click();
+      }
+      await expect(consent).toBeHidden();
       const brand = page.locator(".eph-nav > .eph-brand");
       await expect(brand).toBeVisible();
       await expect(brand.locator("span")).toBeVisible();
