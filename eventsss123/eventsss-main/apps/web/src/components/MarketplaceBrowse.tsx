@@ -341,7 +341,7 @@ export default function MarketplaceBrowse({
       <section className="ess-marketplace-location" aria-label="Find vendors near you" style={{ margin: "18px 0", padding: "16px 18px", border: "1px solid var(--ess-border, #ded9e8)", borderRadius: 16, display: "grid", gap: 10 }}>
         <div>
           <strong>Find vendors near you</strong>
-          <p className="ess-muted" style={{ margin: "4px 0 0", fontSize: 13 }}>Allow location access or enter a city. EPHINTA uses a one-time map lookup to identify your city and does not save your coordinates.</p>
+          <p className="ess-muted" style={{ margin: "4px 0 0", fontSize: 13 }}>Allow location access or enter a city. EPHINTA uses a one-time OpenStreetMap lookup to identify your city; we do not save your coordinates.</p>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           <input aria-label="Your city" value={nearbyCity} onChange={(event) => { setNearbyCity(event.target.value); setLocationStatus(event.target.value.trim() ? `Prioritising vendors in ${event.target.value.trim()}.` : ""); }} placeholder="Enter your city" style={{ flex: "1 1 180px", minWidth: 0, minHeight: 42, padding: "9px 12px", border: "1px solid var(--ess-border, #ded9e8)", borderRadius: 10, background: "var(--surface, #fff)", color: "inherit" }} />
