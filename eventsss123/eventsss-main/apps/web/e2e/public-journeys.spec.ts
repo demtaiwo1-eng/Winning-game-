@@ -160,10 +160,22 @@ test("marketplace deep links open the marketplace tab in an authenticated custom
   await unlockDeviceGate(page);
   await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
   await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Your city" })).toBeVisible();
-  await page.getByRole("textbox", { name: "Your city" }).fill("Ibadan");
+  const cityInput = page.getByRole("textbox", { name: "Your city" });
+  await expect(cityInput).toBeVisible();
+  await page.context().grantPermissions(["geolocation"]);
+  await page.context().setGeolocation({ latitude: 7.3775, longitude: 3.9470 });
+  await page.route("https://nominatim.openstreetmap.org/reverse**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ address: { city: "Ibadan" } }),
+    });
+  });
+  await page.getByRole("button", { name: "Use my location" }).click();
+  await expect(cityInput).toHaveValue("Ibadan");
   await expect(page.getByRole("status").filter({ hasText: "Prioritising vendors in Ibadan" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Use my location" })).toBeVisible();
+  await cityInput.fill("Lagos");
+  await expect(page.getByRole("status").filter({ hasText: "Prioritising vendors in Lagos" })).toBeVisible();
 });
 
 test("guest RSVP deep links are public and show a safe unavailable state for an invalid token", async ({ page }) => {
