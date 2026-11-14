@@ -44,7 +44,9 @@ type Props = {
  */
 export default function DeviceSecurityGate({ userId, onSignOut, children }: Props) {
   const storageKey = useMemo(() => `ephinta:device-pin:v1:${userId}`, [userId]);
-  const [configured, setConfigured] = useState(() => {\n    try { return Boolean(localStorage.getItem(`ephinta:device-pin:v1:${userId}`)); } catch { return false; }\n  });
+  const [configured, setConfigured] = useState(() => {
+    try { return Boolean(localStorage.getItem(`ephinta:device-pin:v1:${userId}`)); } catch { return false; }
+  });
   const [locked, setLocked] = useState(true);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -54,8 +56,25 @@ export default function DeviceSecurityGate({ userId, onSignOut, children }: Prop
   const lastActivity = useRef(Date.now());
   const timer = useRef<number | null>(null);
   const attemptsKey = useMemo(() => `ephinta:device-pin-attempts:v1:${userId}`, [userId]);
-  let storedAttempts = 0;\n  try { storedAttempts = Number.parseInt(localStorage.getItem(attemptsKey) ?? "0", 10); } catch { storedAttempts = 0; }
-  const attempts = useRef(Number.isFinite(storedAttempts) ? Math.max(0, Math.min(5, storedAttempts)) : 0);\n\n  // Re-read per-account PIN state when the authenticated account changes.\n  useEffect(() => {\n    try {\n      setConfigured(Boolean(localStorage.getItem(storageKey)));\n      const saved = Number.parseInt(localStorage.getItem(attemptsKey) ?? "0", 10);\n      attempts.current = Number.isFinite(saved) ? Math.max(0, Math.min(5, saved)) : 0;\n    } catch {\n      setConfigured(false);\n      attempts.current = 0;\n    }\n    setLocked(true);\n    setPin("");\n    setConfirmPin("");\n    setError("");\n  }, [storageKey, attemptsKey]);
+  let storedAttempts = 0;
+  try { storedAttempts = Number.parseInt(localStorage.getItem(attemptsKey) ?? "0", 10); } catch { storedAttempts = 0; }
+  const attempts = useRef(Number.isFinite(storedAttempts) ? Math.max(0, Math.min(5, storedAttempts)) : 0);
+
+  // Re-read per-account PIN state when the authenticated account changes.
+  useEffect(() => {
+    try {
+      setConfigured(Boolean(localStorage.getItem(storageKey)));
+      const saved = Number.parseInt(localStorage.getItem(attemptsKey) ?? "0", 10);
+      attempts.current = Number.isFinite(saved) ? Math.max(0, Math.min(5, saved)) : 0;
+    } catch {
+      setConfigured(false);
+      attempts.current = 0;
+    }
+    setLocked(true);
+    setPin("");
+    setConfirmPin("");
+    setError("");
+  }, [storageKey, attemptsKey]);
 
   useEffect(() => {
     let active = true;
