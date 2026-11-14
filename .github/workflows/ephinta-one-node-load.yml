@@ -1,0 +1,50 @@
+name: EPHINTA one-node 5,000 synthetic-user load campaign
+
+on:
+  pull_request:
+    paths:
+      - "eventsss123/eventsss-main/scripts/qa/ephinta-one-node-load.mjs"
+      - ".github/workflows/ephinta-one-node-load.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ephinta-one-node-load-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  one-node-load:
+    name: 5,000 synthetic users · one staging node
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Confirm target is the isolated staging API
+        run: |
+          test "${EPHINTA_LOAD_BASE_URL}" = "https://ephinta-opay-staging.onrender.com"
+          echo "Target: one staging service; one request per synthetic identity; concurrency capped at 4; request rate capped at 3/second."
+        env:
+          EPHINTA_LOAD_BASE_URL: https://ephinta-opay-staging.onrender.com
+      - name: Run bounded 5,000-user campaign and financial mode simulation
+        working-directory: eventsss123/eventsss-main
+        env:
+          EPHINTA_LOAD_BASE_URL: https://ephinta-opay-staging.onrender.com
+          LOAD_USERS: "5000"
+          LOAD_CONCURRENCY: "4"
+          LOAD_RPS: "3"
+        run: node scripts/qa/ephinta-one-node-load.mjs
+      - name: Upload administrative dashboard and raw results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-one-node-5000-load-dashboard
+          path: |
+            eventsss123/eventsss-main/artifacts/ephinta-one-node-5000-report.json
+            eventsss123/eventsss-main/artifacts/ephinta-one-node-5000-dashboard.html
+          if-no-files-found: warn
+          retention-days: 14
