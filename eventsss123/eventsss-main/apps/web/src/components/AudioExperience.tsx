@@ -1,35 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
-import { EPHINTA_MUSIC } from "../lib/music/ephinta-config";
+import { EPHINTA_MUSIC, safeLicensedAudioUrl } from "../lib/music/ephinta-config";
 
 type Props = {
+  /** HTTPS URL or same-origin path to an audio recording cleared for EPHINTA commercial use. */
   audioUrl?: string;
   showPrompt?: boolean;
   autoPlay?: boolean;
-};
-type MusicCategory = keyof typeof EPHINTA_MUSIC.categoryTracks;
-
-const CATEGORY_LABELS: Record<MusicCategory, string> = {
-  wedding: "Wedding",
-  naming: "Naming ceremony",
-  burial: "Burial",
 };
 
 function readPreference(key: string): string | null {
   try { return localStorage.getItem(key); } catch { return null; }
 }
 function writePreference(key: string, value: string): void {
-  try { localStorage.setItem(key, value); } catch { /* Storage is optional in private modes. */ }
-}
-function readCategory(): MusicCategory {
-  const value = readPreference("ephinta:music-category");
-  return value === "naming" || value === "burial" || value === "wedding" ? value : "wedding";
+  try { localStorage.setItem(key, value); } catch { /* Storage is optional. */ }
 }
 
 export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay = false }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const skipNextAutoPlay = useRef(false);
-  const [category, setCategory] = useState<MusicCategory>(readCategory);
-  const [trackIndex, setTrackIndex] = useState(0);
+  const source = safeLicensedAudioUrl(audioUrl || EPHINTA_MUSIC.licensedAudioUrl || "");
   const [volume, setVolume] = useState(() => {
     const saved = Number(readPreference("ephinta:sound-volume"));
     return Number.isFinite(saved) && saved >= 0 && saved <= 1 ? saved : 0.35;
@@ -45,43 +34,22 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [duration, setDuration] = useState(0);
   const [status, setStatus] = useState("");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const tracks = EPHINTA_MUSIC.categoryTracks[category];
-  const source = audioUrl || tracks[trackIndex] || tracks[0];
-  const trackTitle = source.split("/").pop()?.replace(/%20/g, " ").replace(/\.mp3$/i, "").replace(/[-_]/g, " ") || CATEGORY_LABELS[category];
 
   useEffect(() => { setPreferencesLoaded(true); }, []);
   useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) audio.volume = volume;
+    if (audioRef.current) audioRef.current.volume = volume;
     writePreference("ephinta:sound-volume", String(volume));
   }, [volume]);
-  useEffect(() => {
-    writePreference("ephinta:music-category", category);
-    setTrackIndex(0);
-  }, [category]);
-  useEffect(() => { writePreference("ephinta:music-track", String(trackIndex)); }, [trackIndex]);
 
   useEffect(() => {
-    const onCategoryChange = (event: Event) => {
-      const value = (event as CustomEvent).detail;
-      if (value === "wedding" || value === "naming" || value === "burial") setCategory(value);
-    };
     const onStorage = (event: StorageEvent) => {
-      if (event.key === "ephinta:music-category" &&
-        (event.newValue === "wedding" || event.newValue === "naming" || event.newValue === "burial")) {
-        setCategory(event.newValue);
-      }
       if (event.key === "ephinta:sound" && event.newValue === "off") {
         audioRef.current?.pause();
         setConsent(false);
       }
     };
-    window.addEventListener("ephinta:music-category-change", onCategoryChange);
     window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener("ephinta:music-category-change", onCategoryChange);
-      window.removeEventListener("storage", onStorage);
-    };
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   useEffect(() => {
@@ -101,12 +69,10 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   }, []);
 
   useEffect(() => {
-    if (!autoPlay || consent !== true || !preferencesLoaded) return;
+    if (!source || !autoPlay || consent !== true || !preferencesLoaded) return;
     if (skipNextAutoPlay.current) { skipNextAutoPlay.current = false; return; }
     const audio = audioRef.current;
     if (!audio) return;
-    // Browsers and Android WebView may reject background autoplay. The visible
-    // play control remains available and the rejection is reported accessibly.
     void audio.play().catch(() => setStatus("Tap Play to start music; this browser requires a user gesture."));
   }, [autoPlay, consent, preferencesLoaded, source]);
 
@@ -114,14 +80,14 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
 
   async function play(): Promise<void> {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !source) return;
     try {
       audio.volume = volume;
       await audio.play();
-      setStatus("Music is playing.");
+      setStatus("Licensed event music is playing.");
     } catch (error) {
       console.warn("EPHINTA audio playback was blocked or unavailable.", error);
-      setStatus("Music could not start automatically. Check your connection and tap Play again.");
+      setStatus("Music could not start. Check the configured audio source and tap Play again.");
     }
   }
 
@@ -136,9 +102,20 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     }
   }
 
-  function changeTrack(direction: -1 | 1): void {
-    setTrackIndex((index) => (index + direction + tracks.length) % tracks.length);
-  }
+  // No source means no prompt, audio request, or misleading claim that EPHINTA
+  // owns a recording. The player becomes available after a rights-cleared URL
+  // is configured through VITE_EPHINTA_LICENSED_AUDIO_URL or the audioUrl prop.
+  if (!source) return null;
+
+  const trackTitle = (() => {
+    try {
+      const path = new URL(source, window.location.origin).pathname;
+      const filename = path.split("/").pop() || "";
+      return decodeURIComponent(filename).replace(/\.[^.]+$/, "").replace(/[-_]/g, " ") || "Licensed event music";
+    } catch {
+      return "Licensed event music";
+    }
+  })();
 
   return (
     <>
@@ -151,8 +128,8 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         onPause={() => setPlaying(false)}
         onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
         onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
-        onEnded={() => changeTrack(1)}
-        onError={() => setStatus("This music track is unavailable. Check your connection or choose another track.")}
+        onEnded={() => setPlaying(false)}
+        onError={() => setStatus("The configured licensed audio source is unavailable.")}
       />
       <p className="eph-audio__status" role="status" aria-live="polite">{status}</p>
 
@@ -160,9 +137,9 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         <div className="eph-audio__backdrop">
           <section className="eph-audio__prompt" role="dialog" aria-modal="true" aria-labelledby="eph-audio-title">
             <span className="eph-audio__prompt-icon" aria-hidden="true">♫</span>
-            <p className="eph-audio__eyebrow">A little atmosphere</p>
-            <h2 id="eph-audio-title">Enjoy background music?</h2>
-            <p>May EPHINTA play its original event music while you browse? Your choice is saved on this device.</p>
+            <p className="eph-audio__eyebrow">Optional event atmosphere</p>
+            <h2 id="eph-audio-title">Would you like background music?</h2>
+            <p>EPHINTA will only play the audio source configured by the platform owner. Your choice is saved on this device.</p>
             <div className="eph-audio__choices">
               <button type="button" className="eph-audio__accept" onClick={() => chooseConsent(true)}>Yes, play music</button>
               <button type="button" className="eph-audio__decline" onClick={() => chooseConsent(false)}>No, thanks</button>
@@ -176,19 +153,17 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
           ♫ Music {playing ? "playing" : "paused"}
         </button>
       ) : (
-        <section className="eph-audio__player" aria-label="EPHINTA music player">
+        <section className="eph-audio__player" aria-label="EPHINTA licensed music player">
           <div className="eph-audio__player-heading">
             <span className="eph-audio__player-art" aria-hidden="true">♫</span>
             <div className="eph-audio__track-copy">
-              <span className="eph-audio__player-label">EPHINTA MUSIC · {CATEGORY_LABELS[category].toUpperCase()}</span>
+              <span className="eph-audio__player-label">EPHINTA MUSIC · RIGHTS-CLEARED SOURCE</span>
               <strong title={trackTitle}>{trackTitle}</strong>
             </div>
             <span className={"eph-audio__playing-indicator" + (playing ? " is-playing" : "")} aria-label={playing ? "Playing" : "Paused"} />
           </div>
           <div className="eph-audio__player-controls">
-            <button className="eph-audio__control" type="button" onClick={() => changeTrack(-1)} aria-label="Previous track">|◀</button>
             <button className="eph-audio__control eph-audio__play" type="button" onClick={() => playing ? audioRef.current?.pause() : void play()} aria-label={playing ? "Pause music" : "Play music"}>{playing ? "Ⅱ" : "▶"}</button>
-            <button className="eph-audio__control" type="button" onClick={() => changeTrack(1)} aria-label="Next track">▶|</button>
             <label className="eph-audio__volume">
               <span className="eph-audio__volume-label">Volume</span>
               <input aria-label="Music volume" type="range" min="0" max="1" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} />
@@ -205,14 +180,6 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
             <span>{formatTime(duration)}</span>
           </div>
           <div className="eph-audio__player-footer">
-            <label>
-              <span className="eph-audio__volume-label">Event music</span>
-              <select aria-label="Music category" value={category} onChange={(event) => setCategory(event.target.value as MusicCategory)}>
-                <option value="wedding">Wedding</option>
-                <option value="naming">Naming ceremony</option>
-                <option value="burial">Burial</option>
-              </select>
-            </label>
             <button className="eph-audio__dismiss" type="button" onClick={() => setExpanded(false)}>Minimize</button>
             <button className="eph-audio__dismiss" type="button" onClick={() => chooseConsent(false)}>Turn music off</button>
           </div>

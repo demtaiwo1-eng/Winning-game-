@@ -6,14 +6,11 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(here, "..");
 const repoRoot = path.resolve(appRoot, "../..");
-const requiredTracks = [
-  "Here we are-1 -Wale Waves_ESS_Wedding.mp3",
-  "Here we are-2 -Wale Waves_ESS_Wedding.mp3",
-  "Welcome, Little One-1-Wale Waves_ESS_Naming.mp3",
-  "Welcome, Little One-2-Wale Waves_ESS_Naming.mp3",
-  "You Will Live in Our Hearts-1-Wale Waves_ESS_Burials.mp3",
-  "You Will Live in Our Hearts-2-Wale Waves_ESS_Burials.mp3",
-];
+const audioDir = path.join(appRoot, "public", "audio");
+const rootAudioNames = fs.readdirSync(repoRoot).filter((name) => /\.(mp3|m4a|wav|ogg)$/i.test(name));
+const appAudioFiles = fs.existsSync(audioDir)
+  ? fs.readdirSync(audioDir).filter((name) => /\.(mp3|m4a|wav|ogg)$/i.test(name))
+  : [];
 
 function fail(message) {
   console.error("✗ " + message);
@@ -23,33 +20,39 @@ function pass(message) {
   console.log("✓ " + message);
 }
 
-console.log("\nEPHINTA cross-platform audio readiness check\n");
-const audioDir = path.join(appRoot, "public", "audio");
-for (const track of requiredTracks) {
-  const file = path.join(audioDir, track);
-  if (!fs.existsSync(file)) fail("Missing audio asset: public/audio/" + track);
-  else if (fs.statSync(file).size < 10_000) fail("Audio asset is unexpectedly small: " + track);
-  else pass("Audio asset present: " + track);
-}
+console.log("\nEPHINTA licensed-audio distribution gate\n");
+if (rootAudioNames.length) fail("Unregistered audio files exist at the application root: " + rootAudioNames.join(", "));
+else pass("No unregistered audio files are shipped from the application root.");
+if (appAudioFiles.length) fail("Audio assets in public/audio require a rights record before distribution: " + appAudioFiles.join(", "));
+else pass("No unlicensed bundled audio is exposed in the public web build.");
 
+const config = fs.readFileSync(path.join(appRoot, "src/lib/music/ephinta-config.ts"), "utf8");
 const component = fs.readFileSync(path.join(appRoot, "src/components/AudioExperience.tsx"), "utf8");
-for (const feature of ["Play music", "Pause music", "Previous track", "Next track", "Music volume", "Seek music", "Music category"]) {
-  if (!component.includes(feature)) fail("Audio UI is missing feature: " + feature);
-  else pass("Audio control present: " + feature);
-}
+if (!config.includes("VITE_EPHINTA_LICENSED_AUDIO_URL") || !config.includes("safeLicensedAudioUrl")) {
+  fail("Audio configuration must require an explicit, safe, owner-configured licensed URL.");
+} else pass("Audio source requires explicit owner configuration and HTTPS validation.");
+if (!component.includes("if (!source) return null") || !component.includes("rights-cleared")) {
+  fail("Audio UI must stay hidden when no rights-cleared source is configured.");
+} else pass("Audio UI remains disabled until a rights-cleared source is configured.");
 
-// Capacitor lives in the mobile workspace, not in a repository-root /mobile folder.
+const skillsDir = path.join(repoRoot, ".agents", "skills");
+if (fs.existsSync(skillsDir)) {
+  const names = fs.readdirSync(skillsDir).filter((name) => /remotion/i.test(name));
+  if (names.length) fail("Unused third-party Remotion skill content remains in the product repository: " + names.join(", "));
+  else pass("No unused Remotion skill bundle remains in the product repository.");
+} else pass("No third-party Remotion skill bundle remains in the product repository.");
+
 const configPath = path.join(repoRoot, "apps", "mobile", "capacitor.config.ts");
 if (!fs.existsSync(configPath)) {
   fail("Capacitor configuration not found at apps/mobile/capacitor.config.ts.");
 } else {
-  const config = fs.readFileSync(configPath, "utf8");
-  if (!config.includes('appName: "EPHINTA"')) fail("Capacitor app identity is not EPHINTA.");
+  const capacitorConfig = fs.readFileSync(configPath, "utf8");
+  if (!capacitorConfig.includes('appName: "EPHINTA"')) fail("Capacitor app identity is not EPHINTA.");
   else pass("Capacitor Android/iOS shell is configured for EPHINTA.");
 }
 
 if (process.exitCode) {
-  console.error("\nAudio readiness checks failed. Fix the listed issues before building.");
+  console.error("\nLicensed-audio distribution checks failed.");
   process.exit(1);
 }
 
@@ -61,14 +64,11 @@ function run(command, args, cwd, label) {
     process.exit(result.status ?? 1);
   }
 }
-
 run("npm", ["run", "build"], appRoot, "Production web build");
-
 if (process.env.EPHINTA_AUDIO_SKIP_BROWSER_TESTS === "true") {
-  console.log("\n↷ Audio browser journey tests are covered by the Linux browser-regression workflow; skipping the duplicate server-backed run on this platform.");
+  console.log("\n↷ Browser journey tests are covered by the browser-regression workflow.");
 } else {
-  run("npm", ["run", "test:e2e", "--", "e2e/audio-experience.spec.ts"], appRoot, "Audio browser journey tests");
+  run("npm", ["run", "test:e2e", "--", "e2e/audio-experience.spec.ts"], appRoot, "Audio rights-gate browser tests");
 }
-
-console.log("\n✓ Web/PWA audio readiness checks passed.");
-console.log("NOTE: A real Android/iOS device playback check is still required. Browser automation mocks audio output and cannot prove that a physical speaker produces sound.");
+console.log("\n✓ Licensed-audio distribution checks passed.");
+console.log("NOTE: Playback remains off until the owner records rights evidence and configures a licensed source URL.");

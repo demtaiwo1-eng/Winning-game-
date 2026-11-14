@@ -18,17 +18,10 @@ It labels an exact country match only when that country's name appears on a fetc
 
 The script does not submit applicant data to any provider, does not create provider accounts, and does not configure production credentials.
 
-## Hosted identity verification integration
+## Active integration status
 
-The API adapter `apps/api/src/lib/kyc-provider.ts` starts a hosted Veriff identity session. It expects these server-side environment variables:
+The current API uses the Bytid hosted KYC adapter in `apps/api/src/lib/bytid.ts` and the `/bytid` routes in `apps/api/src/modules/kyc/kyc.routes.ts`. Live mode is explicitly gated by `BYTID_ALLOW_LIVE=true`; keep it disabled until EPHINTA has an approved provider contract, production credentials, verified webhook configuration, privacy/DPA review, and end-to-end sandbox evidence.
 
-- `VERIFF_API_URL`: the base URL issued for EPHINTA's Veriff integration (do not guess or use a public URL copied from another customer).
-- `VERIFF_API_KEY`: the integration API key, stored only in the backend secret manager.
+A small unused Veriff session-start prototype previously existed in the repository but was not called by any route, did not implement a verified decision webhook, and had no configured `VERIFF_API_*` environment variables. It has been removed from the current release branch rather than being presented as an active integration.
 
-The adapter sends a session request using Veriff's documented `X-AUTH-CLIENT` header and stores no raw identity image in EPHINTA. Applicants complete document capture in Veriff's hosted flow. The session-start adapter alone is not a complete production integration: the authenticated decision webhook, signature verification, replay protection, decision mapping, retention/deletion workflow, and end-to-end sandbox tests must be implemented before a provider decision can automatically change an EPHINTA account to VERIFIED.
-
-Veriff's official API guide documents session creation, hosted URL/session ID responses, and decision webhooks:
-https://devdocs.veriff.com/apidocs/veriff-api-reference-index
-https://devdocs.veriff.com/apidocs/v1sessions
-
-**Important:** Do not enable live KYC until webhook verification and the provider's country/document feature matrix have been contractually confirmed. Business KYB requires a separate company-verification product and is not covered by the individual identity session adapter.
+Smile ID, Veriff, and Sumsub in this document are research references only. The research script reads public provider coverage pages; it does not submit applicant data, start verification sessions, or configure provider accounts.

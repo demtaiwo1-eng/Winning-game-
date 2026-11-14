@@ -1,0 +1,220 @@
+name: EPHINTA staged cleanup full verification
+
+on:
+  pull_request:
+    branches:
+      - main
+      - release/paid-access-readme-payment-audit-20261113
+    paths:
+      - "maintenance/quarantine/**"
+      - "docs/maintenance/**"
+      - "eventsss123/eventsss-main/UNUSED_FILES_AUDIT.md"
+      - "eventsss123/eventsss-main/docs/SOFTWARE_AND_SERVICE_INVENTORY.md"
+      - ".github/workflows/ephinta-maintenance-cleanup.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ephinta-maintenance-cleanup-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: eventsss123/eventsss-main
+
+jobs:
+  application-quality:
+    name: API, web, build, security and rights gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ess
+          POSTGRES_PASSWORD: ess_test_password
+          POSTGRES_DB: ess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ess -d ess_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      NODE_ENV: test
+      DATABASE_MODE: local
+      DATABASE_URL_LOCAL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
+      DATABASE_URL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
+      JWT_SECRET: ci-only-secret-change-me-0123456789abcdef0123456789abcdef
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - name: Install exact locked dependencies
+        run: npm ci
+      - name: API, TypeScript, unit and KYC checks
+        run: npm run check
+      - name: Apply migrations to disposable CI database
+        run: npm run db:deploy -w apps/api
+      - name: Run database integration tests
+        run: npm run test:db -w apps/api
+        env:
+          RUN_DB_TESTS: "1"
+      - name: Build API
+        run: npm run build
+      - name: Build web
+        run: npm run build:web
+      - name: Verify device security
+        run: npm run device-security:verify
+      - name: Verify source and asset rights gates
+        run: npm run ip:verify
+      - name: Run strict responsive/design quality audit
+        run: npm run design:audit:strict -w apps/web
+      - name: Fetch pinned SPDX licence texts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/spdx-license-texts
+          SPDX_COMMIT=31846481de7ea17d92f2f46fad76abe58b2e9bb0
+          for license in MIT ISC Apache-2.0 BSD-2-Clause BSD-3-Clause MPL-2.0 BlueOak-1.0.0 Unlicense CC-BY-4.0 MIT-0 0BSD CC0-1.0; do
+            curl --fail --silent --show-error --location \
+              "https://raw.githubusercontent.com/spdx/license-list-data/${SPDX_COMMIT}/text/${license}.txt" \
+              --output "artifacts/spdx-license-texts/${license}.txt"
+          done
+      - name: Generate dependency and third-party notices inventory
+        env:
+          SPDX_LICENSE_TEXT_DIR: artifacts/spdx-license-texts
+        run: node scripts/qa/ephinta-license-inventory.mjs
+      - name: Upload generated dependency licence report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-cleanup-dependency-licences
+          path: |
+            eventsss123/eventsss-main/artifacts/ephinta-dependency-license-inventory.md
+            eventsss123/eventsss-main/artifacts/ephinta-third-party-notices.md
+          if-no-files-found: ignore
+          retention-days: 30
+
+  browser-journeys:
+    name: Desktop and mobile browser journeys
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ess
+          POSTGRES_PASSWORD: ess_test_password
+          POSTGRES_DB: ess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ess -d ess_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      CI: "true"
+      NODE_ENV: test
+      DATABASE_MODE: local
+      DATABASE_URL_LOCAL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
+      DATABASE_URL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
+      JWT_SECRET: ci-only-secret-change-me-0123456789abcdef0123456789abcdef
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Prepare disposable browser-test database
+        run: |
+          npm run prisma:generate
+          npm run db:deploy -w apps/api
+          npm run db:seed -w apps/api
+      - name: Run desktop and mobile browser journeys
+        run: npm run test:e2e -w apps/web
+      - name: Upload browser diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-cleanup-playwright-diagnostics
+          path: |
+            eventsss123/eventsss-main/apps/web/test-results/
+            eventsss123/eventsss-main/apps/web/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 5
+
+  android-build:
+    name: Android lint, unit tests and debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Accept Android SDK licences and install build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -1)"
+          test -x "$SDKMANAGER"
+          "$SDKMANAGER" --licenses <<'ANDROID_SDK_LICENSES'
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          ANDROID_SDK_LICENSES
+          "$SDKMANAGER" --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+      - name: Install locked workspace dependencies
+        working-directory: eventsss123/eventsss-main
+        run: npm ci
+      - name: Verify Android wrapper and build
+        working-directory: eventsss123/eventsss-main
+        run: |
+          chmod +x apps/mobile/android/gradlew
+          npm run mobile:verify
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-cleanup-android-debug-apk
+          path: eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7

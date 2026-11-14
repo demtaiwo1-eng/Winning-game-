@@ -21,7 +21,6 @@ for (const [name, url, method] of [
   ["API health", apiUrl + "/health", "GET"],
   ["API database readiness", apiUrl + "/ready", "GET"],
   ["EPHINTA logo asset", webUrl + "/brand/ephinta_logo2.png", "HEAD"],
-  ["wedding audio asset", webUrl + "/audio/Here%20we%20are-1%20-Wale%20Waves_ESS_Wedding.mp3", "HEAD"],
 ]) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
