@@ -114,7 +114,8 @@ async function main() {
   }
 
   if (process.env.JAVA_HOME || process.platform === "linux") {
-    await check("Capacitor Android project sync", npm, ["run", "sync", "-w", "apps/mobile"]);\n    await check("Android lint, unit tests and debug APK build", npm, ["run", "verify:android", "-w", "apps/mobile"]);
+    await check("Capacitor Android project sync", npm, ["run", "sync", "-w", "apps/mobile"]);
+    await check("Android lint, unit tests and debug APK build", npm, ["run", "verify:android", "-w", "apps/mobile"]);
   } else {
     report.releaseBlockers.push("Android build skipped: configure JDK 21 and Android SDK on this runner.");
   }
