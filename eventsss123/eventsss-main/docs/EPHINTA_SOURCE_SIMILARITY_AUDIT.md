@@ -94,3 +94,15 @@ A higher-confidence review should include:
 > The release candidate passed its automated asset-rights and dependency-licence gates. A targeted public GitHub search found no exact match for the selected EPHINTA-specific identifiers, and the repository's known unverified audio and unused third-party bundle were removed. A complete external code-similarity review and contributor/asset chain-of-title confirmation remain outstanding.
 
 This document is a technical audit record, not legal advice or a legal opinion.
+
+## 9. Additional distinctive-fragment searches
+
+Additional public GitHub searches were made for `isPromotionPaymentValid`, `promotionTrackingLimit`, `majorToMinorUnits` with `formatMoneyInput`, `ephinta:music-category-change`, `EventReadinessStatus` with `ServiceCheckStatus`, and the EPHINTA Render deployment hostname.
+
+- The payment-policy and music-event identifiers returned only files within the EPHINTA repository.
+- Currency utility names returned EPHINTA source and its own tests/legacy helper references.
+- Event readiness enum names returned EPHINTA schema/migration references.
+- The deployment hostname returned EPHINTA's own completion tracker/workflow references.
+- No unrelated public repository result was returned for these exact domain-specific fragments.
+
+The public search index resolves repository results against the default branch at search time, not necessarily the release candidate branch. These are supporting search observations, not proof that every line in the candidate is original.
