@@ -106,3 +106,9 @@ Additional public GitHub searches were made for `isPromotionPaymentValid`, `prom
 - No unrelated public repository result was returned for these exact domain-specific fragments.
 
 The public search index resolves repository results against the default branch at search time, not necessarily the release candidate branch. These are supporting search observations, not proof that every line in the candidate is original.
+
+## 10. Release-tree inventory
+
+The recursive Git tree for the reviewed release commit contained 620 tracked files. Of these, 227 were first-party application source/script candidates under the maintained API, web and mobile source/script directories, including 157 JavaScript/TypeScript-family files. The web public directory contained 68 image/font/audio/video-format asset candidates by extension. This is a path/extension inventory, not proof of authorship or a binary asset fingerprint review.
+
+The selected source files were inspected manually, but a complete structural clone scan across all 157 JS/TS files was not completed in this run. The 68 public asset files have not each been reverse-image-searched or matched to purchase/commission records. Those are explicit outstanding investigation items, not assumed clearances.
