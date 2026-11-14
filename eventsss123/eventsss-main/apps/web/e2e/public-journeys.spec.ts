@@ -274,6 +274,34 @@ test("event builder inherits the global parent theme and saves a brief", async (
 
 });
 
+test("customer dashboard marketplace carousel navigates in-app without reloading", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "marketplace-carousel-e2e",
+      email: "marketplace-carousel@example.test",
+      name: "Marketplace Carousel Test",
+      role: "CLIENT",
+    }));
+    localStorage.setItem("ess_access_token", "e2e-access-token");
+    localStorage.setItem("ess_onboard_v2_client_default", "1");
+    localStorage.setItem("ephinta:sound", "off");
+  });
+
+  await page.goto("/dashboard/client");
+  await unlockDeviceGate(page);
+  const explore = page.locator(".eph-portal-marketplace-cta");
+  await expect(explore).toBeVisible();
+
+  let mainFrameNavigations = 0;
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) mainFrameNavigations += 1;
+  });
+  await explore.click();
+  await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
+  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+  expect(mainFrameNavigations).toBe(0);
+});
+
 test("signed-in event planners can open the modern planner route", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("ess_user", JSON.stringify({
