@@ -25,6 +25,8 @@ interface LandingPageProps {
 
   onStartBuilder?: () => void;
 
+  onExploreMarketplace?: () => void;
+
 }
 
 
@@ -152,6 +154,8 @@ export default function PublicLanding({
 
   onStartBuilder,
 
+  onExploreMarketplace,
+
 }: LandingPageProps) {
 
   const [draft, setDraft] = useState<EventDraft>(() => {
@@ -240,13 +244,6 @@ export default function PublicLanding({
 
   const [promotions, setPromotions] = useState<PublicPromotion[]>([]);
 
-
-  // The public homepage always starts with the wedding soundtrack. A selected
-  // naming or burial category is carried into /plan by its dedicated CTA.
-  useEffect(() => {
-    try { localStorage.setItem('ephinta:music-category', 'wedding'); } catch { /* optional */ }
-    window.dispatchEvent(new CustomEvent('ephinta:music-category-change', { detail: 'wedding' }));
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -489,6 +486,15 @@ export default function PublicLanding({
       return;
     }
     window.location.assign('/plan');
+  }
+
+  function exploreMarketplace() {
+    setMenuOpen(false);
+    if (onExploreMarketplace) {
+      onExploreMarketplace();
+      return;
+    }
+    window.location.assign('/marketplace');
   }
 
 
@@ -775,7 +781,32 @@ export default function PublicLanding({
         .eph-ad-card button{margin-top:auto;align-self:flex-start;border:none;border-radius:999px;background:var(--purple);color:white;padding:9px 13px;font-weight:800}
 
 
-
+        /* Customer-journey polish: clearer brand, softer promotional surfaces,
+           centred authentication and predictable small-screen layouts. */
+        .eph-landing .eph-brand { gap: 12px; }
+        .eph-landing .eph-brand img { width: 44px; height: 44px; }
+        .eph-landing .eph-brand span { font-size: clamp(19px, 2vw, 24px); letter-spacing: .14em; }
+        .eph-landing .eph-title { font-size: clamp(3rem, 6.2vw, 5.25rem); line-height: 1.02; }
+        .eph-landing .eph-subtitle { font-size: clamp(17px, 1.45vw, 20px); line-height: 1.75; }
+        .eph-landing .eph-promo-shell { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--line) !important; box-shadow: none !important; }
+        .eph-landing .eph-promo-shell h2 { color: var(--ink) !important; }
+        .eph-landing .eph-promo-shell p, .eph-landing .eph-promo-shell .eph-promo-placeholder { color: var(--muted) !important; }
+        .eph-landing .eph-promo-marketplace-cta { color: #fff !important; background: var(--purple) !important; }
+        .eph-landing .ephinta-marketing-zone { color: var(--ink) !important; background: transparent !important; background-image: none !important; border: 1px solid var(--line) !important; box-shadow: none !important; isolation: isolate; }
+        .eph-landing .ephinta-marketing-zone h2 { color: var(--ink) !important; }
+        .eph-landing .ephinta-marketing-zone p, .eph-landing .ephinta-marketing-zone .ephinta-human-proof { color: var(--muted) !important; -webkit-text-fill-color: currentColor !important; text-shadow: none !important; }
+        .eph-landing .ephinta-marketing-zone .ephinta-marketing-zone__eyebrow { color: var(--purple) !important; -webkit-text-fill-color: currentColor !important; text-shadow: none !important; }
+        .eph-landing .eph-modal-backdrop { display: grid; place-items: center; align-items: center; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
+        .eph-landing .eph-modal { width: min(100%, 480px); margin: auto; max-height: min(92dvh, 900px); overflow-y: auto; }
+        .eph-landing .ephinta-marketing-zone__cta { border: 0; cursor: pointer; font: inherit; min-height: 48px; }
+        @media (max-width: 700px) {
+          .eph-landing .eph-nav { min-height: 72px; height: auto; padding-block: 10px; gap: 12px; }
+          .eph-landing .eph-brand img { width: 38px; height: 38px; }
+          .eph-landing .eph-brand span { font-size: 18px; }
+          .eph-landing .eph-title { font-size: clamp(2.65rem, 12vw, 4rem); }
+          .eph-landing .eph-modal { padding: 22px 18px; max-height: 90dvh; }
+          .eph-landing .eph-promo-shell { padding: 18px 16px; }
+        }
 
       `}</style>
 
@@ -874,7 +905,7 @@ export default function PublicLanding({
               <h2>Find the people and services behind your next big moment.</h2>
               <p>Browse event venues, catering, photography, décor and trusted event professionals. Featured vendor campaigns appear here when approved and active.</p>
             </div>
-            <button type="button" className="eph-promo-marketplace-cta" onClick={() => window.location.assign('/marketplace')}>
+            <button type="button" className="eph-promo-marketplace-cta" onClick={() => exploreMarketplace()}>
               Explore marketplace <span aria-hidden="true">→</span>
             </button>
           </div>
@@ -889,7 +920,7 @@ export default function PublicLanding({
                   {promotion.listingTitle && <span>{promotion.listingTitle}</span>}
                   {formatPromotionLocation(promotion.city, promotion.country) && <span>{formatPromotionLocation(promotion.city, promotion.country)}</span>}
                 </div>
-                <button type="button" onClick={() => window.location.assign('/marketplace')}>View marketplace offer →</button>
+                <button type="button" onClick={() => exploreMarketplace()}>View marketplace offer →</button>
               </article>
             ))}
             {MARKETPLACE_SPOTLIGHTS.map((item) => (
@@ -898,7 +929,7 @@ export default function PublicLanding({
                 <small>{item.eyebrow}</small>
                 <strong>{item.title}</strong>
                 <p>{item.description}</p>
-                <button type="button" onClick={() => window.location.assign('/marketplace')}>Explore services →</button>
+                <button type="button" onClick={() => exploreMarketplace()}>Explore services →</button>
               </article>
             ))}
           </div>
@@ -926,10 +957,6 @@ export default function PublicLanding({
               <div className="eph-hero-cta">
 
                 <button className="eph-btn eph-btn-purple" onClick={startPlanning}>Start planning <span aria-hidden="true">→</span></button>
-
-                <button className="eph-btn eph-btn-outline" onClick={startNamingPlanning}>Plan a Naming Ceremony</button>
-
-                <button className="eph-btn eph-btn-outline" onClick={startBurialPlanning}>Plan a Burial</button>
 
                 <button className="eph-btn eph-btn-outline" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>Explore how it works</button>
 
@@ -977,7 +1004,7 @@ export default function PublicLanding({
 
   </div>
 
-  <a className="ephinta-marketing-zone__cta" href="/plan">Plan your event <span aria-hidden="true">→</span></a>
+  <button type="button" className="ephinta-marketing-zone__cta" onClick={startPlanning}>Plan your event <span aria-hidden="true">→</span></button>
 
 </section>
 
