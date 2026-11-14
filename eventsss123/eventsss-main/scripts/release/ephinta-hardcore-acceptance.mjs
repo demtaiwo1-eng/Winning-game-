@@ -89,6 +89,13 @@ async function main() {
     throw new Error("Dependencies are absent. Run with --install to execute npm ci.");
   }
 
+  const hasCiDatabase = process.env.RUN_DB_TESTS === "1" && process.env.DATABASE_URL;
+  if (hasCiDatabase) {
+    await check("Apply Prisma migrations to isolated CI PostgreSQL before browser-backed audits", npm, ["run", "db:deploy", "-w", "apps/api"], { DATABASE_URL_LOCAL: process.env.DATABASE_URL });
+  } else {
+    report.releaseBlockers.push("Database integration suite not run in this invocation; CI must provide a disposable PostgreSQL service with RUN_DB_TESTS=1.");
+  }
+
   const commands = [
     ["API schema, TypeScript, non-database API tests, web tests and KYC research tests", npm, ["run", "check"], { RUN_DB_TESTS: "0" }],
     ["API production build", npm, ["run", "build"]],
@@ -106,11 +113,8 @@ async function main() {
     await check(name, command, commandArgs, extraEnv);
   }
 
-  if (process.env.RUN_DB_TESTS === "1" && process.env.DATABASE_URL) {
-    await check("Apply Prisma migrations to isolated CI PostgreSQL", npm, ["run", "db:deploy", "-w", "apps/api"], { DATABASE_URL_LOCAL: process.env.DATABASE_URL });
+  if (hasCiDatabase) {
     await check("API PostgreSQL integration regression suite", npm, ["run", "test:db", "-w", "apps/api"], { DATABASE_URL_LOCAL: process.env.DATABASE_URL, RUN_DB_TESTS: "1" });
-  } else {
-    report.releaseBlockers.push("Database integration suite not run in this invocation; CI must provide a disposable PostgreSQL service with RUN_DB_TESTS=1.");
   }
 
   if (process.env.JAVA_HOME || process.platform === "linux") {
