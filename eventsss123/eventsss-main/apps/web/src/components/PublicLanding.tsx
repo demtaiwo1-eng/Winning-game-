@@ -802,6 +802,15 @@ export default function PublicLanding({
           .eph-landing .eph-promo-shell { padding: 18px 16px; }
         }
 
+        @media (max-width: 390px) {
+          .eph-landing .eph-nav { padding-inline: 12px; gap: 8px; }
+          .eph-landing .eph-brand { gap: 7px; }
+          .eph-landing .eph-brand img { width: 36px !important; height: 36px !important; }
+          .eph-landing .eph-brand span { display: inline !important; font-size: 17px !important; letter-spacing: .12em !important; }
+          .eph-landing .eph-nav-actions { gap: 8px; }
+          .eph-landing .eph-nav-actions .eph-btn { padding: 9px 9px !important; font-size: 11px !important; }
+        }
+
       `}</style>
 
 
