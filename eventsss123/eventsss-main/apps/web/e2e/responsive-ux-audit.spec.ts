@@ -102,18 +102,31 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
 
       const prompt = page.locator('.eph-audio__prompt[role="dialog"]');
       if (await prompt.isVisible()) {
-        const overlay = await prompt.evaluate(element => {
-          const promptStyle = getComputedStyle(element);
-          const promptRect = element.getBoundingClientRect();
+        const overlay = await page.locator(".eph-audio__backdrop").evaluate(element => {
+          const backdropStyle = getComputedStyle(element);
+          const promptElement = element.querySelector(".eph-audio__prompt");
+          const promptStyle = promptElement ? getComputedStyle(promptElement) : null;
+          const rect = element.getBoundingClientRect();
           const action = document.querySelector(".ess-builder-card .ess-primary");
           const actionRect = action?.getBoundingClientRect();
           const overlapsAction = actionRect
-            ? !(promptRect.right <= actionRect.left || promptRect.left >= actionRect.right || promptRect.bottom <= actionRect.top || promptRect.top >= actionRect.bottom)
+            ? !(rect.right <= actionRect.left || rect.left >= actionRect.right || rect.bottom <= actionRect.top || rect.top >= actionRect.bottom)
             : false;
-          return { backgroundImage: promptStyle.backgroundImage, overlapsAction };
+          return {
+            backgroundImage: promptStyle?.backgroundImage ?? "",
+            backdropFilter: backdropStyle.backdropFilter,
+            coversViewport: rect.left <= 0 && rect.top <= 0 && rect.right >= innerWidth && rect.bottom >= innerHeight,
+            overlapsAction,
+          };
         });
-        expect(overlay.backgroundImage, "Audio consent must inherit the parent dialog surface").toContain("linear-gradient");
-        expect(overlay.overlapsAction, "Audio consent must not obscure the planner's next action").toBe(false);
+        expect(overlay.backgroundImage, "Audio consent must use its branded surface").toContain("linear-gradient");
+        expect(overlay.backdropFilter, "Audio consent must blur the complete app").toContain("blur");
+        expect(overlay.coversViewport, "Audio consent must cover the complete viewport").toBe(true);
+        expect(overlay.overlapsAction, "Audio consent must block the planner until a choice is made").toBe(true);
+        await prompt.getByRole("button", { name: "No, thanks" }).click();
+        await expect(prompt).toBeHidden();
+        await expect(page.locator(".eph-audio__backdrop")).toHaveCount(0);
+        await expect(page.locator(".ess-builder-card .ess-primary")).toBeVisible();
       }
 
       const metrics = await page.evaluate(() => ({
