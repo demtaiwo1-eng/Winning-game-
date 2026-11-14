@@ -48,7 +48,8 @@
     "qa:worldwide": "node scripts/qa/run-worldwide-personas.mjs",
     "qa:worldwide:headed": "node scripts/qa/run-worldwide-personas.mjs --headed",
     "ip:verify": "node scripts/qa/ephinta-ip-release-gate.mjs",
-    "licence:inventory": "node scripts/qa/ephinta-license-inventory.mjs"
+    "licence:inventory": "node scripts/qa/ephinta-license-inventory.mjs",
+    "release:complete": "node scripts/release/ephinta-release-complete.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.4",
