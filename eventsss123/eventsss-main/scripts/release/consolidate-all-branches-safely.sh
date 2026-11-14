@@ -116,6 +116,14 @@ while IFS= read -r ref; do
     continue
   fi
 
+  # A branch can have unique commits but no net tree change after earlier
+  # integrations. Avoid attempting an empty merge commit in that case.
+  if ! git rev-parse -q --verify MERGE_HEAD >/dev/null; then
+    skipped=$((skipped + 1))
+    printf '%s\t%s\t%s\t%s\n' "$branch" "no-tree-change" "$(git rev-parse HEAD)" "No merge commit was needed." >> "$REPORT_FILE"
+    continue
+  fi
+
   if ! run_release_checks; then
     detail="One or more release checks failed; this branch was not accepted."
     abort_merge || die "Could not safely abort failed-check merge for $branch."
