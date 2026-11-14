@@ -46,3 +46,9 @@ The project-wide proprietary licence is **pending confirmation of the legal copy
 - [Project licence owner approval](./eventsss123/eventsss-main/docs/PROJECT_LICENSE_PENDING_OWNER_APPROVAL.md)
 
 The repository is currently public. Make it private before relying on source confidentiality or selling access to source code. See GitHub's [repository licensing guidance](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository).
+
+## Payments and audio rights
+
+Incoming wallet funding and outgoing bank-withdrawal fee calculations are fixed at 2% in the application. Automated payment simulations use mocked provider responses; they do not move money or certify live OPay settlement. OPay live transfers remain disabled until merchant transfer entitlement, credentials, webhook verification and sandbox bank-transfer acceptance are confirmed.
+
+No unverified third-party recordings are bundled or selected by default. The optional music player appears only when the owner configures `VITE_EPHINTA_LICENSED_AUDIO_URL` with an HTTPS source cleared for commercial use. User consent is still required before playback.
