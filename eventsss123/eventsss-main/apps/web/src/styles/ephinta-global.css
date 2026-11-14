@@ -34,3 +34,205 @@
 @import "./ephinta-scale-responsive.css";
 
 @import "./ephinta-help-assistant.css";
+
+
+/* EPHINTA mobile polish: compact marketplace carousel, registration surface,
+   device PIN theme, and update notice all flow through this single CSS hub. */
+.eph-portal-marketplace-compact {
+  position: relative;
+  margin: 0 0 18px;
+  padding: 12px 14px 10px;
+  border-radius: 15px;
+}
+.eph-portal-marketplace-compact .eph-portal-marketplace-heading {
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+.eph-portal-marketplace-compact .eph-portal-marketplace-kicker {
+  margin-bottom: 3px;
+  font-size: 8px;
+  letter-spacing: .11em;
+}
+.eph-portal-marketplace-compact .eph-portal-marketplace-heading h2 {
+  margin: 0;
+  font-size: clamp(14px, 2vw, 18px);
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
+.eph-portal-marketplace-compact .eph-portal-marketplace-heading p {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.eph-portal-marketplace-compact .eph-portal-marketplace-cta {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font-size: 10px;
+}
+.eph-portal-carousel-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 0 0 4px;
+}
+.eph-portal-carousel-controls button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+}
+.eph-portal-ad-carousel {
+  gap: 8px;
+  padding: 2px 1px 7px;
+  scroll-snap-type: x mandatory;
+}
+.eph-portal-marketplace-compact .eph-portal-ad-card {
+  flex: 0 0 clamp(164px, 21vw, 218px);
+  min-height: 118px;
+  gap: 5px;
+  padding: 10px 11px;
+  border-radius: 11px;
+}
+.eph-portal-marketplace-compact .eph-portal-ad-card strong {
+  font-size: 12px;
+  line-height: 1.25;
+}
+.eph-portal-marketplace-compact .eph-portal-ad-card p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 9px;
+  line-height: 1.35;
+}
+.eph-portal-marketplace-compact .eph-portal-ad-card small { font-size: 8px; }
+.eph-portal-marketplace-compact .eph-portal-ad-card a { font-size: 9px; }
+.eph-portal-marketplace-compact .eph-portal-ad-icon { font-size: 15px; }
+.eph-portal-marketplace-compact .eph-portal-marketplace-footer {
+  margin-top: 4px;
+  font-size: 9px;
+  line-height: 1.3;
+}
+.eph-portal-marketplace-compact .eph-portal-marketplace-footer span:last-child { display: none; }
+
+/* Remove the dark sticky footer strip from the registration dialog. */
+.ess-auth-modal .ess-registration-navigation {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+.ess-auth-modal .ess-registration-navigation::before,
+.ess-auth-modal .ess-registration-navigation::after {
+  content: none !important;
+  display: none !important;
+}
+.ess-auth-modal .ess-auth-mode-switch {
+  background: transparent !important;
+  color: var(--ephinta-theme-muted) !important;
+}
+
+/* PIN screen uses shared theme tokens and global component classes only. */
+.ess-device-lock {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100dvh;
+  padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+  background: var(--ephinta-theme-page, var(--app-bg, #10002f));
+  color: var(--ephinta-theme-ink, #f8fafc);
+}
+.ess-device-lock-card {
+  box-sizing: border-box;
+  width: min(100%, 420px);
+  margin: auto;
+  padding: clamp(20px, 5vw, 30px);
+  border: 1px solid var(--ephinta-theme-border, rgba(255,255,255,.16));
+  border-radius: 22px;
+  background: var(--ephinta-theme-surface, #171d32);
+  color: var(--ephinta-theme-ink, #f8fafc);
+}
+.ess-device-lock-card :where(h1,p,label) { color: inherit; }
+.ess-device-lock-eyebrow {
+  margin: 0 0 8px;
+  color: var(--ephinta-theme-muted, #cbd5e1) !important;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.ess-device-lock-title { margin: 0 0 10px; font-size: clamp(23px, 6vw, 28px); }
+.ess-device-lock-description {
+  margin: 0 0 22px;
+  color: var(--ephinta-theme-muted, #cbd5e1) !important;
+  line-height: 1.5;
+}
+.ess-device-lock-input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 54px;
+  padding: 14px 16px;
+  border: 1px solid var(--ephinta-theme-border, rgba(255,255,255,.25)) !important;
+  border-radius: 12px;
+  background: var(--ephinta-theme-surface-soft, rgba(255,255,255,.08)) !important;
+  color: var(--ephinta-theme-ink, #fff) !important;
+  font: inherit;
+  font-size: 22px;
+  letter-spacing: .3em;
+}
+.ess-device-lock-label { display: block; margin: 0 0 8px; color: var(--ephinta-theme-ink, #fff) !important; font-weight: 700; }
+.ess-device-lock-label-confirm { margin-top: 16px; }
+.ess-device-lock-error { margin: 12px 0 0; color: #c62828 !important; }
+.ess-device-lock-primary, .ess-device-lock-secondary {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 11px;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.ess-device-lock-primary {
+  border: 0;
+  background: var(--ephinta-theme-primary-bg, var(--primary, #a78bfa));
+  color: var(--ephinta-theme-primary-ink, #16072c);
+}
+.ess-device-lock-secondary {
+  border: 1px solid var(--ephinta-theme-border, rgba(255,255,255,.24));
+  background: transparent;
+  color: var(--ephinta-theme-ink, inherit);
+}
+.ess-device-lock-note {
+  margin: 16px 0 0;
+  color: var(--ephinta-theme-muted, #cbd5e1) !important;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Update banner is an in-app surface, inset into the installed app viewport. */
+.ephinta-update-notice {
+  top: auto;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: calc(100% - 24px);
+  max-width: 760px;
+  padding: 11px 13px;
+  border-radius: 14px;
+}
+@media (max-width: 620px) {
+  .eph-portal-marketplace-compact { padding: 10px; margin-bottom: 14px; }
+  .eph-portal-marketplace-compact .eph-portal-marketplace-heading h2 { font-size: 14px; }
+  .eph-portal-marketplace-compact .eph-portal-marketplace-heading p { font-size: 9px; }
+  .eph-portal-marketplace-compact .eph-portal-ad-card { flex-basis: min(70vw, 205px); min-height: 112px; }
+  .ess-auth-modal .ess-registration-navigation { position: static !important; padding: 10px 0 0 !important; }
+  .ephinta-update-notice { bottom: max(8px, env(safe-area-inset-bottom)); }
+}
