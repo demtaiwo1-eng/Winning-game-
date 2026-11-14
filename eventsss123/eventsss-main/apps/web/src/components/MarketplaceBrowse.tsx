@@ -54,6 +54,8 @@ export default function MarketplaceBrowse({
   onOpenWallet?: () => void;
 }) {
   const [query, setQuery] = useState("");
+  const [nearbyCity, setNearbyCity] = useState("");
+  const [locationStatus, setLocationStatus] = useState("");
   const [category, setCategory] = useState("All");
   const [typeFilter, setTypeFilter] = useState<"ALL" | "VENUE" | "GOOD" | "SERVICE">("ALL");
   const [listings, setListings] = useState<MarketListing[]>([]);
@@ -128,15 +130,53 @@ export default function MarketplaceBrowse({
     };
   }, [query, typeFilter]);
 
+  const requestNearbyLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus("Location is not available in this browser. Enter your city to prioritise local vendors.");
+      return;
+    }
+    setLocationStatus("Waiting for your location permission…");
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      try {
+        const lookup = new URL("https://nominatim.openstreetmap.org/reverse");
+        lookup.searchParams.set("format", "jsonv2");
+        lookup.searchParams.set("lat", String(coords.latitude));
+        lookup.searchParams.set("lon", String(coords.longitude));
+        lookup.searchParams.set("zoom", "10");
+        lookup.searchParams.set("addressdetails", "1");
+        const response = await fetch(lookup.toString(), { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error("Location lookup unavailable");
+        const result = await response.json() as { address?: Record<string, string> };
+        const address = result.address || {};
+        const city = address.city || address.town || address.village || address.suburb || address.county || address.state_district;
+        if (!city) throw new Error("City not found");
+        setNearbyCity(city);
+        setLocationStatus(`Prioritising vendors in ${city}. Other locations remain available below.`);
+      } catch {
+        setLocationStatus("We could not identify your city. Enter it manually to prioritise local vendors.");
+      }
+    }, (error) => {
+      setLocationStatus(error.code === error.PERMISSION_DENIED
+        ? "Location permission was not granted. Enter your city to prioritise local vendors."
+        : "We could not access your location. Enter your city to continue.");
+    }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
+  };
+
   const filtered = useMemo(() => {
-    return listings.filter((l) => {
+    const matches = listings.filter((l) => {
       const matchesCat =
         category === "All" ||
         l.category.toLowerCase().includes(category.toLowerCase()) ||
         (category === "Venue" && l.type === "VENUE");
       return matchesCat;
     });
-  }, [listings, category]);
+    if (!nearbyCity.trim()) return matches;
+    const preferredCity = nearbyCity.trim().toLocaleLowerCase();
+    return [...matches].sort((a, b) =>
+      Number(b.city.trim().toLocaleLowerCase() === preferredCity) -
+      Number(a.city.trim().toLocaleLowerCase() === preferredCity),
+    );
+  }, [listings, category, nearbyCity]);
 
   const handleBook = async (listing: MarketListing) => {
     setBookingMsg("");
@@ -297,6 +337,18 @@ export default function MarketplaceBrowse({
           <div className="ess-marketplace-feature-tile ess-marketplace-feature-main"><span>✦</span><small>YOUR EVENT, CONNECTED</small><strong>Idea to<br />celebration.</strong><em>Plan · Book · Celebrate</em></div>
           <div className="ess-marketplace-float ess-marketplace-float-top"><span>✓</span> Verified vendors</div><div className="ess-marketplace-float ess-marketplace-float-bottom"><span>◷</span> One clear timeline</div>
         </div>
+      </section>
+      <section className="ess-marketplace-location" aria-label="Find vendors near you" style={{ margin: "18px 0", padding: "16px 18px", border: "1px solid var(--ess-border, #ded9e8)", borderRadius: 16, display: "grid", gap: 10 }}>
+        <div>
+          <strong>Find vendors near you</strong>
+          <p className="ess-muted" style={{ margin: "4px 0 0", fontSize: 13 }}>Allow location access or enter a city. EPHINTA uses a one-time map lookup to identify your city and does not save your coordinates.</p>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <input aria-label="Your city" value={nearbyCity} onChange={(event) => { setNearbyCity(event.target.value); setLocationStatus(event.target.value.trim() ? `Prioritising vendors in ${event.target.value.trim()}.` : ""); }} placeholder="Enter your city" style={{ flex: "1 1 180px", minWidth: 0, minHeight: 42, padding: "9px 12px", border: "1px solid var(--ess-border, #ded9e8)", borderRadius: 10, background: "var(--surface, #fff)", color: "inherit" }} />
+          <button type="button" className="ess-primary" onClick={requestNearbyLocation} style={{ minHeight: 42 }}>Use my location</button>
+        </div>
+        {locationStatus && <p role="status" aria-live="polite" className="ess-muted" style={{ margin: 0, fontSize: 12 }}>{locationStatus}</p>}
+        {nearbyCity && <p className="ess-muted" style={{ margin: 0, fontSize: 12 }}>Local-city matches appear first; the current listings do not include exact vendor coordinates for distance calculations.</p>}
       </section>
       <section className="ess-marketplace-capabilities" aria-label="What you can do with EPHINTA">
         <article className="ess-marketplace-capability"><span className="ess-marketplace-capability-icon">⌁</span><div><h3>Plan with confidence</h3><p>Build your event brief, organise tasks, manage your budget and keep important dates in view.</p></div></article>
