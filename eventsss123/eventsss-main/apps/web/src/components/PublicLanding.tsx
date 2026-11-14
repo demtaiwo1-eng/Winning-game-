@@ -158,6 +158,8 @@ export default function PublicLanding({
 
 }: LandingPageProps) {
 
+  const isNativeApp = Boolean((window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.());
+
   const [draft, setDraft] = useState<EventDraft>(() => {
 
     try {
@@ -471,7 +473,7 @@ export default function PublicLanding({
 
   return (
 
-    <div className="eph-landing" data-theme={themeMode}>
+    <div className="eph-landing" data-theme={themeMode} data-native={isNativeApp ? "true" : "false"}>
 
       <style>{`
 
@@ -880,7 +882,7 @@ export default function PublicLanding({
             </button>
           </div>
           <div className="eph-ad-scroll" role="list" aria-label="Horizontally scrollable marketplace categories and sponsored offers">
-            {promotions.map((promotion) => (
+            {!isNativeApp && promotions.map((promotion) => (
               <article className="eph-ad-card eph-ad-card-sponsored" role="listitem" key={promotion.id}>
                 <small>Sponsored · Featured vendor</small>
                 <strong>{promotion.title}</strong>
