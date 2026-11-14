@@ -779,6 +779,15 @@ export default function PublicLanding({
           color: var(--muted) !important; -webkit-text-fill-color: currentColor !important;
           opacity: 1 !important; text-shadow: none !important;
         }
+        .eph-landing .ephinta-marketing-zone .ephinta-right-copy-visible {
+          color: #55586d !important; -webkit-text-fill-color: #55586d !important;
+          opacity: 1 !important; text-shadow: none !important;
+        }
+        .eph-landing .ephinta-marketing-zone .ephinta-marketing-zone__eyebrow {
+          color: #5b36b8 !important; -webkit-text-fill-color: #5b36b8 !important;
+          opacity: 1 !important; text-shadow: none !important;
+        }
+
 
         .eph-landing .eph-ad-card {
           background: rgba(255,255,255,.88) !important;
