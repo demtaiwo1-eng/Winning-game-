@@ -166,6 +166,16 @@ test("public landing page explains the event-planning service and its menu", asy
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
 });
+test("event builder blocks progression when the required event name is empty", async ({ page }) => {
+  await page.goto("/plan");
+  const eventName = page.getByLabel("Event name");
+  await eventName.fill("");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(eventName).toHaveJSProperty("validity.valid", false);
+  await expect(eventName).toBeFocused();
+});
+
 test("event builder inherits the global parent theme and saves a brief", async ({ page }) => {
   await page.goto("/plan");
 
