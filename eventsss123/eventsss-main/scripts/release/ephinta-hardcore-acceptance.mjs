@@ -102,13 +102,13 @@ async function main() {
     ["5,000 deterministic payment personas (mocked; zero provider calls)", process.execPath, ["scripts/qa/ephinta-5000-payment-functional.mjs"]],
   ];
 
-  for (const [name, command, commandArgs] of commands) {
-    await check(name, command, commandArgs);
+  for (const [name, command, commandArgs, extraEnv] of commands) {
+    await check(name, command, commandArgs, extraEnv);
   }
 
   if (process.env.RUN_DB_TESTS === "1" && process.env.DATABASE_URL) {
-    await check("Apply Prisma migrations to isolated CI PostgreSQL", npm, ["run", "db:deploy", "-w", "apps/api"]);
-    await check("API PostgreSQL integration regression suite", npm, ["run", "test:db", "-w", "apps/api"]);
+    await check("Apply Prisma migrations to isolated CI PostgreSQL", npm, ["run", "db:deploy", "-w", "apps/api"], { DATABASE_URL_LOCAL: process.env.DATABASE_URL });
+    await check("API PostgreSQL integration regression suite", npm, ["run", "test:db", "-w", "apps/api"], { DATABASE_URL_LOCAL: process.env.DATABASE_URL, RUN_DB_TESTS: "1" });
   } else {
     report.releaseBlockers.push("Database integration suite not run in this invocation; CI must provide a disposable PostgreSQL service with RUN_DB_TESTS=1.");
   }
