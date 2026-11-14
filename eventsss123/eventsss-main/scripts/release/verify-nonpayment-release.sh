@@ -58,6 +58,14 @@ if [[ "${EPHINTA_RUN_ANDROID_BUILD:-false}" == "true" ]]; then
         if command -v adb >/dev/null 2>&1 && adb devices | awk 'NR>1 && $2=="device"{ok=1}END{exit !ok}'; then
           run "Install debug APK on connected Android device" adb install -r "$APK"
           run "Launch installed Android app" adb shell am start -W -n com.ephinta.app/.MainActivity
+          launched=0
+          for attempt in $(seq 1 60); do
+            pid="$(adb shell pidof com.ephinta.app 2>/dev/null | tr -d '\r' || true)"
+            foreground="$(adb shell dumpsys activity activities 2>/dev/null | grep -E 'mResumedActivity|topResumedActivity' | grep -F com.ephinta.app || true)"
+            if [[ -n "$pid" && -n "$foreground" ]]; then launched=1; break; fi
+            sleep 5
+          done
+          if [[ "$launched" == "1" ]]; then pass "Android app process remains alive in the foreground"; else fail "Android app did not remain alive in the foreground after launch"; fi
         else
           warn "No authorized Android device; device install/launch was not verified."
         fi
