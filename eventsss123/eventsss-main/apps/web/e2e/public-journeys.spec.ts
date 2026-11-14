@@ -651,19 +651,27 @@ test("switching from registration to sign-in clears signup-only password validat
   await expect(dialog.locator(".ess-form-error")).toContainText("That email and password do not match");
 });
 
-test("music consent prompt fits the phone screen and stays in the corner @mobile", async ({ page }) => {
+test("music consent prompt fills the phone screen and blurs the app until answered @mobile", async ({ page }) => {
   await page.goto("/");
   const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
   await expect(prompt).toBeVisible();
   const viewport = page.viewportSize();
-  const bounds = await page.locator(".eph-audio__backdrop").boundingBox();
+  const backdrop = page.locator(".eph-audio__backdrop");
+  const bounds = await backdrop.boundingBox();
   expect(viewport).not.toBeNull();
   expect(bounds).not.toBeNull();
-  expect(bounds!.x).toBeGreaterThanOrEqual(0);
-  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport!.width);
-  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport!.height);
+  expect(bounds!.x).toBe(0);
+  expect(bounds!.y).toBe(0);
+  expect(bounds!.width).toBe(viewport!.width);
+  expect(bounds!.height).toBe(viewport!.height);
+  const backdropFilter = await backdrop.evaluate((element) => getComputedStyle(element).backdropFilter);
+  expect(backdropFilter).toContain("blur");
+  await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
   await expect(prompt.getByRole("button", { name: "Yes, play music" })).toBeVisible();
   await expect(prompt.getByRole("button", { name: "No, thanks" })).toBeVisible();
+  await prompt.getByRole("button", { name: "No, thanks" }).click();
+  await expect(prompt).toBeHidden();
+  await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
 });
 
 test("mobile menu opens and provides sign-in access @mobile", async ({ page }, testInfo) => {
