@@ -765,6 +765,21 @@ export default function PublicLanding({
         .eph-landing .eph-promo-shell h2 { color: var(--ink) !important; }
         .eph-landing .eph-promo-shell p, .eph-landing .eph-promo-shell .eph-promo-placeholder { color: var(--muted) !important; }
         .eph-landing .eph-promo-marketplace-cta { color: #fff !important; background: var(--purple) !important; }
+        .eph-landing .eph-promo-kicker {
+          color: var(--purple) !important; -webkit-text-fill-color: currentColor !important;
+          opacity: 1 !important; text-shadow: none !important; font-weight: 900 !important;
+        }
+        .eph-landing .eph-promo-footer,
+        .eph-landing .eph-promo-footer span {
+          color: var(--muted) !important; -webkit-text-fill-color: currentColor !important;
+          opacity: 1 !important; text-shadow: none !important;
+        }
+        .eph-landing .ephinta-marketing-zone p,
+        .eph-landing .ephinta-marketing-zone .ephinta-human-proof {
+          color: var(--muted) !important; -webkit-text-fill-color: currentColor !important;
+          opacity: 1 !important; text-shadow: none !important;
+        }
+
         .eph-landing .eph-ad-card {
           background: rgba(255,255,255,.88) !important;
           border: 1px solid var(--line) !important;
