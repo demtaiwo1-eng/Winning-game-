@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 // Resolve the version before entering the Android DSL; this keeps local builds
 // on version 2 and lets the protected release workflow supply a higher value.
-def ephintaVersionCode = ((project.findProperty('ephintaVersionCode') ?: System.getenv('EPHINTA_VERSION_CODE')) ?: '2').toString().toInteger()
+def ephintaVersionCode = ((project.findProperty('ephintaVersionCode') ?: System.getenv('EPHINTA_VERSION_CODE')) ?: (System.getenv('GITHUB_RUN_NUMBER') ? Math.max(870, System.getenv('GITHUB_RUN_NUMBER').toInteger() + 2).toString() : '2')).toString().toInteger()
 
 android {
     namespace "com.ephinta.app"

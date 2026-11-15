@@ -7,6 +7,7 @@ on:
       - ".github/workflows/initialize-ephinta-android-signing.yml"
       - "scripts/complete-production-apk.sh"
       - "scripts/setup-android-signing-github.sh"
+      - "eventsss123/eventsss-main/apps/mobile/android/app/build.gradle"
   workflow_dispatch:
     inputs:
       minimum_version_code:
@@ -133,6 +134,16 @@ jobs:
           ANDROID_SDK_LICENSES
           "$SDKMANAGER" --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
+      - name: Download known-working Build 869 APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ephinta-baseline"
+          curl --fail --location --retry 3 \
+            "https://github.com/demtaiwo1-eng/Winning-game-/releases/download/ephinta-apk-42547397876/ephinta-869.apk" \
+            --output "$RUNNER_TEMP/ephinta-baseline/ephinta-869.apk"
+          test -s "$RUNNER_TEMP/ephinta-baseline/ephinta-869.apk"
+
       - name: Install locked dependencies
         run: npm ci
 
@@ -189,13 +200,21 @@ jobs:
             echo "ANDROID_KEY_PASSWORD=$KEY_PASSWORD"
           } >> "$GITHUB_ENV"
 
-      - name: Confirm fresh-install signing transition
+      - name: Verify Build 869 signing identity before build
         shell: bash
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/ephinta-production.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          EXPECTED_CERT: ${{ vars.ANDROID_CERT_SHA256 }}
         run: |
           set -euo pipefail
-          echo "This release uses the newly configured permanent EPHINTA signing identity."
-          echo "It is intentionally not expected to match the unsigned/debug Build 869 test APK."
-          echo "The versionCode is kept above Build 869; users must uninstall the old test build before installing this APK."
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          test -x "$APKSIGNER" && test -x "$AAPT"
+          bash ../../scripts/verify-protected-869-signing-identity.sh \
+            "$RUNNER_TEMP/ephinta-baseline/ephinta-869.apk" "$APKSIGNER" "$AAPT"
 
       - name: Set monotonic Android version code
         shell: bash
@@ -218,8 +237,8 @@ jobs:
             echo "::error::Calculated Android versionCode exceeds the Play Store limit."
             exit 1
           fi
-          sed -i -E "s/versionCode [0-9]+/versionCode $VERSION_CODE/" "$GRADLE_FILE"
-          grep -n 'versionCode' "$GRADLE_FILE"
+          echo "EPHINTA_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "Verified release versionCode: $VERSION_CODE"
 
       - name: Build signed release APK
         working-directory: eventsss123/eventsss-main/apps/mobile/android
