@@ -446,6 +446,13 @@ export default function PublicLanding({
     // Planning navigation must never start or restart event music. Music remains
     // controlled by the user's separate consent and player controls.
     try { localStorage.setItem('ess:eventDraft', JSON.stringify(draft)); } catch { /* storage may be disabled */ }
+    const musicCategory = /burial|remembrance/i.test(draft.type)
+      ? 'burial'
+      : /naming/i.test(draft.type)
+        ? 'naming'
+        : 'wedding';
+    try { localStorage.setItem('ephinta:music-category', musicCategory); } catch { /* storage may be disabled */ }
+    window.dispatchEvent(new CustomEvent('ephinta:music-category-change', { detail: musicCategory }));
     setMenuOpen(false);
     if (onStartBuilder) {
       onStartBuilder();
