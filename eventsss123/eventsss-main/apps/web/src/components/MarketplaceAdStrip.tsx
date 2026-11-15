@@ -62,7 +62,7 @@ export default function MarketplaceAdStrip({ onExploreMarketplace }: { onExplore
         <button type="button" onClick={() => move(1)} aria-label="Next Marketplace cards">›</button>
       </div>
       <div ref={rail} className="eph-portal-ad-scroll eph-portal-ad-carousel" role="list" aria-label="Swipe or scroll through Marketplace categories and sponsored offers">
-        {promotions.map((promotion) => (
+        {(!isNativeApp ? promotions : []).map((promotion) => (
           <article className="eph-portal-ad-card eph-portal-ad-card-sponsored" role="listitem" key={promotion.id}>
             <small>SPONSORED · APPROVED VENDOR</small>
             <strong>{promotion.title}</strong>
