@@ -442,17 +442,11 @@ export default function PublicLanding({
 
 
 
-  function selectMusicCategory(category: 'wedding' | 'naming' | 'burial') {
-    try { localStorage.setItem('ephinta:music-category', category); } catch { /* category is an optional preference */ }
-    window.dispatchEvent(new CustomEvent('ephinta:music-category-change', { detail: category }));
-  }
-
   function startPlanning() {
-    const category = draft.type === 'Naming ceremony' ? 'naming' : draft.type === 'Remembrance' || draft.type === 'Burial' ? 'burial' : 'wedding';
-    selectMusicCategory(category);
+    // Planning navigation must never start or restart event music. Music remains
+    // controlled by the user's separate consent and player controls.
     try { localStorage.setItem('ess:eventDraft', JSON.stringify(draft)); } catch { /* storage may be disabled */ }
     setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (onStartBuilder) {
       onStartBuilder();
       return;
@@ -837,6 +831,45 @@ export default function PublicLanding({
           .eph-landing .eph-nav-actions .eph-btn { padding: 9px 9px !important; font-size: 11px !important; }
         }
 
+
+        /* Front-page polish: stronger identity, calmer surfaces and resilient layouts. */
+        .eph-landing .eph-nav{min-height:84px;height:auto;padding-top:12px;padding-bottom:12px;gap:clamp(12px,2vw,28px)}
+        .eph-landing .eph-brand{gap:12px}
+        .eph-landing .eph-brand img{width:42px;height:42px;flex:0 0 42px;border-radius:12px}
+        .eph-landing .eph-brand span{font-size:18px;letter-spacing:.16em}
+        .eph-landing .eph-title{font-size:clamp(42px,5.6vw,78px);line-height:1.02;letter-spacing:-.055em;overflow-wrap:anywhere}
+        .eph-landing .eph-title em{white-space:normal}
+        .eph-landing .eph-subtitle{font-size:clamp(15px,1.35vw,18px);line-height:1.75}
+        .eph-landing .eph-hero{background:radial-gradient(ellipse at 82% 14%,#eadfff 0,transparent 36%),radial-gradient(ellipse at 12% 92%,#fff0d7 0,transparent 30%),linear-gradient(125deg,#fff 0%,#f8f5ff 52%,#fffaf3 100%)}
+        .eph-landing[data-theme="colorful"] .eph-hero{background:radial-gradient(ellipse at 84% 8%,#f7d8ea 0,transparent 36%),radial-gradient(ellipse at 12% 90%,#ffedc9 0,transparent 32%),linear-gradient(120deg,#fffafd,#f7f1ff 55%,#fffaf2)}
+        .eph-landing .eph-planner{box-shadow:0 22px 64px rgba(43,31,76,.10);border-color:rgba(117,91,166,.18)}
+        .eph-landing .eph-section{background:linear-gradient(180deg,rgba(248,246,252,.72),rgba(255,255,255,.96))}
+        .eph-landing .eph-nav-actions .eph-btn{white-space:nowrap}
+        .eph-landing .eph-btn:focus-visible,.eph-landing a:focus-visible,.eph-landing button:focus-visible{outline:3px solid #ffbd43;outline-offset:3px}
+        @media(max-width:980px){
+          .eph-landing .eph-nav{flex-wrap:wrap}
+          .eph-landing .eph-hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,.92fr);gap:28px}
+          .eph-landing .eph-title{font-size:clamp(40px,6vw,60px)}
+        }
+        @media(max-width:760px){
+          .eph-landing .eph-nav{min-height:72px;padding:10px 16px}
+          .eph-landing .eph-brand img{width:36px;height:36px;flex-basis:36px}
+          .eph-landing .eph-brand span{font-size:15px}
+          .eph-landing .eph-hero-grid{grid-template-columns:minmax(0,1fr);gap:30px}
+          .eph-landing .eph-hero{padding:42px 18px 54px;min-height:0}
+          .eph-landing .eph-title{font-size:clamp(38px,10vw,58px);max-width:100%}
+          .eph-landing .eph-hero-cta{display:grid;grid-template-columns:1fr;align-items:stretch}
+          .eph-landing .eph-hero-cta .eph-btn{width:100%;min-height:48px}
+          .eph-landing .eph-planner{padding:20px}
+        }
+        @media(max-width:390px){
+          .eph-landing .eph-brand span{display:inline!important;font-size:13px!important;letter-spacing:.1em!important}
+          .eph-landing .eph-brand img{width:32px;height:32px;flex-basis:32px}
+          .eph-landing .eph-nav-actions .eph-btn{font-size:10px!important;padding:10px 8px!important}
+          .eph-landing .eph-title{font-size:38px}
+        }
+        @media(prefers-reduced-motion:reduce){.eph-landing *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
       `}</style>
 
 
@@ -892,7 +925,7 @@ export default function PublicLanding({
 
              <span className="eph-menu-label">PORTALS & ACCOUNTS</span>
 
-             <button type="button" className="eph-menu-primary" onClick={() => { setMenuOpen(false); startPlanning(); }}><img src="/brand/ephinta_logo4.png?v=20261010-092247" alt="" />Plan your next event here <span aria-hidden="true">→</span></button>
+             <button type="button" className="eph-menu-primary" onClick={() => { setMenuOpen(false); startPlanning(); }}><img src="/brand/ephinta_logo4.png?v=20261010-092247" alt="" />Start Planner <span aria-hidden="true">→</span></button>
 
             <button type="button" onClick={() => { setMenuOpen(false); openAuth('signin'); }}>Sign in to your account</button>
 
@@ -914,7 +947,7 @@ export default function PublicLanding({
 
         <div className="eph-nav-actions">
 
-          <button className="eph-btn eph-btn-gold" onClick={startPlanning}>Plan your next event here <span aria-hidden="true">→</span></button>
+          <button className="eph-btn eph-btn-gold" onClick={startPlanning}>Start Planner <span aria-hidden="true">→</span></button>
 
           <button ref={menuButtonRef} type="button" className="eph-menu" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-controls="eph-information-menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}>
             <span className="eph-menu-bars" aria-hidden="true"><span /><span /><span /></span>
@@ -985,7 +1018,7 @@ export default function PublicLanding({
 
               <div className="eph-hero-cta">
 
-                <button className="eph-btn eph-btn-purple" onClick={startPlanning}>Start planning <span aria-hidden="true">→</span></button>
+                <button className="eph-btn eph-btn-purple" onClick={startPlanning}>Start Planner <span aria-hidden="true">→</span></button>
 
                 <button className="eph-btn eph-btn-outline" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>Explore how it works</button>
 
