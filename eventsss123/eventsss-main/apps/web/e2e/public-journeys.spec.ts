@@ -195,7 +195,7 @@ test("public landing page explains the event-planning service and its menu", asy
   await expect(
     page.getByRole("heading", { name: /Plan the event you imagine/i }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Start Planner" })).toBeVisible();
+  await expect(page.locator("#home").getByRole("button", { name: "Start Planner", exact: true })).toBeVisible();
   await expect(page.getByRole("img", { name: "EPHINTA" }).first()).toBeVisible();
 
   await page.getByRole("button", { name: "Open menu" }).click();
