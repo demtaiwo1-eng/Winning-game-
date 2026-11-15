@@ -651,27 +651,28 @@ test("switching from registration to sign-in clears signup-only password validat
   await expect(dialog.locator(".ess-form-error")).toContainText("That email and password do not match");
 });
 
-test("music consent prompt fills the phone screen and blurs the app until answered @mobile", async ({ page }) => {
+test("music consent prompt is compact and non-blocking on mobile @mobile", async ({ page }) => {
   await page.goto("/");
   const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
   await expect(prompt).toBeVisible();
+  await expect(prompt).toHaveAttribute("aria-modal", "false");
   const viewport = page.viewportSize();
   const backdrop = page.locator(".eph-audio__backdrop");
   const bounds = await backdrop.boundingBox();
   expect(viewport).not.toBeNull();
   expect(bounds).not.toBeNull();
-  expect(bounds!.x).toBe(0);
-  expect(bounds!.y).toBe(0);
-  expect(bounds!.width).toBe(viewport!.width);
-  expect(bounds!.height).toBe(viewport!.height);
-  const backdropFilter = await backdrop.evaluate((element) => getComputedStyle(element).backdropFilter);
-  expect(backdropFilter).toContain("blur");
-  await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
+  expect(bounds!.x).toBeGreaterThanOrEqual(0);
+  expect(bounds!.y).toBeGreaterThanOrEqual(0);
+  expect(bounds!.width).toBeLessThan(viewport!.width);
+  expect(bounds!.height).toBeLessThan(viewport!.height);
+  await expect(backdrop).toHaveCSS("pointer-events", "none");
+  await expect(prompt).toHaveCSS("pointer-events", "auto");
   await expect(prompt.getByRole("button", { name: "Yes, play music" })).toBeVisible();
   await expect(prompt.getByRole("button", { name: "No, thanks" })).toBeVisible();
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
   await prompt.getByRole("button", { name: "No, thanks" }).click();
   await expect(prompt).toBeHidden();
-  await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
 });
 
 test("mobile menu opens and provides sign-in access @mobile", async ({ page }, testInfo) => {
@@ -1063,25 +1064,13 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
 test("Plan a Burial opens the burial planner and selects the burial soundtrack", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("ephinta:sound", "off");
-    localStorage.setItem("ess_event_builder_progress", JSON.stringify({
-      title: "Old wedding draft",
-      type: "PERSONAL",
-      goal: "Celebrate",
-      date: "",
-      city: "Ibadan",
-      guests: "120",
-      budget: "",
-      atmosphere: "Warm and social",
-      food: "Mixed menu",
-      venue: "Still deciding",
-      priorities: "Guest experience",
-    }));
+    localStorage.setItem("ess:eventDraft", JSON.stringify({ type: "Burial", title: "Burial celebration" }));
   });
   await page.route("**/data/wale-waves-playlists.json", async (route) => {
     await route.fulfill({ status: 404, body: "not synced yet" });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Plan a Burial" }).click();
+  await page.getByRole("button", { name: "Start planning", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Burial celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("CULTURAL");
@@ -1092,12 +1081,13 @@ test("Plan a Burial opens the burial planner and selects the burial soundtrack",
 test("Plan a Naming Ceremony selects the naming soundtrack", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("ephinta:sound", "off");
+    localStorage.setItem("ess:eventDraft", JSON.stringify({ type: "Naming ceremony", title: "Naming ceremony celebration" }));
   });
   await page.route("**/data/wale-waves-playlists.json", async (route) => {
     await route.fulfill({ status: 404, body: "not synced yet" });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Plan a Naming Ceremony" }).click();
+  await page.getByRole("button", { name: "Start planning", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Naming ceremony celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("PERSONAL");

@@ -505,6 +505,9 @@ export default function PublicLanding({
 
         .eph-landing[data-theme="colorful"]{--navy:#171332;--navy2:#2b2053;--purple:#e34291;--purple2:#9b2fca;--gold:#ffbd43;--cream:#fff6fc;--ink:#21162f;--muted:#716078;--line:#f0ddec}
 
+        /* Keep marketplace promotion headings legible on the dark campaign surface in every theme. */
+        .eph-landing[data-theme="colorful"] .eph-promo-shell.eph-marketplace-advertising .eph-promo-heading h2{color:#fff!important}
+
         .eph-landing[data-theme="colorful"] .eph-hero{background:radial-gradient(ellipse at 84% 8%,#f7c9e5 0,transparent 34%),radial-gradient(ellipse at 12% 90%,#ffdf9d 0,transparent 32%),linear-gradient(120deg,#fff8fd,#f2e9ff 55%,#fff7e9)}
 
         .eph-theme-select{display:flex;align-items:center;gap:8px;color:#f3f0ff;font-size:12px;font-weight:750}
