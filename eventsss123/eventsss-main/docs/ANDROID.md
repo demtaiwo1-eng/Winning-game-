@@ -2,7 +2,7 @@
 
 The active root-level Android pipeline has two delivery lanes:
 
-1. **Verified test APK and OTA release:** `.github/workflows/ephinta-build-apk.yml` runs the API/web checks, database integration tests, and Android build. It packages the web build as an OTA bundle and creates a version manifest. After a successful default-branch run, `.github/workflows/ephinta-apk-download.yml` publishes the unsigned debug APK and checksum as a test prerelease, and updates the separate stable `ephinta-web-latest` OTA release with `ephinta-web-bundle.zip` and `version.json`.
+1. **Gated test APK and OTA release:** `.github/workflows/ephinta-build-apk.yml` builds a fresh Android debug APK and OTA web bundle for main-branch app changes. The publisher `.github/workflows/ephinta-apk-download.yml` waits for the exact same main commit to pass Browser E2E, 7,000-fixture scale QA, the full app verification suite, and the Phase 8 quality gate. If any gate fails, is cancelled, or does not finish within the wait window, neither the APK nor OTA release is published. When all gates pass, the tested APK and checksum are published as a test prerelease and the stable `ephinta-web-latest` OTA release is refreshed.
 2. **Native Android changes:** changes to Android/Capacitor native code, permissions, plugins, or signing still require a newly built APK and a normal install/update. OTA delivery replaces only the web UI and web logic.
 
 The app checks the CORS-enabled API proxy at `https://ephinta-wss.onrender.com/api/v1/app-updates`. The API reads the dedicated `ephinta-web-latest` GitHub release tag server-side and streams the versioned web bundle to the app, avoiding browser CORS restrictions on GitHub release assets. This OTA tag is kept separate from APK releases, so publishing an unsigned test APK or a signed production APK cannot interrupt web-layer updates. GitHub Pages is not required.
@@ -27,6 +27,13 @@ Set these GitHub Actions repository variables/secrets:
 - `GOOGLE_SERVICES_JSON_BASE64` — optional base64-encoded Firebase `google-services.json` for package `com.ephinta.app`; without it, Android push notifications are not configured.
 
 The post-build publisher updates the dedicated `ephinta-web-latest` OTA release with `ephinta-web-bundle.zip` and `version.json`; the debug APK remains in its own test prerelease.
+
+## What updates automatically and what needs confirmation
+
+- Web-layer changes can be offered inside the installed Capacitor app through the existing updater. The app checks the stable OTA manifest and presents **Install update**; the downloaded web bundle can be activated without reinstalling the APK.
+- Changes to native Android code, permissions, plugins, or the Android runtime require a newly built APK. The CI-generated APK is an unsigned debug/test build and is not guaranteed to update an existing production-signed installation.
+- Production APK updates must be signed with the same owner-controlled Android signing identity as the installed app. Android then displays its normal package-installer confirmation; an ordinary app cannot silently install an APK update.
+- A green CI result means **tests passed for this commit**, not that a person has confirmed the app works on a physical phone. After installing a candidate, the owner must test the real device journeys and explicitly approve a production version tag. Never describe an untested candidate as confirmed working.
 
 ## Production-signed Android release
 
