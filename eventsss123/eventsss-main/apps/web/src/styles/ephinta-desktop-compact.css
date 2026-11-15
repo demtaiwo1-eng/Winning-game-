@@ -122,22 +122,6 @@
     font-size: 10px;
   }
 
-  /* Do not compact modal, auth, registration or questionnaire surfaces. */
-  .ess-app .ess-modal,
-  .ess-app .ess-auth-modal,
-  .ess-app .ess-journey-card,
-  .ess-app .ess-modal-backdrop,
-  .ess-app .ess-registration-form,
-  .ess-app .ess-auth-modal form {
-    font-size: revert;
-  }
-
-  .ess-app .ess-auth-modal,
-  .ess-app .ess-modal,
-  .ess-app .ess-journey-card {
-    width: min(100%, 560px);
-    padding: clamp(20px, 4vw, 30px);
-  }
 }
 
 /* The landing page remains deliberately full-width on desktop. */
