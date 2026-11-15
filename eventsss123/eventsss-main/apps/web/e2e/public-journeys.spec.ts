@@ -195,7 +195,7 @@ test("public landing page explains the event-planning service and its menu", asy
   await expect(
     page.getByRole("heading", { name: /Plan the event you imagine/i }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Start planning" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start Planner" })).toBeVisible();
   await expect(page.getByRole("img", { name: "EPHINTA" }).first()).toBeVisible();
 
   await page.getByRole("button", { name: "Open menu" }).click();
@@ -206,7 +206,7 @@ test("public landing page explains the event-planning service and its menu", asy
   await expect(menu.locator(".eph-menu-brand")).toContainText("EPHINTA");
   await expect(menu.locator(".eph-menu-brand img")).toHaveCSS("width", "20px");
   await expect(menu.locator(".eph-menu-primary img")).toHaveCSS("width", "16px");
-  await expect(menu.getByRole("button", { name: /Plan your next event here/ })).toBeVisible();
+  await expect(menu.getByRole("button", { name: /Start Planner/ })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
 });
@@ -333,7 +333,7 @@ test("the menu planner action opens the guided event planner", async ({ page }) 
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).click();
   await page.getByRole("navigation", { name: "Main navigation" })
-    .getByRole("button", { name: /Plan your next event here/ }).click();
+    .getByRole("button", { name: /Start Planner/ }).click();
 
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
@@ -1070,7 +1070,7 @@ test("Plan a Burial opens the burial planner and selects the burial soundtrack",
     await route.fulfill({ status: 404, body: "not synced yet" });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Start planning", exact: true }).click();
+  await page.getByRole("button", { name: "Start Planner", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Burial celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("CULTURAL");
@@ -1087,7 +1087,7 @@ test("Plan a Naming Ceremony selects the naming soundtrack", async ({ page }) =>
     await route.fulfill({ status: 404, body: "not synced yet" });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Start planning", exact: true }).click();
+  await page.getByRole("button", { name: "Start Planner", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Naming ceremony celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("PERSONAL");
