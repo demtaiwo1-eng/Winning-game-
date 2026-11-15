@@ -7,7 +7,7 @@ on:
       - 'eventsss123/eventsss-main/**'
       - '.github/workflows/verify-app-suite.yml'
   push:
-    branches: [chore/android-launch-readiness]
+    branches: [main, chore/android-launch-readiness]
     paths:
       - 'eventsss123/eventsss-main/apps/mobile/**'
       - 'eventsss123/eventsss-main/capacitor.config.*'
