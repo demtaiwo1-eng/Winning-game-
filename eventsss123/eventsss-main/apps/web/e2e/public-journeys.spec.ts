@@ -77,6 +77,35 @@ test("legacy forgot-password and planner continuation URLs resolve to active scr
   await expect(page.locator("#eph-auth-dialog")).toBeVisible();
 });
 
+test("landing page actions navigate in-app without restarting or starting music", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ephinta:sound", "off");
+  });
+  await page.goto("/");
+  await page.evaluate(() => {
+    (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe = "loaded";
+  });
+
+  await expect(page.getByRole("button", { name: "Plan a Naming Ceremony" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Plan a Burial" })).toHaveCount(0);
+
+  await page.locator(".ephinta-marketing-zone__cta").click();
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect.poll(() => page.locator("audio").evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(true);
+  await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
+});
+
+test("landing marketplace actions open the customer marketplace sign-in route in-app", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe = "loaded";
+  });
+  await page.locator(".eph-promo-marketplace-cta").click();
+  await expect(page).toHaveURL(/\/auth\/signin\?role=CLIENT&returnTo=%2Fmarketplace$/);
+  await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
+});
+
 test("signed-out marketplace deep links return to the marketplace after sign-in", async ({ page }) => {
   await page.route("**/api/v1/auth/login", async (route) => {
     await route.fulfill({
@@ -129,6 +158,22 @@ test("marketplace deep links open the marketplace tab in an authenticated custom
   await unlockDeviceGate(page);
   await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
   await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+  const cityInput = page.getByRole("textbox", { name: "Your city" });
+  await expect(cityInput).toBeVisible();
+  await page.context().grantPermissions(["geolocation"]);
+  await page.context().setGeolocation({ latitude: 7.3775, longitude: 3.9470 });
+  await page.route("https://nominatim.openstreetmap.org/reverse**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ address: { city: "Ibadan" } }),
+    });
+  });
+  await page.getByRole("button", { name: "Use my location" }).click();
+  await expect(cityInput).toHaveValue("Ibadan");
+  await expect(page.getByRole("status").filter({ hasText: "Prioritising vendors in Ibadan" })).toBeVisible();
+  await cityInput.fill("Lagos");
+  await expect(page.getByRole("status").filter({ hasText: "Prioritising vendors in Lagos" })).toBeVisible();
 });
 
 test("guest RSVP deep links are public and show a safe unavailable state for an invalid token", async ({ page }) => {
@@ -237,6 +282,33 @@ test("event builder inherits the global parent theme and saves a brief", async (
     budget: "2,500,000.00",
   });
 
+});
+
+test("customer dashboard marketplace carousel navigates in-app without reloading", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "marketplace-carousel-e2e",
+      email: "marketplace-carousel@example.test",
+      name: "Marketplace Carousel Test",
+      role: "CLIENT",
+    }));
+    localStorage.setItem("ess_access_token", "e2e-access-token");
+    localStorage.setItem("ess_onboard_v2_client_default", "1");
+    localStorage.setItem("ephinta:sound", "off");
+  });
+
+  await page.goto("/dashboard/client");
+  await unlockDeviceGate(page);
+  const explore = page.locator(".eph-portal-marketplace-cta");
+  await expect(explore).toBeVisible();
+
+  await page.evaluate(() => {
+    (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe = "loaded";
+  });
+  await explore.click();
+  await expect(page).toHaveURL(/\/dashboard\/client\?tab=marketplace$/);
+  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
 
 test("signed-in event planners can open the modern planner route", async ({ page }) => {
@@ -579,19 +651,27 @@ test("switching from registration to sign-in clears signup-only password validat
   await expect(dialog.locator(".ess-form-error")).toContainText("That email and password do not match");
 });
 
-test("music consent prompt fits the phone screen and stays in the corner @mobile", async ({ page }) => {
+test("music consent prompt fills the phone screen and blurs the app until answered @mobile", async ({ page }) => {
   await page.goto("/");
   const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
   await expect(prompt).toBeVisible();
   const viewport = page.viewportSize();
-  const bounds = await page.locator(".eph-audio__backdrop").boundingBox();
+  const backdrop = page.locator(".eph-audio__backdrop");
+  const bounds = await backdrop.boundingBox();
   expect(viewport).not.toBeNull();
   expect(bounds).not.toBeNull();
-  expect(bounds!.x).toBeGreaterThanOrEqual(0);
-  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport!.width);
-  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport!.height);
+  expect(bounds!.x).toBe(0);
+  expect(bounds!.y).toBe(0);
+  expect(bounds!.width).toBe(viewport!.width);
+  expect(bounds!.height).toBe(viewport!.height);
+  const backdropFilter = await backdrop.evaluate((element) => getComputedStyle(element).backdropFilter);
+  expect(backdropFilter).toContain("blur");
+  await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
   await expect(prompt.getByRole("button", { name: "Yes, play music" })).toBeVisible();
   await expect(prompt.getByRole("button", { name: "No, thanks" })).toBeVisible();
+  await prompt.getByRole("button", { name: "No, thanks" }).click();
+  await expect(prompt).toBeHidden();
+  await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
 });
 
 test("mobile menu opens and provides sign-in access @mobile", async ({ page }, testInfo) => {

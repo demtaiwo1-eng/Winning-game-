@@ -2304,6 +2304,7 @@ export default function EnterpriseApp() {
         } catch { /* */ }
       }}
       onStartBuilder={startEventBuilder}
+      onExploreMarketplace={() => navigate("/marketplace")}
     />
   );
   if (!session) {
@@ -2642,7 +2643,9 @@ export default function EnterpriseApp() {
                     />
                   </div>
                 )}
-                <MarketplaceAdStrip />
+                {canPlanEvents && (
+                  <MarketplaceAdStrip onExploreMarketplace={() => navigate(`/dashboard/${session.role.toLowerCase()}?tab=marketplace`)} />
+                )}
                 {portal}
               </main>
             }
