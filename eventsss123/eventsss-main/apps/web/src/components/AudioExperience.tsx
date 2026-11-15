@@ -168,7 +168,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
 
       {showPrompt && preferencesLoaded && consent === null && !authDialogOpen && (
         <div className="eph-audio__backdrop">
-          <section className="eph-audio__prompt" role="dialog" aria-modal="true" aria-labelledby="eph-audio-title">
+          <section className="eph-audio__prompt" role="dialog" aria-modal="false" aria-labelledby="eph-audio-title">
             <span className="eph-audio__prompt-icon" aria-hidden="true">♫</span>
             <p className="eph-audio__eyebrow">A little atmosphere</p>
             <h2 id="eph-audio-title">Enjoy background music?</h2>
