@@ -446,6 +446,13 @@ export default function PublicLanding({
     // Planning navigation must never start or restart event music. Music remains
     // controlled by the user's separate consent and player controls.
     try { localStorage.setItem('ess:eventDraft', JSON.stringify(draft)); } catch { /* storage may be disabled */ }
+    const musicCategory = /burial|remembrance/i.test(draft.type)
+      ? 'burial'
+      : /naming/i.test(draft.type)
+        ? 'naming'
+        : 'wedding';
+    try { localStorage.setItem('ephinta:music-category', musicCategory); } catch { /* storage may be disabled */ }
+    window.dispatchEvent(new CustomEvent('ephinta:music-category-change', { detail: musicCategory }));
     setMenuOpen(false);
     if (onStartBuilder) {
       onStartBuilder();
@@ -863,7 +870,7 @@ export default function PublicLanding({
           .eph-landing .eph-planner{padding:20px}
         }
         @media(max-width:390px){
-          .eph-landing .eph-brand span{display:inline!important;font-size:13px!important;letter-spacing:.1em!important}
+          .eph-landing .eph-brand span{display:inline!important;font-size:17px!important;letter-spacing:.1em!important}
           .eph-landing .eph-brand img{width:32px;height:32px;flex-basis:32px}
           .eph-landing .eph-nav-actions .eph-btn{font-size:10px!important;padding:10px 8px!important}
           .eph-landing .eph-title{font-size:38px}
