@@ -160,3 +160,5 @@ if [[ "$skipped" -gt 0 || "$failed" -gt 0 ]]; then
   echo "::warning::Some branches need manual conflict or test review. Do not delete them."
   exit 2
 fi
+
+# Triggered branch-by-branch EPHINTA consolidation after the current main snapshot.
