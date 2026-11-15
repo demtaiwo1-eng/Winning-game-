@@ -23,7 +23,8 @@ function locationLabel(city?: string | null, country?: string | null): string {
 }
 
 /** Compact, touch-friendly Marketplace and approved-promotion carousel. */
-export default function MarketplaceAdStrip() {
+export default function MarketplaceAdStrip({ onExploreMarketplace }: { onExploreMarketplace: () => void }) {
+  const isNativeApp = Boolean((window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.());
   const [promotions, setPromotions] = useState<PublicPromotion[]>([]);
   const rail = useRef<HTMLDivElement>(null);
 
@@ -47,21 +48,21 @@ export default function MarketplaceAdStrip() {
   };
 
   return (
-    <section className="eph-portal-marketplace eph-portal-marketplace-compact" aria-label="EPHINTA Marketplace and featured advertising">
+    <section className="eph-portal-marketplace eph-portal-marketplace-compact" aria-label="EPHINTA Marketplace and approved promotions">
       <div className="eph-portal-marketplace-heading">
         <div>
           <span className="eph-portal-marketplace-kicker">DISCOVER · CONNECT · CELEBRATE</span>
           <h2>Discover the EPHINTA Marketplace</h2>
-          <p>Featured services and approved vendor promotions.</p>
+          <p>{isNativeApp ? "Browse venues, catering, photography, décor and trusted event professionals." : "Featured services and approved vendor promotions."}</p>
         </div>
-        <a href="/marketplace" className="eph-portal-marketplace-cta">Explore <span aria-hidden="true">→</span></a>
+        <a href="/marketplace" onClick={(event) => { event.preventDefault(); onExploreMarketplace(); }} className="eph-portal-marketplace-cta">Explore <span aria-hidden="true">→</span></a>
       </div>
       <div className="eph-portal-carousel-controls" aria-label="Marketplace carousel controls">
         <button type="button" onClick={() => move(-1)} aria-label="Previous Marketplace cards">‹</button>
         <button type="button" onClick={() => move(1)} aria-label="Next Marketplace cards">›</button>
       </div>
       <div ref={rail} className="eph-portal-ad-scroll eph-portal-ad-carousel" role="list" aria-label="Swipe or scroll through Marketplace categories and sponsored offers">
-        {promotions.map((promotion) => (
+        {(!isNativeApp ? promotions : []).map((promotion) => (
           <article className="eph-portal-ad-card eph-portal-ad-card-sponsored" role="listitem" key={promotion.id}>
             <small>SPONSORED · APPROVED VENDOR</small>
             <strong>{promotion.title}</strong>
@@ -71,7 +72,7 @@ export default function MarketplaceAdStrip() {
               {promotion.listingTitle && <span>{promotion.listingTitle}</span>}
               {locationLabel(promotion.city, promotion.country) && <span>{locationLabel(promotion.city, promotion.country)}</span>}
             </div>
-            <a href="/marketplace">View offer <span aria-hidden="true">→</span></a>
+            <a href="/marketplace" onClick={(event) => { event.preventDefault(); onExploreMarketplace(); }}>View offer <span aria-hidden="true">→</span></a>
           </article>
         ))}
         {MARKETPLACE_CATEGORIES.map((item) => (
@@ -80,7 +81,7 @@ export default function MarketplaceAdStrip() {
             <small>{item.eyebrow}</small>
             <strong>{item.title}</strong>
             <p>{item.description}</p>
-            <a href="/marketplace">Explore <span aria-hidden="true">→</span></a>
+            <a href="/marketplace" onClick={(event) => { event.preventDefault(); onExploreMarketplace(); }}>Explore <span aria-hidden="true">→</span></a>
           </article>
         ))}
       </div>
