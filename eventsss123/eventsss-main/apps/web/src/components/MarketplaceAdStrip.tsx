@@ -29,7 +29,6 @@ export default function MarketplaceAdStrip({ onExploreMarketplace }: { onExplore
   const rail = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isNativeApp) return;
     let cancelled = false;
     fetch(apiUrl("/billing/public-promotions"))
       .then(async (response) => {
@@ -42,14 +41,14 @@ export default function MarketplaceAdStrip({ onExploreMarketplace }: { onExplore
       })
       .catch(() => { if (!cancelled) setPromotions([]); });
     return () => { cancelled = true; };
-  }, [isNativeApp]);
+  }, []);
 
   const move = (direction: -1 | 1) => {
     rail.current?.scrollBy({ left: direction * Math.max(220, rail.current.clientWidth * 0.72), behavior: "smooth" });
   };
 
   return (
-    <section className="eph-portal-marketplace eph-portal-marketplace-compact" aria-label="EPHINTA Marketplace and service categories">
+    <section className="eph-portal-marketplace eph-portal-marketplace-compact" aria-label="EPHINTA Marketplace and approved promotions">
       <div className="eph-portal-marketplace-heading">
         <div>
           <span className="eph-portal-marketplace-kicker">DISCOVER · CONNECT · CELEBRATE</span>
@@ -62,8 +61,8 @@ export default function MarketplaceAdStrip({ onExploreMarketplace }: { onExplore
         <button type="button" onClick={() => move(-1)} aria-label="Previous Marketplace cards">‹</button>
         <button type="button" onClick={() => move(1)} aria-label="Next Marketplace cards">›</button>
       </div>
-      <div ref={rail} className="eph-portal-ad-scroll eph-portal-ad-carousel" role="list" aria-label={isNativeApp ? "Swipe or scroll through Marketplace categories" : "Swipe or scroll through Marketplace categories and sponsored offers"}>
-        {!isNativeApp && promotions.map((promotion) => (
+      <div ref={rail} className="eph-portal-ad-scroll eph-portal-ad-carousel" role="list" aria-label="Swipe or scroll through Marketplace categories and sponsored offers">
+        {promotions.map((promotion) => (
           <article className="eph-portal-ad-card eph-portal-ad-card-sponsored" role="listitem" key={promotion.id}>
             <small>SPONSORED · APPROVED VENDOR</small>
             <strong>{promotion.title}</strong>
@@ -87,7 +86,7 @@ export default function MarketplaceAdStrip({ onExploreMarketplace }: { onExplore
         ))}
       </div>
       <div className="eph-portal-marketplace-footer">
-        <span>{isNativeApp ? "Explore the service categories above." : promotions.length ? `${promotions.length} approved vendor promotion${promotions.length === 1 ? "" : "s"} featured` : "Explore Marketplace categories; approved vendor campaigns appear when active."}</span>
+        <span>{promotions.length ? `${promotions.length} approved vendor promotion${promotions.length === 1 ? "" : "s"} featured` : "Explore Marketplace categories; approved vendor campaigns appear when active."}</span>
         <span>Swipe to browse</span>
       </div>
     </section>
