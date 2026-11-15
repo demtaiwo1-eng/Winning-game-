@@ -863,7 +863,7 @@ export default function PublicLanding({
           .eph-landing .eph-planner{padding:20px}
         }
         @media(max-width:390px){
-          .eph-landing .eph-brand span{display:inline!important;font-size:13px!important;letter-spacing:.1em!important}
+          .eph-landing .eph-brand span{display:inline!important;font-size:17px!important;letter-spacing:.1em!important}
           .eph-landing .eph-brand img{width:32px;height:32px;flex-basis:32px}
           .eph-landing .eph-nav-actions .eph-btn{font-size:10px!important;padding:10px 8px!important}
           .eph-landing .eph-title{font-size:38px}
