@@ -117,22 +117,17 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
           const promptElement = element.querySelector(".eph-audio__prompt");
           const promptStyle = promptElement ? getComputedStyle(promptElement) : null;
           const rect = element.getBoundingClientRect();
-          const action = document.querySelector(".ess-builder-card .ess-primary");
-          const actionRect = action?.getBoundingClientRect();
-          const overlapsAction = actionRect
-            ? !(rect.right <= actionRect.left || rect.left >= actionRect.right || rect.bottom <= actionRect.top || rect.top >= actionRect.bottom)
-            : false;
           return {
             backgroundImage: promptStyle?.backgroundImage ?? "",
-            backdropFilter: backdropStyle.backdropFilter,
+            backdropPointerEvents: backdropStyle.pointerEvents,
+            promptPointerEvents: promptStyle?.pointerEvents ?? "none",
             coversViewport: rect.left <= 0 && rect.top <= 0 && rect.right >= innerWidth && rect.bottom >= innerHeight,
-            overlapsAction,
           };
         });
         expect(overlay.backgroundImage, "Audio consent must use its branded surface").toContain("linear-gradient");
-        expect(overlay.backdropFilter, "Audio consent must blur the complete app").toContain("blur");
-        expect(overlay.coversViewport, "Audio consent must cover the complete viewport").toBe(true);
-        expect(overlay.overlapsAction, "Audio consent must block the planner until a choice is made").toBe(true);
+        expect(overlay.backdropPointerEvents, "Audio consent backdrop must not intercept app interactions").toBe("none");
+        expect(overlay.promptPointerEvents, "Audio consent card must remain interactive").toBe("auto");
+        expect(overlay.coversViewport, "Audio consent must remain a compact prompt, not a full-screen overlay").toBe(false);
         await prompt.getByRole("button", { name: "No, thanks" }).click();
         await expect(prompt).toBeHidden();
         await expect(page.locator(".eph-audio__backdrop")).toHaveCount(0);
