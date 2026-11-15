@@ -58,6 +58,9 @@ run_release_checks() {
   log "Installing locked dependencies"
   npm ci || return 1
 
+  log "Apply Prisma migrations to the isolated CI database"
+  npm run db:deploy -w apps/api || return 1
+
   log "API checks, database-aware tests, web tests and KYC self-test"
   npm run check || return 1
 
