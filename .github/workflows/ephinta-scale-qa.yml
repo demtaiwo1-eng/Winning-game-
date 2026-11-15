@@ -1,6 +1,15 @@
 name: EPHINTA 7,000-portal-fixture scale QA
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "eventsss123/eventsss-main/apps/api/**"
+      - "eventsss123/eventsss-main/apps/web/**"
+      - "eventsss123/eventsss-main/scripts/qa/**"
+      - "eventsss123/eventsss-main/package.json"
+      - "eventsss123/eventsss-main/package-lock.json"
+      - ".github/workflows/ephinta-scale-qa.yml"
   pull_request:
     paths:
       - "eventsss123/eventsss-main/apps/api/**"
