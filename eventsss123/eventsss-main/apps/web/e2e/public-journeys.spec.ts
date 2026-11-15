@@ -1065,19 +1065,6 @@ test("Plan a Burial opens the burial planner and selects the burial soundtrack",
   await page.addInitScript(() => {
     localStorage.setItem("ephinta:sound", "off");
     localStorage.setItem("ess:eventDraft", JSON.stringify({ type: "Burial", title: "Burial celebration" }));
-    localStorage.setItem("ess_event_builder_progress", JSON.stringify({
-      title: "Old wedding draft",
-      type: "PERSONAL",
-      goal: "Celebrate",
-      date: "",
-      city: "Ibadan",
-      guests: "120",
-      budget: "",
-      atmosphere: "Warm and social",
-      food: "Mixed menu",
-      venue: "Still deciding",
-      priorities: "Guest experience",
-    }));
   });
   await page.route("**/data/wale-waves-playlists.json", async (route) => {
     await route.fulfill({ status: 404, body: "not synced yet" });
