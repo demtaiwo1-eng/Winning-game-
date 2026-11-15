@@ -120,3 +120,13 @@ test("all bundled EPHINTA music files are served as non-empty audio assets", asy
     expect((await response.body()).byteLength, track + " should not be empty").toBeGreaterThan(10000);
   }
 });
+
+
+test("music consent remains non-blocking while completing the planner's first step", async ({ page }) => {
+  await page.goto("/plan");
+  await expect(page.getByRole("dialog", { name: "Enjoy background music?" })).toBeVisible();
+  await page.getByLabel("Event name").fill("Consent overlay interaction check");
+  await page.getByLabel("Event format").selectOption("PERSONAL");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await expect(page.getByRole("heading", { name: "What should it achieve?" })).toBeVisible();
+});
