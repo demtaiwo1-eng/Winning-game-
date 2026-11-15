@@ -24,7 +24,11 @@ export function bookingCommissionMinor(amountMinor: bigint, config: PaymentFeeCo
   return commissionMinor(amountMinor, bookingCommissionBps(config));
 }
 
-/** Outgoing OPay bank withdrawals default to the agreed 2% transaction fee. */
+/** Outgoing OPay bank withdrawals always carry the agreed 2% transaction fee. */
+export function payoutFeeBps(): number {
+  return 200;
+}
+
 export function payoutFeeMinor(amountMinor: bigint, _config: PaymentFeeConfig & { PAYOUT_FEE_BPS?: number }): bigint {
   return commissionMinor(amountMinor, 200);
 }
