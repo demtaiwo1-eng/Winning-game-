@@ -1064,6 +1064,7 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
 test("Plan a Burial opens the burial planner and selects the burial soundtrack", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("ephinta:sound", "off");
+    localStorage.setItem("ess:eventDraft", JSON.stringify({ type: "Burial", title: "Burial celebration" }));
     localStorage.setItem("ess_event_builder_progress", JSON.stringify({
       title: "Old wedding draft",
       type: "PERSONAL",
@@ -1082,7 +1083,7 @@ test("Plan a Burial opens the burial planner and selects the burial soundtrack",
     await route.fulfill({ status: 404, body: "not synced yet" });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Plan a Burial" }).click();
+  await page.getByRole("button", { name: "Start planning", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Burial celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("CULTURAL");
@@ -1093,12 +1094,13 @@ test("Plan a Burial opens the burial planner and selects the burial soundtrack",
 test("Plan a Naming Ceremony selects the naming soundtrack", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("ephinta:sound", "off");
+    localStorage.setItem("ess:eventDraft", JSON.stringify({ type: "Naming ceremony", title: "Naming ceremony celebration" }));
   });
   await page.route("**/data/wale-waves-playlists.json", async (route) => {
     await route.fulfill({ status: 404, body: "not synced yet" });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Plan a Naming Ceremony" }).click();
+  await page.getByRole("button", { name: "Start planning", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Naming ceremony celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("PERSONAL");
