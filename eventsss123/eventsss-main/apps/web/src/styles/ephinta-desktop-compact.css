@@ -1,0 +1,151 @@
+/* EPHINTA desktop compact workspace.
+   Deliberately scoped to authenticated portal content only:
+   public landing, full-screen forms, dialogs and questionnaires keep their own layouts. */
+
+@media (min-width: 1025px) {
+  .ess-app > .ess-content,
+  .ess-app .ess-content {
+    width: min(100% - 40px, 820px) !important;
+    max-width: 820px !important;
+    margin-inline: auto !important;
+    padding: 26px 18px 64px !important;
+  }
+
+  .ess-app .ess-page-heading {
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .ess-app .ess-page-heading h1 {
+    margin: 4px 0 7px;
+    font-size: clamp(25px, 2.5vw, 32px);
+    line-height: 1.08;
+    letter-spacing: -.045em;
+  }
+
+  .ess-app .ess-page-heading p:not(.ess-eyebrow) {
+    max-width: 560px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .ess-app .ess-portal-stack {
+    gap: 13px;
+  }
+
+  .ess-app .ess-metrics {
+    gap: 9px;
+    margin-bottom: 0;
+  }
+
+  .ess-app .ess-metric {
+    min-height: 94px;
+    padding: 13px 14px;
+    gap: 5px;
+    border-radius: 13px;
+  }
+
+  .ess-app .ess-metric span,
+  .ess-app .ess-metric small {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .ess-app .ess-metric strong {
+    font-size: clamp(19px, 2vw, 25px);
+  }
+
+  .ess-app .ess-grid {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .ess-app .ess-panel,
+  .ess-app .ess-card {
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .ess-app .ess-section-title {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .ess-app .ess-section-title h2,
+  .ess-app .ess-panel h2 {
+    font-size: 17px;
+  }
+
+  .ess-app .ess-panel p:not(.ess-eyebrow),
+  .ess-app .ess-card p {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .ess-app .ess-primary,
+  .ess-app .ess-secondary,
+  .ess-app .ess-outline-button,
+  .ess-app .ess-ghost-button,
+  .ess-app .ess-quiet-button {
+    min-height: 36px;
+    padding: 8px 11px;
+    border-radius: 9px;
+    font-size: 11px;
+  }
+
+  .ess-app .ess-table {
+    font-size: 10px;
+  }
+
+  .ess-app .ess-table th,
+  .ess-app .ess-table td {
+    padding: 9px 10px;
+  }
+
+  .ess-app .ess-job-row {
+    gap: 10px;
+    padding: 11px 0;
+  }
+
+  .ess-app .ess-status {
+    padding: 4px 7px;
+    font-size: 9px;
+  }
+
+  .ess-app .ess-filter-row {
+    padding-bottom: 8px;
+  }
+
+  .ess-app .ess-chip {
+    min-height: 34px;
+    padding: 7px 11px;
+    font-size: 10px;
+  }
+
+  /* Do not compact modal, auth, registration or questionnaire surfaces. */
+  .ess-app .ess-modal,
+  .ess-app .ess-auth-modal,
+  .ess-app .ess-journey-card,
+  .ess-app .ess-modal-backdrop,
+  .ess-app .ess-registration-form,
+  .ess-app .ess-auth-modal form {
+    font-size: revert;
+  }
+
+  .ess-app .ess-auth-modal,
+  .ess-app .ess-modal,
+  .ess-app .ess-journey-card {
+    width: min(100%, 560px);
+    padding: clamp(20px, 4vw, 30px);
+  }
+}
+
+/* The landing page remains deliberately full-width on desktop. */
+@media (min-width: 1025px) {
+  .eph-landing,
+  .eph-landing .eph-hero,
+  .eph-landing .eph-section,
+  .eph-landing .eph-footer {
+    max-width: none;
+  }
+}

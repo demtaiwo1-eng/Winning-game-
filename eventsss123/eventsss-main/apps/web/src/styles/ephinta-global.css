@@ -29,6 +29,7 @@
 @import "./ephinta-global-navigation-fix.css";
 @import "./ephinta-navigation-accessibility.css";
 @import "./ephinta-workspace-advertising.css";
+@import "./ephinta-desktop-compact.css";
 
 @import "./ephinta-remote-update.css";
 @import "./ephinta-scale-responsive.css";
