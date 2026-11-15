@@ -6,7 +6,7 @@ The production release workflow is prepared, but it cannot produce a signed APK 
 
 - Android application ID: `com.ephinta.app`
 - Workflow: `.github/workflows/ephinta-production-apk.yml`
-- Manual run: builds and verifies a signed APK and AAB, then uploads the artifacts.
+- Manual run: builds and verifies a signed APK and AAB, then uploads the artifacts. The workflow requires the `confirm_device_tested` checkbox: tick it only after installing the latest passing test APK on a physical Android phone and confirming the main journeys work.
 - Version tag (`v*`): also publishes the production GitHub Release and the stable web OTA bundle, then verifies that the OTA manifest and bundle are reachable through the production API.
 - Before signing, it requires the production API health and readiness endpoints to respond successfully.
 - It verifies the APK certificate SHA-256 against the owner-configured `ANDROID_CERT_SHA256` repository variable and refuses to publish if they do not match.
