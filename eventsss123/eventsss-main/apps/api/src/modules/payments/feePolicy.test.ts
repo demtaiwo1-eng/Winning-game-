@@ -4,6 +4,7 @@ import {
   bookingCommissionMinor,
   walletTopupFeeBps,
   walletTopupFeeMinor,
+  payoutFeeBps,
   payoutFeeMinor,
 } from "./feePolicy";
 
@@ -29,6 +30,7 @@ describe("separate payment fee policy", () => {
 
   it("deducts exactly 2% from outgoing OPay bank withdrawals", () => {
     const config = { COMMISSION_BPS: 500, PAYOUT_FEE_BPS: 200 };
+    expect(payoutFeeBps()).toBe(200);
     expect(payoutFeeMinor(100000n, config)).toBe(2000n);
     expect(100000n - payoutFeeMinor(100000n, config)).toBe(98000n);
   });
