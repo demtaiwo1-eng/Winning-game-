@@ -1070,7 +1070,7 @@ test("Plan a Burial opens the burial planner and selects the burial soundtrack",
     await route.fulfill({ status: 404, body: "not synced yet" });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Start Planner", exact: true }).click();
+  await page.locator("#home").getByRole("button", { name: "Start Planner", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Burial celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("CULTURAL");
@@ -1087,7 +1087,7 @@ test("Plan a Naming Ceremony selects the naming soundtrack", async ({ page }) =>
     await route.fulfill({ status: 404, body: "not synced yet" });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Start Planner", exact: true }).click();
+  await page.locator("#home").getByRole("button", { name: "Start Planner", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Naming ceremony celebration");
   await expect(page.getByLabel("Event format")).toHaveValue("PERSONAL");
