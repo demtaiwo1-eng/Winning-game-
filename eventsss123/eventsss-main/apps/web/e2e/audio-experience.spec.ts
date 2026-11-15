@@ -13,18 +13,21 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("accepting background music saves consent, starts playback and displays player controls", async ({ page }) => {
+test("accepting music consent starts playback and minimizes the player until restored", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
   await expect(prompt).toBeVisible();
   await prompt.getByRole("button", { name: "Yes, play music" }).click();
   await expect(prompt).toHaveCount(0);
-  await expect(page.locator(".eph-audio__player")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Pause music" })).toBeVisible();
+  await expect(page.locator(".eph-audio__player")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Open music player" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("on");
   await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBe(1);
   await expect(page.locator("audio")).toHaveAttribute("src", /Wedding/);
+  await page.getByRole("button", { name: "Open music player" }).click();
+  await expect(page.locator(".eph-audio__player")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pause music" })).toBeVisible();
 });
 
 test("declining music dismisses the prompt, saves the choice and keeps audio stopped", async ({ page }) => {
@@ -57,19 +60,23 @@ for (const viewport of viewports) {
   });
 }
 
-test("saved music consent restores the visible player and attempts playback", async ({ page }) => {
+test("saved music consent restores the compact player and attempts playback", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("ephinta:sound", "on"));
   await page.goto("/");
   await expect(page.getByRole("dialog", { name: "Enjoy background music?" })).toHaveCount(0);
+  await expect(page.locator(".eph-audio__player")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Open music player" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBeGreaterThanOrEqual(1);
+  await page.getByRole("button", { name: "Open music player" }).click();
   await expect(page.locator(".eph-audio__player")).toBeVisible();
   await expect(page.getByRole("button", { name: "Pause music" })).toBeVisible();
-  await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBeGreaterThanOrEqual(1);
 });
 
 test("player controls switch tracks, categories, volume and stop playback", async ({ page }) => {
   await page.goto("/");
   const prompt = page.getByRole("dialog", { name: "Enjoy background music?" });
   await prompt.getByRole("button", { name: "Yes, play music" }).click();
+  await page.getByRole("button", { name: "Open music player" }).click();
 
   const audio = page.locator("audio");
   await expect(audio).toHaveAttribute("src", /Here%20we%20are-1/);
