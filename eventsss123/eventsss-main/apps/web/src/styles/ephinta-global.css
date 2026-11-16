@@ -342,3 +342,24 @@ html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-col
   outline: 3px solid var(--epg-focus) !important;
   outline-offset: 3px !important;
 }
+
+/* Branded dark feature panels deliberately retain their dark surfaces.
+   Keep their copy white even when the surrounding page is in light mode. */
+:where(.workspace-intro,.ess-sidebar,.app-sidebar,.dashboard-sidebar,.sidebar,
+       .pl-footer,.esg-footer,.hero-dark,.dark-panel) {
+  color: #ffffff !important;
+}
+:where(.workspace-intro,.ess-sidebar,.app-sidebar,.dashboard-sidebar,.sidebar,
+       .pl-footer,.esg-footer,.hero-dark,.dark-panel)
+  :where(h1,h2,h3,h4,h5,h6,p,span,small,label,strong,b,li,a,button) {
+  color: #ffffff !important;
+}
+:where(.workspace-intro,.hero-dark,.dark-panel) :where(p,small,.muted,.text-muted) {
+  color: #eef2ff !important;
+}
+:where(.ess-sidebar,.app-sidebar,.dashboard-sidebar,.sidebar)
+  :where(a[aria-current="page"],.active) {
+  color: #ffffff !important;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
