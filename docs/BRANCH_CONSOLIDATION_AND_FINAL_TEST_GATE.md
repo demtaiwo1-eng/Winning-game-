@@ -217,3 +217,11 @@ No branch from this family has been deleted or force-updated. These are review d
 - Current main exposes the accessible `Vendor dashboard section` selector with a `wallet` option. The vendor payment-persona test has been corrected to select that option instead of clicking the mismatched button.
 - Correction committed to `qa/payment-personas-current-main-20261116`: `5484350fd861952f7afa89c3574f3d8f37794af1`.
 - The fix is not yet verified by a completed green browser run. PR #210 remains unmerged pending fresh required checks.
+
+
+### Focused branch-content verification (2026-11-16)
+
+- `feature/ephinta-bytid-kyc-20261108`: `apps/api/src/lib/bytid.ts` is byte-identical to main. Its KYC route and upload component are shorter than main, so the branch is not a safe source for replacing current KYC implementation. No BYTID credential or provider change is needed for the current OPay-only production scope.
+- `feat/planner-operations-finance-kyc-20261109`: the reviewed event-message service and web messaging panel are byte-identical to main. Its remaining differences include schema/migration, notifications, and planner UI; these still require migration and authorization review before selective extraction.
+- `feature/ephinta-device-security-20261108`: the DeviceSecurityGate differs slightly from main and remains a focused security review item. Do not replace current Android/iOS manifests or package configuration wholesale.
+- `fix/ephinta-registration-planner-and-youtube-oauth`: its older stylesheet stack imports many separate theme files, while main uses the single `ephinta-global.css` entry point. Its theme contrast stylesheet is smaller than the existing main stylesheet. Do not restore this branch's stylesheet stack over current global theming.
