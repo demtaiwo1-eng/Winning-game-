@@ -135,3 +135,15 @@ Before using automation, rewrite and review that script so it:
 6. Never deletes source branches; cleanup is a separate post-merge action after proof of supersession.
 
 This automation audit is an additional blocker, not a completed consolidation.
+
+
+## Branch dispositions completed by content comparison — 2026-11-16
+
+The following two feature branches were compared at file level with the current `main` content:
+
+| Branch | Disposition | Evidence |
+|---|---|---|
+| `feature/experience-modes-gamified-demo-20261116` | **SUPERSEDED — pending ledger finalization** | `ExperienceModeMenu.tsx` and `verify-landing-marketplace-global-css.sh` are byte-identical to `main`. The branch's `ephinta-global.css` is an older, shorter stylesheet than main and must not replace it. The branch's remaining `EnterpriseApp.tsx` is older (branch file 177,443 chars vs main 179,452 chars) and must not overwrite current main. |
+| `feature/isolated-demo-marketplace-catalogue-20261116` | **SUPERSEDED — pending ledger finalization** | The feature is already present in main's `PublicMarketplaceCatalogue.tsx`; main has a more complete 2,000-sample implementation, while the branch has 1,200 samples and older markup. Main's marketplace stylesheet also contains additional rules. Replacing main with this branch would be a regression. |
+
+These are content-level supersession findings; they do not authorize branch deletion until the full inventory and open-PR cross-reference is complete.
