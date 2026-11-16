@@ -3391,6 +3391,7 @@ function AuthModal({
               : roleMeta[role].description}
         </p>
         {mode !== "forgot" && (
+          <>
           <label className="ess-auth-role-select">
             Account type
             <select aria-label="Registration account type" value={role} onChange={(event) => onRole(event.target.value as Role)}>
@@ -3411,6 +3412,7 @@ function AuthModal({
               </button>
             ))}
           </div>
+          </>
         )}
         <form onSubmit={onSubmit}>
           {mode === "signup" && (
