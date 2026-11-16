@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 const contract = readFileSync(new URL("./ephinta-global-theme-contract.css", import.meta.url), "utf8");
 const globalCss = readFileSync(new URL("./ephinta-global.css", import.meta.url), "utf8");
+const themeRuntime = readFileSync(new URL("../lib/ephintaTheme.ts", import.meta.url), "utf8");
 
 function token(block: string, name: string): string {
   const value = block.match(new RegExp(`--epg-${name}:\\s*(#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)\\b`))?.[1];
@@ -52,6 +53,10 @@ describe("EPHINTA global theme contrast", () => {
     expect(contract).toContain("--ess-surface:var(--epg-surface)");
     expect(contract).toContain("background-image:none !important");
     expect(contract).toContain("html[data-ephinta-theme=\"colorful\"],html[data-theme=\"colorful\"]");
+  });
+
+  it("keeps native controls aligned with the selected colorful palette", () => {
+    expect(themeRuntime).toContain('document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light"');
   });
 
   it("keeps the final override after legacy component rules", () => {
