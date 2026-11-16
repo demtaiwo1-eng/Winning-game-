@@ -26,7 +26,7 @@ const modes = ["light", "dark", "colorful"] as const;
 
 describe("EPHINTA global theme contrast", () => {
   it.each(modes)("keeps text, muted text, links and primary buttons readable in %s mode", (mode) => {
-    const blocks = [...contract.matchAll(new RegExp(`html\\[data-ephinta-theme="${mode}"\\][\\s\\S]*?\
+    const blocks = [...contract.matchAll(new RegExp(`html\\[data-ephinta-theme="${mode}"\\][\\s\\S]*?\\n}`, "g"))];
 }`, "g"))];
     const block = blocks.at(-1)?.[0];
     expect(block, `missing ${mode} theme token block`).toBeTruthy();
