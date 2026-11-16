@@ -433,7 +433,7 @@ function ClientPortal({
       <nav className="ess-filter-row ess-dashboard-nav" style={{ marginBottom: 8 }} aria-label="Planner dashboard sections">
         <label className="ess-dashboard-section-select">
           Jump to section
-          <select aria-label="Planner dashboard section" value={tab} onChange={(event) => setTab(event.target.value)}>
+          <select aria-label="Planner dashboard section" value={tab} onChange={(event) => setTab(event.target.value as typeof tab)}>
             {(["overview", "checklist", "planner", "checkin", "marketplace", "verifiers", "payments", "readiness", "messages", "notifications", "feedback", "kyc"] as const).map((id) => (
               <option key={id} value={id}>{({ overview: "Overview", checklist: "Checklist", planner: "Event workspace", checkin: "Guest check-in", marketplace: "Marketplace", verifiers: "Verifiers", payments: "Payments & finances", readiness: "Go-live readiness", messages: "Messages", notifications: "Notifications", feedback: "Feedback", kyc: "KYC" })[id]}</option>
             ))}
@@ -988,7 +988,7 @@ function VendorPortal({
       <nav className="ess-filter-row ess-dashboard-nav ess-vendor-nav" style={{ marginBottom: 12 }} aria-label="Vendor dashboard sections">
         <label className="ess-dashboard-section-select">
           Jump to section
-          <select aria-label="Vendor dashboard section" value={vendorTab} onChange={(event) => setVendorTab(event.target.value)}>
+          <select aria-label="Vendor dashboard section" value={vendorTab} onChange={(event) => setVendorTab(event.target.value as typeof vendorTab)}>
             <option value="catalog">Catalog & demand</option>
             <option value="wallet">Wallet & escrow</option>
             <option value="payments">Booking payments</option>
