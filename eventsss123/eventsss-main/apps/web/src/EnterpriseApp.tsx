@@ -431,6 +431,14 @@ function ClientPortal({
       </div>
 
       <nav className="ess-filter-row ess-dashboard-nav" style={{ marginBottom: 8 }} aria-label="Planner dashboard sections">
+        <label className="ess-dashboard-section-select">
+          Jump to section
+          <select aria-label="Planner dashboard section" value={tab} onChange={(event) => setTab(event.target.value)}>
+            {(["overview", "checklist", "planner", "checkin", "marketplace", "verifiers", "payments", "readiness", "messages", "notifications", "feedback", "kyc"] as const).map((id) => (
+              <option key={id} value={id}>{({ overview: "Overview", checklist: "Checklist", planner: "Event workspace", checkin: "Guest check-in", marketplace: "Marketplace", verifiers: "Verifiers", payments: "Payments & finances", readiness: "Go-live readiness", messages: "Messages", notifications: "Notifications", feedback: "Feedback", kyc: "KYC" })[id]}</option>
+            ))}
+          </select>
+        </label>
         {(
           [
             ["overview", "Overview"],
@@ -978,6 +986,18 @@ function VendorPortal({
       </div>
       {notice && <div className="ess-toast">{notice}</div>}
       <nav className="ess-filter-row ess-dashboard-nav ess-vendor-nav" style={{ marginBottom: 12 }} aria-label="Vendor dashboard sections">
+        <label className="ess-dashboard-section-select">
+          Jump to section
+          <select aria-label="Vendor dashboard section" value={vendorTab} onChange={(event) => setVendorTab(event.target.value)}>
+            <option value="catalog">Catalog & demand</option>
+            <option value="wallet">Wallet & escrow</option>
+            <option value="payments">Booking payments</option>
+            <option value="kyc">KYC</option>
+            <option value="messages">Enquiries & messages</option>
+            <option value="notifications">Notifications</option>
+            <option value="promotions">Promotions</option>
+          </select>
+        </label>
         <button type="button" className={vendorTab === "catalog" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "catalog" ? "page" : undefined} aria-label="Open Catalog & demand" onClick={() => setVendorTab("catalog")}>Catalog & demand</button>
         <button type="button" className={vendorTab === "wallet" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "wallet" ? "page" : undefined} aria-label="Open Wallet & escrow" onClick={() => setVendorTab("wallet")}>Wallet & escrow</button>
         <button type="button" className={vendorTab === "payments" ? "ess-chip ess-chip-active" : "ess-chip"} aria-current={vendorTab === "payments" ? "page" : undefined} aria-label="Open Booking payments" onClick={() => setVendorTab("payments")}>Booking payments</button>
@@ -3371,6 +3391,14 @@ function AuthModal({
               : roleMeta[role].description}
         </p>
         {mode !== "forgot" && (
+          <label className="ess-auth-role-select">
+            Account type
+            <select aria-label="Registration account type" value={role} onChange={(event) => onRole(event.target.value as Role)}>
+              {(mode === "signup" ? SELF_REGISTER_ROLES : Object.keys(roleMeta) as Role[]).map((item) => (
+                <option key={item} value={item}>{roleLabel(item)}</option>
+              ))}
+            </select>
+          </label>
           <div className="ess-auth-roles" aria-label="Account type">
             {(mode === "signup" ? SELF_REGISTER_ROLES : Object.keys(roleMeta) as Role[]).map((item) => (
               <button
