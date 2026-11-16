@@ -147,3 +147,10 @@ The following two feature branches were compared at file level with the current 
 | `feature/isolated-demo-marketplace-catalogue-20261116` | **SUPERSEDED — pending ledger finalization** | The feature is already present in main's `PublicMarketplaceCatalogue.tsx`; main has a more complete 2,000-sample implementation, while the branch has 1,200 samples and older markup. Main's marketplace stylesheet also contains additional rules. Replacing main with this branch would be a regression. |
 
 These are content-level supersession findings; they do not authorize branch deletion until the full inventory and open-PR cross-reference is complete.
+
+
+| Branch | Disposition | Evidence |
+|---|---|---|
+| `feature/global-theme-contrast-20261116` | **SUPERSEDED — pending ledger finalization** | Its public-marketplace component and stylesheet are identical to `main`. Its global theme contract (6,320 chars) and global stylesheet (8,859 chars) are older/smaller than main (15,464 and 18,709 chars respectively). Main already contains the later global palette/contrast work; do not overwrite it with this branch. |
+
+The device-security branch `feature/ephinta-device-security-20261108` remains **REVIEW REQUIRED**: its security gate component differs from main and needs semantic review before any extraction. The branch's Android manifest and iOS Info.plist are older/smaller than main, so those files must not replace the current main versions. The unique security behavior must be assessed separately; no branch-wide merge is approved.
