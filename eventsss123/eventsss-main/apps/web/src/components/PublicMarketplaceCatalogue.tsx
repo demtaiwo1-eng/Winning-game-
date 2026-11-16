@@ -9,7 +9,7 @@ type PublicListing = {
   category: string; categorySlug: string;
 };
 type CatalogueResponse = { items: PublicListing[]; pagination: { page: number; take: number; total: number; totalPages: number } };
-type DemoListing = { id: number; title: string; description: string; type: PublicListing["type"]; priceMinor: number; city: string; country: string; category: string; provider: string };
+type DemoListing = { id: number; title: string; description: string; type: PublicListing["type"]; priceMinor: number; currency: string; city: string; country: string; category: string; provider: string };
 const money = (minor: string | number, currency: string) => {
   const amount = Number(minor) / 100;
   try { return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount); }
@@ -36,7 +36,7 @@ const demoListings: DemoListing[] = Array.from({ length: 1200 }, (_, index) => {
   return {
     id: index + 1, title: `${title} · Sample ${String(index + 1).padStart(4, "0")}`,
     description: "Illustrative demo listing for exploring EPHINTA filters and event-service workflows. This is not a real offer.",
-    type: category.type, priceMinor, city, country: city === "Accra" ? "Ghana" : city === "Nairobi" ? "Kenya" : "Nigeria",
+    type: category.type, priceMinor, currency: city === "Accra" ? "GHS" : city === "Nairobi" ? "KES" : "NGN", city, country: city === "Accra" ? "Ghana" : city === "Nairobi" ? "Kenya" : "Nigeria",
     category: category.name, provider: `Demo provider ${String(index + 1).padStart(4, "0")}`,
   };
 });
@@ -132,7 +132,7 @@ export default function PublicMarketplaceCatalogue() {
             <div className="ess-listing-body"><div className="ess-listing-meta"><span className="ess-tag">{item.category}</span><span className="ess-demo-label">DEMO ONLY</span></div>
               <h2>{item.title}</h2><p className="ess-listing-vendor">{item.provider} · {item.city}, {item.country}</p>
               <p className="ess-muted">{item.description}</p>
-              <div className="ess-listing-footer"><strong>{money(item.priceMinor, "NGN")}</strong><span className="ess-demo-label">Not bookable</span></div>
+              <div className="ess-listing-footer"><strong>{money(item.priceMinor, item.currency)}</strong><span className="ess-demo-label">Not bookable</span></div>
             </div>
           </article>)}</div>
           {demoTotalPages > 1 && <nav className="ess-filter-row" aria-label="Demo catalogue pages">
