@@ -154,3 +154,12 @@ These are content-level supersession findings; they do not authorize branch dele
 | `feature/global-theme-contrast-20261116` | **SUPERSEDED — pending ledger finalization** | Its public-marketplace component and stylesheet are identical to `main`. Its global theme contract (6,320 chars) and global stylesheet (8,859 chars) are older/smaller than main (15,464 and 18,709 chars respectively). Main already contains the later global palette/contrast work; do not overwrite it with this branch. |
 
 The device-security branch `feature/ephinta-device-security-20261108` remains **REVIEW REQUIRED**: its security gate component differs from main and needs semantic review before any extraction. The branch's Android manifest and iOS Info.plist are older/smaller than main, so those files must not replace the current main versions. The unique security behavior must be assessed separately; no branch-wide merge is approved.
+
+
+### Payment-persona branch family
+
+- `qa/payment-personas-current-main-20261116` is the current PR #210 candidate. Its test file is the most recent of the compared persona branches (9,148 characters) and includes the latest client selector correction to use the actual planner dashboard section select. It remains **MERGE CANDIDATE — CI pending**.
+- `qa/payment-notifications-main-20261115` and `qa/payment-notifications-main-20261116` contain older versions of the same three-file payment-persona change (9,095 and 9,167 character test files respectively). They are **SUPERSEDED BY PR #210 for the overlapping three-file scope**, subject to checking for any branch-only commits outside that scope before closure/deletion.
+- `qa/payment-notification-100-personas-20261113` contains the shared persona test plus additional worldwide-persona files/scripts (six changed files in the main comparison). The payment-persona portion is superseded by PR #210, but the additional worldwide-persona work remains **EXTRACT/REVIEW REQUIRED**; do not delete this branch until those additional files are accounted for.
+
+PR #210's test diff was reviewed: it adds mocked API journeys and does not execute real payment settlement. Its workflow is still in progress for browser, app verification, and scale QA. No merge has been performed while those required checks remain in progress.
