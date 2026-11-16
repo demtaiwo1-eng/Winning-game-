@@ -163,3 +163,37 @@ The device-security branch `feature/ephinta-device-security-20261108` remains **
 - `qa/payment-notification-100-personas-20261113` contains the shared persona test plus additional worldwide-persona files/scripts (six changed files in the main comparison). The payment-persona portion is superseded by PR #210, but the additional worldwide-persona work remains **EXTRACT/REVIEW REQUIRED**; do not delete this branch until those additional files are accounted for.
 
 PR #210's test diff was reviewed: it adds mocked API journeys and does not execute real payment settlement. Its workflow is still in progress for browser, app verification, and scale QA. No merge has been performed while those required checks remain in progress.
+
+
+## Follow-up audit — Android signing and refreshed inventory — 2026-11-16
+
+The refreshed remote inventory now returns **39 branches including `main` (38 non-main)**. The added `maintenance/branch-consolidation-rules-20261116` branch is the audit-documentation branch containing this ledger; it is not application code and remains open pending the final disposition process.
+
+### Android release branch family — do not merge wholesale
+
+The following branches overlap heavily:
+- `release/android-production-signing-main-20261108` — 5 commits ahead / 227 behind; 5 changed files.
+- `release/android-signed-ci-20261108` — 3 ahead / 236 behind; 3 changed files.
+- `release/android-production-ota-main-20261108` — 8 ahead / 230 behind; 6 changed files.
+- `release/android-signing-helper-20261108` and `release/android-signing-helper-current-20261108` still require comparison against each other and current main.
+
+The OTA branch's versions of `scripts/setup-android-signing-github.sh` and `scripts/complete-production-apk.sh` are older than current `main`. In particular, the branch setup script can generate a new signing identity, whereas current main's setup helper is designed to import the original Build 869 signing identity and verify it against the published baseline APK. The branch handoff script also uses a differently cased repository name and does not contain the current main workflow's physical-device confirmation gate and minimum version-code input. **Disposition: SUPERSEDED for these overlapping files; do not copy the branch versions over main.** The remaining release-workflow differences still require a line-by-line review before a final branch disposition. No signing secrets or keys were accessed.
+
+### Focused feature branches still requiring review
+
+| Branch | Current comparison to main | Required next action |
+|---|---:|---|
+| `fix/ephinta-registration-planner-and-youtube-oauth` | 79 ahead / 231 behind; 27 files | Review auth, registration, planner, YouTube OAuth, and workflow deltas individually; no branch-wide merge. |
+| `fix/customer-journey-landing-location-20261114` | 35 ahead / 20 behind; 12 files | Review public journey and landing changes against current main; do not overwrite newer app shell or mobile manifests. |
+| `feat/planner-operations-finance-kyc-20261109` | 78 ahead / 146 behind; 23 files | Review Prisma migration/schema and messaging/notification API changes as a unit; validate migration compatibility before extraction. |
+| `feature/ephinta-bytid-kyc-20261108` | 20 ahead / 223 behind; 9 files | Review BYTID provider contract, KYC route changes, env schema, and tests; no merge until API/security review. |
+| `fix/ephinta-marketplace-carousel-portal-ui-20261109` | 69 ahead / 147 behind; 36 files | Extract only still-needed marketplace/update changes after comparing against current main; review app-update API and live-update code carefully. |
+| `integration/recover-verified-feature-fixes-20261108` | 7 ahead / 224 behind; 6 files | Compare audio and contrast changes against current main; do not restore old theme files without evidence. |
+| `recovery/ephinta-responsive-music-player-20261108` | 20 ahead / 231 behind; 4 files | Compare player implementation and CSS with current main; extract only demonstrably missing behavior. |
+| `recovery/ephinta-planner-budget-format-20261108` | 3 ahead / 231 behind; 3 files | Review the narrow planner formatting delta; do not replace current Gradle wrapper. |
+
+### Pre-existing CI observations (not final acceptance)
+
+- Run `43875404810`: web/API production build passed; API database integration passed; desktop/mobile browser journeys remained in progress at the last poll, with worldwide and payment persona stages pending.
+- Runs `43875405160`, `43875404785`, and `43875405001`: their jobs concluded **cancelled**, not passed.
+- These results are recorded as pre-existing CI only and do not satisfy the post-consolidation final-test gate.
