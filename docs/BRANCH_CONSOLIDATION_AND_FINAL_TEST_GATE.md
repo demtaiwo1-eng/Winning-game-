@@ -265,3 +265,18 @@ No branch from this family has been deleted or force-updated. These are review d
 - Run `43885180157`: full verification still running.
 - Run `43885179971`: iOS Simulator build remained queued.
 - These are in-flight branch checks only, not the post-consolidation final acceptance run.
+
+
+### Customer landing, audio recovery, acceptance workflow, and Build 869 helper review — 2026-11-16
+
+- `fix/customer-journey-landing-location-20261114` remains **EXTRACT/REVIEW REQUIRED**. It changes the public landing page, marketplace browsing, public journey tests, responsive audit, audio experience, and mobile manifest/plist. The branch's landing component is shorter than current main (66,259 vs 69,582 characters); its marketplace component is byte-identical to main, so that file is already superseded. The public landing and journey-test deltas are not safe to copy wholesale without reviewing current auth/role and location-permission behavior. Its Android/iOS manifest deltas must not overwrite newer main manifests.
+- `recovery/ephinta-responsive-music-player-20261108` remains **EXTRACT/REVIEW REQUIRED**. Its audio component, audio stylesheet and audio E2E test are all different from main and also differ from the customer-landing branch versions. The branch's Gradle wrapper change is not approved. Compare the actual behavior and rights-cleared track configuration before extracting any audio improvements; do not restore the older stylesheet wholesale.
+- `verify/ephinta-main-acceptance-20261107` is **EXCLUDE for its workflow deletion**: its diff removes `.github/workflows/ess-phase12-e2e.yml`, which must not be accepted as a shortcut to green CI. Its responsive test/design-system deltas remain reviewable individually; no wholesale merge.
+- `fix/ephinta-869-compatible-release` adds a 119-line Build 869 update helper. The helper is byte-identical to the current main helper `eventsss123/eventsss-main/scripts/complete-ephinta-869-update.sh` (7,408 characters); that useful behavior is already present in main. Its workflow delta still requires separate comparison. **SUPERSEDED for the helper script**; do not replace it.
+
+### PR #210 latest status — 2026-11-16
+
+- Fresh workflow-run lookup for head `5484350fd861952f7afa89c3574f3d8f37794af1`: dependency security audit, Windows verification, Web Checks + Android APK, Phase 8 quality gate, and responsive UX audit completed successfully.
+- Browser E2E, 7,000-fixture/300-user scale QA, and full app verification remained in progress at the poll. The iOS Simulator workflow completed as **cancelled** (not passed).
+- PR #210 remains open and unmerged, with no unresolved review threads. Do not merge until all required checks conclude successfully and the exact current head is revalidated. Its payment personas use mocked provider responses and are not evidence of real OPay settlement.
+- Remote branch inventory was refreshed: 39 branches total including `main` (38 non-main). No branch was deleted.
