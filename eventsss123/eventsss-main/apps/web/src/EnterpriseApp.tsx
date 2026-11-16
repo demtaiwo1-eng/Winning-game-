@@ -36,6 +36,7 @@ const WalletPanel = lazy(() => import("./components/WalletPanel"));
 const VendorPaymentRequestsPanel = lazy(() => import("./components/VendorPaymentRequestsPanel"));
 const PromotionsPanel = lazy(() => import("./components/PromotionsPanel"));
 const MarketplaceBrowse = lazy(() => import("./components/MarketplaceBrowse"));
+const PublicMarketplaceCatalogue = lazy(() => import("./components/PublicMarketplaceCatalogue"));
 const FeedbackPanel = lazy(() => import("./components/FeedbackPanel"));
 import { EmptyState } from "./components/EmptyState";
 const KycUpload = lazy(() => import("./components/KycUpload"));
@@ -2318,10 +2319,7 @@ export default function EnterpriseApp() {
           <Route path="/register" element={<LegacyAuthRedirect mode="signup" />} />
           <Route path="/register/:role" element={<LegacyAuthRedirect mode="signup" />} />
           <Route path="/forgot-password" element={<LegacyAuthRedirect mode="forgot" />} />
-          <Route
-            path="/marketplace"
-            element={<Navigate to="/auth/signin?role=CLIENT&returnTo=%2Fmarketplace" replace />}
-          />
+          <Route path="/marketplace" element={<PublicMarketplaceCatalogue />} />
           <Route path="/plan/review" element={<Navigate to="/plan" replace />} />
           <Route path="/plan/create-account" element={<Navigate to="/auth/signup?role=CLIENT" replace />} />
           <Route path="/rsvp/:token" element={<PublicRsvpPage />} />
