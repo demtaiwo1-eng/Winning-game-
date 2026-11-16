@@ -225,3 +225,27 @@ No branch from this family has been deleted or force-updated. These are review d
 - `feat/planner-operations-finance-kyc-20261109`: the reviewed event-message service and web messaging panel are byte-identical to main. Its remaining differences include schema/migration, notifications, and planner UI; these still require migration and authorization review before selective extraction.
 - `feature/ephinta-device-security-20261108`: the DeviceSecurityGate differs slightly from main and remains a focused security review item. Do not replace current Android/iOS manifests or package configuration wholesale.
 - `fix/ephinta-registration-planner-and-youtube-oauth`: its older stylesheet stack imports many separate theme files, while main uses the single `ephinta-global.css` entry point. Its theme contrast stylesheet is smaller than the existing main stylesheet. Do not restore this branch's stylesheet stack over current global theming.
+
+
+### Additional recovery, release, and cleanup branch inventory (2026-11-16)
+
+- `recovery/ephinta-planner-budget-format-20261108`: only three changed files (Android Gradle wrapper, planner journey test, EnterpriseApp); needs focused diff review, not branch-wide merge.
+- `recovery/ephinta-responsive-music-player-20261108`: four changed files (wrapper, audio E2E, AudioExperience, audio CSS); review against current main before any extraction.
+- `recovery/ephinta-theme-text-contrast-20261108`: theme CSS and main entry point differ, but main has the current consolidated global CSS; do not replace main entry point or theme stack from this branch.
+- `fix/ephinta-marketplace-carousel-portal-ui-20261109`: broad 69-commit/147-behind divergence with marketplace, remote update, audio, device security, and release workflows; requires path-by-path review. Do not merge wholesale.
+- `integration/ephinta-planner-music-rebased-20261108`: 24 commits ahead/219 behind with overlapping registration, audio, marketplace and CSS; current main already has the global stylesheet consolidation. No branch-wide merge.
+- `maintenance/licensed-audio-e2e-fix-20261114`: 126 commits ahead/25 behind and very broad third-party skill/audio/docs inventory; needs separate rights and scope audit. Do not merge wholesale.
+- Android release branches (`release/android-production-ota-main-20261108`, `release/android-production-signing-main-20261108`, `release/android-signed-ci-20261108`, `release/android-signing-helper-current-20261108`) contain overlapping signing workflows and helper scripts. Treat as one release family and compare the signing secret handling and workflow permissions before selecting a single canonical implementation.
+- `release/ios-signed-ci-20261108` adds iOS release workflow/docs; review signing and certificate handling separately.
+- `verify/ephinta-main-acceptance-20261107` adds acceptance workflow, responsive audit and design quality gate; compare those scripts with current main before extraction.
+- `fix/ephinta-869-compatible-release` and `fix/opay-provider-display-20261113` remain distinct; the latter is explicitly excluded to preserve the currently working OPay behavior.
+
+### CI status after payment-persona selector correction
+
+- New PR #210 run `43885179876`: web/API production build passed; API database integration passed; desktop/mobile browser portal journeys remained in progress at last poll.
+- Run `43885179752`: responsive web test/build and Android APK jobs passed.
+- Run `43885179826`: Windows API/web/browser/design verification passed.
+- Run `43885179370`: responsive audit passed.
+- Run `43885179398`: validation passed.
+- Run `43885179580` (7,000 fixtures/300-user gates) and `43885180157` (verification) remained in progress; iOS simulator run `43885179971` was queued.
+- These checks are useful branch-level evidence, not the final post-consolidation acceptance suite. PR #210 is still unmerged pending all required checks.
