@@ -26,7 +26,9 @@ const modes = ["light", "dark", "colorful"] as const;
 
 describe("EPHINTA global theme contrast", () => {
   it.each(modes)("keeps text, muted text, links and primary buttons readable in %s mode", (mode) => {
-    const blocks = [...contract.matchAll(new RegExp(`html\\[data-ephinta-theme="${mode}"\\][\\s\\S]*?\\n}`, "g"))];\n    const block = blocks.at(-1)?.[0];
+    const blocks = [...contract.matchAll(new RegExp(`html\\[data-ephinta-theme="${mode}"\\][\\s\\S]*?\
+}`, "g"))];
+    const block = blocks.at(-1)?.[0];
     expect(block, `missing ${mode} theme token block`).toBeTruthy();
     const ink = token(block!, "ink");
     const muted = token(block!, "muted");
@@ -46,7 +48,14 @@ describe("EPHINTA global theme contrast", () => {
     expect(contrast(accentInk, accent)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("uses one neutral surface system and maps legacy tokens to it", () => {\n    expect(contract).toContain("--ephinta-theme-page:var(--epg-page)");\n    expect(contract).toContain("--ess-surface:var(--epg-surface)");\n    expect(contract).toContain("background-image:none !important");\n    expect(contract).toContain("html[data-ephinta-theme=\\"colorful\\"],html[data-theme=\\"colorful\\"]");\n  });\n\n  it("keeps the final override after legacy component rules", () => {
+  it("uses one neutral surface system and maps legacy tokens to it", () => {
+    expect(contract).toContain("--ephinta-theme-page:var(--epg-page)");
+    expect(contract).toContain("--ess-surface:var(--epg-surface)");
+    expect(contract).toContain("background-image:none !important");
+    expect(contract).toContain("html[data-ephinta-theme=\\"colorful\\"],html[data-theme=\\"colorful\\"]");
+  });
+
+  it("keeps the final override after legacy component rules", () => {
     const marker = "FINAL GLOBAL CONTRAST ENFORCEMENT";
     expect(globalCss).toContain(marker);
     expect(globalCss.lastIndexOf(marker)).toBeGreaterThan(globalCss.indexOf("@import"));
