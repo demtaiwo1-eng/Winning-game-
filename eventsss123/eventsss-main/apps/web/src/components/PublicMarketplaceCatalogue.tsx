@@ -97,7 +97,7 @@ export default function PublicMarketplaceCatalogue() {
   return (
     <main className="ess-content ess-public-marketplace"><section className="ess-shell">
       <div className="ess-page-heading"><div><p className="ess-eyebrow">EPHINTA marketplace</p>
-        <h1>Discover event services</h1>
+        <h1>Discover trusted event services</h1>
         <p className="ess-muted">Browse real verified providers, or explore a clearly labelled sample catalogue to practise planning.</p></div>
         <div className="ess-filter-row"><Link className="ess-outline-button" to="/auth/signin?role=CLIENT&returnTo=%2Fmarketplace">Sign in</Link>
           <Link className="ess-primary" to="/auth/signup?role=CLIENT">Create account</Link></div>
@@ -121,7 +121,7 @@ export default function PublicMarketplaceCatalogue() {
           <div className="ess-listing-body"><div className="ess-listing-meta"><span className="ess-tag">{item.category}</span><span className="ess-verified">✓ Verified provider</span></div>
             <h2>{item.title}</h2><p className="ess-listing-vendor">{item.vendorName} · {[item.city, item.country].filter(Boolean).join(", ")}</p>
             {item.description && <p className="ess-muted">{item.description}</p>}
-            <div className="ess-listing-footer"><strong>{money(item.priceMinor, item.currency)}</strong><Link className="ess-outline-button" to="/auth/signin?role=CLIENT&returnTo=%2Fmarketplace">Sign in to enquire or book</Link></div>
+            <div className="ess-listing-footer"><strong>{money(item.priceMinor, item.currency)}</strong><Link className="ess-outline-button" to="/auth/signin?role=CLIENT&returnTo=%2Fmarketplace">Sign in to book</Link></div>
           </div>
         </article>)}</div>}
         {!loading && totalPages > 1 && <nav className="ess-filter-row" aria-label="Marketplace pages"><button className="ess-outline-button" type="button" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>Previous</button><span className="ess-muted">Page {page} of {totalPages}</span><button className="ess-outline-button" type="button" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>Next</button></nav>}
