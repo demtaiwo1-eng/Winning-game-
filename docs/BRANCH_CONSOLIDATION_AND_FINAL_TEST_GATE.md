@@ -355,3 +355,11 @@ No branch from this family has been deleted or force-updated. These are review d
 - The branch's responsive audit expects a full-screen blur, while current main explicitly verifies that the audio backdrop does not intercept app interactions. Keep the current main behavior and tests; do not reintroduce the blocking overlay expectation.
 - `EnterpriseApp.tsx`, `AudioExperience.tsx`, and audio CSS differences are small older variants; current main already contains the newer implementations. The branch's public landing buttons use older wording and should not overwrite current main's current labels.
 - **Disposition: SUPERSEDED for all 12 reviewed paths**; no required unique location, landing, marketplace, audio, or journey behavior was found. No extraction is needed. Branch deletion still waits for full open-PR and commit disposition review.
+### Theme-text-contrast recovery branch review — 2026-11-16
+
+- `recovery/ephinta-theme-text-contrast-20261108` compares as 11 commits ahead / 231 behind with five changed paths. Its Gradle wrapper is byte-identical to main.
+- The branch's `main.tsx` reintroduces a fragmented legacy CSS import stack (`ephinta-accessible-contrast.css`, `ess-bright-orange-theme.css`, multiple design/repair stylesheets, and other legacy files). Current main uses the consolidated theme entry point and the global theme contract; do not restore the branch import stack.
+- The branch's 217-line `ephinta-theme-text-contrast.css` is an older subset of the current main file (8,414 vs 10,932 characters). Main includes additional current theme tokens and focus/autofill contrast behavior.
+- The branch adds a forced white gradient/ink override for the audio consent dialog at the end of `ephinta-parent-design-system.css`. That hard-coded light surface would override theme-dependent styling in dark mode and is not accepted as a global fix. Current main's parent stylesheet is otherwise the newer implementation.
+- Its verification workflow is older: branch push trigger is scoped only to `chore/android-launch-readiness` and omits current main's `push` trigger for `main` plus the current `pull-requests: read` permission. Retain main's workflow.
+- **Disposition: SUPERSEDED for all five reviewed paths**; no extraction required. No branch deletion until the full inventory and open-PR cross-reference are complete.
