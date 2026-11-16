@@ -417,3 +417,9 @@ No branch from this family has been deleted or force-updated. These are review d
 - PR #213 is the draft documentation PR for this ledger (one file, 410 additions). It remains draft/unmerged and its recorded base SHA is not current main; refresh/rebase it only after the ledger is complete and do not treat it as application integration.
 - PR #210 remains the only focused application/test PR under active validation. It has the corrected test head `6fe0d5030bd909e6a4358c88c65b9f7a11363522`; its fresh run set is still in progress. No unresolved review threads were found on #210, #187, #178, #170 or #213.
 - The open-PR inventory and branch review still do not justify bulk merging or bulk branch deletion. All large integration PRs remain held out pending path-level extraction.
+### Main acceptance branch review — 2026-11-16
+
+- `verify/ephinta-main-acceptance-20261107` compares as 10 commits ahead / 238 behind with five changed paths. Its deletion of `.github/workflows/ess-phase12-e2e.yml` is explicitly **EXCLUDED**; preserve the existing required workflow.
+- Its responsive UX test is older/shorter than main (7,307 vs 8,541 characters). Main already asserts the audio prompt's branded gradient, non-intercepting backdrop, interactive prompt, compact/non-fullscreen footprint, and dismissal. The branch's additional overlap assertion is not adopted without validating its `.ess-builder-card .ess-primary` selector against current planner markup.
+- The branch's design-quality script is older/shorter (6,726 vs 7,823 characters) and lacks current main's later checks; its parent design-system stylesheet is byte-identical to main. The completion tracker addition is documentation only and does not establish new product behavior.
+- **Disposition: EXCLUDE the workflow deletion; SUPERSEDED for the reviewed responsive/design/style paths.** No wholesale merge or workflow removal.
