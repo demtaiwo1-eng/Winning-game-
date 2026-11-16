@@ -363,3 +363,62 @@ html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-col
   text-decoration: underline;
   text-underline-offset: .2em;
 }
+
+/* Specificity guard: component sheets contain several legacy !important rules.
+   The app-root selector ensures this final theme contract wins those conflicts. */
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(h1,h2,h3,h4,h5,h6,p,li,dt,dd,label,legend,small,summary,
+    figcaption,caption,blockquote,span,strong,b,em,i,th,td,output,
+    .page-title,.dashboard-title,.section-header,.section-description,
+    .helper-text,.form-hint,.empty-state,.workspace-subtitle,.eyebrow,
+    .metric-value,.metric-label) {
+  color: var(--epg-ink) !important;
+}
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(p,li,dt,dd,small,summary,figcaption,caption,blockquote,
+    .muted,.text-muted,.workspace-subtitle,.section-description,.helper-text,
+    .form-hint,.empty-state,.metric-label,.task-item small,.budget-row small) {
+  color: var(--epg-muted) !important;
+}
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root a {
+  color: var(--epg-link) !important;
+}
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(input,select,textarea,option) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: var(--epg-ink) !important;
+  background-color: var(--epg-surface-raised) !important;
+  border-color: var(--epg-border) !important;
+}
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(input,textarea)::placeholder {
+  color: var(--epg-subtle) !important;
+  -webkit-text-fill-color: var(--epg-subtle) !important;
+  opacity: 1 !important;
+}
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(.workspace-card,.dashboard-card,.stat-card,.metric-card,.panel,
+    .panel-card,.surface,.surface-card,.modal,.dialog,[role="dialog"],
+    [aria-modal="true"],[role="menu"],.dropdown-menu,.popover,.ess-mode-menu,
+    .listing-card,.vendor-card,.marketplace-card,.detail-section-card,
+    .cart-summary,.empty-marketplace,.ess-card,dialog[open]) {
+  color: var(--epg-ink) !important;
+  background-color: var(--epg-surface) !important;
+  border-color: var(--epg-border) !important;
+}
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(.primary-button,.continue-action,.select-listing,.ess-primary,
+    .pl-btn-primary,.pl-primary,.esg-btn.p,[data-variant="primary"],
+    button.primary,[role="button"].primary) {
+  color: var(--epg-accent-ink) !important;
+  -webkit-text-fill-color: var(--epg-accent-ink) !important;
+  background-color: var(--epg-accent) !important;
+  border-color: var(--epg-accent) !important;
+}
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(.secondary-button,.outline-button,.ess-outline-button,.ess-secondary) {
+  color: var(--epg-ink) !important;
+  background-color: var(--epg-surface-raised) !important;
+  border-color: var(--epg-border) !important;
+}
