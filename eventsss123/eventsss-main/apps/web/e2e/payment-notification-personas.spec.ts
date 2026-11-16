@@ -160,8 +160,9 @@ for (const persona of personas) {
       await page.getByRole("button", { name: "Open Notifications" }).click();
     } else {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
-      // Use the supported dashboard tab route on desktop and compact/mobile layouts.
-      await page.goto("/dashboard/vendor?tab=wallet");
+      // Select the wallet through the dashboard navigation so the test covers
+      // the same interaction available to desktop, tablet and compact layouts.
+      await page.getByRole("button", { name: "Open Wallet & escrow" }).click();
       await expect(page.getByLabel("Withdrawal amount (NGN)")).toBeVisible();
       await page.getByLabel("Withdrawal amount (NGN)").fill("10000");
       await page.getByLabel("Destination bank").selectOption("058");
