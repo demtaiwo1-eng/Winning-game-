@@ -280,3 +280,11 @@ No branch from this family has been deleted or force-updated. These are review d
 - Browser E2E, 7,000-fixture/300-user scale QA, and full app verification remained in progress at the poll. The iOS Simulator workflow completed as **cancelled** (not passed).
 - PR #210 remains open and unmerged, with no unresolved review threads. Do not merge until all required checks conclude successfully and the exact current head is revalidated. Its payment personas use mocked provider responses and are not evidence of real OPay settlement.
 - Remote branch inventory was refreshed: 39 branches total including `main` (38 non-main). No branch was deleted.
+
+
+### Focused follow-up: Build 869 and planner-budget recovery branches — 2026-11-16
+
+- `fix/ephinta-869-compatible-release` compares as 6 commits ahead / 145 behind with two changed paths. Its `eventsss123/eventsss-main/scripts/complete-ephinta-869-update.sh` is byte-identical to current main (7,408 characters), so no helper extraction is needed. Its `.github/workflows/ephinta-production-apk.yml` is older than current main and lacks the current workflow's required physical-device confirmation input, protected Build 869 signing checks, and additional workflow validation. **SUPERSEDED for the reviewed helper and workflow; do not replace main.**
+- `recovery/ephinta-planner-budget-format-20261108` compares as 3 commits ahead / 231 behind with three changed paths. Its planner journey test is an older, substantially shorter file (33,557 vs 55,895 characters) and lacks current main's device-security unlock helper; its `EnterpriseApp.tsx` is also older (158,073 vs 179,452 characters) and must not overwrite main. **SUPERSEDED for these two reviewed files.** Its one-line Gradle wrapper delta still needs an exact compatibility check before final branch disposition; no wholesale merge.
+- PR #210 head remains `5484350fd861952f7afa89c3574f3d8f37794af1`. The latest poll still showed browser portal journeys, 7,000-fixture/300-user QA, and full verification in progress. The iOS Simulator job is cancelled. No merge is authorized while required checks remain incomplete.
+- Latest inventory remains 39 branches including main (38 non-main); no branches deleted. Final post-consolidation acceptance remains blocked.
