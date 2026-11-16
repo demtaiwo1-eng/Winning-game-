@@ -29,6 +29,7 @@ import NotificationsPanel from "./components/NotificationsPanel";
 import MarketplaceAdStrip from "./components/MarketplaceAdStrip";
 import DeviceSecurityGate from "./components/DeviceSecurityGate";
 import GlobalPaymentModePanel from "./components/GlobalPaymentModePanel";
+import ExperienceModeMenu from "./components/ExperienceModeMenu";
 // All application styles are imported through the single global stylesheet in main.tsx.
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
@@ -2432,6 +2433,7 @@ export default function EnterpriseApp() {
                     <span>Switch workspace</span>
                     <small>Choose an operating lane</small>
                   </div>
+                  <ExperienceModeMenu role={session.role} />
                   {[session.role].map((role) => (
                     <button
                       className={
