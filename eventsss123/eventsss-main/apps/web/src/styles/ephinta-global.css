@@ -449,3 +449,17 @@ html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorf
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
+
+
+/* The marketing spotlight sits on its own pale branded surface, not the
+   theme page surface. Preserve its designed deep-plum heading for contrast. */
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root .ephinta-marketing-zone h2 {
+  color: #251633 !important;
+  -webkit-text-fill-color: #251633 !important;
+}
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root .ephinta-bright-slogan {
+  color: #251a36 !important;
+  -webkit-text-fill-color: #251a36 !important;
+}
