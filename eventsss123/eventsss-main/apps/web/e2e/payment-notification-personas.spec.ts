@@ -144,8 +144,8 @@ for (const persona of personas) {
 
     if (persona.role === "CLIENT") {
       await expect(page).toHaveURL(/\/dashboard\/client$/);
-      // Use the supported dashboard tab route. The shortcut is absent in compact layouts.
-      await page.goto("/dashboard/client?tab=payments");
+      // Select the payments section using the dashboard navigation.
+      await page.getByRole("button", { name: "Open Payments & finances" }).click();
       await expect(page.getByLabel("Amount (major units)")).toBeVisible();
       await page.getByLabel("Amount (major units)").fill("10000");
       await expect(page.getByText(/2% platform fee/)).toBeVisible();
@@ -160,9 +160,8 @@ for (const persona of personas) {
       await page.getByRole("button", { name: "Open Notifications" }).click();
     } else {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
-      // Select the wallet through the dashboard navigation so the test covers
-      // the same interaction available to desktop, tablet and compact layouts.
-      await page.getByRole("button", { name: "Open Wallet & escrow" }).click();
+      // The dashboard heading has a persistent Payments shortcut to the wallet.
+      await page.getByRole("button", { name: "Payments", exact: true }).click();
       await expect(page.getByLabel("Withdrawal amount (NGN)")).toBeVisible();
       await page.getByLabel("Withdrawal amount (NGN)").fill("10000");
       await page.getByLabel("Destination bank").selectOption("058");
