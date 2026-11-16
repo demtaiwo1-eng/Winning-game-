@@ -96,13 +96,14 @@ test("landing page actions navigate in-app without restarting or starting music"
   await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
 
-test("landing marketplace actions open the customer marketplace sign-in route in-app", async ({ page }) => {
+test("landing marketplace actions open the public marketplace catalogue in-app", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => {
     (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe = "loaded";
   });
   await page.locator(".eph-promo-marketplace-cta").click();
-  await expect(page).toHaveURL(/\/auth\/signin\?role=CLIENT&returnTo=%2Fmarketplace$/);
+  await expect(page).toHaveURL(/\/marketplace$/);
+  await expect(page.getByRole("heading", { name: "Discover trusted event services" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
 
