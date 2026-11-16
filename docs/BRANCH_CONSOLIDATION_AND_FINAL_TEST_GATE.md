@@ -115,3 +115,23 @@ Some CI jobs were already in progress when this policy was requested. Do not tre
 |---|---|---|
 | 2026-11-16 | Compared 37 non-main remote branches with `main`; identified 38 total branches including `main`. | Diverged histories and overlapping changes confirmed; blanket merge/deletion prohibited. |
 | 2026-11-16 | Reviewed open PRs #210, #187, #178, and #170. | #210 candidate after checks; #187/#178 require extraction review; #170 held to preserve OPay. |
+
+
+## Additional automation audit — 2026-11-16
+
+A pre-existing consolidation workflow and script were found on `integration/ephinta-release-candidate-final-20261114`:
+
+- `.github/workflows/ephinta-branch-consolidation.yml`
+- `eventsss123/eventsss-main/scripts/release/consolidate-all-branches-safely.sh`
+
+**Do not dispatch this existing workflow as-is.** Its script merges every fetched remote branch into the release-candidate branch in alphabetical order, including `fix/opay-provider-display-20261113`, which conflicts with the owner's explicit instruction to preserve current OPay behavior. It also runs the full release-check suite after each successful branch merge, before all branches have been processed. This violates the requested sequencing of consolidating all branches first and running the final acceptance matrix only once afterward. It skips conflicts and does not delete branches, but its current behavior is not an approved all-branches execution plan.
+
+Before using automation, rewrite and review that script so it:
+1. Uses a reviewed branch manifest with explicit per-branch disposition, never an unfiltered `git for-each-ref` over all remote refs.
+2. Excludes the protected OPay change unless the owner later authorizes it.
+3. Integrates only changes reviewed for inclusion; conflict branches remain unresolved and block completion rather than being silently ignored.
+4. Performs no full acceptance run between merges.
+5. Runs the final acceptance matrix exactly once, after all in-scope changes are consolidated, and pushes no candidate if any in-scope branch remains unresolved or the final matrix fails.
+6. Never deletes source branches; cleanup is a separate post-merge action after proof of supersession.
+
+This automation audit is an additional blocker, not a completed consolidation.
