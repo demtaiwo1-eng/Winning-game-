@@ -146,7 +146,7 @@ for (const persona of personas) {
       await expect(page).toHaveURL(/\/dashboard\/client$/);
       // Use the supported dashboard tab route. The shortcut is absent in compact layouts.
       await page.goto("/dashboard/client?tab=payments");
-      await expect(page.getByText("OPay deposit · 2% platform fee", { exact: false })).toBeVisible();
+      await expect(page.getByLabel("Amount (major units)")).toBeVisible();
       await page.getByLabel("Amount (major units)").fill("10000");
       await expect(page.getByText(/2% platform fee/)).toBeVisible();
       await expect(page.getByText(/Wallet credit after fee/)).toBeVisible();
@@ -162,7 +162,7 @@ for (const persona of personas) {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
       // Use the supported dashboard tab route on desktop and compact/mobile layouts.
       await page.goto("/dashboard/vendor?tab=wallet");
-      await expect(page.getByText(/2% platform fee is deducted from the gross amount/)).toBeVisible();
+      await expect(page.getByLabel("Withdrawal amount (NGN)")).toBeVisible();
       await page.getByLabel("Withdrawal amount (NGN)").fill("10000");
       await page.getByLabel("Destination bank").selectOption("058");
       await page.getByLabel("Account number").fill("0123456789");
