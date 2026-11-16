@@ -1108,3 +1108,23 @@ test("EPHINTA Guide opens, maximizes, restores and minimizes accessibly", async 
   await expect(chat).toBeHidden();
   await expect(launcher).toBeVisible();
 });
+
+
+test("public marketplace keeps simulated demo examples separate from verified providers and disables booking", async ({ page }) => {
+  await page.route("**/api/v1/marketplace/public**", async (route) => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ items: [], pagination: { page: 1, take: 24, total: 0, totalPages: 0 } }),
+  }));
+  await page.goto("/marketplace");
+  await expect(page.getByText("0 verified active listings")).toBeVisible();
+  await page.getByRole("button", { name: /Demo showcase/ }).click();
+  await expect(page.getByText("DEMO SHOWCASE — SIMULATED CONTENT")).toBeVisible();
+  await expect(page.getByText("2,000 simulated samples")).toBeVisible();
+  await expect(page.getByText("DEMO EXAMPLE").first()).toBeVisible();
+  await expect(page.getByText("Sample only · not bookable").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Sign in to enquire or book/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByText("Page 2 of 84")).toBeVisible();
+  await page.getByRole("button", { name: "Verified providers" }).click();
+  await expect(page.getByText("0 verified active listings")).toBeVisible();
+});
