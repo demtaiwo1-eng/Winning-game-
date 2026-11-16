@@ -111,3 +111,12 @@
   .ess-public-marketplace .ess-listing-art { min-height: 84px; }
   .ess-public-marketplace .ess-listing-body { padding: 13px; }
 }
+
+/* Separate simulated catalogue: visibly distinct and never actionable. */
+.ess-public-marketplace .ess-marketplace-mode { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 12px; }
+.ess-public-marketplace .ess-marketplace-mode button { min-height:42px; padding:9px 15px; border:1px solid var(--ephinta-theme-border,rgba(120,130,150,.3)); border-radius:999px; background:var(--ephinta-theme-surface,#fff); color:var(--ephinta-theme-ink,#182033); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.ess-public-marketplace .ess-marketplace-mode button.is-active { border-color:var(--ephinta-theme-accent,#ea580c); background:var(--ephinta-theme-accent,#ea580c); color:#fff; }
+.ess-public-marketplace .ess-marketplace-demo-notice { display:grid; gap:5px; margin:12px 0; padding:13px 15px; border:1px solid rgba(180,110,20,.35); border-radius:12px; background:rgba(245,158,11,.08); color:var(--ephinta-theme-ink,#182033); font-size:13px; }
+.ess-public-marketplace .ess-marketplace-demo-notice strong,.ess-public-marketplace .ess-demo-tag { color:#a45b0a; font-size:11px; font-weight:800; letter-spacing:.04em; }
+.ess-public-marketplace .ess-demo-unavailable { color:var(--ephinta-theme-muted,#64748b); font-size:12px; font-weight:650; }
+.ess-public-marketplace .ess-demo-listing { border-style:dashed; }
