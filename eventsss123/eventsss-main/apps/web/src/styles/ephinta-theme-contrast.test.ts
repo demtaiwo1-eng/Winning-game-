@@ -5,7 +5,7 @@ const contract = readFileSync(new URL("./ephinta-global-theme-contract.css", imp
 const globalCss = readFileSync(new URL("./ephinta-global.css", import.meta.url), "utf8");
 
 function token(block: string, name: string): string {
-  const value = block.match(new RegExp(`--epg-${name}:\\s*(#[0-9a-fA-F]{6})`))?.[1];
+  const value = block.match(new RegExp(`--epg-${name}:\\s*(#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)\\b`))?.[1];
   if (!value) throw new Error(`Missing --epg-${name} in theme block`);
   return value;
 }
