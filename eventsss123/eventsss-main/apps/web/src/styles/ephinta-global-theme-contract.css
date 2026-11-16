@@ -1,0 +1,65 @@
+/* EPHINTA GLOBAL THEME CONTRACT
+   Shared accessible palette for light, dark and colorful modes.
+   Feature styles should consume these tokens instead of pairing hard-coded colors. */
+:root {
+  color-scheme: light;
+  --epg-page:#f6f7fc; --epg-surface:#fff; --epg-surface-raised:#fff; --epg-surface-soft:#eef1fa;
+  --epg-ink:#17152b; --epg-muted:#4b5268; --epg-subtle:#626b82; --epg-border:#d7dbea;
+  --epg-link:#4b35b5; --epg-focus:#075fcc; --epg-accent:#5b35d5; --epg-accent-ink:#fff;
+  --epg-success:#176b42; --epg-warning:#8a4b00; --epg-danger:#a51f35;
+  --epg-shadow:0 12px 32px rgb(25 28 55 / 9%);
+}
+html[data-ephinta-theme="light"],html[data-theme="light"],html.theme-light,.theme-light {
+  color-scheme:light;
+  --epg-page:#f6f7fc; --epg-surface:#fff; --epg-surface-raised:#fff; --epg-surface-soft:#eef1fa;
+  --epg-ink:#17152b; --epg-muted:#4b5268; --epg-subtle:#626b82; --epg-border:#d7dbea;
+  --epg-link:#4b35b5; --epg-focus:#075fcc; --epg-accent:#5b35d5; --epg-accent-ink:#fff;
+  --epg-success:#176b42; --epg-warning:#8a4b00; --epg-danger:#a51f35;
+  --epg-shadow:0 12px 32px rgb(25 28 55 / 9%);
+}
+html[data-ephinta-theme="dark"],html[data-theme="dark"],html.theme-dark,.theme-dark {
+  color-scheme:dark;
+  --epg-page:#0b1020; --epg-surface:#151c30; --epg-surface-raised:#1c2540; --epg-surface-soft:#222d49;
+  --epg-ink:#f7f8ff; --epg-muted:#d0d7e8; --epg-subtle:#b5bfd5; --epg-border:#46516d;
+  --epg-link:#9bdcff; --epg-focus:#ffd166; --epg-accent:#a78bfa; --epg-accent-ink:#160d2b;
+  --epg-success:#8be0b2; --epg-warning:#ffd28a; --epg-danger:#ff9eae;
+  --epg-shadow:0 14px 36px rgb(0 0 0 / 28%);
+}
+html[data-ephinta-theme="colorful"],html[data-theme="colorful"],html.theme-colorful,.theme-colorful {
+  color-scheme:dark;
+  --epg-page:#15102b; --epg-surface:#211a3d; --epg-surface-raised:#2a2050; --epg-surface-soft:#33265d;
+  --epg-ink:#fffaff; --epg-muted:#f0e9ff; --epg-subtle:#d9cdf5; --epg-border:#7663a7;
+  --epg-link:#8eeaff; --epg-focus:#ffe082; --epg-accent:#ff70bd; --epg-accent-ink:#24102b;
+  --epg-success:#9af0c5; --epg-warning:#ffda91; --epg-danger:#ffafc0;
+  --epg-shadow:0 14px 38px rgb(0 0 0 / 30%);
+}
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful),
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) body,
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) #root {
+  color:var(--epg-ink); background-color:var(--epg-page);
+}
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(h1,h2,h3,h4,h5,h6,strong,b,th,dt,legend) { color:var(--epg-ink); }
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(p,li,dd,label,small,figcaption,caption,.muted,.text-muted,.workspace-subtitle) { color:var(--epg-muted); }
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) a { color:var(--epg-link); text-decoration-thickness:.08em; text-underline-offset:.16em; }
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) a:hover { text-decoration:underline; }
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(
+.workspace-card,.card,.metric-card,.panel,.surface,.modal,.dialog,[role="dialog"],[role="menu"],.dropdown-menu,.popover,.ess-mode-menu,.listing-card,.eph-portal-marketplace-compact,.ess-device-lock-card
+) { color:var(--epg-ink); border-color:var(--epg-border); box-shadow:var(--epg-shadow); }
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(
+.workspace-card,.card,.metric-card,.panel,.surface,.modal,.dialog,[role="dialog"],[role="menu"],.dropdown-menu,.popover,.ess-mode-menu,.listing-card
+) { background-color:var(--epg-surface); }
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(input,select,textarea,option) {
+  color:var(--epg-ink); background-color:var(--epg-surface-raised); border-color:var(--epg-border); accent-color:var(--epg-accent);
+}
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(input,textarea)::placeholder { color:var(--epg-subtle); opacity:1; }
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(table,th,td,.detail-list li,.event-row,.vendor-metric-row,.budget-row) { border-color:var(--epg-border); }
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(
+.eyebrow,.workspace-subtitle,.workspace-card>p,.listing-card>p:not(.eyebrow),.listing-card footer,.metric-card span,.metric-card small,.task-item small,.budget-row small
+) { color:var(--epg-muted); }
+html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(.status-pill,.badge,.status-button,.empty-marketplace) { color:var(--epg-ink); }
+:where(button,a,input,select,textarea,[tabindex]):focus-visible { outline:3px solid var(--epg-focus)!important; outline-offset:3px!important; }
+::selection { color:#17152b; background:#b8a4ff; }
+@media(prefers-reduced-motion:reduce) {
+  html:focus-within { scroll-behavior:auto; }
+  *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; }
+}
