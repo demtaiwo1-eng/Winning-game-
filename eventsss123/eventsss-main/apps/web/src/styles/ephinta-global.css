@@ -422,3 +422,21 @@ html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorf
   background-color: var(--epg-surface-raised) !important;
   border-color: var(--epg-border) !important;
 }
+
+/* Preserve the intentional dark feature panels after the stronger app-root rules. */
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(.workspace-intro,.ess-sidebar,.app-sidebar,.dashboard-sidebar,
+    .sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel),
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(.workspace-intro,.ess-sidebar,.app-sidebar,.dashboard-sidebar,
+    .sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel)
+    :is(h1,h2,h3,h4,h5,h6,p,span,small,label,strong,b,li,a,button) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root :is(.workspace-intro,.hero-dark,.dark-panel)
+    :is(p,small,.muted,.text-muted) {
+  color: #eef2ff !important;
+  -webkit-text-fill-color: #eef2ff !important;
+}
