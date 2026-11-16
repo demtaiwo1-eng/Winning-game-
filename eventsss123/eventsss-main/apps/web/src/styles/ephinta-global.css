@@ -261,3 +261,198 @@
 }
 .ess-mode-menu .ess-muted, .ess-mode-menu small { margin: 0; font-size: 11px; line-height: 1.45; }
 .ess-mode-menu .ess-outline-button { min-height: 38px; padding: 8px 12px; font-size: 12px; }
+
+
+/* Public landing marketplace advertisement block — owned by the global stylesheet.
+   Keep component markup free of one-off presentation rules so theme and responsive
+   behavior can be maintained in one place. */
+.eph-landing .eph-promotions {
+  width: 100%;
+  max-width: 1320px;
+  margin: clamp(18px, 3vw, 36px) auto 0;
+  padding-inline: clamp(14px, 4vw, 56px);
+}
+.eph-landing .eph-promo-shell.eph-marketplace-advertising {
+  box-sizing: border-box;
+  padding: clamp(18px, 2.8vw, 32px);
+  border: 1px solid rgba(190, 170, 255, .32);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 90% 8%, rgba(153, 119, 255, .25), transparent 34%),
+    linear-gradient(125deg, #11152d 0%, #28204b 54%, #19334a 100%);
+  color: #fff;
+  box-shadow: 0 22px 55px rgba(17, 21, 45, .2);
+}
+.eph-landing .eph-marketplace-advertising .eph-promo-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 22px;
+  margin: 0 0 20px;
+}
+.eph-landing .eph-marketplace-advertising .eph-promo-heading > div {
+  max-width: 760px;
+}
+.eph-landing .eph-marketplace-advertising .eph-promo-kicker {
+  display: block;
+  margin: 0 0 9px;
+  color: #ffd47c;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .15em;
+}
+.eph-landing .eph-marketplace-advertising .eph-promo-heading h2 {
+  max-width: 760px;
+  margin: 0 0 9px;
+  color: #fff;
+  font-size: clamp(22px, 3vw, 36px);
+  line-height: 1.1;
+  letter-spacing: -.04em;
+}
+.eph-landing .eph-marketplace-advertising .eph-promo-heading p {
+  max-width: 700px;
+  margin: 0;
+  color: #d7d9ed;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.eph-landing .eph-marketplace-advertising .eph-promo-marketplace-cta {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(110deg, #ffd166, #ff9b55);
+  color: #24152d;
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: 0 9px 22px rgba(255, 177, 75, .2);
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-scroll {
+  display: flex;
+  grid-auto-flow: unset;
+  grid-auto-columns: unset;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 2px 12px;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-card {
+  display: flex;
+  flex: 0 0 clamp(220px, 25vw, 292px);
+  min-width: 0;
+  min-height: 190px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 17px;
+  border: 1px solid rgba(255, 255, 255, .17);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.055));
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(0,0,0,.14);
+  scroll-snap-align: start;
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-card-sponsored {
+  background: linear-gradient(145deg, rgba(109,66,216,.42), rgba(255,255,255,.07));
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-card-marketplace {
+  background: linear-gradient(145deg, rgba(30,151,170,.2), rgba(255,255,255,.07));
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-card small {
+  color: #ffdc91;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  line-height: 1.4;
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-card strong {
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-card p {
+  margin: 0;
+  color: #d6d9eb;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-card button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: auto;
+  padding: 9px 11px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 9px;
+  background: #ffd166;
+  color: #24152d;
+  font-size: 10px;
+  font-weight: 900;
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 11px;
+  background: rgba(255,255,255,.1);
+  color: #ffe09a;
+  font-size: 19px;
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.eph-landing .eph-marketplace-advertising .eph-ad-meta span {
+  padding: 4px 7px;
+  border: 1px solid rgba(255,255,255,.17);
+  border-radius: 99px;
+  color: #e9e9f5;
+  font-size: 9px;
+}
+.eph-landing .eph-marketplace-advertising .eph-promo-footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 9px;
+  color: #c9cde0;
+  font-size: 10px;
+}
+.eph-landing .eph-marketplace-advertising .eph-promo-scroll-hint {
+  color: #ffe09a;
+  font-weight: 800;
+}
+@media (max-width: 760px) {
+  .eph-landing .eph-promotions { margin-top: 18px; padding-inline: 12px; }
+  .eph-landing .eph-marketplace-advertising .eph-promo-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 13px;
+  }
+  .eph-landing .eph-marketplace-advertising .eph-promo-marketplace-cta { width: 100%; }
+  .eph-landing .eph-marketplace-advertising .eph-ad-card {
+    flex-basis: min(78vw, 285px);
+    min-height: 180px;
+  }
+  .eph-landing .eph-marketplace-advertising .eph-promo-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eph-landing .eph-marketplace-advertising .eph-ad-scroll { scroll-behavior: auto; }
+}
