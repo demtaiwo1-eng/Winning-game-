@@ -322,3 +322,27 @@ No branch from this family has been deleted or force-updated. These are review d
 - The device-security branch's `package-lock.json` is byte-identical to main (blob `0b461ba80fd5966826786a9ed54c11dbd74d1d28`). Its Android manifest and iOS Info.plist are older than main; the current main files are larger and must be retained. The App.tsx delta is a small older app-shell variant and must not overwrite main. The PIN gate component is superseded by main's stronger implementation, as recorded above.
 - The branch adds a unique security/device-access requirements document. It is documentation, not implementation evidence: it explicitly lists secure native token storage, server-managed device sessions, server-side step-up authentication, and physical-device biometric testing as remaining requirements. Retain the document as an audit reference for now; do not claim those future controls are implemented. No production security behavior is changed by this review.
 - PR #210 still has API integration and production build passing; browser portal journeys, worldwide/payment persona stages, 7,000-fixture/300-user QA and full verification remain in progress at the latest poll. PR head remains `5484350fd861952f7afa89c3574f3d8f37794af1`; no merge.
+
+### PR #210 selector diagnosis and correction — 2026-11-16
+
+- The previous failure report was more specific than an absent dashboard: PR #210's own EnterpriseApp.tsx snapshot contains dashboard navigation **buttons**, not the `<select>` controls that were added later on `main`. The test incorrectly queried `Planner dashboard section` and `Vendor dashboard section`, so all 100 personas timed out before reaching the payment form.
+- Verified against the PR head source: planner navigation exposes the button with accessible name `Open Payments & finances`; vendor navigation exposes `Open Wallet & escrow`. The selector failure was therefore a test-to-branch UI mismatch, not evidence that OPay or the payment panels were broken.
+- Updated `payment-notification-personas.spec.ts` to click those existing accessible navigation buttons. Fix commit: `6fe0d5030bd909e6a4358c88c65b9f7a11363522`.
+- This supersedes the earlier ledger note that said the PR test should use the dashboard section `<select>`. The PR's source branch does not have that select. The correction must still pass a fresh browser run; no test success is claimed yet.
+- Run `43885179876` ultimately completed with browser portal journeys **failed** (100 vendor/client persona failures from the selector mismatch); API database integration and production build passed. Runs `43885179580` and `43885180157` concluded **cancelled**, not passed. iOS simulator run `43885179971` was cancelled. These are pre-consolidation checks.
+- PR #210 now points to head `6fe0d5030bd909e6a4358c88c65b9f7a11363522`. It remains open and unmerged. Fresh CI for this exact head has not yet been returned by the commit-run lookup; verify its new required checks before any merge decision.
+
+### Responsive music-player recovery branch review — 2026-11-16
+
+- `recovery/ephinta-responsive-music-player-20261108` compares as 20 commits ahead / 231 behind with four changed paths.
+- `AudioExperience.tsx` on current main is substantially newer (10,970 characters vs 5,474) and includes the more complete category-aware player/consent flow. The branch's shorter component is not a safe replacement.
+- `ephinta-audio.css` on main is larger (9,774 vs 5,890) and includes the current player styling and responsive behavior; the branch adds only a narrow prompt-width/flex-wrap safeguard already covered by the current main responsive rules. Do not replace the stylesheet wholesale.
+- `audio-experience.spec.ts` on main is longer (7,112 vs 4,369) and includes the additional minimize/restore, consent, responsive and planner-interaction coverage. The branch test is an older subset; no missing unique test behavior was established.
+- The Gradle wrapper file content is byte-identical despite compare metadata showing a one-line change (both resolve to Gradle 8.11.1 with the same timeout and validation settings).
+- **Disposition: SUPERSEDED for all four reviewed paths**; no extraction required. This is a path-level content review, not branch deletion authorization until remaining commits and open-PR cross-reference are finalized.
+
+### PR #210 CI state after selector correction — 2026-11-16
+
+- New fix commit: `6fe0d5030bd909e6a4358c88c65b9f7a11363522`. It changes only the persona test navigation calls: planner uses `Open Payments & finances`; vendor uses `Open Wallet & escrow`.
+- The commit-run lookup has not yet returned a new workflow run or status check for this exact head. PR #210 remains open/unmerged; do not merge or call the persona suite green until a fresh browser run and all required checks pass.
+- Current branch inventory remains 39 branches including `main`; no branch has been deleted. Final acceptance remains blocked pending full dispositions, integration and separate cleanup.
