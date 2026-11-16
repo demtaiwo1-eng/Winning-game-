@@ -3,7 +3,7 @@
    Feature styles should consume these tokens instead of pairing hard-coded colors. */
 :root {
   color-scheme: light;
-  --epg-page:#f6f7fc; --epg-surface:#fff; --epg-surface-raised:#fff; --epg-surface-soft:#eef1fa;
+  --epg-page:#f6f7fc; --epg-surface:#fff; --epg-surface-raised:#f9f8fc; --epg-surface-soft:#eef1fa;
   --epg-ink:#17152b; --epg-muted:#4b5268; --epg-subtle:#626b82; --epg-border:#d7dbea;
   --epg-link:#4b35b5; --epg-focus:#075fcc; --epg-accent:#5b35d5; --epg-accent-ink:#fff;
   --epg-success:#176b42; --epg-warning:#8a4b00; --epg-danger:#a51f35;
