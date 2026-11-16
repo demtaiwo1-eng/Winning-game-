@@ -206,3 +206,42 @@ body { color-scheme:inherit; }
   outline-offset:3px !important;
 }
 ::selection { color:var(--epg-ink); background:var(--epg-surface-soft); }
+
+
+/* High-specificity final guard: legacy component sheets include !important
+   declarations, so the selected theme must win regardless of import order. */
+html[data-ephinta-theme] :is(.workspace-card,.dashboard-card,.metric-card,.stat-card,
+.panel-card,.surface-card,.card,.panel,.surface,.listing-card,.vendor-card,
+.marketplace-card,.detail-section-card,.cart-summary,.ess-card,.ess-builder-card,
+.ess-mode-menu,.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
+[aria-modal="true"],dialog[open]) {
+  color:var(--epg-ink) !important;
+  background:var(--epg-surface) !important;
+  background-image:none !important;
+  border-color:var(--epg-border) !important;
+}
+html[data-ephinta-theme] :is(.workspace-card,.dashboard-card,.metric-card,.stat-card,
+.panel-card,.surface-card,.card,.panel,.surface,.listing-card,.vendor-card,
+.marketplace-card,.detail-section-card,.cart-summary,.ess-card,.ess-builder-card,
+.ess-mode-menu,.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
+[aria-modal="true"],dialog[open]) :is(h1,h2,h3,h4,h5,h6,strong,b,th,label,legend) {
+  color:var(--epg-ink) !important;
+}
+html[data-ephinta-theme] :is(.workspace-card,.dashboard-card,.metric-card,.stat-card,
+.panel-card,.surface-card,.card,.panel,.surface,.listing-card,.vendor-card,
+.marketplace-card,.detail-section-card,.cart-summary,.ess-card,.ess-builder-card,
+.ess-mode-menu,.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
+[aria-modal="true"],dialog[open]) :is(p,li,small,span,dd,dt,.muted,.text-muted,.helper-text,.eyebrow) {
+  color:var(--epg-muted) !important;
+}
+html[data-ephinta-theme] :is(input,select,textarea,option) {
+  color:var(--epg-ink) !important;
+  background:var(--epg-surface-raised) !important;
+  border-color:var(--epg-border) !important;
+}
+html[data-ephinta-theme] :is(.primary-button,.continue-action,.select-listing,
+.ess-primary,.pl-btn-primary,.pl-primary,.esg-btn.p) {
+  color:var(--epg-accent-ink) !important;
+  background:var(--epg-accent) !important;
+  border-color:var(--epg-accent) !important;
+}
