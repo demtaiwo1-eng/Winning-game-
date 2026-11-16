@@ -52,5 +52,7 @@ describe("EPHINTA global theme contrast", () => {
     expect(globalCss.lastIndexOf(marker)).toBeGreaterThan(globalCss.indexOf("@import"));
     expect(globalCss.trimEnd().endsWith("}")).toBe(true);
     expect(globalCss).toContain("Branded dark feature panels deliberately retain their dark surfaces.");
+    expect(globalCss).toContain("Specificity guard: component sheets contain several legacy !important rules.");
+    expect(globalCss.lastIndexOf("Preserve the intentional dark feature panels")).toBeGreaterThan(globalCss.lastIndexOf("Specificity guard"));
   });
 });
