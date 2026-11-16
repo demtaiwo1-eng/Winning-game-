@@ -51,7 +51,7 @@ describe("EPHINTA global theme contrast", () => {
     expect(contract).toContain("--ephinta-theme-page:var(--epg-page)");
     expect(contract).toContain("--ess-surface:var(--epg-surface)");
     expect(contract).toContain("background-image:none !important");
-    expect(contract).toContain("html[data-ephinta-theme=\\"colorful\\"],html[data-theme=\\"colorful\\"]");
+    expect(contract).toContain("html[data-ephinta-theme=\"colorful\"],html[data-theme=\"colorful\"]");
   });
 
   it("keeps the final override after legacy component rules", () => {
