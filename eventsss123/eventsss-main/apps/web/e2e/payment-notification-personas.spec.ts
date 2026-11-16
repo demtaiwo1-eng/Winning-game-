@@ -144,7 +144,8 @@ for (const persona of personas) {
 
     if (persona.role === "CLIENT") {
       await expect(page).toHaveURL(/\/dashboard\/client$/);
-      await page.getByRole("button", { name: "Open payments and wallet" }).click();
+      // Dashboard sections are URL-backed tabs; select the payments view directly.
+      await page.goto("/dashboard/client?tab=payments");
       await expect(page.getByText("OPay deposit · 2% platform fee", { exact: false })).toBeVisible();
       await page.getByLabel("Amount (major units)").fill("10000");
       await expect(page.getByText(/2% platform fee/)).toBeVisible();
@@ -154,11 +155,11 @@ for (const persona of personas) {
       await expect(page).toHaveURL(new RegExp(`sandbox-checkout\\.opayweb\\.com/qa/${persona.index}$`));
       // A redirect is not a settlement. Return to the app and verify the
       // wallet has not been optimistically credited before provider confirmation.
-      await page.goto("/dashboard/client");
-      await page.getByRole("button", { name: "Open Notifications" }).click();
+      await page.goto("/dashboard/client?tab=notifications");
     } else {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
-      await page.getByRole("button", { name: "Open Wallet & escrow" }).click();
+      // Select the URL-backed wallet tab directly so the test focuses on payout UI.
+      await page.goto("/dashboard/vendor?tab=wallet");
       await expect(page.getByText(/2% platform fee is deducted from the gross amount/)).toBeVisible();
       await page.getByLabel("Withdrawal amount (NGN)").fill("10000");
       await page.getByLabel("Destination bank").selectOption("058");
@@ -170,7 +171,7 @@ for (const persona of personas) {
       await page.getByRole("button", { name: "Withdraw to bank" }).click();
       await expect(page.getByText(/Withdrawal processing:/)).toBeVisible();
       await expect(page.getByText(/98/)).toBeVisible();
-      await page.getByRole("button", { name: "Open Notifications" }).click();
+      await page.goto("/dashboard/vendor?tab=notifications");
     }
 
     await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible();
