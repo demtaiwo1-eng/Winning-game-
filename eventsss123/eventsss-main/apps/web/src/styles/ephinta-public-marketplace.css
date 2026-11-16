@@ -111,3 +111,38 @@
   .ess-public-marketplace .ess-listing-art { min-height: 84px; }
   .ess-public-marketplace .ess-listing-body { padding: 13px; }
 }
+
+
+/* The sample catalogue is visually distinct from real verified provider inventory. */
+.ess-public-marketplace .ess-marketplace-catalogue-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 8px 0 16px;
+}
+.ess-public-marketplace .ess-demo-catalogue-notice {
+  margin: 12px 0 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(217, 119, 6, .35);
+  border-radius: 12px;
+  background: rgba(245, 158, 11, .08);
+}
+.ess-public-marketplace .ess-demo-catalogue-notice strong,
+.ess-public-marketplace .ess-demo-label {
+  color: #a16207;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .035em;
+}
+.ess-public-marketplace .ess-demo-catalogue-notice p {
+  margin: 6px 0 0;
+  color: var(--ephinta-theme-muted, #64748b);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ess-public-marketplace .ess-demo-listing-card {
+  border-style: dashed;
+}
+.ess-public-marketplace .ess-demo-listing-card .ess-listing-art {
+  background: repeating-linear-gradient(135deg, rgba(217,119,6,.08), rgba(217,119,6,.08) 12px, rgba(124,58,237,.06) 12px, rgba(124,58,237,.06) 24px);
+}
