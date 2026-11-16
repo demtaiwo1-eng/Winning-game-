@@ -39,6 +39,9 @@
 @import "./ephinta-public-marketplace.css";
 
 
+/* Last imported stylesheet: shared palette and contrast tokens override feature styles. */
+@import "./ephinta-global-theme-contract.css";
+
 /* EPHINTA mobile polish: compact marketplace carousel, registration surface,
    device PIN theme, and update notice all flow through this single CSS hub. */
 .eph-portal-marketplace-compact {
