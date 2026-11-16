@@ -39,6 +39,9 @@
 @import "./ephinta-public-marketplace.css";
 
 
+/* Last imported stylesheet: shared palette and contrast tokens override feature styles. */
+@import "./ephinta-global-theme-contract.css";
+
 /* EPHINTA mobile polish: compact marketplace carousel, registration surface,
    device PIN theme, and update notice all flow through this single CSS hub. */
 .eph-portal-marketplace-compact {
@@ -263,5 +266,3 @@
 }
 .ess-mode-menu .ess-muted, .ess-mode-menu small { margin: 0; font-size: 11px; line-height: 1.45; }
 
-/* Last import: the single global theme/contrast contract wins over feature CSS. */
-@import "./ephinta-global-theme-contract.css";
