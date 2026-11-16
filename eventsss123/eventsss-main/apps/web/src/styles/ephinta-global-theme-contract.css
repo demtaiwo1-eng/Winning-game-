@@ -13,7 +13,18 @@
   --ephinta-theme-surface-soft:var(--epg-surface-raised); --ephinta-theme-ink:var(--epg-ink);
   --ephinta-theme-muted:var(--epg-muted); --ephinta-theme-border:var(--epg-border);
   --ephinta-theme-accent:var(--epg-accent); --ephinta-theme-primary-bg:var(--epg-accent);
-  --ephinta-theme-primary-ink:var(--epg-accent-ink);
+  --ephinta-theme-primary-ink:var(--epg-accent-ink); --ephinta-theme-placeholder:var(--epg-subtle);
+  --ephinta-theme-link:var(--epg-link); --ephinta-theme-focus:var(--epg-focus);
+  --ess-bg:var(--epg-page); --ess-bg-2:var(--epg-surface-soft);
+  --ess-surface:var(--epg-surface); --ess-surface-soft:var(--epg-surface-raised);
+  --ess-ink:var(--epg-ink); --ess-ink-soft:var(--epg-muted); --ess-mute:var(--epg-muted);
+  --ess-line:var(--epg-border); --ess-line-strong:var(--epg-border);
+  --eph-parent-bg:var(--epg-page); --eph-parent-bg-soft:var(--epg-surface-soft);
+  --eph-parent-surface:var(--epg-surface); --eph-parent-surface-muted:var(--epg-surface-raised);
+  --eph-parent-ink:var(--epg-ink); --eph-parent-muted:var(--epg-muted);
+  --eph-parent-border:var(--epg-border); --eph-parent-primary:var(--epg-accent);
+  --eph-parent-primary-hover:var(--epg-link); --eph-parent-secondary:var(--epg-link);
+  --eph-parent-accent:var(--epg-warning);
   --app-bg:var(--epg-page); --surface:var(--epg-surface); --text:var(--epg-ink);
   --muted:var(--epg-muted); --border:var(--epg-border);
 }
