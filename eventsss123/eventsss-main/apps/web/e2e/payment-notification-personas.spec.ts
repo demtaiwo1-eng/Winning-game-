@@ -145,7 +145,7 @@ for (const persona of personas) {
     if (persona.role === "CLIENT") {
       await expect(page).toHaveURL(/\/dashboard\/client$/);
       // Select the payments section using the dashboard navigation.
-      await page.getByRole("button", { name: "Open Payments & finances" }).click();
+      await page.getByLabel("Planner dashboard section").selectOption("payments");
       await expect(page.getByLabel("Amount (major units)")).toBeVisible();
       await page.getByLabel("Amount (major units)").fill("10000");
       await expect(page.getByText(/2% platform fee/)).toBeVisible();
