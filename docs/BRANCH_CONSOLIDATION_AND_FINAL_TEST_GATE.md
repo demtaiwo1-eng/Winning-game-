@@ -209,3 +209,11 @@ The OTA branch's versions of `scripts/setup-android-signing-github.sh` and `scri
 - `verify/ephinta-main-acceptance-20261107` (10 ahead / 238 behind; 5 files) includes removal of an older workflow and older design-system/test deltas. Review its responsive UX tests only if they contain assertions absent from current main; do not restore its workflow deletion without explicit evidence.
 
 No branch from this family has been deleted or force-updated. These are review dispositions only, not merged outcomes.
+
+
+### Payment-persona browser failure follow-up (2026-11-16)
+
+- PR #210 browser run `43875404810` passed web/API production builds and API database integration, but its browser journey job failed because vendor personas waited for a button named `Open Wallet & escrow` that is not present under that accessible name in the current vendor dashboard.
+- Current main exposes the accessible `Vendor dashboard section` selector with a `wallet` option. The vendor payment-persona test has been corrected to select that option instead of clicking the mismatched button.
+- Correction committed to `qa/payment-personas-current-main-20261116`: `5484350fd861952f7afa89c3574f3d8f37794af1`.
+- The fix is not yet verified by a completed green browser run. PR #210 remains unmerged pending fresh required checks.
