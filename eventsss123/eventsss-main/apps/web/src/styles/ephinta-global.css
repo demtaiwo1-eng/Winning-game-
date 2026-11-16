@@ -237,3 +237,6 @@
   .ess-auth-modal .ess-registration-navigation { position: static !important; padding: 10px 0 0 !important; }
   .ephinta-update-notice { bottom: max(8px, env(safe-area-inset-bottom)); }
 }
+
+/* Landing marketplace advertisement: shared global design-system layer. */
+@import "./ephinta-marketplace-advertising.css";
