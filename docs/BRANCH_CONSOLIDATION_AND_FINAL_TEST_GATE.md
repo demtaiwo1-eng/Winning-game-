@@ -249,3 +249,19 @@ No branch from this family has been deleted or force-updated. These are review d
 - Run `43885179398`: validation passed.
 - Run `43885179580` (7,000 fixtures/300-user gates) and `43885180157` (verification) remained in progress; iOS simulator run `43885179971` was queued.
 - These checks are useful branch-level evidence, not the final post-consolidation acceptance suite. PR #210 is still unmerged pending all required checks.
+
+
+### iOS and Android signed-release workflow review — 2026-11-16
+
+- `release/ios-signed-ci-20261108` is 6 commits ahead / 234 behind and adds a 211-line manual-dispatch iOS distribution workflow plus signing documentation. The workflow uses read-only repository permissions, requires owner-provided certificate/profile/team secrets, verifies certificate SHA-256, provisioning-profile expiry, Team ID, bundle ID, distribution entitlement, and codesign output, and uploads a signed IPA artifact. No signing secrets were read. **EXTRACT/REVIEW REQUIRED**: before adopting, fix the cleanup step so it removes only the profile file created by this job rather than recursively deleting the entire runner user's provisioning-profiles directory; also review action pinning and ensure the workflow's app bundle identifier matches the current iOS project. Do not merge the branch wholesale.
+- `release/android-signed-ci-20261108` is 3 commits ahead / 236 behind. Its signed workflow uses protected GitHub secrets, a temporary keystore with mode 600, APK/AAB signature verification, and cleanup. It pins Java 17, while the newer production signing workflow reviewed on `release/android-production-signing-main-20261108` uses Java 21 and performs stronger certificate fingerprint and API readiness checks. Treat the older signed-CI workflow as superseded unless a unique requirement is found; do not replace the current Java 21 production release path.
+- `release/android-production-signing-main-20261108` contains a broader Java 21 release workflow with keystore/certificate validation, health/readiness probes, APK/AAB signing checks, and OTA bundle publishing. Its `contents: write` permission is scoped to the release job and should remain confined to tag-triggered publishing. The workflow requires owner-configured secrets and was not executed because credentials must not be invented or requested in chat. Continue reviewing its helper scripts and current-main equivalent before selecting the canonical workflow.
+- These findings do not authorize a merge. No signing branch was merged or deleted.
+
+### Fresh CI poll — 2026-11-16
+
+- Run `43885179876`: API database integration and web/API production build completed successfully; browser portal journeys were still running at the poll.
+- Run `43885179580`: 7,000-fixture / 300-user scale and browser/design gate still running.
+- Run `43885180157`: full verification still running.
+- Run `43885179971`: iOS Simulator build remained queued.
+- These are in-flight branch checks only, not the post-consolidation final acceptance run.
