@@ -160,9 +160,8 @@ for (const persona of personas) {
       await page.getByRole("button", { name: "Open Notifications" }).click();
     } else {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
-      // Use the vendor dashboard control to open the wallet panel.
-      await page.getByRole("navigation", { name: "Vendor dashboard sections" })
-        .getByRole("button", { name: "Open Wallet & escrow" }).click();
+      // Use the supported dashboard tab route on desktop and compact/mobile layouts.
+      await page.goto("/dashboard/vendor?tab=wallet");
       await expect(page.getByText(/2% platform fee is deducted from the gross amount/)).toBeVisible();
       await page.getByLabel("Withdrawal amount (NGN)").fill("10000");
       await page.getByLabel("Destination bank").selectOption("058");
