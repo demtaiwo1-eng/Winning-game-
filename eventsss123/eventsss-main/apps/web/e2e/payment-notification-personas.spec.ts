@@ -156,7 +156,7 @@ for (const persona of personas) {
       // A redirect is not a settlement. Return from the mocked checkout to
       // the app before opening notifications; the checkout page has no app UI.
       await page.goBack();
-      await expect(page).toHaveURL(/\\/dashboard\\/client$/);
+      await expect(page).toHaveURL((url) => url.pathname === "/dashboard/client");
       await page.getByRole("button", { name: "Open Notifications" }).click();
     } else {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
