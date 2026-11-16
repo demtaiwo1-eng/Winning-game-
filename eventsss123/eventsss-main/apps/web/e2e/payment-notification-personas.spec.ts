@@ -145,7 +145,7 @@ for (const persona of personas) {
     if (persona.role === "CLIENT") {
       await expect(page).toHaveURL(/\/dashboard\/client$/);
       // Use the dashboard control so the tab state and rendered panel stay in sync.
-      await page.getByRole("button", { name: "Open Payments & finances" }).click();
+      await page.getByRole("button", { name: "Open payments and wallet" }).click();
       await expect(page.getByText("OPay deposit · 2% platform fee", { exact: false })).toBeVisible();
       await page.getByLabel("Amount (major units)").fill("10000");
       await expect(page.getByText(/2% platform fee/)).toBeVisible();
@@ -159,7 +159,8 @@ for (const persona of personas) {
     } else {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
       // Use the vendor dashboard control to open the wallet panel.
-      await page.getByRole("button", { name: "Open Wallet & escrow" }).click();
+      await page.getByRole("navigation", { name: "Vendor dashboard sections" })
+        .getByRole("button", { name: "Open Wallet & escrow" }).click();
       await expect(page.getByText(/2% platform fee is deducted from the gross amount/)).toBeVisible();
       await page.getByLabel("Withdrawal amount (NGN)").fill("10000");
       await page.getByLabel("Destination bank").selectOption("058");
