@@ -50,7 +50,7 @@ export default function PublicMarketplaceCatalogue() {
   };
 
   return (
-    <main className="ess-content"><section className="ess-shell">
+    <main className="ess-content ess-public-marketplace"><section className="ess-shell">
       <div className="ess-page-heading"><div><p className="ess-eyebrow">EPHINTA marketplace</p>
         <h1>Discover trusted event services</h1>
         <p className="ess-muted">Explore active listings from verified providers. Sign in when you are ready to enquire or book.</p></div>
