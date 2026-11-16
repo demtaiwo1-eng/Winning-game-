@@ -440,3 +440,12 @@ html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorf
   color: #eef2ff !important;
   -webkit-text-fill-color: #eef2ff !important;
 }
+
+
+/* Promotional hero is intentionally white on its dark branded gradient.
+   Keep this exception after the global theme specificity guard. */
+html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful)
+  body #root .eph-promo-heading h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
