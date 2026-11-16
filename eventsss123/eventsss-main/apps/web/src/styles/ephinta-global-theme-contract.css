@@ -10,7 +10,7 @@
   --epg-shadow:0 12px 32px rgb(25 28 55 / 9%);
   /* Legacy app tokens alias the same global contract. */
   --ephinta-theme-page:var(--epg-page); --ephinta-theme-surface:var(--epg-surface);
-  --ephinta-theme-surface-soft:var(--epg-surface-soft); --ephinta-theme-ink:var(--epg-ink);
+  --ephinta-theme-surface-soft:var(--epg-surface-raised); --ephinta-theme-ink:var(--epg-ink);
   --ephinta-theme-muted:var(--epg-muted); --ephinta-theme-border:var(--epg-border);
   --ephinta-theme-accent:var(--epg-accent); --ephinta-theme-primary-bg:var(--epg-accent);
   --ephinta-theme-primary-ink:var(--epg-accent-ink);
