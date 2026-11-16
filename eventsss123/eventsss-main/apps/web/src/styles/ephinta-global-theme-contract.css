@@ -8,6 +8,14 @@
   --epg-link:#4b35b5; --epg-focus:#075fcc; --epg-accent:#5b35d5; --epg-accent-ink:#fff;
   --epg-success:#176b42; --epg-warning:#8a4b00; --epg-danger:#a51f35;
   --epg-shadow:0 12px 32px rgb(25 28 55 / 9%);
+  /* Legacy app tokens alias the same global contract. */
+  --ephinta-theme-page:var(--epg-page); --ephinta-theme-surface:var(--epg-surface);
+  --ephinta-theme-surface-soft:var(--epg-surface-soft); --ephinta-theme-ink:var(--epg-ink);
+  --ephinta-theme-muted:var(--epg-muted); --ephinta-theme-border:var(--epg-border);
+  --ephinta-theme-accent:var(--epg-accent); --ephinta-theme-primary-bg:var(--epg-accent);
+  --ephinta-theme-primary-ink:var(--epg-accent-ink);
+  --app-bg:var(--epg-page); --surface:var(--epg-surface); --text:var(--epg-ink);
+  --muted:var(--epg-muted); --border:var(--epg-border);
 }
 html[data-ephinta-theme="light"],html[data-theme="light"],html.theme-light,.theme-light {
   color-scheme:light;
@@ -33,10 +41,9 @@ html[data-ephinta-theme="colorful"],html[data-theme="colorful"],html.theme-color
   --epg-success:#9af0c5; --epg-warning:#ffda91; --epg-danger:#ffafc0;
   --epg-shadow:0 14px 38px rgb(0 0 0 / 30%);
 }
-html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful),
-html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) body,
-html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) #root {
-  color:var(--epg-ink); background-color:var(--epg-page);
+html,body,#root {
+  color:var(--epg-ink);
+  background:var(--epg-page);
 }
 html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(h1,h2,h3,h4,h5,h6,strong,b,th,dt,legend) { color:var(--epg-ink); }
 html:where([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorful) :is(p,li,dd,label,small,figcaption,caption,.muted,.text-muted,.workspace-subtitle) { color:var(--epg-muted); }
