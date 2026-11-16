@@ -8,6 +8,57 @@ import { HttpError } from "../../lib/errors";
 export const marketplaceRouter = Router();
 
 /** Public-friendly catalog (auth optional for future personalization). */
+
+/** Public, read-only catalogue. Only verified vendors and active listings are visible. */
+marketplaceRouter.get(
+  "/public",
+  asyncHandler(async (req, res) => {
+    const q = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 120) : undefined;
+    const city = typeof req.query.city === "string" ? req.query.city.trim().slice(0, 80) : undefined;
+    const typeRaw = typeof req.query.type === "string" ? req.query.type.trim().toUpperCase() : undefined;
+    const type = typeRaw && ["VENUE", "GOOD", "SERVICE"].includes(typeRaw) ? (typeRaw as ListingType) : undefined;
+    const pageRaw = Number(req.query.page ?? 1);
+    const page = Number.isInteger(pageRaw) && pageRaw > 0 ? Math.min(pageRaw, 10000) : 1;
+    const takeRaw = Number(req.query.take ?? 24);
+    const take = Number.isInteger(takeRaw) && takeRaw > 0 ? Math.min(takeRaw, 50) : 24;
+    const where = {
+      status: ListingStatus.ACTIVE,
+      vendor: { verification: "VERIFIED" as const, user: { status: "ACTIVE" as const } },
+      ...(q ? { OR: [
+        { title: { contains: q, mode: "insensitive" as const } },
+        { description: { contains: q, mode: "insensitive" as const } },
+        { city: { contains: q, mode: "insensitive" as const } },
+      ] } : {}),
+      ...(city ? { city: { contains: city, mode: "insensitive" as const } } : {}),
+      ...(type ? { type } : {}),
+    };
+    const [items, total] = await Promise.all([
+      prisma.listing.findMany({
+        where, orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+        skip: (page - 1) * take, take,
+        select: {
+          id: true, title: true, description: true, type: true, priceMinor: true,
+          currency: true, country: true, city: true, capacity: true, mediaUrls: true,
+          vendor: { select: { businessName: true, slug: true } },
+          category: { select: { name: true, slug: true } },
+        },
+      }),
+      prisma.listing.count({ where }),
+    ]);
+    res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+    res.json({
+      items: items.map((item) => ({
+        id: item.id, title: item.title, description: item.description, type: item.type,
+        priceMinor: item.priceMinor.toString(), currency: item.currency, country: item.country,
+        city: item.city, capacity: item.capacity, mediaUrls: item.mediaUrls.slice(0, 6),
+        vendorName: item.vendor.businessName, vendorSlug: item.vendor.slug,
+        category: item.category.name, categorySlug: item.category.slug,
+      })),
+      pagination: { page, take, total, totalPages: Math.ceil(total / take) },
+    });
+  }),
+);
+
 marketplaceRouter.get(
   "/",
   requireAuth,

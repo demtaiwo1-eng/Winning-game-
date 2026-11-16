@@ -96,49 +96,41 @@ test("landing page actions navigate in-app without restarting or starting music"
   await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
 
-test("landing marketplace actions open the customer marketplace sign-in route in-app", async ({ page }) => {
+test("landing marketplace actions open the public marketplace catalogue in-app", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => {
     (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe = "loaded";
   });
   await page.locator(".eph-promo-marketplace-cta").click();
-  await expect(page).toHaveURL(/\/auth\/signin\?role=CLIENT&returnTo=%2Fmarketplace$/);
+  await expect(page).toHaveURL(/\/marketplace$/);
+  await expect(page.getByRole("heading", { name: "Discover trusted event services" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
 
-test("signed-out marketplace deep links return to the marketplace after sign-in", async ({ page }) => {
-  await page.route("**/api/v1/auth/login", async (route) => {
+test("signed-out marketplace visitors can browse verified public listings before sign-in", async ({ page }) => {
+  await page.route("**/api/v1/marketplace/public**", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        user: {
-          id: "marketplace-return-e2e",
-          name: "Marketplace Return Test",
-          email: "marketplace-return@example.test",
-          role: "CLIENT",
-          country: "NG",
-          currency: "NGN",
-          locale: "en",
-        },
-        accessToken: "e2e-access-token",
-        refreshToken: "e2e-refresh-token",
-        expiresIn: 900,
+        items: [{
+          id: "public-listing-1", title: "Ibadan Garden Venue", description: "Open-air event venue",
+          type: "VENUE", priceMinor: "25000000", currency: "NGN", city: "Ibadan", country: "NG",
+          capacity: 250, mediaUrls: [], vendorName: "Verified Events", vendorSlug: "verified-events",
+          category: "Venues", categorySlug: "venues",
+        }],
+        pagination: { page: 1, take: 24, total: 1, totalPages: 1 },
       }),
     });
   });
 
-  await page.addInitScript(() => {
-    localStorage.setItem("ess_onboard_v2_client_default", "1");
-  });
   await page.goto("/marketplace");
-  await expect(page).toHaveURL(/\/auth\/signin\?role=CLIENT&returnTo=%2Fmarketplace$/);
-  await page.getByLabel("Email").fill("marketplace-return@example.test");
-  await page.getByRole("textbox", { name: "Password" }).fill("QaOnlyPassword123!");
-  await page.getByRole("button", { name: /Continue securely/ }).click();
-  await unlockDeviceGate(page);
-  await expect(page).toHaveURL(/\/dashboard\/client(?:\?tab=marketplace)?$/);
-  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+  await expect(page).toHaveURL(/\/marketplace$/);
+  await expect(page.getByRole("heading", { name: "Discover trusted event services" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ibadan Garden Venue" })).toBeVisible();
+  await expect(page.getByText("Verified Events")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in to book" })).toHaveAttribute("href", /auth\/signin\?role=CLIENT/);
+  await expect(page.getByRole("link", { name: "Create account" })).toHaveAttribute("href", /auth\/signup\?role=CLIENT/);
 });
 
 test("marketplace deep links open the marketplace tab in an authenticated customer workspace", async ({ page }) => {
