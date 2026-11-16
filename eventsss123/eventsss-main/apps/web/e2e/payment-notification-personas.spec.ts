@@ -144,8 +144,8 @@ for (const persona of personas) {
 
     if (persona.role === "CLIENT") {
       await expect(page).toHaveURL(/\/dashboard\/client$/);
-      // Use the dashboard control so the tab state and rendered panel stay in sync.
-      await page.getByRole("button", { name: "Open payments and wallet" }).click();
+      // Use the supported dashboard tab route. The shortcut is absent in compact layouts.
+      await page.goto("/dashboard/client?tab=payments");
       await expect(page.getByText("OPay deposit · 2% platform fee", { exact: false })).toBeVisible();
       await page.getByLabel("Amount (major units)").fill("10000");
       await expect(page.getByText(/2% platform fee/)).toBeVisible();
