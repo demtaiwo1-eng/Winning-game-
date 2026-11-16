@@ -157,14 +157,14 @@ body { color-scheme:inherit; }
 :where(.workspace-card,.dashboard-card,.metric-card,.stat-card,.panel-card,
 .surface-card,.card,.panel,.surface,.listing-card,.vendor-card,.marketplace-card,
 .detail-section-card,.cart-summary,.ess-card,.ess-builder-card,.ess-mode-menu,
-.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu],
+.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
 [aria-modal="true"],dialog[open]) :where(h1,h2,h3,h4,h5,h6,strong,b,th,label,legend) {
   color:var(--epg-ink) !important;
 }
 :where(.workspace-card,.dashboard-card,.metric-card,.stat-card,.panel-card,
 .surface-card,.card,.panel,.surface,.listing-card,.vendor-card,.marketplace-card,
 .detail-section-card,.cart-summary,.ess-card,.ess-builder-card,.ess-mode-menu,
-.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu],
+.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
 [aria-modal="true"],dialog[open]) :where(p,li,small,span,dd,dt,.muted,.text-muted,.helper-text,.eyebrow) {
   color:var(--epg-muted);
 }
