@@ -153,8 +153,10 @@ for (const persona of personas) {
       await page.getByRole("button", { name: "Deposit to wallet with OPay" }).click();
       await expect(page.getByText(/Redirecting to OPay secure checkout/)).toBeVisible();
       await expect(page).toHaveURL(new RegExp(`sandbox-checkout\\.opayweb\\.com/qa/${persona.index}$`));
-      // A redirect is not a settlement. Return to the app and verify the
-      // wallet has not been optimistically credited before provider confirmation.
+      // A redirect is not a settlement. Return from the mocked checkout to
+      // the app before opening notifications; the checkout page has no app UI.
+      await page.goBack();
+      await expect(page).toHaveURL(/\\/dashboard\\/client$/);
       await page.getByRole("button", { name: "Open Notifications" }).click();
     } else {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
