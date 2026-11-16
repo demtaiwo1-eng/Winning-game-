@@ -1,0 +1,117 @@
+# EPHINTA branch consolidation and final-test gate
+
+**Applies to:** `demtaiwo1-eng/winning-game-`  
+**Protected integration target:** `main`  
+**Rule status:** Mandatory for release preparation  
+**Last inventory reviewed:** 2026-11-16
+
+## Non-negotiable order
+
+1. Inventory every remote branch and every open pull request against the current `main` SHA.
+2. Review the unique commits and changed files on **every** non-main branch. Do not infer that a branch is disposable because it is old, diverged, or has no open PR.
+3. Give every branch exactly one recorded disposition:
+   - **MERGE** — merge its PR or integrate its unique commits into `main`.
+   - **EXTRACT** — cherry-pick/re-implement the required changes onto a fresh branch based on current `main`, then merge that PR.
+   - **SUPERSEDED** — prove every useful change is already present on `main` or in another merged branch; record the replacement commit/PR.
+   - **EXCLUDE** — owner-approved explicit exclusion, with reason and confirmation that no required work is lost.
+4. Resolve conflicts on branches based on the latest `main`; do not merge a stale integration branch wholesale just to make the branch count reach zero.
+5. Preserve all required GitHub Actions workflows and release scripts. Workflow deletion or disabling requires a separate evidence-backed decision.
+6. Merge all required work into `main`. Only after verifying that each non-main branch has a completed disposition may redundant branches be deleted. Never delete `main`, a branch with unmerged unique work, or a branch needed by an open PR.
+7. **Do not start a new final acceptance/test run until steps 1–6 are complete.** After consolidation, run the final test matrix once against the consolidated `main` SHA. If code changes after that run, the final gate is invalid and must be rerun.
+8. A green CI run is not permission to skip branch review. Conversely, a branch being merged is not proof that its code works; the post-consolidation final matrix must pass.
+
+## Merge safety requirements
+
+- Merge only a reviewed PR with the expected head SHA, no unresolved review threads, and a clean mergeable state.
+- Prefer small feature PRs based on current `main`. For highly diverged branches, compare commit/file history and extract only required changes; do not use blind merge or force-push.
+- Before integrating payment changes, inspect provider selection, fees, payout/refund paths, idempotency, webhook verification, and ledger effects. Keep the currently working OPay behavior unchanged unless the owner explicitly approves a change.
+- Do not put API keys, signing keys, passwords, tokens, or production data in commits, test fixtures, logs, or this ledger.
+- Never merge a test-only change that mocks settlement as evidence of real payment settlement.
+- Do not delete or rewrite migration history. Do not run destructive database operations as part of branch cleanup.
+- Keep branch cleanup separate from application behavior changes. Delete only after the integration/supersession evidence is recorded.
+
+## Final-test gate checklist
+
+The release owner must be able to answer **yes** to all items before triggering the final run:
+
+- [ ] Remote branch inventory has been paginated to completion.
+- [ ] Every branch except `main` has a written disposition and reviewer evidence.
+- [ ] Every required unique change is present on `main`; no unreviewed branch-only commits remain.
+- [ ] Every open PR is merged, closed as superseded/excluded with a reason, or explicitly held outside the release scope.
+- [ ] No unresolved review threads or unresolved merge conflicts remain for in-scope work.
+- [ ] Required workflows are present and enabled; no required workflow was removed to obtain a green result.
+- [ ] OPay behavior is unchanged unless separately authorized.
+- [ ] Branch cleanup is complete for branches proven redundant; branches with unresolved disposition remain and block final testing.
+- [ ] The exact consolidated `main` SHA is recorded.
+- [ ] Only now may the final test matrix run against that SHA.
+
+## Required final test matrix (after consolidation only)
+
+Run the repository's applicable checks on the exact consolidated `main` SHA: clean dependency install; API typecheck/unit tests; disposable PostgreSQL migrations and integration tests; web unit/build; responsive and accessibility/design checks; browser journeys on desktop and mobile; payment/notification persona coverage; Android lint/unit/build and APK artifact verification; iOS build where supported; dependency/security audit; and the bounded load/scale suite. Record run URLs, job conclusions, artifact links, and any device-only checks that cannot be performed in CI. Do not describe a build artifact as a physical-device installation test.
+
+## Initial audit snapshot — 2026-11-16
+
+The remote branch inventory returned **38 branches including `main` (37 non-main branches)**. All 37 were compared with `main`. The comparison showed that the inventory is not a simple fast-forward cleanup: many branches are diverged, several contain large integration histories, and some are likely overlapping or superseded. Therefore no blanket merge or bulk deletion is safe.
+
+### Branches requiring individual disposition
+
+```text
+audit/ephinta-ip-paid-access-readme-20261114
+codespace-fantastic-memory-xrx467jxj56r2j4r
+feat/planner-operations-finance-kyc-20261109
+feature/ephinta-bytid-kyc-20261108
+feature/ephinta-device-security-20261108
+feature/experience-modes-gamified-demo-20261116
+feature/global-theme-contrast-20261116
+feature/isolated-demo-marketplace-catalogue-20261116
+fix/customer-journey-landing-location-20261114
+fix/ephinta-869-compatible-release
+fix/ephinta-marketplace-carousel-portal-ui-20261109
+fix/ephinta-registration-planner-and-youtube-oauth
+fix/opay-provider-display-20261113
+integration/ephinta-planner-music-rebased-20261108
+integration/ephinta-release-android-verified-20261114
+integration/ephinta-release-candidate-final-20261114
+integration/ephinta-unified-20261114
+integration/ephinta-unified-final-20261114
+integration/recover-verified-feature-fixes-20261108
+maintenance/final-cleanup-20261114
+maintenance/licensed-audio-e2e-fix-20261114
+maintenance/verification-matrix-20261114
+qa/payment-notification-100-personas-20261113
+qa/payment-notifications-main-20261115
+qa/payment-notifications-main-20261116
+qa/payment-personas-current-main-20261116
+recovery/ephinta-planner-budget-format-20261108
+recovery/ephinta-responsive-music-player-20261108
+recovery/ephinta-theme-text-contrast-20261108
+release/android-production-ota-main-20261108
+release/android-production-signing-main-20261108
+release/android-signed-ci-20261108
+release/android-signing-helper-20261108
+release/android-signing-helper-current-20261108
+release/ios-signed-ci-20261108
+release/paid-access-readme-payment-audit-20261113
+verify/ephinta-main-acceptance-20261107
+```
+
+### Known pull-request decisions to preserve during the audit
+
+- **PR #210** — payment/notification browser personas. Small, focused change set (3 files); candidate for integration after its branch is reviewed and the existing in-flight checks finish. Its test mocks are not proof of real provider settlement.
+- **PR #187** — large, diverged release-candidate integration (91 commits ahead / 21 behind at the time checked; comparison exceeded the 300-file display limit). Extract required changes individually; no blind merge.
+- **PR #178** — large, diverged documentation/payment-audit integration (144 ahead / 25 behind; comparison exceeded the 300-file display limit). Extract required changes individually; no blind merge.
+- **PR #170** — OPay provider labels/fee behavior. Hold out of integration because the owner instructed that the currently working OPay implementation must remain unchanged.
+- Other open PRs/branches must be discovered again at execution time; this snapshot is not a substitute for a fresh inventory.
+
+### Current gate decision
+
+**FINAL TEST RUN: BLOCKED pending complete branch dispositions and integration.**
+
+Some CI jobs were already in progress when this policy was requested. Do not treat those pre-existing runs as the post-consolidation final test run, and do not start another final matrix until the checklist above is complete. Record their results separately.
+
+## Audit log
+
+| Date UTC | Action | Result |
+|---|---|---|
+| 2026-11-16 | Compared 37 non-main remote branches with `main`; identified 38 total branches including `main`. | Diverged histories and overlapping changes confirmed; blanket merge/deletion prohibited. |
+| 2026-11-16 | Reviewed open PRs #210, #187, #178, and #170. | #210 candidate after checks; #187/#178 require extraction review; #170 held to preserve OPay. |
