@@ -408,3 +408,12 @@ No branch from this family has been deleted or force-updated. These are review d
 - `eventsss123/eventsss-main/scripts/setup-android-signing.sh` is byte-identical to main and simply delegates to the protected root helper. The Android signing branches do not provide a better replacement for the current protected workflow.
 - `release/android-signed-ci-20261108` is the older Java 17 signed-CI workflow; current main's Java 21 production release path and Build 869 certificate continuity checks take precedence. `release/android-production-ota-main-20261108` and the two helper branches overlap the same older workflows/scripts; no wholesale merge.
 - `release/ios-signed-ci-20261108` remains a separate EXTRACT/REVIEW candidate only. Its cleanup bug must be fixed to remove only the provisioning profile created by the job, and its bundle identifier/action pinning must be checked before any extraction. No signing secrets were accessed.
+### Open pull-request inventory and merge safety — 2026-11-16
+
+- Fresh open-PR inventory returned #213, #210, #187, #178 and #170.
+- PR #187 (`integration/ephinta-release-candidate-final-20261114`) reports 2,795 changed files, approximately 2,989 additions and 988,899 deletions; GitHub reports `mergeable: false`. Its head contains the previously reviewed unfiltered branch-consolidation script/workflow and broad unrelated removals. **Do not merge.**
+- PR #178 (`release/paid-access-readme-payment-audit-20261113`) reports 2,791 changed files, approximately 1,989 additions and 990,900 deletions; GitHub reports `mergeable: false`. It shares the broad cleanup history and mass deletion risk. **Do not merge.**
+- PR #170 (`fix/opay-provider-display-20261113`) remains explicitly excluded to preserve the current working OPay implementation. No review or merge is authorized for it.
+- PR #213 is the draft documentation PR for this ledger (one file, 410 additions). It remains draft/unmerged and its recorded base SHA is not current main; refresh/rebase it only after the ledger is complete and do not treat it as application integration.
+- PR #210 remains the only focused application/test PR under active validation. It has the corrected test head `6fe0d5030bd909e6a4358c88c65b9f7a11363522`; its fresh run set is still in progress. No unresolved review threads were found on #210, #187, #178, #170 or #213.
+- The open-PR inventory and branch review still do not justify bulk merging or bulk branch deletion. All large integration PRs remain held out pending path-level extraction.
