@@ -1,0 +1,40 @@
+branch	disposition	expected_sha	rationale
+audit/ephinta-ip-paid-access-readme-20261114	REVIEW		Requires isolated IP-rights and dependency-licence workflow review
+codespace-fantastic-memory-xrx467jxj56r2j4r	REVIEW		Review remaining unique commits before disposition
+feat/planner-operations-finance-kyc-20261109	REVIEW		Confirm current-main equivalence and any unique planner/KYC changes
+feature/ephinta-bytid-kyc-20261108	REVIEW		Confirm helper equivalence and route/UI disposition
+feature/ephinta-device-security-20261108	REVIEW		Preserve stronger current-main security implementation; inspect all unique commits
+feature/experience-modes-gamified-demo-20261116	REVIEW		Compare all branch changes against current main
+feature/global-theme-contrast-20261116	REVIEW		Compare global theme changes against current main
+feature/isolated-demo-marketplace-catalogue-20261116	REVIEW		Compare marketplace catalogue changes against current main
+fix/customer-journey-landing-location-20261114	REVIEW		Compare landing and journey changes against current main
+fix/ephinta-869-compatible-release	REVIEW		Confirm release helper equivalence and retain Build 869 safeguards
+fix/ephinta-marketplace-carousel-portal-ui-20261109	REVIEW		Compare app update, splash and portal changes against current main
+fix/ephinta-registration-planner-and-youtube-oauth	REVIEW		OAuth and playlist changes need credentials and rights review
+fix/opay-provider-display-20261113	REVIEW		Explicitly preserve current OPay implementation; do not merge provider-display regression
+integration/ephinta-planner-music-rebased-20261108	REVIEW		Review unique planner/music changes and external rights dependencies
+integration/ephinta-release-android-verified-20261114	REVIEW		Review broad release/cleanup changes; do not wholesale merge
+integration/ephinta-release-candidate-final-20261114	REVIEW		Unsafe bulk-merge workflow; review individual changes only
+integration/ephinta-unified-20261114	REVIEW		Review broad release/cleanup changes; do not wholesale merge
+integration/ephinta-unified-final-20261114	REVIEW		Review broad release/cleanup changes; do not wholesale merge
+integration/recover-verified-feature-fixes-20261108	REVIEW		Compare all recovery changes against current main
+maintenance/branch-consolidation-rules-20261116	REVIEW		Consolidation rules ledger; verify and merge documentation PR separately
+maintenance/final-cleanup-20261114	REVIEW		Review cleanup scope; preserve skills, assets and workflows
+maintenance/licensed-audio-e2e-fix-20261114	REVIEW		Audio asset licensing decision required before integration
+maintenance/verification-matrix-20261114	REVIEW		Review test matrix and workflow changes independently
+qa/payment-notification-100-personas-20261113	REVIEW		Superseded payment suite candidate; verify patch-equivalence to current PR
+qa/payment-notifications-main-20261115	REVIEW		Superseded payment suite candidate; verify patch-equivalence to current PR
+qa/payment-notifications-main-20261116	REVIEW		Superseded payment suite candidate; verify patch-equivalence to current PR
+qa/payment-personas-current-main-20261116	REVIEW		Payment persona PR #210; merge only after required checks pass
+recovery/ephinta-planner-budget-format-20261108	REVIEW		Compare planner budget changes against current main
+recovery/ephinta-responsive-music-player-20261108	REVIEW		Compare player and responsive changes against current main
+recovery/ephinta-theme-text-contrast-20261108	REVIEW		Preserve current global theme; verify any genuinely unique fixes
+release/android-production-ota-main-20261108	REVIEW		Review release workflow and signing safeguards
+release/android-production-signing-main-20261108	REVIEW		Keep current protected signing and Build 869 identity checks
+release/android-signed-ci-20261108	REVIEW		Current main uses Java 21; inspect unique workflow changes
+release/android-signing-helper-20261108	REVIEW		Review helper changes against current main
+release/android-signing-helper-current-20261108	REVIEW		Review helper changes against current main
+release/ios-signed-ci-20261108	REVIEW		Requires owner-managed Apple signing credentials and workflow review
+release/paid-access-readme-payment-audit-20261113	REVIEW		Review rights/licence gates and mocked-payment claims independently
+verify/ephinta-main-acceptance-20261107	REVIEW		Do not remove existing E2E workflows; compare unique test changes
+# hosted audit run trigger; dispositions remain intentionally REVIEW until verified

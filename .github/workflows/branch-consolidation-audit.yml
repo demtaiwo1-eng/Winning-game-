@@ -1,0 +1,60 @@
+name: Branch consolidation audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/consolidate-branches.sh
+      - docs/branch-consolidation-manifest.tsv
+      - .github/workflows/branch-consolidation-audit.yml
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Audit only; integration/deletion stays blocked until every manifest row is reviewed
+        required: true
+        type: choice
+        options:
+          - audit
+        default: audit
+
+permissions:
+  contents: read
+
+concurrency:
+  group: branch-consolidation-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out main with full Git history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate shell syntax
+        run: bash -n scripts/consolidate-branches.sh
+
+      - name: Run branch consolidation audit
+        id: audit
+        continue-on-error: true
+        run: bash scripts/consolidate-branches.sh
+
+      - name: Upload branch audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-branch-consolidation-audit
+          path: artifacts/branch-consolidation/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Enforce reviewed manifest
+        if: steps.audit.outcome == 'failure'
+        run: |
+          echo "Audit found branches that still require explicit review."
+          echo "See the uploaded TSV report; no branches were merged or deleted."
+          exit 1

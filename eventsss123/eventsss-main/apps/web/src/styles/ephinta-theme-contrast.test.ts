@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 const contract = readFileSync(new URL("./ephinta-global-theme-contract.css", import.meta.url), "utf8");
 const globalCss = readFileSync(new URL("./ephinta-global.css", import.meta.url), "utf8");
+const themeRuntime = readFileSync(new URL("../lib/ephintaTheme.ts", import.meta.url), "utf8");
 
 function token(block: string, name: string): string {
   const value = block.match(new RegExp(`--epg-${name}:\\s*(#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)\\b`))?.[1];
@@ -26,7 +27,8 @@ const modes = ["light", "dark", "colorful"] as const;
 
 describe("EPHINTA global theme contrast", () => {
   it.each(modes)("keeps text, muted text, links and primary buttons readable in %s mode", (mode) => {
-    const block = contract.match(new RegExp(`html\\[data-ephinta-theme="${mode}"\\][\\s\\S]*?\\n}`))?.[0];
+    const blocks = [...contract.matchAll(new RegExp(`html\\[data-ephinta-theme="${mode}"\\][\\s\\S]*?\\n}`, "g"))];
+    const block = blocks[blocks.length - 1]?.[0];
     expect(block, `missing ${mode} theme token block`).toBeTruthy();
     const ink = token(block!, "ink");
     const muted = token(block!, "muted");
@@ -44,6 +46,17 @@ describe("EPHINTA global theme contrast", () => {
     expect(contrast(subtle, surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(link, surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(accentInk, accent)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("uses one neutral surface system and maps legacy tokens to it", () => {
+    expect(contract).toContain("--ephinta-theme-page:var(--epg-page)");
+    expect(contract).toContain("--ess-surface:var(--epg-surface)");
+    expect(contract).toContain("background-image:none !important");
+    expect(contract).toContain("html[data-ephinta-theme=\"colorful\"],html[data-theme=\"colorful\"]");
+  });
+
+  it("keeps native controls aligned with the selected colorful palette", () => {
+    expect(themeRuntime).toContain('document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light"');
   });
 
   it("keeps the final override after legacy component rules", () => {
