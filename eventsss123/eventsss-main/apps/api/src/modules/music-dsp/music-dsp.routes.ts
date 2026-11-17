@@ -103,7 +103,7 @@ musicDspRouter.post("/admin/revenue", requireAuth, requireRole("ADMIN"), asyncHa
   const reference = typeof req.body.reference === "string" ? req.body.reference.trim() : "";
   const periodStart = new Date(req.body.periodStart);
   const periodEnd = new Date(req.body.periodEnd);
-  if (!["ADVERTISING", "SPONSORSHIP", "OTHER"].includes(source) || !/^[1-9][0-9]*$/.test(amountRaw) || !/^[A-Z]{3}$/.test(currency) || !reference || Number.isNaN(periodStart.getTime()) || Number.isNaN(periodEnd.getTime()) || periodEnd <= periodStart) {
+  if (!["ADVERTISING", "SPONSORSHIP", "OTHER"].includes(source) || !/^[1-9][0-9]*$/.test(amountRaw) || !["NGN", "USD", "GBP", "EUR"].includes(currency) || !reference || Number.isNaN(periodStart.getTime()) || Number.isNaN(periodEnd.getTime()) || periodEnd <= periodStart) {
     throw new HttpError(400, "INVALID_MUSIC_REVENUE", "Provide a valid source, positive amountMinor, currency, reference and period.");
   }
   const entry = await prisma.musicRevenueEntry.create({ data: { source, amountMinor: BigInt(amountRaw), currency, reference, periodStart, periodEnd, createdById: req.user!.id } });
