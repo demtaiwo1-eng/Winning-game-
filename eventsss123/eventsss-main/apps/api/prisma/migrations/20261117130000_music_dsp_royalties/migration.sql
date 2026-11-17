@@ -44,7 +44,7 @@ CREATE TABLE "MusicRoyaltyStatement" (
   "periodStart" TIMESTAMP(3) NOT NULL,
   "periodEnd" TIMESTAMP(3) NOT NULL,
   "currency" TEXT NOT NULL,
-  "grossRevenueMinor" BIGINT NOT NULL,
+  "netRevenueMinor" BIGINT NOT NULL,
   "royaltyMinor" BIGINT NOT NULL,
   "shareRateBps" INTEGER NOT NULL DEFAULT 2500,
   "listenedSeconds" INTEGER NOT NULL,
