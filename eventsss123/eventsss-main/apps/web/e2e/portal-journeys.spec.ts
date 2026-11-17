@@ -98,7 +98,7 @@ async function installRoleApiFixtures(page: Page, portal: PortalCase, options: {
       tracks: [], owners: [], usage: { plays: 0, listenedSeconds: 0 }, revenue: [], statements: [],
     });
     if (path.endsWith("/music-dsp/owner/summary")) return json({
-      owner: { displayName: "QA Rights Holder" }, shareRateBps: 2500,
+      owner: { displayName: "QA Rights Holder" }, shareRateBps: 3000,
       tracks: [], usage: { plays: 0, listenedSeconds: 0 }, earningsByCurrency: {}, statements: [],
     });
     if (path.endsWith("/admin/runtime/payment-mode")) {
