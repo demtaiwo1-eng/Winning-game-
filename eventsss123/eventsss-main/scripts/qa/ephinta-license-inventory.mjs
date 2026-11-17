@@ -205,6 +205,7 @@ notices.push("");
 fs.mkdirSync(artifactDir, { recursive: true });
 fs.writeFileSync(inventoryPath, inventory.join("\n"), "utf8");
 fs.writeFileSync(noticesPath, notices.join("\n"), "utf8");
+fs.writeFileSync(path.join(ROOT, "THIRD_PARTY_NOTICES.md"), notices.join("\n"), "utf8");
 console.log(JSON.stringify({
   thirdPartyPackages: packages.length,
   licenseTypes: byLicense.size,
