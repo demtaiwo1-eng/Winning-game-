@@ -1,4 +1,4 @@
-export const MUSIC_RIGHTS_OWNER_SHARE_BPS = 2500;
+export const MUSIC_RIGHTS_OWNER_SHARE_BPS = 3000;
 
 export type MusicRoyaltyAllocation = {
   ownerId: string;
