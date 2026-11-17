@@ -34,7 +34,7 @@ musicDspRouter.get("/owner/summary", requireAuth, requireRole("AFFILIATE"), asyn
     prisma.musicPlaySession.groupBy({ by: ["trackId"], where: { track: { rightsOwnerId: owner.id } }, _count: { _all: true }, _sum: { listenedSeconds: true } }),
     prisma.musicRoyaltyStatement.findMany({ where: { ownerId: owner.id }, orderBy: { periodStart: "desc" }, take: 24 }),
   ]);
-  const byTrack = new Map(playGroups.map((p) => [p.trackId, p]));
+  const byTrack = new Map<string, (typeof playGroups)[number]>(playGroups.map((p) => [p.trackId, p] as const));
   const totalPlays = playGroups.reduce((sum, p) => sum + p._count._all, 0);
   const totalSeconds = playGroups.reduce((sum, p) => sum + (p._sum.listenedSeconds ?? 0), 0);
   const totals = statements.reduce((acc, s) => {
