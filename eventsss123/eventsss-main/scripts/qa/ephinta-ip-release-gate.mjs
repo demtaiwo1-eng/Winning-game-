@@ -78,7 +78,7 @@ check(!fs.existsSync(path.join(APP_ROOT, "contracts", "EventEscrowVault.sol")),
   "The retired MIT-labelled escrow prototype has reappeared; review its licence and runtime use before release.");
 
 const musicConfig = fs.readFileSync(path.join(APP_ROOT, "apps", "web", "src", "lib", "music", "ephinta-config.ts"), "utf8");
-const configuredAudioPaths = [...musicConfig.matchAll(/["'](\\/audio\\/[^"']+\\.(?:mp3|m4a|wav|ogg|flac|aac))["']/gi)]
+const configuredAudioPaths = [...musicConfig.matchAll(/["'](\/audio\/[^"']+\.(?:mp3|m4a|wav|ogg|flac|aac))["']/gi)]
   .map((match) => decodeURIComponent(match[1]))
   .map((assetPath) => path.posix.join("eventsss123/eventsss-main/apps/web/public", assetPath.slice(1)));
 const configuredMusicCleared = configuredAudioPaths.length > 0 && configuredAudioPaths.every((assetPath) => {
