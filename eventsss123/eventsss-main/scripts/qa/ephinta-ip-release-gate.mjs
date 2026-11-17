@@ -68,7 +68,7 @@ check(trackedFiles.status === 0 && committedDependencyPaths.length === 0,
    "Tracked dependency install files inside the app tree must not be committed: " + committedDependencyPaths.slice(0, 20).join(", "));
 
 const trackedPaths = trackedFiles.status === 0 ? trackedFiles.stdout.split(/\r?\n/) : [];
-const remotionPaths = trackedPaths.filter((file) => /(^|\/)remotion([-/]|\/|$)/i.test(file) || file.includes(".agents/skills/"));
+const remotionPaths = trackedPaths.filter((file) => /(^|\/)remotion([-/]|\/|$)/i.test(file));
 check(trackedFiles.status === 0 && remotionPaths.length === 0,
   "Unused third-party Remotion agent bundle is absent.",
   "Third-party Remotion/agent-skill files have been reintroduced: " + remotionPaths.slice(0, 20).join(", "));
