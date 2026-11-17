@@ -1,4 +1,101 @@
 {
   "schemaVersion": 1,
-  "assets": []
+  "assets": [
+    {
+      "path": "eventsss123/eventsss-main/Here we are-1 -Wale Waves_ESS_Wedding.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/Here we are-2 -Wale Waves_ESS_Wedding.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/Welcome, Little One-1-Wale Waves_ESS_Naming.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/Welcome, Little One-2-Wale Waves_ESS_Naming.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/You Will Live in Our Hearts-1-Wale Waves_ESS_Burials.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/You Will Live in Our Hearts-2-Wale Waves_ESS_Burials.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/apps/web/public/audio/Here we are-1 -Wale Waves_ESS_Wedding.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/apps/web/public/audio/Here we are-2 -Wale Waves_ESS_Wedding.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/apps/web/public/audio/Welcome, Little One-1-Wale Waves_ESS_Naming.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/apps/web/public/audio/Welcome, Little One-2-Wale Waves_ESS_Naming.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/apps/web/public/audio/You Will Live in Our Hearts-1-Wale Waves_ESS_Burials.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    },
+    {
+      "path": "eventsss123/eventsss-main/apps/web/public/audio/You Will Live in Our Hearts-2-Wale Waves_ESS_Burials.mp3",
+      "creatorOrRightsHolder": "EPHINTA project rights holder (owner declaration; legal name not published)",
+      "licence": "Commercial rights declared by the project owner for in-app streaming and monetisation on 2026-11-17; supporting agreements retained privately",
+      "commercialDistribution": true,
+      "evidenceRef": "project-owner-declaration:2026-11-17",
+      "attribution": "Wale Waves"
+    }
+  ]
 }
