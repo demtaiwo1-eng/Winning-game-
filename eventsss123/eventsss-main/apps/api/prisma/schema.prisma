@@ -1181,7 +1181,7 @@ model MusicRoyaltyStatement {
   currency          String
   netRevenueMinor BigInt
   royaltyMinor      BigInt
-  shareRateBps      Int      @default(2500)
+  shareRateBps      Int      @default(3000)
   listenedSeconds   Int
   status            String   @default("PENDING")
   createdAt         DateTime @default(now())
