@@ -13,7 +13,7 @@ The DSP is an addition to the existing EPHINTA app, not a separate app. Music co
 - Statements are generated as pending liabilities; no automatic payout is made in this MVP.
 
 ## Measurement
-The existing player reports authenticated listening sessions when playback pauses or finishes. Sessions shorter than five seconds are ignored. Listening time is accumulated from media playback progress, not from time the app is merely open. This is usage analytics, not a third-party ad impression or a guarantee of advertiser revenue.
+The existing player reports authenticated listening sessions when playback pauses or finishes. Sessions shorter than five seconds are ignored. Listening time is accumulated from media playback progress, not from time the app is merely open. Reports require an authenticated account, ignore sessions shorter than five seconds, and are capped at one reported listening hour per account in a rolling hour. These are client-reported usage analytics with basic abuse limits, not independently verified playback or third-party ad impressions.
 
 ## Portal
 - Rights owner: catalogue, play count, listening time, 25% share rate and royalty statements.
