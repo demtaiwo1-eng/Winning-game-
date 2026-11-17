@@ -160,9 +160,9 @@ for (const persona of personas) {
       await page.getByRole("button", { name: "Open Notifications" }).click();
     } else {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
-      // Use the dashboard's accessible section selector; the shortcut button is
-      // labelled only "Payments" in the rendered vendor dashboard.
-      await page.getByLabel("Vendor dashboard section").selectOption("wallet");
+      // The desktop dashboard exposes the visible Wallet & escrow navigation
+      // chip; the compact section select is hidden at desktop breakpoints.
+      await page.getByRole("button", { name: "Open Wallet & escrow" }).click();
       await expect(page.getByLabel("Withdrawal amount (NGN)")).toBeVisible();
       await page.getByLabel("Withdrawal amount (NGN)").fill("10000");
       await page.getByLabel("Destination bank").selectOption("058");
