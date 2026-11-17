@@ -162,7 +162,7 @@ for (const persona of personas) {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
       // Use the dashboard's accessible section selector; the shortcut button is
       // labelled only "Payments" in the rendered vendor dashboard.
-      await page.getByRole("button", { name: "Open Wallet & escrow" }).click();
+      await page.getByRole("button", { name: "Payments", exact: true }).click();
       await expect(page.getByLabel("Withdrawal amount (NGN)")).toBeVisible();
       await page.getByLabel("Withdrawal amount (NGN)").fill("10000");
       await page.getByLabel("Destination bank").selectOption("058");
