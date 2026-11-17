@@ -78,12 +78,16 @@ check(!fs.existsSync(path.join(APP_ROOT, "contracts", "EventEscrowVault.sol")),
   "The retired MIT-labelled escrow prototype has reappeared; review its licence and runtime use before release.");
 
 const musicConfig = fs.readFileSync(path.join(APP_ROOT, "apps", "web", "src", "lib", "music", "ephinta-config.ts"), "utf8");
-check(musicConfig.includes("VITE_EPHINTA_LICENSED_AUDIO_URL") && musicConfig.includes("safeLicensedAudioUrl"),
-  "Music requires an explicit HTTPS-configured source.",
-  "Music source configuration no longer enforces an explicit safe licensed URL.");
-check(!/Wale Waves|\.mp3|\.m4a|\.wav/i.test(musicConfig),
-  "No artist-specific or hard-coded audio asset is selected by default.",
-  "A hard-coded third-party artist or audio asset is present in the default music configuration.");
+const configuredAudioPaths = [...musicConfig.matchAll(/["'](\\/audio\\/[^"']+\\.(?:mp3|m4a|wav|ogg|flac|aac))["']/gi)]
+  .map((match) => decodeURIComponent(match[1]))
+  .map((assetPath) => path.posix.join("eventsss123/eventsss-main/apps/web/public", assetPath.slice(1)));
+const configuredMusicCleared = configuredAudioPaths.length > 0 && configuredAudioPaths.every((assetPath) => {
+  const record = rightsRecords.get(assetPath);
+  return record?.commercialDistribution === true && Boolean(record?.creatorOrRightsHolder && record?.licence && record?.evidenceRef);
+});
+check(configuredMusicCleared,
+  "Every configured in-app music track has an approved rights-manifest record.",
+  "The music player references an audio asset without a commercial-rights record.");
 
 for (const message of checks) console.log("✓ " + message);
 for (const message of failures) console.error("✗ " + message);
