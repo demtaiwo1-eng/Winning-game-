@@ -52,7 +52,7 @@ musicDspRouter.get("/owner/summary", requireAuth, requireRole("AFFILIATE"), asyn
     }),
     usage: { plays: totalPlays, listenedSeconds: totalSeconds },
     earningsByCurrency: Object.fromEntries(Object.entries(totals).map(([currency, amount]) => [currency, amount.toString()])),
-    statements: statements.map((s) => ({ id: s.id, periodStart: s.periodStart, periodEnd: s.periodEnd, currency: s.currency, grossRevenueMinor: s.grossRevenueMinor.toString(), royaltyMinor: s.royaltyMinor.toString(), shareRateBps: s.shareRateBps, listenedSeconds: s.listenedSeconds, status: s.status })),
+    statements: statements.map((s) => ({ id: s.id, periodStart: s.periodStart, periodEnd: s.periodEnd, currency: s.currency, netRevenueMinor: s.netRevenueMinor.toString(), royaltyMinor: s.royaltyMinor.toString(), shareRateBps: s.shareRateBps, listenedSeconds: s.listenedSeconds, status: s.status })),
   });
 }));
 
@@ -142,7 +142,7 @@ musicDspRouter.post("/admin/settlements/generate", requireAuth, requireRole("ADM
         continue;
       }
       const statement = await prisma.musicRoyaltyStatement.create({
-        data: { ownerId, periodStart, periodEnd, currency, grossRevenueMinor: gross, royaltyMinor: royalty, shareRateBps: MUSIC_RIGHTS_OWNER_SHARE_BPS, listenedSeconds: seconds },
+        data: { ownerId, periodStart, periodEnd, currency, netRevenueMinor: gross, royaltyMinor: royalty, shareRateBps: MUSIC_RIGHTS_OWNER_SHARE_BPS, listenedSeconds: seconds },
       });
       statements.push({ ownerId, currency, royaltyMinor: statement.royaltyMinor.toString(), status: statement.status, alreadyGenerated: false });
     }
