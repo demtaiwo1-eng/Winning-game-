@@ -1,6 +1,7 @@
 /* ESS Bright Orange Theme active — see ess-bright-orange-theme.css */
 /* ESS — Tailwind v4 (required for LandingPage utility classes) */
 @import "tailwindcss";
+@import "./ephinta-dialog-layout.css";
 
 html { scroll-behavior: smooth; }
 
