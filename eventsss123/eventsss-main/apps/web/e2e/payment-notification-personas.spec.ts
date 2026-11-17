@@ -184,3 +184,5 @@ for (const persona of personas) {
     await expect(page.getByRole("status").filter({ hasText: "Marked as read." })).toBeVisible();
   });
 }
+
+// CI synchronization marker: run the browser payment-persona suite for this PR head.
