@@ -94,6 +94,13 @@ async function installRoleApiFixtures(page: Page, portal: PortalCase, options: {
     if (path.endsWith("/vendor/profile")) return json({ profile: { id: "qa-profile", businessName: "QA Services", country: "NG", city: "Ibadan" } });
     if (path.endsWith("/readiness/queue")) return json({ items: [] });
     if (path.endsWith("/readiness/mine")) return json({ items: [] });
+    if (path.endsWith("/music-dsp/admin/overview")) return json({
+      tracks: [], owners: [], usage: { plays: 0, listenedSeconds: 0 }, revenue: [], statements: [],
+    });
+    if (path.endsWith("/music-dsp/owner/summary")) return json({
+      owner: { displayName: "QA Rights Holder" }, shareRateBps: 2500,
+      tracks: [], usage: { plays: 0, listenedSeconds: 0 }, earningsByCurrency: {}, statements: [],
+    });
     if (path.endsWith("/admin/runtime/payment-mode")) {
       const mode = request.method() === "PATCH" ? (request.postDataJSON() as { paymentMode?: string }).paymentMode || "test" : "test";
       return json({ paymentMode: mode, updatedAt: "2026-11-13T00:00:00.000Z" });
