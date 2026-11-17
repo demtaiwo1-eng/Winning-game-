@@ -12,7 +12,7 @@ describe("music DSP royalty policy", () => {
   it("distributes rounding remainders deterministically without losing minor units", () => {
     const rows = allocateMusicRoyalties(1004n, new Map([["owner-b", 1], ["owner-a", 1]]));
     expect(rows.map((r) => [r.ownerId, r.royaltyMinor])).toEqual([["owner-a", 126n], ["owner-b", 125n]]);
-    expect(rows.reduce((sum, row) => sum + row.royaltyMinor, 0n)).toBe(250n);
+    expect(rows.reduce((sum, row) => sum + row.royaltyMinor, 0n)).toBe(251n);
   });
 
   it("returns no allocations when there is no eligible listening", () => {
