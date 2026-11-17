@@ -38,7 +38,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - uses: cli/cli@v2
       - name: Authenticate GitHub CLI
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
