@@ -224,6 +224,7 @@ model User {
   vendorReplies VendorEnquiry[] @relation("EnquiryResponder")
   pushDevices PushDevice[]
   pushPreference PushPreference?
+  musicRightsOwner MusicRightsOwner?
 }
 
 model RefreshToken {
@@ -1118,4 +1119,73 @@ model PlatformRuntimeSetting {
   updatedAt   DateTime @updatedAt
 
   @@index([updatedAt])
+}
+
+
+/// A verified EPHINTA music rights holder. AFFILIATE accounts may be linked by an administrator.
+model MusicRightsOwner {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  displayName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tracks      MusicTrack[]
+  statements  MusicRoyaltyStatement[]
+}
+
+model MusicTrack {
+  id             String   @id @default(uuid())
+  key            String   @unique
+  title          String
+  artist         String
+  assetUrl       String
+  rightsOwnerId  String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  rightsOwner    MusicRightsOwner? @relation(fields: [rightsOwnerId], references: [id], onDelete: SetNull)
+  plays          MusicPlaySession[]
+  @@index([rightsOwnerId, active])
+}
+
+model MusicPlaySession {
+  id              String   @id @default(uuid())
+  trackId         String
+  userId          String?
+  listenedSeconds Int
+  playedAt        DateTime @default(now())
+  track           MusicTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  @@index([trackId, playedAt])
+  @@index([userId, playedAt])
+}
+
+model MusicRevenueEntry {
+  id          String   @id @default(uuid())
+  source      String
+  amountMinor BigInt
+  currency    String
+  periodStart DateTime
+  periodEnd   DateTime
+  reference   String   @unique
+  createdById String
+  createdAt   DateTime @default(now())
+  @@index([currency, periodStart, periodEnd])
+}
+
+model MusicRoyaltyStatement {
+  id                String   @id @default(uuid())
+  ownerId           String
+  periodStart       DateTime
+  periodEnd         DateTime
+  currency          String
+  netRevenueMinor BigInt
+  royaltyMinor      BigInt
+  shareRateBps      Int      @default(3000)
+  listenedSeconds   Int
+  status            String   @default("PENDING")
+  createdAt         DateTime @default(now())
+  owner             MusicRightsOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  @@unique([ownerId, periodStart, periodEnd, currency])
+  @@index([ownerId, periodStart])
 }

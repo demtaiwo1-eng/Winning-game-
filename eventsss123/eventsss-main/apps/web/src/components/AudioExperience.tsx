@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { EPHINTA_MUSIC } from "../lib/music/ephinta-config";
+import { api } from "../lib/api";
 
 type Props = {
   audioUrl?: string;
@@ -47,8 +48,35 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [status, setStatus] = useState("");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const tracks = EPHINTA_MUSIC.categoryTracks[category];
-  const source = audioUrl || tracks[trackIndex] || tracks[0];
-  const trackTitle = source.split("/").pop()?.replace(/%20/g, " ").replace(/\.mp3$/i, "").replace(/[-_]/g, " ") || CATEGORY_LABELS[category];
+  const currentTrack = tracks[trackIndex] || tracks[0];
+  const source = audioUrl || currentTrack.src;
+  const trackTitle = audioUrl ? (audioUrl.split("/").pop() || CATEGORY_LABELS[category]) : currentTrack.title;
+  const listenedSeconds = useRef(0);
+  const lastPlaybackTime = useRef(0);
+  const recordListening = () => {
+    const seconds = Math.floor(listenedSeconds.current);
+    listenedSeconds.current = 0;
+    lastPlaybackTime.current = 0;
+    if (audioUrl || seconds < 5 || !currentTrack?.key) return;
+    try { if (!localStorage.getItem("ess_access_token")) return; } catch { return; }
+    void api("/music-dsp/plays", {
+      method: "POST",
+      body: JSON.stringify({ trackKey: currentTrack.key, listenedSeconds: Math.min(seconds, 3600) }),
+    }).catch(() => undefined);
+  };
+
+  useEffect(() => {
+    const flushWhenLeaving = () => recordListening();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flushWhenLeaving();
+    };
+    window.addEventListener("pagehide", flushWhenLeaving);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("pagehide", flushWhenLeaving);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [source, consent]);
 
   useEffect(() => { setPreferencesLoaded(true); }, []);
   useEffect(() => {
@@ -149,11 +177,11 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         src={source}
         preload="metadata"
         playsInline
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+        onPlay={(event) => { setPlaying(true); lastPlaybackTime.current = event.currentTarget.currentTime; }}
+        onPause={() => { setPlaying(false); recordListening(); }}
+        onTimeUpdate={(event) => { const current = event.currentTarget.currentTime; const previous = lastPlaybackTime.current; if (playing && current > previous && current - previous <= 3) listenedSeconds.current += current - previous; lastPlaybackTime.current = current; setCurrentTime(current); }}
         onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
-        onEnded={() => changeTrack(1)}
+        onEnded={() => { recordListening(); changeTrack(1); }}
         onError={() => setStatus("This music track is unavailable. Check your connection or choose another track.")}
       />
       <p className="eph-audio__status" role="status" aria-live="polite">{status}</p>

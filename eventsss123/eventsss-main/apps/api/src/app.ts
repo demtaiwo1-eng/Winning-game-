@@ -23,6 +23,7 @@ import { checkoutRouter } from "./modules/checkout/checkout.routes";
 import { readinessRouter } from "./modules/readiness/readiness.routes";
 import { adminRouter } from "./modules/admin/admin.routes";
 import { appUpdatesRouter } from "./modules/app-updates/app-updates.routes";
+import { musicDspRouter } from "./modules/music-dsp/music-dsp.routes";
 
 import { hasRole, requireAuth } from "./middleware/auth";
 import { requireRole } from "./middleware/auth";
@@ -100,6 +101,7 @@ export function createApp() {
   app.use("/api/v1/notifications", notificationsRouter);
   app.use("/api/v1/readiness", readinessRouter);
   app.use("/api/v1/admin", adminRouter);
+  app.use("/api/v1/music-dsp", musicDspRouter);
   app.get("/api/v1/vendor/profile", requireAuth, requireRole("VENDOR"), async (req, res, next) => {
     try {
       const profile = await prisma.vendorProfile.findUnique({ where: { userId: req.user!.id }, include: { shops: true } });
