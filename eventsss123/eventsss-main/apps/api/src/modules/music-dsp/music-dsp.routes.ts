@@ -14,6 +14,14 @@ musicDspRouter.post("/plays", requireAuth, asyncHandler(async (req, res) => {
   }
   const track = await prisma.musicTrack.findFirst({ where: { key, active: true }, select: { id: true } });
   if (!track) throw new HttpError(404, "TRACK_NOT_FOUND", "This music track is not registered for usage reporting.");
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const recentUsage = await prisma.musicPlaySession.aggregate({
+    where: { userId: req.user!.id, playedAt: { gte: hourAgo } },
+    _sum: { listenedSeconds: true },
+  });
+  if ((recentUsage._sum.listenedSeconds ?? 0) + seconds > 3600) {
+    throw new HttpError(429, "LISTENING_TIME_LIMIT", "Listening reports are limited to one hour per account in a rolling hour.");
+  }
   await prisma.musicPlaySession.create({ data: { trackId: track.id, userId: req.user!.id, listenedSeconds: seconds } });
   res.status(201).json({ recorded: true });
 }));
@@ -125,12 +133,17 @@ musicDspRouter.post("/admin/settlements/generate", requireAuth, requireRole("ADM
     const pool = gross * 2500n / 10000n;
     for (const [ownerId, seconds] of secondsByOwner) {
       const royalty = pool * BigInt(seconds) / BigInt(totalSeconds);
-      const statement = await prisma.musicRoyaltyStatement.upsert({
+      const existing = await prisma.musicRoyaltyStatement.findUnique({
         where: { ownerId_periodStart_periodEnd_currency: { ownerId, periodStart, periodEnd, currency } },
-        create: { ownerId, periodStart, periodEnd, currency, grossRevenueMinor: gross, royaltyMinor: royalty, shareRateBps: 2500, listenedSeconds: seconds },
-        update: { grossRevenueMinor: gross, royaltyMinor: royalty, shareRateBps: 2500, listenedSeconds: seconds, status: "PENDING" },
       });
-      statements.push({ ownerId, currency, royaltyMinor: statement.royaltyMinor.toString(), status: statement.status });
+      if (existing) {
+        statements.push({ ownerId, currency, royaltyMinor: existing.royaltyMinor.toString(), status: existing.status, alreadyGenerated: true });
+        continue;
+      }
+      const statement = await prisma.musicRoyaltyStatement.create({
+        data: { ownerId, periodStart, periodEnd, currency, grossRevenueMinor: gross, royaltyMinor: royalty, shareRateBps: 2500, listenedSeconds: seconds },
+      });
+      statements.push({ ownerId, currency, royaltyMinor: statement.royaltyMinor.toString(), status: statement.status, alreadyGenerated: false });
     }
   }
   res.json({ shareRateBps: 2500, totalEligibleListenSeconds: totalSeconds, statements });
