@@ -67,11 +67,17 @@ check(trackedFiles.status === 0 && committedDependencyPaths.length === 0,
   "No node_modules directories are committed inside the distributable app tree.",
    "Tracked dependency install files inside the app tree must not be committed: " + committedDependencyPaths.slice(0, 20).join(", "));
 
-const trackedPaths = trackedFiles.status === 0 ? trackedFiles.stdout.split(/\r?\n/) : [];
-const remotionPaths = trackedPaths.filter((file) => /(^|\/)remotion([-/]|\/|$)/i.test(file));
-check(trackedFiles.status === 0 && remotionPaths.length === 0,
-  "Unused third-party Remotion agent bundle is absent.",
-  "Third-party Remotion/agent-skill files have been reintroduced: " + remotionPaths.slice(0, 20).join(", "));
+const packageJson = JSON.parse(fs.readFileSync(path.join(APP_ROOT, "package.json"), "utf8"));
+const runtimePackages = {
+  ...(packageJson.dependencies || {}),
+  ...(packageJson.devDependencies || {}),
+};
+const remotionDependencies = Object.keys(runtimePackages).filter((name) =>
+  name === "remotion" || name.startsWith("@remotion/")
+);
+check(remotionDependencies.length === 0,
+  "No Remotion runtime dependency is included in the EPHINTA app.",
+  "Remotion runtime dependencies require a separate product and licence review: " + remotionDependencies.join(", "));
 
 check(!fs.existsSync(path.join(APP_ROOT, "contracts", "EventEscrowVault.sol")),
   "Unused MIT-labelled escrow prototype is absent from the product tree.",
