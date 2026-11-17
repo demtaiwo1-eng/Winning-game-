@@ -6,7 +6,7 @@ The DSP is an addition to the existing EPHINTA app, not a separate app. Music co
 ## Commercial rule
 - Rights holders collectively receive **30% of eligible net DSP revenue**.
 - Eligible sources: advertising, sponsorships and other recorded music-channel revenue.
-- The remaining 75% is retained by EPHINTA for platform operations and distribution costs.
+- The remaining 70% is retained by EPHINTA for platform operations and distribution costs.
 - The 30% pool is allocated between rights owners in proportion to eligible listening seconds on tracks assigned to each owner during the statement period.
 - Revenue must be recorded net of taxes, refunds, ad-network deductions and other agreed pass-through costs before settlement generation.
 - Calculations are currency-specific. No foreign-exchange conversion is performed.
