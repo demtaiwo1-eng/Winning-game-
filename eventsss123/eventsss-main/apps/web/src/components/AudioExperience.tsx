@@ -65,6 +65,19 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     }).catch(() => undefined);
   };
 
+  useEffect(() => {
+    const flushWhenLeaving = () => recordListening();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flushWhenLeaving();
+    };
+    window.addEventListener("pagehide", flushWhenLeaving);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("pagehide", flushWhenLeaving);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [source, consent]);
+
   useEffect(() => { setPreferencesLoaded(true); }, []);
   useEffect(() => {
     const audio = audioRef.current;
