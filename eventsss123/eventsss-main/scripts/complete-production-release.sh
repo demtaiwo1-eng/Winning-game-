@@ -53,8 +53,10 @@ else
   pass "Original Android keystore restored to ephemeral runner storage"
 
   npm ci
+  export VITE_API_URL="${EPHINTA_API_URL:-$API_ORIGIN/api/v1}"
+  export VITE_UPDATE_URL="${EPHINTA_UPDATE_URL:-$API_ORIGIN/api/v1/app-updates}"
   npm run build:web
-  npx cap sync android
+  npx cap sync android --config apps/mobile/capacitor.config.ts
   chmod +x apps/mobile/android/gradlew
   (cd apps/mobile/android && ./gradlew --no-daemon assembleRelease)
 
