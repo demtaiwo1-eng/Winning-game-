@@ -135,7 +135,7 @@ const roleMeta: Record<
   AFFILIATE: {
     label: "Growth partner",
     short: "Affiliate",
-    description: "Refer planners and vendors; track commissions in real time.",
+    description: "Refer planners and vendors, or access music-rights royalties when linked by EPHINTA.",
   },
   VERIFIER: {
     label: "Pre-event readiness",
@@ -167,7 +167,7 @@ const registrationBenefits: Record<SelfRegisterRole, string[]> = {
   CLIENT: ["Plan and budget events", "Discover trusted services", "Keep event tasks together"],
   ORGANIZATION: ["Coordinate your organization", "Manage team event work", "Choose planning or service delivery"],
   VENDOR: ["Manage service listings", "Receive booking requests", "Track payments and verification"],
-  AFFILIATE: ["Share trusted referrals", "Track referral activity", "View commission progress"],
+  AFFILIATE: ["Share trusted referrals", "Track referral activity", "Access music-rights statements when linked"],
   VERIFIER: ["Review assigned services", "Record readiness checks", "Track event milestones"],
   CONSULTANT: ["Access assigned workspaces", "Coordinate event operations", "Track your assigned work"],
 };
