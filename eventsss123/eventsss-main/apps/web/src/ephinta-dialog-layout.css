@@ -1,0 +1,27 @@
+/* EPHINTA responsive dialog and display alignment system.
+   Imported last from index.css so legacy page styles cannot pull dialogs off-centre. */
+:root { --eph-dialog-gutter: clamp(12px, 3vw, 28px); --eph-dialog-max-height: min(90dvh, 900px); }
+.ess-modal-backdrop,.ess-auth-backdrop,[data-dialog-backdrop],.dialog-backdrop,.modal-backdrop,[role="presentation"].modal-overlay {
+ position:fixed!important;inset:0!important;z-index:1000!important;display:grid!important;place-items:center!important;align-content:center!important;justify-content:center!important;padding:var(--eph-dialog-gutter)!important;overflow-y:auto!important;overscroll-behavior:contain;background:rgba(2,6,13,.76);
+}
+.ess-modal,.ess-auth-modal,[role="dialog"],[aria-modal="true"],.dialog-panel,.modal-panel {
+ box-sizing:border-box;min-width:0;max-width:min(100%,680px);max-height:var(--eph-dialog-max-height);margin:auto!important;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;overflow-wrap:anywhere;
+}
+.ess-modal,.ess-auth-modal {width:min(100%,540px);max-height:var(--eph-dialog-max-height)}
+.ess-auth-modal {width:min(100%,460px)}
+.ess-modal-header {align-items:center;gap:12px}
+.ess-modal form,.ess-auth-modal form {min-width:0}
+.ess-modal input,.ess-modal select,.ess-modal textarea,.ess-auth-modal input,.ess-auth-modal select,.ess-auth-modal textarea,[role="dialog"] input,[role="dialog"] select,[role="dialog"] textarea {box-sizing:border-box;min-width:0;max-width:100%}
+@media(max-width:640px){
+ .ess-modal-backdrop,.ess-auth-backdrop,[data-dialog-backdrop],.dialog-backdrop,.modal-backdrop,[role="presentation"].modal-overlay {padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))!important}
+ .ess-modal,.ess-auth-modal,[role="dialog"],[aria-modal="true"],.dialog-panel,.modal-panel {width:100%;max-width:560px;max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px);padding:18px;border-radius:16px}
+ .ess-modal-header {position:sticky;top:-18px;z-index:1;padding-top:2px;background:inherit}
+}
+@media(min-width:641px) and (max-width:1024px){
+ .ess-modal-backdrop,.ess-auth-backdrop,[data-dialog-backdrop],.dialog-backdrop,.modal-backdrop,[role="presentation"].modal-overlay {padding:20px!important}
+ .ess-modal,.ess-auth-modal,[role="dialog"],[aria-modal="true"],.dialog-panel,.modal-panel {max-width:min(92vw,620px);max-height:88dvh}
+}
+@media(prefers-reduced-motion:no-preference){
+ .ess-modal,.ess-auth-modal,[role="dialog"],[aria-modal="true"] {animation:eph-dialog-enter 160ms ease-out both}
+ @keyframes eph-dialog-enter {from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+}
