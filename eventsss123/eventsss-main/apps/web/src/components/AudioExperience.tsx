@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { EPHINTA_MUSIC } from "../lib/music/ephinta-config";
+import { api } from "../lib/api";
 
 type Props = {
   audioUrl?: string;
@@ -149,11 +150,11 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         src={source}
         preload="metadata"
         playsInline
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+        onPlay={(event) => { setPlaying(true); lastPlaybackTime.current = event.currentTarget.currentTime; }}
+        onPause={() => { setPlaying(false); recordListening(); }}
+        onTimeUpdate={(event) => { const current = event.currentTarget.currentTime; const previous = lastPlaybackTime.current; if (playing && current > previous && current - previous <= 3) listenedSeconds.current += current - previous; lastPlaybackTime.current = current; setCurrentTime(current); }}
         onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
-        onEnded={() => changeTrack(1)}
+        onEnded={() => { recordListening(); changeTrack(1); }}
         onError={() => setStatus("This music track is unavailable. Check your connection or choose another track.")}
       />
       <p className="eph-audio__status" role="status" aria-live="polite">{status}</p>

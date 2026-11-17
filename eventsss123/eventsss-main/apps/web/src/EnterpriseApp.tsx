@@ -1318,6 +1318,10 @@ function VendorPortal({
 }
 
 function AffiliatePortal() {
+  const [musicSummary, setMusicSummary] = useState<any>(null);
+  const [musicError, setMusicError] = useState("");
+  const [musicLoading, setMusicLoading] = useState(true);
+  useEffect(() => { let active = true; api<any>("/music-dsp/owner/summary").then((r) => { if (active) setMusicSummary(r); }).catch((e: Error) => { if (active) setMusicError(e.message); }).finally(() => { if (active) setMusicLoading(false); }); return () => { active = false; }; }, []);
   const [code, setCode] = useState("");
   const [channel, setChannel] = useState("Social media");
   const [notice, setNotice] = useState("");
@@ -1391,6 +1395,16 @@ function AffiliatePortal() {
         >
           Save partner profile
         </button>
+      </section>
+      <section className="ess-panel music-dsp-panel">
+        <SectionTitle eyebrow="EPHINTA music DSP" title="Music rights & royalties" />
+        <p className="ess-muted">Your songs earn a 25% share of eligible net advertising, sponsorship and other music-channel revenue. The share is allocated by verified listening time.</p>
+        {musicLoading ? <p className="ess-muted">Loading music statements…</p> : musicError ? <p className="ess-muted" role="status">{musicError}</p> : <>
+          <div className="ess-metrics"><Metric label="Recorded plays" value={String(musicSummary?.usage?.plays ?? 0)} detail="Authenticated app listening sessions" accent /><Metric label="Listening time" value={Math.round((musicSummary?.usage?.listenedSeconds ?? 0) / 60) + " min"} detail="Eligible listening time" /><Metric label="Royalty share" value="25%" detail="Of eligible net DSP revenue" /></div>
+          <h3>Your music catalogue</h3><div className="ess-table-wrap"><table className="ess-table"><thead><tr><th>Track</th><th>Plays</th><th>Listening time</th></tr></thead><tbody>{(musicSummary?.tracks ?? []).map((track: any) => <tr key={track.key}><td>{track.title}</td><td>{track.plays}</td><td>{Math.round(track.listenedSeconds / 60)} min</td></tr>)}</tbody></table></div>
+          <h3>Royalty statements</h3><div className="ess-table-wrap"><table className="ess-table"><thead><tr><th>Period</th><th>Revenue share</th><th>Amount</th><th>Status</th></tr></thead><tbody>{(musicSummary?.statements ?? []).map((statement: any) => <tr key={statement.id}><td>{new Date(statement.periodStart).toLocaleDateString()} – {new Date(statement.periodEnd).toLocaleDateString()}</td><td>25%</td><td>{(Number(statement.royaltyMinor) / 100).toLocaleString(undefined, { style: "currency", currency: statement.currency })}</td><td>{statement.status}</td></tr>)}</tbody></table></div>
+          <small className="ess-muted">Statements are calculated from recorded revenue and eligible listening time. Payouts are not automatic yet.</small>
+        </>}
       </section>
       <section className="ess-panel">
         <p className="ess-eyebrow">Partner earnings</p>
