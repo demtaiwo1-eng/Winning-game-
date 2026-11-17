@@ -57,7 +57,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     const seconds = Math.floor(listenedSeconds.current);
     listenedSeconds.current = 0;
     lastPlaybackTime.current = 0;
-    if (seconds < 5 || !currentTrack?.key) return;
+    if (audioUrl || seconds < 5 || !currentTrack?.key) return;
     try { if (!localStorage.getItem("ess_access_token")) return; } catch { return; }
     void api("/music-dsp/plays", {
       method: "POST",
