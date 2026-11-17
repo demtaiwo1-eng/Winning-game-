@@ -30,6 +30,7 @@ import MarketplaceAdStrip from "./components/MarketplaceAdStrip";
 import DeviceSecurityGate from "./components/DeviceSecurityGate";
 import GlobalPaymentModePanel from "./components/GlobalPaymentModePanel";
 import ExperienceModeMenu from "./components/ExperienceModeMenu";
+import MusicDspAdminPanel from "./components/MusicDspAdminPanel";
 // All application styles are imported through the single global stylesheet in main.tsx.
 const PublicLanding = lazy(() => import("./components/PublicLanding"));
 const WalletPanel = lazy(() => import("./components/WalletPanel"));
@@ -1939,6 +1940,7 @@ function AdminPortal() {
       <GlobalPaymentModePanel />
       <FinanceOperationsPanel />
       <AdminControlsPanel />
+      <MusicDspAdminPanel />
       <PromotionsPanel mode="admin" />
     </>
   );
