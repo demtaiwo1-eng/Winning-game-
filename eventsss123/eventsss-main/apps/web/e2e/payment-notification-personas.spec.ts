@@ -144,8 +144,13 @@ for (const persona of personas) {
 
     if (persona.role === "CLIENT") {
       await expect(page).toHaveURL(/\/dashboard\/client$/);
-      // Select the payments section using the dashboard navigation.
-      await page.getByRole("button", { name: "Open Payments & finances" }).click();
+      // Use the visible navigation control for the current responsive layout.
+      const clientPaymentsShortcut = page.getByRole("button", { name: "Open payments and wallet" });
+      if (await clientPaymentsShortcut.isVisible()) {
+        await clientPaymentsShortcut.click();
+      } else {
+        await page.getByLabel("Planner dashboard section").selectOption("payments");
+      }
       await expect(page.getByLabel("Amount (major units)")).toBeVisible();
       await page.getByLabel("Amount (major units)").fill("10000");
       await expect(page.getByText(/2% platform fee/)).toBeVisible();
@@ -160,9 +165,13 @@ for (const persona of personas) {
       await page.getByRole("button", { name: "Open Notifications" }).click();
     } else {
       await expect(page).toHaveURL(/\/dashboard\/vendor$/);
-      // Use the dashboard's accessible section selector; the shortcut button is
-      // labelled only "Payments" in the rendered vendor dashboard.
-      await page.getByRole("button", { name: "Payments", exact: true }).click();
+      // Use the visible navigation control for the current responsive layout.
+      const vendorWalletShortcut = page.getByRole("button", { name: "Open Wallet & escrow" });
+      if (await vendorWalletShortcut.isVisible()) {
+        await vendorWalletShortcut.click();
+      } else {
+        await page.getByLabel("Vendor dashboard section").selectOption("wallet");
+      }
       await expect(page.getByLabel("Withdrawal amount (NGN)")).toBeVisible();
       await page.getByLabel("Withdrawal amount (NGN)").fill("10000");
       await page.getByLabel("Destination bank").selectOption("058");
