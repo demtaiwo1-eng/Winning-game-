@@ -40,7 +40,7 @@ process_pr() {
   log "Processing PR #$pr"
   state="$(field "$pr" state)"
   merged_at="$(field "$pr" mergedAt)"
-  if [[ "$state" == MERGED || "$merged_at" != null ]]; then
+  if [[ "$state" == MERGED ]]; then
     log "Already merged; verifying."
     MERGED+=("$pr")
     return 0
@@ -86,7 +86,7 @@ process_pr() {
   for ((i=1; i<=MAX_POLLS; i++)); do
     state="$(field "$pr" state)"
     merged_at="$(field "$pr" mergedAt)"
-    if [[ "$state" == MERGED && "$merged_at" != null ]]; then
+    if [[ "$state" == MERGED && -n "$merged_at" && "$merged_at" != null ]]; then
       log "Verified merged at $merged_at."
       MERGED+=("$pr")
       return 0
