@@ -1,0 +1,146 @@
+name: EPHINTA one-command production finalization
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ephinta-production-finalization
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate release and quality scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell syntax
+        run: |
+          bash -n eventsss123/eventsss-main/scripts/complete-production-release.sh
+          bash -n eventsss123/eventsss-main/scripts/complete-ephinta-quality-gates.sh
+
+  quality:
+    name: Full frontend, API and Android quality gate
+    needs: [validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ess
+          POSTGRES_PASSWORD: ess_test_password
+          POSTGRES_DB: ess_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ess -d ess_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: "1"
+      NODE_ENV: test
+      DATABASE_MODE: local
+      DATABASE_URL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
+      DATABASE_URL_LOCAL: postgresql://ess:ess_test_password@127.0.0.1:5432/ess_test?schema=public
+      JWT_SECRET: e2e-only-secret-change-me-0123456789abcdef
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Install Playwright browser dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run complete EPHINTA quality gate
+        run: bash scripts/complete-ephinta-quality-gates.sh
+      - name: Upload QA reports and browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-complete-quality-gate
+          path: |
+            eventsss123/eventsss-main/artifacts/quality-gate/**
+            eventsss123/eventsss-main/apps/web/test-results/**
+            eventsss123/eventsss-main/apps/web/playwright-report/**
+            eventsss123/eventsss-main/apps/web/design-quality-report.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  finalize:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [validate, quality]
+    name: Verify live services and build original-key signed APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_CERT_SHA256: ${{ vars.ANDROID_CERT_SHA256 }}
+      EPHINTA_DB_BACKUP_RESTORE_VERIFIED: ${{ vars.EPHINTA_DB_BACKUP_RESTORE_VERIFIED }}
+      EPHINTA_DB_DURABLE_BEFORE_EXPIRY: ${{ vars.EPHINTA_DB_DURABLE_BEFORE_EXPIRY }}
+      EPHINTA_LIVE_PAYMENT_SETTLEMENT_VERIFIED: ${{ vars.EPHINTA_LIVE_PAYMENT_SETTLEMENT_VERIFIED }}
+      EPHINTA_DSP_AD_SPONSOR_RECONCILIATION_VERIFIED: ${{ vars.EPHINTA_DSP_AD_SPONSOR_RECONCILIATION_VERIFIED }}
+      EPHINTA_DSP_RIGHTS_OWNER_PAYOUTS_VERIFIED: ${{ vars.EPHINTA_DSP_RIGHTS_OWNER_PAYOUTS_VERIFIED }}
+      EPHINTA_ANDROID_PHYSICAL_DEVICE_TESTED: ${{ vars.EPHINTA_ANDROID_PHYSICAL_DEVICE_TESTED }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: android-actions/setup-android@v3
+      - name: Run production finalizer
+        id: finalize
+        shell: bash
+        run: |
+          set +e
+          bash scripts/complete-production-release.sh
+          status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Upload signed APK and readiness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-production-finalization
+          path: |
+            eventsss123/eventsss-main/artifacts/production-finalization/*
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Enforce final production gate
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.finalize.outputs.exit_code }}" != "0" ]]; then
+            echo "::error::EPHINTA production finalization has unresolved external gates. See the uploaded readiness report."
+            exit 1
+          fi
