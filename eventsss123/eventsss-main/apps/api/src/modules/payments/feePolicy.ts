@@ -1,5 +1,7 @@
 import { commissionMinor } from "../../lib/money";
 
+export const TRANSACTION_FEE_BPS = 200;
+
 export interface PaymentFeeConfig {
   COMMISSION_BPS: number;
   WALLET_TOPUP_FEE_BPS?: number;
@@ -26,9 +28,9 @@ export function bookingCommissionMinor(amountMinor: bigint, config: PaymentFeeCo
 
 /** Outgoing OPay bank withdrawals always carry the agreed 2% transaction fee. */
 export function payoutFeeBps(): number {
-  return 200;
+  return TRANSACTION_FEE_BPS;
 }
 
 export function payoutFeeMinor(amountMinor: bigint, _config: PaymentFeeConfig & { PAYOUT_FEE_BPS?: number }): bigint {
-  return commissionMinor(amountMinor, 200);
+  return commissionMinor(amountMinor, TRANSACTION_FEE_BPS);
 }
