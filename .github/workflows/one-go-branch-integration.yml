@@ -1,0 +1,59 @@
+name: One-go branch integration
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/integrate-all-branches-one-go.sh
+      - .github/workflows/one-go-branch-integration.yml
+  workflow_dispatch:
+    inputs:
+      run_local_verify:
+        description: Run the full API, web, and Android verification suite
+        required: true
+        type: boolean
+        default: true
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  actions: read
+concurrency:
+  group: one-go-branch-integration
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: cli/cli@v2
+      - name: Authenticate GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh auth status
+      - name: Run integration and verification
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RUN_LOCAL_VERIFY: ${{ github.event_name == 'push' && '1' || (inputs.run_local_verify && '1' || '0') }}
+        run: bash scripts/integrate-all-branches-one-go.sh
+      - name: Upload integration report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-integration-report
+          path: artifacts/branch-integration/*.tsv
+          if-no-files-found: ignore
