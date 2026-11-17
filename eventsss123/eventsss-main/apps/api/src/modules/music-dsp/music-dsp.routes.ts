@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { requireAuth, requireRole } from "../../middleware/auth";
+import { allocateMusicRoyalties, MUSIC_RIGHTS_OWNER_SHARE_BPS } from "./royaltyPolicy";
 
 export const musicDspRouter = Router();
 
@@ -130,9 +131,9 @@ musicDspRouter.post("/admin/settlements/generate", requireAuth, requireRole("ADM
   if (totalSeconds <= 0 || totals.size === 0) throw new HttpError(409, "NO_ALLOCATABLE_USAGE_OR_REVENUE", "No eligible rights-holder listening time or recorded revenue exists for this period.");
   const statements = [];
   for (const [currency, gross] of totals) {
-    const pool = gross * 2500n / 10000n;
-    for (const [ownerId, seconds] of secondsByOwner) {
-      const royalty = pool * BigInt(seconds) / BigInt(totalSeconds);
+    const allocations = allocateMusicRoyalties(gross, secondsByOwner);
+    for (const allocation of allocations) {
+      const { ownerId, listenedSeconds: seconds, royaltyMinor: royalty } = allocation;
       const existing = await prisma.musicRoyaltyStatement.findUnique({
         where: { ownerId_periodStart_periodEnd_currency: { ownerId, periodStart, periodEnd, currency } },
       });
@@ -141,7 +142,7 @@ musicDspRouter.post("/admin/settlements/generate", requireAuth, requireRole("ADM
         continue;
       }
       const statement = await prisma.musicRoyaltyStatement.create({
-        data: { ownerId, periodStart, periodEnd, currency, grossRevenueMinor: gross, royaltyMinor: royalty, shareRateBps: 2500, listenedSeconds: seconds },
+        data: { ownerId, periodStart, periodEnd, currency, grossRevenueMinor: gross, royaltyMinor: royalty, shareRateBps: MUSIC_RIGHTS_OWNER_SHARE_BPS, listenedSeconds: seconds },
       });
       statements.push({ ownerId, currency, royaltyMinor: statement.royaltyMinor.toString(), status: statement.status, alreadyGenerated: false });
     }
