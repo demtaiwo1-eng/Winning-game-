@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { allocateMusicRoyalties, MUSIC_RIGHTS_OWNER_SHARE_BPS } from "./royaltyPolicy";
 
 describe("music DSP royalty policy", () => {
-  it("allocates exactly 25% of net revenue by listening seconds", () => {
+  it("allocates exactly 30% of net revenue by listening seconds", () => {
     const rows = allocateMusicRoyalties(10000n, new Map([["owner-a", 75], ["owner-b", 25]]));
     expect(MUSIC_RIGHTS_OWNER_SHARE_BPS).toBe(2500);
     expect(rows.map((r) => r.royaltyMinor)).toEqual([1875n, 625n]);
