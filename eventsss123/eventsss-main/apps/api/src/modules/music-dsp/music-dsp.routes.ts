@@ -56,7 +56,7 @@ musicDspRouter.get("/admin/overview", requireAuth, requireRole("ADMIN"), asyncHa
     prisma.musicRoyaltyStatement.findMany({ orderBy: { periodStart: "desc" }, take: 50, include: { owner: { select: { displayName: true } } } }),
   ]);
   res.json({
-    tracks: tracks.map(t => ({ id: t.id, key: t.key, title: t.title, artist: t.artist, active: t.active, plays: t._count.plays, rightsOwner: t.rightsOwner })),
+    tracks: tracks.map(t => ({ id: t.id, key: t.key, title: t.title, artist: t.artist, assetUrl: t.assetUrl, active: t.active, plays: t._count.plays, rightsOwner: t.rightsOwner })),
     owners,
     usage: { plays: plays._count._all, listenedSeconds: plays._sum.listenedSeconds ?? 0 },
     revenue: revenues.map(r => ({ id: r.id, source: r.source, amountMinor: r.amountMinor.toString(), currency: r.currency, periodStart: r.periodStart, periodEnd: r.periodEnd, reference: r.reference })),
