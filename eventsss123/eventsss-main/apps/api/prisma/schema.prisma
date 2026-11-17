@@ -1179,7 +1179,7 @@ model MusicRoyaltyStatement {
   periodStart       DateTime
   periodEnd         DateTime
   currency          String
-  grossRevenueMinor BigInt
+  netRevenueMinor BigInt
   royaltyMinor      BigInt
   shareRateBps      Int      @default(2500)
   listenedSeconds   Int
