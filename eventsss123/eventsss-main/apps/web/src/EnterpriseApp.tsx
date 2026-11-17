@@ -1399,7 +1399,7 @@ function AffiliatePortal() {
       </section>
       <section className="ess-panel music-dsp-panel">
         <SectionTitle eyebrow="EPHINTA music DSP" title="Music rights & royalties" />
-        <p className="ess-muted">Your songs earn a 25% share of eligible net advertising, sponsorship and other music-channel revenue. The share is allocated by verified listening time.</p>
+        <p className="ess-muted">Your songs earn a 25% share of eligible net advertising, sponsorship and other music-channel revenue. The share is allocated by eligible recorded listening time.</p>
         {musicLoading ? <p className="ess-muted">Loading music statements…</p> : musicError ? <p className="ess-muted" role="status">{musicError}</p> : <>
           <div className="ess-metrics"><Metric label="Recorded plays" value={String(musicSummary?.usage?.plays ?? 0)} detail="Authenticated app listening sessions" accent /><Metric label="Listening time" value={Math.round((musicSummary?.usage?.listenedSeconds ?? 0) / 60) + " min"} detail="Eligible listening time" /><Metric label="Royalty share" value="25%" detail="Of eligible net DSP revenue" /></div>
           <h3>Your music catalogue</h3><div className="ess-table-wrap"><table className="ess-table"><thead><tr><th>Track</th><th>Plays</th><th>Listening time</th></tr></thead><tbody>{(musicSummary?.tracks ?? []).map((track: any) => <tr key={track.key}><td>{track.title}</td><td>{track.plays}</td><td>{Math.round(track.listenedSeconds / 60)} min</td></tr>)}</tbody></table></div>
