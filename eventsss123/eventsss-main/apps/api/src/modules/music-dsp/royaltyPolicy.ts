@@ -7,7 +7,7 @@ export type MusicRoyaltyAllocation = {
 };
 
 /**
- * Allocate exactly 25% of net DSP revenue by eligible listening seconds.
+ * Allocate exactly 30% of net DSP revenue by eligible listening seconds.
  * Largest-remainder rounding keeps the sum of owner allocations equal to the
  * royalty pool without creating or losing minor currency units.
  */
