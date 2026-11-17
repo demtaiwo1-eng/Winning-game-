@@ -2,6 +2,11 @@ name: EPHINTA one-command production finalization
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ephinta-production-finalization.yml'
+      - 'eventsss123/eventsss-main/scripts/complete-production-release.sh'
 
 permissions:
   contents: read
@@ -11,7 +16,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate:
+    name: Validate finalizer script and workflow inputs
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell syntax
+        run: bash -n eventsss123/eventsss-main/scripts/complete-production-release.sh
+
   finalize:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [validate]
+
     name: Verify live services and build original-key signed APK
     runs-on: ubuntu-latest
     timeout-minutes: 45
