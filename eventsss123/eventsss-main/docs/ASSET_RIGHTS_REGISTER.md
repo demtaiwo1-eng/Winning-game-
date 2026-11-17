@@ -1,13 +1,21 @@
 # EPHINTA asset rights register
 
 ## Music recordings
-The rights holder has expressly confirmed that they hold commercial rights to all songs currently included in the repository. The recordings are retained for use in the EPHINTA in-app music experience and DSP MVP.
 
-This register records the rights holder's declaration. It is not an independent legal audit and does not replace contracts, split sheets, performer consents, producer agreements, master-use rights, publishing rights, territory/term details or written evidence required by distribution partners.
+The project owner has expressly confirmed on 17 November 2026 that they hold commercial rights to all songs currently included in the repository, including the six Wale Waves event recordings. The recordings are retained for EPHINTA in-app streaming and the EPHINTA Music DSP.
 
-| Asset group | Rights status | Evidence |
-| --- | --- | --- |
-| Six Wale Waves event recordings (wedding, naming and burial categories) | Rights holder declaration received; commercial use authorised by the rights holder | Project-owner confirmation; attach supporting agreements before external DSP distribution |
+The rights manifest records this owner declaration for both the repository archive copies and the six copies served by the web app. This is a rights-holder declaration, not an independent legal audit. Supporting agreements and contributor split details should remain in private records and be attached to the release evidence before external DSP distribution, sublicensing or third-party distribution.
 
-## Release rule
-Retain the recordings in the app. Before licensing tracks to third-party DSPs, monetising through an external distributor, or sublicensing to sponsors, record the relevant master and publishing rights, contributors, territories, term and revenue splits. Do not infer rights for any future asset from this declaration.
+| Recording | Category | Current treatment |
+|---|---|---|
+| Here we are 1 and 2 — Wale Waves | Wedding | Retained; in-app catalogue |
+| Welcome, Little One 1 and 2 — Wale Waves | Naming ceremony | Retained; in-app catalogue |
+| You Will Live in Our Hearts 1 and 2 — Wale Waves | Burial | Retained; in-app catalogue |
+
+## Other visual assets
+
+The app contains EPHINTA logo variants, favicons, launcher/splash images and avatar illustrations. Their commercial origin should be confirmed by the project owner and recorded before third-party licensing or redistribution.
+
+## Manifest requirements
+
+Each shipped non-code asset should have an exact repository-relative path, rights holder, licence or permission description, commercial-use status and evidence reference in `docs/assets/asset-rights.json`. Private contracts and personal information must not be committed to the public repository.
