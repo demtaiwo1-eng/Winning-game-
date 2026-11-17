@@ -37,3 +37,4 @@ release/android-signing-helper-current-20261108	REVIEW		Review helper changes ag
 release/ios-signed-ci-20261108	REVIEW		Requires owner-managed Apple signing credentials and workflow review
 release/paid-access-readme-payment-audit-20261113	REVIEW		Review rights/licence gates and mocked-payment claims independently
 verify/ephinta-main-acceptance-20261107	REVIEW		Do not remove existing E2E workflows; compare unique test changes
+# hosted audit run trigger; dispositions remain intentionally REVIEW until verified
