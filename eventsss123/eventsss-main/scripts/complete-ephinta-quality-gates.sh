@@ -38,6 +38,9 @@ if [[ ! -f package-lock.json ]]; then
 fi
 
 run_gate "Install locked workspace dependencies" npm ci
+# The API startup runs ensureReferenceData(), which requires the migrated schema.
+# Browser suites need the same disposable PostgreSQL schema as the dedicated E2E workflow.
+run_gate "Apply Prisma migrations to disposable CI database" npm run db:deploy
 run_gate "API, frontend unit tests and KYC research checks" npm run check
 run_gate "Frontend static design-system audit" npm run design:audit:strict -w apps/web
 run_gate "Responsive UX browser audit" npm run ux:audit
