@@ -3365,8 +3365,6 @@ function AuthModal({
     const message = fieldError(field, value);
     return message ? <span className="ess-form-error" id={`auth-${field}-error`} role="alert">{message}</span> : null;
   };
-  const suggestPassword = () =>
-    setPassword(`Ess-${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}!`);
   return (
     <div className="ess-modal-backdrop ess-auth-backdrop">
       <div id="eph-auth-dialog" className="ess-auth-modal" data-role={role.toLowerCase()} role="dialog" aria-modal="true" aria-labelledby="ess-auth-title">
@@ -3698,15 +3696,6 @@ function AuthModal({
                       </div>
                     );
                   })()}
-                  {mode === "signup" && (
-                    <button
-                      type="button"
-                      className="ess-quiet-button"
-                      onClick={suggestPassword}
-                    >
-                      Suggest a strong password
-                    </button>
-                  )}
                 </div>
               )}
           </>}
