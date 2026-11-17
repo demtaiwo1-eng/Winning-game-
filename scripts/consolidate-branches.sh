@@ -87,8 +87,12 @@ BASE_SHA="$(git rev-parse HEAD)"
 echo "Main baseline: $BASE_SHA"
 
 declare -A disposition expected rationale seen
-while IFS=$'\t' read -r b d sha why || [[ -n "${b:-}" ]]; do
-  [[ -z "${b:-}" || "$b" == branch || "$b" == \#* ]] && continue
+while IFS= read -r line || [[ -n "$line" ]]; do
+  b="$(printf '%s' "$line" | cut -f1)"
+  [[ -z "$b" || "$b" == branch || "$b" == \#* ]] && continue
+  d="$(printf '%s' "$line" | cut -f2)"
+  sha="$(printf '%s' "$line" | cut -f3)"
+  why="$(printf '%s' "$line" | cut -f4-)"
   if [[ -n "${seen[$b]+x}" ]]; then
     echo "ERROR: duplicate manifest entry for $b" >&2; exit 2
   fi
@@ -177,7 +181,7 @@ if (( PUSH )); then
   echo "Pushing consolidated main..."
   git push "$REMOTE" "$MAIN_BRANCH"
   git fetch "$REMOTE" "$MAIN_BRANCH"
-  git merge-base --is-ancestor "refs/remotes/$REMOTE/$MAIN_BRANCH" HEAD || {
+  git merge-base --is-ancestor HEAD "refs/remotes/$REMOTE/$MAIN_BRANCH" || {
     echo "ERROR: pushed remote main is not contained in local main." >&2; exit 1;
   }
 fi
