@@ -45,7 +45,7 @@ musicDspRouter.get("/owner/summary", requireAuth, requireRole("AFFILIATE"), asyn
   res.setHeader("Cache-Control", "no-store");
   res.json({
     owner: { displayName: owner.displayName },
-    shareRateBps: 3000,
+    shareRateBps: MUSIC_RIGHTS_OWNER_SHARE_BPS,
     tracks: tracks.map((track) => {
       const usage = byTrack.get(track.id);
       return { key: track.key, title: track.title, artist: track.artist, active: track.active, plays: usage?._count._all ?? 0, listenedSeconds: usage?._sum.listenedSeconds ?? 0 };
@@ -147,5 +147,5 @@ musicDspRouter.post("/admin/settlements/generate", requireAuth, requireRole("ADM
       statements.push({ ownerId, currency, royaltyMinor: statement.royaltyMinor.toString(), status: statement.status, alreadyGenerated: false });
     }
   }
-  res.json({ shareRateBps: 3000, totalEligibleListenSeconds: totalSeconds, statements });
+  res.json({ shareRateBps: MUSIC_RIGHTS_OWNER_SHARE_BPS, totalEligibleListenSeconds: totalSeconds, statements });
 }));
