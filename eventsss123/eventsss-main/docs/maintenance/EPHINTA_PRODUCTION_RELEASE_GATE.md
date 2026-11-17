@@ -10,6 +10,13 @@ Last reviewed: 2026-11-17
 - The API readiness endpoint returned HTTP 200 in Render runtime logs, and no error/fatal API log entries were present in the reviewed window.
 - The current production database is Render Postgres `ephinta_db`, Free plan, status available. Render reports its expiry as **2026-11-26**. This is a time-limited database, not a durable production data-retention arrangement.
 
+## Android distribution status
+
+- The latest GitHub release at review time is labelled **Android Test APK - Build 1586**; it is not a verified production-signed Play Store release.
+- The production signing workflow requires the original release keystore and the GitHub Actions secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, plus repository variable `ANDROID_CERT_SHA256`.
+- The production workflow also requires explicit confirmation that the test APK has been installed and tested on a physical Android device.
+- Do not generate a replacement signing key: existing installations can only receive normal updates signed with the matching original certificate.
+
 ## Required before commercial production
 
 - [ ] Back up the current production database and verify that the backup can be restored.
