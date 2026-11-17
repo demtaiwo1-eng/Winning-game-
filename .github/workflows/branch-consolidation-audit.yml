@@ -1,6 +1,12 @@
 name: Branch consolidation audit
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/consolidate-branches.sh
+      - docs/branch-consolidation-manifest.tsv
+      - .github/workflows/branch-consolidation-audit.yml
   workflow_dispatch:
     inputs:
       mode:
