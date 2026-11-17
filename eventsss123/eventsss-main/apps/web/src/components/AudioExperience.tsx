@@ -48,8 +48,22 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [status, setStatus] = useState("");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const tracks = EPHINTA_MUSIC.categoryTracks[category];
-  const source = audioUrl || tracks[trackIndex] || tracks[0];
-  const trackTitle = source.split("/").pop()?.replace(/%20/g, " ").replace(/\.mp3$/i, "").replace(/[-_]/g, " ") || CATEGORY_LABELS[category];
+  const currentTrack = tracks[trackIndex] || tracks[0];
+  const source = audioUrl || currentTrack.src;
+  const trackTitle = audioUrl ? (audioUrl.split("/").pop() || CATEGORY_LABELS[category]) : currentTrack.title;
+  const listenedSeconds = useRef(0);
+  const lastPlaybackTime = useRef(0);
+  const recordListening = () => {
+    const seconds = Math.floor(listenedSeconds.current);
+    listenedSeconds.current = 0;
+    lastPlaybackTime.current = 0;
+    if (seconds < 5 || !currentTrack?.key) return;
+    try { if (!localStorage.getItem("ess_access_token")) return; } catch { return; }
+    void api("/music-dsp/plays", {
+      method: "POST",
+      body: JSON.stringify({ trackKey: currentTrack.key, listenedSeconds: Math.min(seconds, 3600) }),
+    }).catch(() => undefined);
+  };
 
   useEffect(() => { setPreferencesLoaded(true); }, []);
   useEffect(() => {
