@@ -116,6 +116,23 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum PaymentRefundStatus {
+  REQUESTED
+  MANUAL_REVIEW
+  SUBMITTING
+  SUBMISSION_UNKNOWN
+  INITIAL
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum RefundWay {
+  Original
+  BankAccount
+}
+
 enum PayoutStatus {
   PENDING
   PROCESSING
@@ -206,6 +223,7 @@ model User {
   receivedMessages Message[]             @relation("ReceivedMessages")
   reviews          Review[]
   payments         PaymentIntent[]
+  paymentRefunds   PaymentRefund[]
   eventDeposits    EventDeposit[]
   bookingPaymentRequests BookingPaymentRequest[]
   carts            Cart[]
@@ -559,6 +577,7 @@ model Wallet {
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   entries        LedgerEntry[]
   payouts        Payout[]
+  refunds        PaymentRefund[]
 
   @@unique([userId, currency])
 }
@@ -625,6 +644,7 @@ model PaymentIntent {
   user        User          @relation(fields: [userId], references: [id])
   checkoutSession CheckoutSession? @relation(fields: [checkoutSessionId], references: [id], onDelete: SetNull)
   checkoutSessionId String?
+  refunds       PaymentRefund[]
 
   @@index([userId])
   @@index([status, reconciliationNextAttemptAt])
@@ -632,6 +652,39 @@ model PaymentIntent {
   @@index([checkoutSessionId])
 }
 
+
+
+/// Durable provider refund request. Creating this row never changes a wallet balance.
+model PaymentRefund {
+  id                         String              @id @default(uuid())
+  paymentIntentId            String
+  userId                     String
+  walletId                   String?
+  provider                   String              @default("opay")
+  providerRef                String              @unique
+  idempotencyKey              String              @unique
+  amountMinor                 BigInt
+  currency                    String
+  refundWay                   RefundWay           @default(Original)
+  status                      PaymentRefundStatus @default(REQUESTED)
+  refundReason                String?
+  providerOrderNo             String?
+  providerStatus              String?
+  reconciliationAttempts      Int                 @default(0)
+  reconciliationNextAttemptAt DateTime?
+  reconciliationLastError     String?
+  submittedAt                 DateTime?
+  completedAt                 DateTime?
+  createdAt                   DateTime            @default(now())
+  updatedAt                   DateTime            @updatedAt
+  paymentIntent               PaymentIntent       @relation(fields: [paymentIntentId], references: [id], onDelete: Restrict)
+  user                        User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  wallet                      Wallet?             @relation(fields: [walletId], references: [id], onDelete: SetNull)
+
+  @@index([paymentIntentId, status])
+  @@index([userId, createdAt])
+  @@index([status, reconciliationNextAttemptAt])
+}
 
 model PaymentProviderThrottle {
   provider      String   @id
