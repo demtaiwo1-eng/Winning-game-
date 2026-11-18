@@ -331,3 +331,14 @@ Reviewed 2026-11-18:
 - Its EnterpriseApp and related planner/guest-check-in/notification/verifier snapshots are older than main. The branch version omits current main integrations for device security, payment-mode administration, experience modes, music administration, marketplace advertising, and current auth/navigation. Preserve main and do not wholesale merge.
 - Branch-only CSS is coupled to the older EnterpriseApp markup and stylesheet import order. Do not add it without a separate compatibility review.
 - No files copied, PR opened, merge or deletion performed. CI remains unverified.
+
+
+## Follow-up review: KYC, device security, theme, experience and marketplace branches (2026-11-18)
+
+- `feature/ephinta-bytid-kyc-20261108`: the Bytid client is byte-for-byte identical to main. Main's KYC routes and payment-provider implementation are newer, larger snapshots; preserve main's conservative provider/KYC handling. No branch-only implementation needs copying based on this comparison.
+- `feature/ephinta-device-security-20261108`: main already has the DeviceSecurityGate and App integration. The branch gate is a different older snapshot; main retains current session/account reset and guarded-storage protections. Its Android/iOS permission metadata and install-smoke workflow are older than main. Preserve main.
+- `feature/global-theme-contrast-20261116`: the marketplace catalogue component is identical to main. The branch's theme-contract stylesheet is only about 6.3 KB compared with main's 15.5 KB current implementation. Main's public journey E2E and global theme styling are already the preferred versions. No merge.
+- `feature/experience-modes-gamified-demo-20261116`: ExperienceModeMenu is byte-for-byte identical to main; main already integrates it in EnterpriseApp and has newer global styling. No merge.
+- `fix/customer-journey-landing-location-20261114`: earlier comparisons found MarketplaceBrowse and MarketplaceAdStrip identical to main; its PublicLanding, audio and responsive journey tests are older snapshots. Its Android/iOS manifests also predate main's permission-purpose descriptions. No safe missing change identified.
+- `fix/ephinta-marketplace-carousel-portal-ui-20261109`: main already has the remote-update notice, but the branch versions of RemoteUpdateNotice and its E2E spec differ and are shorter; main's versions include additional safeguards. The audio-platform verification script is byte-for-byte identical. Branch workflow, splash, audio, live-update and landing changes are older or already represented more safely on main. Preserve main.
+- These branches were not merged or deleted. No files copied and no PR opened. CI remains unverified.
