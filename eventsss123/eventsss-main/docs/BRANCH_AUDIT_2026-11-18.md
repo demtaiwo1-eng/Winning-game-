@@ -184,3 +184,17 @@ This branch only changes the Android Gradle wrapper, public-journey E2E test and
 ### Verified-feature recovery branch — overlaps older audio and journey snapshots
 
 Its audio E2E, public journey E2E, EnterpriseApp, main entrypoint and audio CSS overlap earlier snapshots already superseded by main. Its theme-contrast stylesheet is an older copy of the current main stylesheet. Do not merge wholesale.
+
+
+## Follow-up review: marketplace, acceptance, and signing branches
+
+Reviewed 2026-11-18 against the current `main` tree:
+
+- `fix/ephinta-marketplace-carousel-portal-ui-20261109`: diverged (69 commits ahead, 244 behind at comparison). It contains candidate remote-update notice and audio-platform verification additions, but also changes core startup/update behavior, AudioExperience, PublicLanding, app entrypoint, splash behavior, and multiple release workflows. The branch's RemoteUpdateNotice uses localStorage and a remote manifest and attempts native bundle installation; this requires focused security/rollback/API-contract testing before adoption. Do not merge wholesale. Current main already has newer release workflows and app architecture.
+- `verify/ephinta-main-acceptance-20261107`: diverged (10 ahead, 335 behind). Adds responsive UX audit coverage and completion-tracker notes but removes `.github/workflows/ess-phase12-e2e.yml`. Keep the workflow removal out. Consider selectively porting only test assertions that remain valid against current routes/design tokens; no test execution was available in this review.
+- Android signed-release workflow branch `release/android-signed-ci-20261108`: main already contains a more complete signed-release workflow. The current main workflow uses read-only contents permission for the signed artifact build, dispatch-only signing, owner-configured secrets, certificate fingerprint verification, and temporary keystore cleanup. No replacement needed.
+- iOS signed-release branch `release/ios-signed-ci-20261108`: main already contains an iOS signed-distribution workflow with explicit secret validation and signing verification. No replacement needed.
+- Android signing-helper branch `release/android-signing-helper-20261108`: helper generates a NEW key and uploads GitHub secrets, but explicitly requires a Codespace and refuses to overwrite existing secret names. It is not suitable for this user workflow (no Codespace) and must not be run against an existing production signing identity. Do not merge/run as a completion shortcut.
+- Main's production APK workflow requires owner-configured keystore secrets and a certificate fingerprint, checks API health/readiness, requires physical-device test confirmation for manual dispatch, and verifies the known Build 869 signing identity before publishing. This is the safer existing release gate; it cannot produce a production-signed APK until the owner configures the original signing material in GitHub settings.
+
+No branch was merged or deleted in this review. CI remains unverified where no workflow run/status was returned.
