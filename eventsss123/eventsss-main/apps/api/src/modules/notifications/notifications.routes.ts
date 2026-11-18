@@ -140,6 +140,65 @@ notificationsRouter.delete(
   }),
 );
 
+notificationsRouter.patch(
+  "/:notificationId/unread",
+  asyncHandler(async (req, res) => {
+    if (!uuidPattern.test(req.params.notificationId)) {
+      return res.status(400).json({ error: { code: "INVALID_ID", message: "Notification ID is invalid" } });
+    }
+    const result = await prisma.notification.updateMany({
+      where: { id: req.params.notificationId, userId: req.user!.id },
+      data: { readAt: null },
+    });
+    if (!result.count) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Notification not found" } });
+    res.json({ ok: true });
+  }),
+);
+
+notificationsRouter.patch(
+  "/:notificationId/archive",
+  asyncHandler(async (req, res) => {
+    if (!uuidPattern.test(req.params.notificationId)) {
+      return res.status(400).json({ error: { code: "INVALID_ID", message: "Notification ID is invalid" } });
+    }
+    const result = await prisma.notification.updateMany({
+      where: { id: req.params.notificationId, userId: req.user!.id },
+      data: { archivedAt: new Date() },
+    });
+    if (!result.count) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Notification not found" } });
+    res.json({ ok: true });
+  }),
+);
+
+notificationsRouter.patch(
+  "/:notificationId/unarchive",
+  asyncHandler(async (req, res) => {
+    if (!uuidPattern.test(req.params.notificationId)) {
+      return res.status(400).json({ error: { code: "INVALID_ID", message: "Notification ID is invalid" } });
+    }
+    const result = await prisma.notification.updateMany({
+      where: { id: req.params.notificationId, userId: req.user!.id },
+      data: { archivedAt: null },
+    });
+    if (!result.count) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Notification not found" } });
+    res.json({ ok: true });
+  }),
+);
+
+notificationsRouter.delete(
+  "/:notificationId",
+  asyncHandler(async (req, res) => {
+    if (!uuidPattern.test(req.params.notificationId)) {
+      return res.status(400).json({ error: { code: "INVALID_ID", message: "Notification ID is invalid" } });
+    }
+    const result = await prisma.notification.deleteMany({
+      where: { id: req.params.notificationId, userId: req.user!.id },
+    });
+    if (!result.count) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Notification not found" } });
+    res.json({ ok: true });
+  }),
+);
+
 notificationsRouter.get(
   "/preferences",
   asyncHandler(async (req, res) => {
