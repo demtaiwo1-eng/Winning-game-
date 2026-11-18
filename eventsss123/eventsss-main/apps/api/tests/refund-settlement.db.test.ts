@@ -154,6 +154,29 @@ describe.skipIf(!run)("OPay refund settlement transaction (DB)", () => {
     })).toBe(1);
   });
 
+  it("serializes concurrent settlement attempts into one wallet and fee reversal", async () => {
+    const fixture = await makeFixture("concurrent", FEE);
+    const results = await Promise.all([
+      settleProviderConfirmedOpayRefund(fixture.refund.id),
+      settleProviderConfirmedOpayRefund(fixture.refund.id),
+    ]);
+
+    expect(results.filter((result) => result.settled)).toHaveLength(1);
+    expect(results.filter((result) => result.alreadySettled)).toHaveLength(1);
+    const wallet = await prisma.wallet.findUniqueOrThrow({ where: { id: fixture.wallet.id } });
+    const account = await prisma.platformRevenueAccount.findUniqueOrThrow({ where: { id: fixture.account.id } });
+    const refund = await prisma.paymentRefund.findUniqueOrThrow({ where: { id: fixture.refund.id } });
+    expect(wallet.availableMinor).toBe(0n);
+    expect(account.balanceMinor).toBe(fixture.startingRevenueBalance);
+    expect(refund.status).toBe("SUCCEEDED");
+    expect(await prisma.ledgerEntry.count({
+      where: { idempotencyKey: `payment_refund_wallet_reversal:${fixture.refund.id}` },
+    })).toBe(1);
+    expect(await prisma.platformRevenueEntry.count({
+      where: { idempotencyKey: `payment_refund_platform_fee_reversal:${fixture.refund.id}` },
+    })).toBe(1);
+  });
+
   it("rolls back the wallet reversal when platform fee funds are unavailable", async () => {
     const fixture = await makeFixture("rollback", 0n);
     await expect(settleProviderConfirmedOpayRefund(fixture.refund.id)).rejects.toMatchObject({
