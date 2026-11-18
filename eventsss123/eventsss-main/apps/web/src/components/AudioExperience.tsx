@@ -29,6 +29,7 @@ function readCategory(): MusicCategory {
 export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay = false }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const skipNextAutoPlay = useRef(false);
+  const resumeAfterTrackChange = useRef(false);
   const [category, setCategory] = useState<MusicCategory>(readCategory);
   const [trackIndex, setTrackIndex] = useState(0);
   const [volume, setVolume] = useState(() => {
@@ -138,6 +139,15 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   }, [showPrompt, preferencesLoaded, consent, authDialogOpen]);
 
   useEffect(() => {
+    if (!resumeAfterTrackChange.current) return;
+    resumeAfterTrackChange.current = false;
+    if (consent !== true || authDialogOpen) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    void audio.play().catch(() => setStatus("Tap Play to continue music; this browser requires a user gesture."));
+  }, [source, consent, authDialogOpen]);
+
+  useEffect(() => {
     if (!autoPlay || consent !== true || !preferencesLoaded) return;
     if (skipNextAutoPlay.current) { skipNextAutoPlay.current = false; return; }
     const audio = audioRef.current;
@@ -189,7 +199,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         onPause={() => { setPlaying(false); recordListening(); }}
         onTimeUpdate={(event) => { const current = event.currentTarget.currentTime; const previous = lastPlaybackTime.current; if (playing && current > previous && current - previous <= 3) listenedSeconds.current += current - previous; lastPlaybackTime.current = current; setCurrentTime(current); }}
         onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
-        onEnded={() => { recordListening(); changeTrack(1); }}
+        onEnded={() => { recordListening(); resumeAfterTrackChange.current = consent === true && !authDialogOpen; changeTrack(1); }}
         onError={() => setStatus("This music track is unavailable. Check your connection or choose another track.")}
       />
       <p className="eph-audio__status" role="status" aria-live="polite">{status}</p>
