@@ -426,6 +426,55 @@ describe("OPay cashier refunds", () => {
     expect(result.amountMinor).toBe(4000n);
   });
 
+  it("rejects a refund query response with a different refund reference", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      code: "00000",
+      data: {
+        reference: "some-other-refund",
+        originalReference: "payment-identity",
+        refundAmount: { total: 1000, currency: "NGN" },
+        orderStatus: "SUCCESS",
+      },
+    }), { status: 200 })));
+
+    await expect(queryOpayRefund({
+      reference: "refund-identity",
+      originalReference: "payment-identity",
+      amountMinor: 1000n,
+    })).rejects.toThrow("reference does not match");
+  });
+
+  it("rejects a refund query response with a different amount or currency", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        code: "00000",
+        data: {
+          reference: "refund-amount-check",
+          originalReference: "payment-amount-check",
+          refundAmount: { total: 999, currency: "NGN" },
+          orderStatus: "SUCCESS",
+        },
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        code: "00000",
+        data: {
+          reference: "refund-amount-check",
+          originalReference: "payment-amount-check",
+          refundAmount: { total: 1000, currency: "USD" },
+          orderStatus: "SUCCESS",
+        },
+      }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const input = {
+      reference: "refund-amount-check",
+      originalReference: "payment-amount-check",
+      amountMinor: 1000n,
+    };
+    await expect(queryOpayRefund(input)).rejects.toThrow("amount does not match");
+    await expect(queryOpayRefund(input)).rejects.toThrow("valid NGN refund amount");
+  });
+
   it("rejects a refund response for a different original payment", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
       code: "00000",
