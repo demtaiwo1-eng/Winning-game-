@@ -146,10 +146,7 @@ export async function settleProviderConfirmedOpayRefund(
       },
     });
     if (completed.count !== 1) {
-      throw new Prisma.PrismaClientKnownRequestError(
-        "Refund settlement state changed during the transaction.",
-        { code: "P2025", clientVersion: "refund-settlement" },
-      );
+      throw new Error("Refund settlement state changed during the transaction.");
     }
     return { settled: true, alreadySettled: false };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
