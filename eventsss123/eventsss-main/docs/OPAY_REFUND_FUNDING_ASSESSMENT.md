@@ -119,3 +119,10 @@ A mocked Vitest suite now covers the settlement success path, refusal before pro
 These fields are storage primitives only. No worker currently claims refunds, renews leases, increments attempts, dead-letters exhausted work, or calls OPay. A future worker must atomically claim eligible rows with a unique lock token and bounded lease, verify the token before every state update, recover only expired leases, and never re-submit an ambiguous `SUBMITTING`/`SUBMISSION_UNKNOWN` create request. It must reconcile the same provider reference first. Dead-lettering must preserve the financial reservation until an audited operator action resolves it; it must not silently release reserved refund capacity.
 
 Do not enable a worker or provider submission solely because these columns exist. Callback authentication, provider response capture, idempotent event processing, and database-backed concurrency tests remain required.
+
+
+## Atomic reconciliation claim primitive
+
+`apps/api/src/modules/payments/refundReconciliationClaim.service.ts` now provides a parameterized, single-statement PostgreSQL claim operation. It uses `FOR UPDATE SKIP LOCKED` to claim bounded batches, assigns a fresh lock token and lease expiry, increments the attempt count, and returns the existing provider reference with each claimed row. Only OPay `INITIAL`, `PENDING`, and `SUBMISSION_UNKNOWN` rows are eligible; `REQUESTED`, `MANUAL_REVIEW`, `SUBMITTING`, provider-success-pending-settlement, terminal states, dead-lettered rows, rows not yet due, and rows with an active lease are excluded. A `SUBMISSION_UNKNOWN` row is explicitly query-only and must never trigger a second create request.
+
+This is a claim primitive, not a running worker. It does not call OPay, update retry scheduling, release leases, mark dead letters, process callbacks, or settle balances. A worker must use the returned lock token as a compare-and-set guard for every later update and must reconcile the same `providerRef`. The accompanying unit tests cover returned claims and option validation; SQL concurrency and lease-expiry behavior still require database-backed tests before production use.
