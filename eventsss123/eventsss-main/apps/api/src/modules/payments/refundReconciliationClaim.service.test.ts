@@ -56,13 +56,13 @@ describe("refund reconciliation lease updates", () => {
 
   it("completes only the reconciliation lease and reports a successful compare-and-set", async () => {
     executeRawMock.mockResolvedValue(1);
-    await expect(completeRefundReconciliationClaim(lease)).resolves.toBe(true);
+    await expect(completeRefundReconciliationClaim({ ...lease, nextAttemptAt: new Date("2026-11-18T10:05:00.000Z") })).resolves.toBe(true);
     expect(executeRawMock).toHaveBeenCalledTimes(1);
   });
 
   it("returns false when a stale token no longer owns the lease", async () => {
     executeRawMock.mockResolvedValue(0);
-    await expect(completeRefundReconciliationClaim({ ...lease, lockToken: "stale-token" })).resolves.toBe(false);
+    await expect(completeRefundReconciliationClaim({ ...lease, lockToken: "stale-token", nextAttemptAt: new Date("2026-11-18T10:05:00.000Z") })).resolves.toBe(false);
   });
 
   it("schedules a retry while preserving the provider lifecycle status", async () => {
