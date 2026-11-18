@@ -166,7 +166,9 @@ paymentsRouter.post(
       ...result,
       message: action === PaymentRefundReviewAction.REJECT
         ? "Refund request rejected and recorded. No provider call or wallet movement occurred."
-        : "Decision recorded. The request is queued for separate provider and accounting review; no OPay refund was submitted.",
+        : result.status === PaymentRefundStatus.MANUAL_REVIEW
+          ? "Funding checks did not pass. The request remains in manual review; no OPay refund was submitted."
+          : "Funding checks passed for an untouched full deposit. The request is queued for separate provider and settlement review; no OPay refund was submitted.",
     });
   }),
 );
