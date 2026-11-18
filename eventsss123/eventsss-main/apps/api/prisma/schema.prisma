@@ -680,6 +680,9 @@ model PaymentRefund {
   reconciliationAttempts      Int                 @default(0)
   reconciliationNextAttemptAt DateTime?
   reconciliationLastError     String?
+  reconciliationDeadLetteredAt DateTime?
+  reconciliationLockToken      String?
+  reconciliationLockedUntil    DateTime?
   submittedAt                 DateTime?
   completedAt                 DateTime?
   createdAt                   DateTime            @default(now())
@@ -692,6 +695,8 @@ model PaymentRefund {
   @@index([paymentIntentId, status])
   @@index([userId, createdAt])
   @@index([status, reconciliationNextAttemptAt])
+  @@index([status, reconciliationLockedUntil])
+  @@index([reconciliationDeadLetteredAt])
 }
 
 model PaymentRefundReview {
