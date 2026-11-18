@@ -68,3 +68,9 @@ The provider adapter, customer request intake, and administrator review workflow
 The API now contains `refundFundingAssessment.service.ts` and focused unit tests. The helper is read-only and returns a structured eligibility decision. It checks the successful OPay NGN wallet-deposit intent, provider-safe gross amount, unique source deposit ledger row, matching customer wallet, net-credit amount, matching platform-fee journal entry, wallet ledger activity at or after the source-deposit timestamp, and competing active/completed refund requests.
 
 The interim helper intentionally rejects partial refunds and any wallet with subsequent or ambiguous same-time ledger activity. It is not yet wired to the customer/admin routes, does not reserve funds, does not submit to OPay, and does not settle either ledger. The caller must invoke it inside a transaction after locking the payment-intent row and must compute the expected fee using the fee policy applicable to the original payment. Unit tests have been added, but execution and Prisma/typecheck validation remain outstanding.
+
+## Admin review integration
+
+The admin approval route now locks the original payment-intent row and calls the read-only funding assessment in the same serializable transaction. If the assessment passes, the request advances from `MANUAL_REVIEW` to `REQUESTED`, with an audit note recording that provider submission is still disabled. If any assessment check fails, the request stays in `MANUAL_REVIEW` and the specific reason is stored in the refund record and review audit note. Rejection still cancels the request and records the administrator's decision.
+
+This integration is a pre-submission gate only. It is not a funds reservation or settlement transaction, and it does not call the OPay provider adapter.
