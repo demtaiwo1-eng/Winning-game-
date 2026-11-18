@@ -382,3 +382,12 @@ Reviewed 2026-11-18:
 - The candidate's branch-consolidation workflow grants `contents: write`, checks out the integration branch with persistent credentials, and invokes an all-branch consolidation script. This conflicts with the required branch-by-branch semantic review and must not be enabled or run as-is.
 - The candidate's dependency-security workflow changes triggers and report behavior relative to main; no evidence from a completed run supports replacing the main workflow.
 - No merge, PR, file copy or branch deletion was performed. CI remains unverified.
+
+
+## Follow-up review: IP/release documentation, recovery and planner/music branches (2026-11-18)
+
+- `audit/ephinta-ip-paid-access-readme-20261114` compares 58 commits ahead and 135 behind main; `release/paid-access-readme-payment-audit-20261113` compares 144 ahead and 139 behind. Both are heavily diverged with broad historical Remotion asset removals. Their 5,000-payment simulation, licence inventory, and licensed-audio policy assets are already represented on main; the branch IP gate is older than main's pinned SPDX/licence-inventory implementation. Do not merge either branch wholesale.
+- `maintenance/final-cleanup-20261114` compares 143 ahead and 139 behind. Its staged-cleanup workflow is branch-only and has duplicate top-level job `env` keys, making its environment configuration unreliable; it also targets a historical release branch. Do not copy or enable it. Its third-party notices and cleanup manifest are historical snapshots, not current release certification.
+- `integration/recover-verified-feature-fixes-20261108` compares 7 ahead and 338 behind with six frontend/E2E snapshot changes. These are older snapshots of audio, public journeys, EnterpriseApp and theme styling; preserve main's newer versions.
+- `integration/ephinta-planner-music-rebased-20261108` compares 24 ahead and 333 behind. It adds a YouTube playlist-sync workflow and OAuth/scheduled sync implementation that would require explicit owner authorization and Google credentials. Its frontend, API, and E2E changes are older snapshots; do not merge pending authorization and a separate current-main compatibility review.
+- No branch was merged, no file copied, and no branch deleted. No completed CI run was verified; CI remains unverified.
