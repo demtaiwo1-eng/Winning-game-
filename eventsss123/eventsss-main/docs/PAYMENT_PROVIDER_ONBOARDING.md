@@ -92,3 +92,14 @@ For every provider and every operation (collection, status verification, refund,
 - [ ] Provider confirms production activation and owner approves the switch.
 
 No production payment mode should be enabled by this document alone.
+
+
+### Current implementation status — customer refund review (2026-11-18)
+
+The API now records customer requests at `POST /api/v1/payments/refunds/request`. Requests are limited to the authenticated owner's successful OPay NGN wallet-deposit payment, require an idempotency key, reserve against the original gross payment amount, and are initially placed in `MANUAL_REVIEW`. A transaction-level row lock and serializable transaction protect the remaining-refund calculation.
+
+Administrators can inspect the queue at `GET /api/v1/payments/refunds/admin` and record a decision at `POST /api/v1/payments/refunds/:refundId/review`. Both routes require the `ADMIN` role. Decisions require a 10–1000 character audit note and are stored in the immutable `PaymentRefundReview` audit table. Approval moves a request to `REQUESTED` (approved for a later provider/accounting stage); rejection moves it to `CANCELLED`.
+
+**This is review intake only, not a completed refund system.** Approval does not submit an OPay refund. No route currently calls the OPay refund adapter, debits a wallet, reverses platform revenue, or reconciles provider callbacks. Requests remain subject to manual financial review because the current wallet ledger does not yet prove that the original deposit's net credit remains available and attributable after escrow, spending or withdrawals. Do not describe an approved request as paid or refunded.
+
+Before provider submission is enabled, add and test a payment-specific funds allocation/reservation model, deterministic partial-refund fee allocation, safe handling of funds already moved or spent, provider create/query timeout reconciliation, signed callback handling, and idempotent wallet/revenue journal reversals. Apply both refund migrations and run Prisma validation, API type-checks, database tests, and provider-mocked tests first.
