@@ -431,3 +431,15 @@ Reviewed 2026-11-18:
 - No merge was performed during this checkpoint; no branch was deleted. There were zero open PRs at the last inventory refresh.
 - Latest audit commits have no associated GitHub status checks or workflow runs. CI, browser E2E, full quality gates, Android signed build/install, and live payment-provider settlement remain unverified by this GitHub-only audit.
 - Branch protection was reported disabled for main in the last inventory refresh. Enable appropriate rulesets/required checks before release.
+
+## Final live-ref refresh (2026-11-18, after deletion-readiness checkpoint)
+
+- Live GitHub branch inventory still contains 40 refs: `main` plus 39 non-main branches. The inventory reports `protected: false` for every listed ref.
+- Live open-PR query returns an empty list (zero open PRs).
+- Current `main` HEAD at refresh: `28ba51b9f34fab0130632feb970be14a5ab20f4f` (`docs(git): record all-branch deletion readiness checkpoint`).
+- The latest main commit has no reported combined status checks and no associated workflow runs in the GitHub connector response. This means CI is unverified, not passed.
+- The detailed branch-protection endpoint returned HTTP 403 (resource not accessible by the connected integration). The branch-list `protected: false` fields are a warning, but the detailed rules could not be inspected from this connection.
+- The 39 non-main branches were already individually compared/reviewed against main in this audit. They are not Git-ancestry merged: the prior comparison checkpoint found the refs diverged. The review instead records whether their useful changes are already present, obsolete, unsafe to import, or awaiting owner decision.
+- **Manual deletion guidance:** do not bulk-delete by assuming every ahead commit was merged. First retain/export any branch-only work you still want. In particular, the YouTube playlist OAuth/scheduled-sync work needs an explicit owner decision; signing-helper branches must not generate or replace the existing Android signing key; and the branch-only hardcore acceptance runner/third-party-notices snapshot remain unvalidated. The 100 vendor payment-persona journey branches remain explicitly excluded and must not be merged.
+- No PRs were opened, no merges were performed, and no branches were deleted by this audit. The connected GitHub toolset does not provide a safe branch-ref deletion action.
+- **Release gate remains open:** run the repository's actual CI, browser/E2E, API/web build, and Android signing/install checks on current main before declaring the application release-ready. No live OPay/Cleva settlement or provider refund callback is certified by this branch audit.
