@@ -139,3 +139,10 @@ The reconciliation claim module now also exposes three compare-and-set operation
 Every operation requires both the refund ID and the exact lease token, and updates only a lease that has not expired. A stale token, expired lease, or ineligible refund state produces a zero-row update and returns `false`. Error text is limited to 1,000 characters, and retry times must be later than the supplied clock.
 
 These operations are storage primitives only. They do not call OPay, interpret provider responses, authenticate callbacks, or settle funds. Unit tests cover successful compare-and-set updates, stale-token rejection, retry/dead-letter input validation, and the invariant that the provider lifecycle status is not changed. Database-backed concurrency and SQL validation remain outstanding.
+
+
+### Database-backed reconciliation lease tests
+
+A gated database test suite now exists at `apps/api/tests/refund-reconciliation-claims.db.test.ts`. When run through the local-only `npm run test:db` runner, it exercises actual PostgreSQL rows for due-row filtering, concurrent claim exclusion, stale-token rejection, delayed re-polling, transient retry scheduling, and dead-lettering while preserving the refund status/reservation. The suite is opt-in via `RUN_DB_TESTS=1` and is skipped in ordinary unit-test runs.
+
+The test file has been committed, but it has not yet been executed against PostgreSQL in this environment. Its presence is not evidence that the SQL or concurrency assertions pass. Run the repository's local database test command and inspect the result before treating reconciliation leases as production-ready.
