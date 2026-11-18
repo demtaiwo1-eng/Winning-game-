@@ -877,6 +877,110 @@ export default function PublicLanding({
         }
         @media(prefers-reduced-motion:reduce){.eph-landing *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
+        /* Landing marketing panel + authentication dialog: final theme-aware contrast contract. */
+        .eph-landing {
+          --eph-marketing-surface: #ffffff;
+          --eph-marketing-ink: #21162f;
+          --eph-marketing-muted: #51445f;
+          --eph-marketing-accent: #5424a8;
+          --eph-marketing-border: #d6c9e5;
+        }
+        .eph-landing[data-theme="light"] {
+          --eph-marketing-surface: #ffffff;
+          --eph-marketing-ink: #111827;
+          --eph-marketing-muted: #374151;
+          --eph-marketing-accent: #3730a3;
+          --eph-marketing-border: #cbd5e1;
+        }
+        .eph-landing[data-theme="dark"] {
+          --eph-marketing-surface: #202039;
+          --eph-marketing-ink: #f8fafc;
+          --eph-marketing-muted: #d5deee;
+          --eph-marketing-accent: #c4b5fd;
+          --eph-marketing-border: #46536c;
+        }
+        .eph-landing[data-theme="colorful"] {
+          --eph-marketing-surface: #ffffff;
+          --eph-marketing-ink: #21112b;
+          --eph-marketing-muted: #4d3b57;
+          --eph-marketing-accent: #6b279b;
+          --eph-marketing-border: #d8c5df;
+        }
+
+        /* The full marketing block: headings, copy, labels, captions and links. */
+        .eph-landing .ephinta-marketing-zone {
+          color: var(--eph-marketing-ink) !important;
+          background: var(--eph-marketing-surface) !important;
+          background-image: none !important;
+          border: 1px solid var(--eph-marketing-border) !important;
+        }
+        .eph-landing .ephinta-marketing-zone :where(h1,h2,h3,h4,h5,strong,b) {
+          color: var(--eph-marketing-ink) !important;
+          -webkit-text-fill-color: currentColor !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
+        .eph-landing .ephinta-marketing-zone :where(p,li,small,span,label,figcaption,.ephinta-human-proof,.ephinta-right-copy-visible) {
+          color: var(--eph-marketing-muted) !important;
+          -webkit-text-fill-color: currentColor !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
+        .eph-landing .ephinta-marketing-zone :where(a,.ephinta-marketing-zone__eyebrow) {
+          color: var(--eph-marketing-accent) !important;
+          -webkit-text-fill-color: currentColor !important;
+          opacity: 1 !important;
+        }
+        .eph-landing .ephinta-marketing-zone :where(button,.ephinta-marketing-zone__cta) {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+          background: var(--purple) !important;
+          border-color: var(--purple) !important;
+        }
+
+        /* Marketing/auth modal must keep readable copy and controls in all 3 themes. */
+        .eph-landing .eph-modal {
+          color: var(--eph-marketing-ink) !important;
+          background: var(--eph-marketing-surface) !important;
+          border: 1px solid var(--eph-marketing-border) !important;
+        }
+        .eph-landing .eph-modal :where(h1,h2,h3,h4,strong,b,label,.eph-field-title) {
+          color: var(--eph-marketing-ink) !important;
+          -webkit-text-fill-color: currentColor !important;
+          opacity: 1 !important;
+        }
+        .eph-landing .eph-modal :where(p,small,.eph-auth-switch) {
+          color: var(--eph-marketing-muted) !important;
+          -webkit-text-fill-color: currentColor !important;
+          opacity: 1 !important;
+        }
+        .eph-landing .eph-modal :where(input,select,textarea) {
+          color: var(--eph-marketing-ink) !important;
+          -webkit-text-fill-color: var(--eph-marketing-ink) !important;
+          background: var(--eph-marketing-surface) !important;
+          border-color: var(--eph-marketing-border) !important;
+        }
+        .eph-landing .eph-modal :where(input,textarea)::placeholder {
+          color: var(--eph-marketing-muted) !important;
+          -webkit-text-fill-color: var(--eph-marketing-muted) !important;
+          opacity: 1 !important;
+        }
+        .eph-landing .eph-modal .eph-close {
+          color: var(--eph-marketing-ink) !important;
+          background: color-mix(in srgb, var(--eph-marketing-muted) 12%, var(--eph-marketing-surface)) !important;
+        }
+        .eph-landing .eph-modal .eph-text-btn,
+        .eph-landing .eph-modal .eph-auth-switch button {
+          color: var(--eph-marketing-accent) !important;
+          -webkit-text-fill-color: currentColor !important;
+        }
+
+        /* Remove the previous fixed grey text override that failed on dark mode. */
+        .eph-landing .ephinta-marketing-zone .ephinta-right-copy-visible {
+          color: var(--eph-marketing-muted) !important;
+          -webkit-text-fill-color: currentColor !important;
+        }
+
       `}</style>
 
 
