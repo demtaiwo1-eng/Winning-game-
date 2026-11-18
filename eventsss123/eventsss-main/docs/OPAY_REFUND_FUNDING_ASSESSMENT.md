@@ -65,12 +65,25 @@ The provider adapter, customer request intake, and administrator review workflow
 
 ## Implemented interim assessment helper
 
-The API now contains `refundFundingAssessment.service.ts` and focused unit tests. The helper is read-only and returns a structured eligibility decision. It checks the successful OPay NGN wallet-deposit intent, provider-safe gross amount, unique source deposit ledger row, matching customer wallet, net-credit amount, matching platform-fee journal entry, wallet ledger activity at or after the source-deposit timestamp, and competing active/completed refund requests.
+The API contains `refundFundingAssessment.service.ts` and focused unit tests. The helper is read-only and returns a structured eligibility decision. It checks the successful OPay NGN wallet-deposit intent, provider-safe gross amount, unique source deposit ledger row, matching customer wallet, net-credit amount, matching platform-fee journal entry, wallet ledger activity at or after the source-deposit timestamp, and competing active/completed refund requests.
 
-The interim helper intentionally rejects partial refunds and any wallet with subsequent or ambiguous same-time ledger activity. It is not yet wired to the customer/admin routes, does not reserve funds, does not submit to OPay, and does not settle either ledger. The caller must invoke it inside a transaction after locking the payment-intent row and must compute the expected fee using the fee policy applicable to the original payment. Unit tests have been added, but execution and Prisma/typecheck validation remain outstanding.
+The helper is now called by the admin approval route inside a serializable transaction after locking the original payment-intent row. An eligible untouched full deposit advances to `REQUESTED` for a separate provider/settlement review. An ineligible request remains in `MANUAL_REVIEW` with the reason recorded in both the refund record and review audit note. The helper still rejects partial refunds and any wallet with subsequent or ambiguous same-time ledger activity. This route does not reserve or move funds, submit to OPay, or settle either ledger. The expected fee is recomputed using the current fixed 2% wallet-top-up fee policy. Unit tests have been added, but execution and Prisma/typecheck validation remain outstanding.
 
 ## Admin review integration
 
 The admin approval route now locks the original payment-intent row and calls the read-only funding assessment in the same serializable transaction. If the assessment passes, the request advances from `MANUAL_REVIEW` to `REQUESTED`, with an audit note recording that provider submission is still disabled. If any assessment check fails, the request stays in `MANUAL_REVIEW` and the specific reason is stored in the refund record and review audit note. Rejection still cancels the request and records the administrator's decision.
 
 This integration is a pre-submission gate only. It is not a funds reservation or settlement transaction, and it does not call the OPay provider adapter.
+
+
+## Provider callback and reconciliation status
+
+The existing `/webhooks/opay` handler is for payment transactions. It verifies OPay transaction-status callbacks and deliberately ignores non-success and refunded payment notifications; it is not a refund callback handler. Do not point OPay refund callbacks at that payment handler or treat a payment webhook acknowledgement as proof of refund settlement.
+
+Although `createOpayRefund` and `queryOpayRefund` provider adapters exist, there is not yet a durable refund-submission worker or refund-specific callback processor. In particular:
+
+- `REQUESTED` is a review queue state, not permission for an automatic provider call.
+- `SUBMITTING` and `SUBMISSION_UNKNOWN` must not be treated as permission to submit again.
+- A timeout after a create request must be reconciled by querying the same `providerRef`; never create a new reference or blindly retry.
+- Provider-reported success must remain distinct from internally settled `SUCCEEDED`. Until an explicit provider-success-awaiting-ledger state and atomic two-ledger settlement exist, do not mark a refund `SUCCEEDED` from a callback or query result.
+- Refund callback authentication, replay protection, out-of-order event handling, durable provider response capture, and database-backed concurrency tests remain release blockers.
