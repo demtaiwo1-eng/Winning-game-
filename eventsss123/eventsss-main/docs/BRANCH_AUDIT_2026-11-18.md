@@ -136,3 +136,20 @@ Decision: preserve current main files; defer YouTube account sync until the owne
 Direct comparison of `fix/customer-journey-landing-location-20261114` shows that MarketplaceBrowse and MarketplaceAdStrip are byte-for-byte identical to main. Its PublicLanding is shorter/older; at the first substantive divergence, the branch still changes music category as a side effect of planning navigation, while main explicitly keeps planning navigation separate from user-controlled music consent. Its responsive E2E file is also older and lacks the current audio-consent interaction checks. Android/iOS manifest copies are older than main and omit existing permission purpose declarations.
 
 Decision: do not merge this branch wholesale or backport its older landing/E2E/native files.
+
+
+### Experience modes branch — implemented on main
+
+`feature/experience-modes-gamified-demo-20261116` adds `ExperienceModeMenu.tsx`, but that component is byte-for-byte identical to main. Main's EnterpriseApp already imports and renders the mode menu and GlobalPaymentModePanel. The branch EnterpriseApp and global CSS are older than main; the verification script is identical to main.
+
+Decision: no merge needed.
+
+### Global theme / public marketplace branch — implementation already present
+
+`feature/global-theme-contrast-20261116` has PublicMarketplaceCatalogue, public-marketplace CSS and public-journey E2E files byte-for-byte identical to main. Its theme-contract CSS is substantially shorter than main's current contract (6,320 bytes versus 15,464 bytes); preserve main.
+
+Decision: no merge needed.
+
+### Isolated demo marketplace catalogue branch — do not overwrite main
+
+Main already contains the larger 2,000-record clearly labelled demo catalogue. The isolated-catalogue branch's older 1,200-record version is not an improvement and must not replace main.
