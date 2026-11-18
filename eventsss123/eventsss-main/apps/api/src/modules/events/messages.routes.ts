@@ -75,3 +75,29 @@ eventMessagesRouter.delete(
     ));
   }),
 );
+
+for (const action of ["read", "unread", "archive", "unarchive"] as const) {
+  eventMessagesRouter.patch(
+    `/:eventId/messages/:messageId/${action}`,
+    asyncHandler(async (req, res) => {
+      res.json(await messages.updateEventMessageState(
+        req.user!.id,
+        eventId(req.params.eventId),
+        messageId(req.params.messageId),
+        action.toUpperCase() as "READ" | "UNREAD" | "ARCHIVE" | "UNARCHIVE",
+      ));
+    }),
+  );
+}
+
+eventMessagesRouter.delete(
+  "/:eventId/messages/:messageId",
+  asyncHandler(async (req, res) => {
+    res.json(await messages.updateEventMessageState(
+      req.user!.id,
+      eventId(req.params.eventId),
+      messageId(req.params.messageId),
+      "DELETE",
+    ));
+  }),
+);
