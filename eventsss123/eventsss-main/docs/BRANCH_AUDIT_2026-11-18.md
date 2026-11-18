@@ -362,3 +362,13 @@ Reviewed 2026-11-18:
 - Both branches carry broad removals of bundled Remotion skill/reference assets and historical cleanup manifests. The manifests make claims about quarantined scripts and preserved blob SHAs, but the branch snapshots are not a safe reason to import the accompanying cleanup history or delete files from main.
 - The 5,000-user and one-node test assets are already on main; they are synthetic/non-payment tests, not proof of live provider transactions or production capacity.
 - No branch was merged, no file was copied, and no branch was deleted. CI remains unverified.
+
+
+## Follow-up review: Android-verified integration branch (2026-11-18)
+
+- `integration/ephinta-release-android-verified-20261114` compares 41 commits ahead and 133 behind main. It is heavily diverged and also removes a large set of bundled Remotion skill/reference assets; do not merge it wholesale.
+- Its Android install-smoke workflow is an older/alternate trigger configuration. Main retains a narrower native-input/manual-dispatch trigger, while the branch adds broader pull-request paths including web assets and the APK workflow. No reason was found to replace the main workflow.
+- The branch's IP-release workflow is older than the workflow already on main: main includes pinned SPDX licence-text retrieval and dependency-inventory generation before the asset-rights gate. Do not replace it with the branch snapshot.
+- The dependency licence-inventory workflow is byte-identical on main and the branch; no copy is required.
+- The branch's 5,000-payment simulation workflow is not evidence of live OPay/Cleva settlement and does not justify importing the rest of the branch. The corresponding deterministic simulation asset is already on main.
+- No merge, PR, file copy or branch deletion was performed. CI remains unverified.
