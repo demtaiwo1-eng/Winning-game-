@@ -98,8 +98,8 @@ describe.skipIf(!run)("OPay refund reconciliation claims (DB)", () => {
     const refund = await makeRefund("concurrent");
     const now = new Date();
     const [first, second] = await Promise.all([
-      claimDueOpayRefundReconciliation({ now, batchSize: 1 }),
-      claimDueOpayRefundReconciliation({ now, batchSize: 1 }),
+      claimDueOpayRefundReconciliation({ now, batchSize: 100 }),
+      claimDueOpayRefundReconciliation({ now, batchSize: 100 }),
     ]);
     const occurrences = [...first, ...second].filter((row) => row.id === refund.id);
     expect(occurrences).toHaveLength(1);
