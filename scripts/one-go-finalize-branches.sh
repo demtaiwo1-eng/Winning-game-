@@ -86,6 +86,7 @@ run_gate(){ label="$1"; shift; echo "--- $label"; "$@" || quality_status=1; }
 run_gate "API, web, and KYC tests" npm run check
 run_gate "API production build" npm run build
 run_gate "Web production build" npm run build:web
+chmod +x "$APP/apps/mobile/android/gradlew" 2>/dev/null || true
 run_gate "Android lint, unit tests, sync and debug APK verification" npm run mobile:verify
 
 cat > "$SUMMARY" <<EOF
