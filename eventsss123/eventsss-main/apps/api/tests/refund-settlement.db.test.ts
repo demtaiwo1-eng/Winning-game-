@@ -62,6 +62,10 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
     },
   });
 
+  const existingAccount = await prisma.platformRevenueAccount.findUnique({
+    where: { currency: "NGN" },
+  });
+  const startingRevenueBalance = existingAccount?.balanceMinor ?? 0n;
   const account = await prisma.platformRevenueAccount.upsert({
     where: { currency: "NGN" },
     update: { balanceMinor: { increment: FEE } },
@@ -117,7 +121,7 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
     where: { id: account.id },
   });
   fixtureAccountAdjustments.push({ accountId: account.id, refundId: refund.id, amount: revenueBalance });
-  return { user, intent, wallet, account: finalAccount, refund, startingRevenueBalance: finalAccount.balanceMinor };
+  return { user, intent, wallet, account: finalAccount, refund, startingRevenueBalance };
 }
 
 async function cleanup() {
