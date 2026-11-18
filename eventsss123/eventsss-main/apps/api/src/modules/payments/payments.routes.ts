@@ -9,6 +9,7 @@ import {
   ListingStatus,
   PaymentStatus,
   PaymentRefundStatus,
+  PaymentRefundReviewAction,
   Prisma,
   type BookingPaymentRequest,
 } from "@prisma/client";
@@ -63,6 +64,93 @@ logger.info({
 
 
 /** Record a customer refund request for manual review. This endpoint never calls OPay or changes wallet balances. */
+/** Admin-only refund queue. Listing never triggers provider calls or wallet movements. */
+paymentsRouter.get(
+  "/refunds/admin",
+  requireAuth,
+  requireRole("ADMIN"),
+  asyncHandler(async (req, res) => {
+    const takeRaw = Number(req.query.take || 50);
+    const take = Number.isInteger(takeRaw) ? Math.max(1, Math.min(takeRaw, 100)) : 50;
+    const status = req.query.status ? String(req.query.status) : undefined;
+    const allowedStatuses = new Set(Object.values(PaymentRefundStatus));
+    if (status && !allowedStatuses.has(status as PaymentRefundStatus)) {
+      throw new HttpError(400, "INVALID_REFUND_STATUS", "The requested refund status is not valid.");
+    }
+    const items = await prisma.paymentRefund.findMany({
+      where: status ? { status: status as PaymentRefundStatus } : { status: { in: [PaymentRefundStatus.MANUAL_REVIEW, PaymentRefundStatus.REQUESTED] } },
+      take,
+      orderBy: { createdAt: "asc" },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        paymentIntent: { select: { id: true, provider: true, providerRef: true, amountMinor: true, currency: true, status: true } },
+        reviews: { orderBy: { createdAt: "asc" }, include: { reviewer: { select: { id: true, name: true, email: true } } } },
+      },
+    });
+    res.json({ items: items.map((item) => ({
+      id: item.id, reference: item.providerRef, amountMinor: item.amountMinor.toString(),
+      currency: item.currency, status: item.status, reason: item.refundReason,
+      reviewWarning: item.reconciliationLastError, createdAt: item.createdAt,
+      customer: item.user, originalPayment: item.paymentIntent,
+      reviews: item.reviews.map((review) => ({
+        action: review.action, note: review.note, createdAt: review.createdAt, reviewer: review.reviewer,
+      })),
+    })) });
+  }),
+);
+
+/** Record an auditable admin decision. Approval only advances to REQUESTED; it does NOT call OPay. */
+paymentsRouter.post(
+  "/refunds/:refundId/review",
+  requireAuth,
+  requireRole("ADMIN"),
+  asyncHandler(async (req, res) => {
+    const action = String(req.body.action || "");
+    const note = String(req.body.note || "").trim();
+    if (action !== PaymentRefundReviewAction.APPROVE_FOR_PROVIDER_REVIEW && action !== PaymentRefundReviewAction.REJECT) {
+      throw new HttpError(400, "INVALID_REVIEW_ACTION", "Choose APPROVE_FOR_PROVIDER_REVIEW or REJECT.");
+    }
+    if (note.length < 10 || note.length > 1000) {
+      throw new HttpError(400, "REVIEW_NOTE_REQUIRED", "Provide an audit note between 10 and 1000 characters.");
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const refund = await tx.paymentRefund.findUnique({ where: { id: req.params.refundId } });
+      if (!refund) throw new HttpError(404, "REFUND_NOT_FOUND", "Refund request not found.");
+      if (refund.status !== PaymentRefundStatus.MANUAL_REVIEW) {
+        throw new HttpError(409, "REFUND_NOT_REVIEWABLE", "Only requests in MANUAL_REVIEW can receive an administrator decision.");
+      }
+      const nextStatus = action === PaymentRefundReviewAction.REJECT
+        ? PaymentRefundStatus.CANCELLED
+        : PaymentRefundStatus.REQUESTED;
+      const changed = await tx.paymentRefund.updateMany({
+        where: { id: refund.id, status: PaymentRefundStatus.MANUAL_REVIEW },
+        data: {
+          status: nextStatus,
+          reconciliationLastError: action === PaymentRefundReviewAction.REJECT
+            ? "Refund request rejected by an administrator. No provider refund was submitted."
+            : "Approved for a separate provider/accounting review. Provider submission remains disabled.",
+        },
+      });
+      if (changed.count !== 1) throw new HttpError(409, "REFUND_REVIEW_CONFLICT", "This refund request was updated by another reviewer.");
+      const review = await tx.paymentRefundReview.create({
+        data: {
+          refundId: refund.id, reviewerId: req.user!.id,
+          action: action as PaymentRefundReviewAction, note,
+        },
+      });
+      return { refundId: refund.id, status: nextStatus, reviewId: review.id };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+    res.json({
+      ...result,
+      message: action === PaymentRefundReviewAction.REJECT
+        ? "Refund request rejected and recorded. No provider call or wallet movement occurred."
+        : "Decision recorded. The request is queued for separate provider and accounting review; no OPay refund was submitted.",
+    });
+  }),
+);
+
 paymentsRouter.post(
   "/refunds/request",
   requireAuth,
