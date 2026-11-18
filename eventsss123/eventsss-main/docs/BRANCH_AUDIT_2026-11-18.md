@@ -399,3 +399,11 @@ Reviewed 2026-11-18:
 - Refreshed open pull requests: zero are currently open. There is therefore no open PR queue to merge or review at this checkpoint.
 - The branch listing reports `protected: false` for every listed branch, including `main`. This is a repository governance risk: configure branch protection/rulesets for `main` (required checks, pull-request review, and prevention of force pushes/deletion) before treating it as release-protected.
 - This inventory check does not imply that the non-main branch contents have been merged. No branch deletion was performed; the available GitHub actions in this session do not expose a safe branch-delete operation.
+
+
+## Follow-up review: one-go integration automation branch (2026-11-18)
+
+- `automation/integrate-all-branches-one-go-20261117` compares one commit ahead and 102 behind main and adds only `scripts/integrate-all-branches-one-go.sh`; do not merge or execute it as a consolidation shortcut.
+- Although the script checks PR state and CI, it creates PRs for every non-main branch, treats patch-equivalent commits as represented without semantic review, and may merge any clean, green PR under its file/deletion thresholds. It has no explicit denylist for the excluded 100 payment-persona journeys, no policy check for risky provider/credential/cleanup changes, and no independent validation that a green workflow actually covers the changed functionality. A green check is not a substitute for reviewing what a branch changes.
+- It requires a local clone, GitHub CLI authentication, git/jq, and local npm verification; it cannot satisfy the user's no-Codespace/no-local-shell constraint. Its final `npm run mobile:verify` also assumes Android SDK/Java tooling not available through this GitHub-only workflow.
+- No script was run, no PR was opened, no branch was merged or deleted. Preserve branch-by-branch review and explicit exclusion of all 100 vendor payment-persona journeys.
