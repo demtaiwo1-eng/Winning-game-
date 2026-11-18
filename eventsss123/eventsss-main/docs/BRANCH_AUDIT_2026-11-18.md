@@ -289,3 +289,14 @@ Reviewed 2026-11-18:
 - The candidate's `.github/workflows/ephinta-nonpayment-release-verification.yml` is hard-wired to push events on `fix/ephinta-nonpayment-release-gates-20261114`, rather than main or pull requests. It invokes a branch-only shell script whose compatibility with main was not established. It is not ready to adopt as-is.
 - `fix/ephinta-registration-planner-and-youtube-oauth` remains unsuitable for wholesale integration: it is 335 commits behind main, includes older snapshots of core UI/API/E2E files, and adds YouTube OAuth/scheduled playlist synchronization that requires owner-authorized Google access and secrets. No account authorization was supplied, so leave that automation inactive. No selective file was established as both unique and safe in this pass.
 - No changes were copied, no PR was opened, and no branch was merged or deleted in this pass. The payment-persona exclusion remains active. CI and end-to-end execution remain unverified.
+
+
+
+## Follow-up review: payment-persona branch family
+
+Reviewed 2026-11-18:
+
+- Compared all five payment-persona/navigation branches directly against main: `integration/selected-payment-persona-navigation-fix-20261117`, `qa/payment-notification-100-personas-20261113`, `qa/payment-notifications-main-20261115`, `qa/payment-notifications-main-20261116`, and `qa/payment-personas-wallet-selector-fix-20261117`.
+- The selected-navigation branch modifies only `apps/web/e2e/payment-notification-personas.spec.ts`; the four QA branches add or modify that same excluded spec, and some also change the browser E2E workflow/package scripts or add worldwide persona data and a runner. These are all excluded by the owner's explicit instruction to remove all 100 vendor payment-persona journeys. Do not merge, cherry-pick, or re-enable their workflow/package wiring.
+- The payment-persona test changes are not required to preserve the independently existing 5,000-identity mocked payment functional simulation already on main; that simulation is a separate script and workflow.
+- No files copied, PR opened, branch merged, or branch deleted. No CI execution was performed.
