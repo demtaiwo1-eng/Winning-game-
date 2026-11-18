@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { randomUUID } from "node:crypto";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../lib/errors";
 import { createNotification } from "../notifications/notifications.service";
