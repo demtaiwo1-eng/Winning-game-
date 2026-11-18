@@ -323,3 +323,11 @@ Reviewed 2026-11-18:
 - The branch's environment schema is older and omits current OPay test/live credential readiness fields and transfer URLs present on main. No missing OPay display or provider capability was established. No copy or merge.
 - `fix/ephinta-869-compatible-release` adds a Build 869 release helper that requires a local Git checkout, GitHub CLI authentication, repository write/Actions access, Java, Android SDK tools, and the original Build 869 signing certificate. It explicitly refuses to proceed on a non-main working branch and cannot be executed through a repository-only workflow without a local environment. It also expects an owner-configured certificate fingerprint and signing secrets. Do not run or adopt this helper as a workaround for the no-Codespace constraint; preserve main's current production APK workflow and signing safeguards.
 - No files copied, PR opened, branch merged, or branch deleted. CI remains unverified.
+
+
+## Planner operations branch follow-up (2026-11-18)
+
+- Rechecked `feat/planner-operations-finance-kyc-20261109`: the message archive migration, message service/routes, message DB tests, EventMessagesPanel, and KycUpload are byte-for-byte identical to main. No copy is needed for these features.
+- Its EnterpriseApp and related planner/guest-check-in/notification/verifier snapshots are older than main. The branch version omits current main integrations for device security, payment-mode administration, experience modes, music administration, marketplace advertising, and current auth/navigation. Preserve main and do not wholesale merge.
+- Branch-only CSS is coupled to the older EnterpriseApp markup and stylesheet import order. Do not add it without a separate compatibility review.
+- No files copied, PR opened, merge or deletion performed. CI remains unverified.
