@@ -62,3 +62,9 @@ If any check fails, record the reason and leave the refund in manual review. Do 
 ## Release gate
 
 The provider adapter, customer request intake, and administrator review workflow do not constitute a complete customer refund workflow. Keep provider submission disabled until the funding assessment, durable allocation/reservation logic, provider outcome reconciliation, and atomic two-ledger settlement are implemented and covered by database-backed tests. Apply and validate the existing refund migrations before deploying any route that reads these models.
+
+## Implemented interim assessment helper
+
+The API now contains `refundFundingAssessment.service.ts` and focused unit tests. The helper is read-only and returns a structured eligibility decision. It checks the successful OPay NGN wallet-deposit intent, provider-safe gross amount, unique source deposit ledger row, matching customer wallet, net-credit amount, matching platform-fee journal entry, wallet ledger activity at or after the source-deposit timestamp, and competing active/completed refund requests.
+
+The interim helper intentionally rejects partial refunds and any wallet with subsequent or ambiguous same-time ledger activity. It is not yet wired to the customer/admin routes, does not reserve funds, does not submit to OPay, and does not settle either ledger. The caller must invoke it inside a transaction after locking the payment-intent row and must compute the expected fee using the fee policy applicable to the original payment. Unit tests have been added, but execution and Prisma/typecheck validation remain outstanding.
