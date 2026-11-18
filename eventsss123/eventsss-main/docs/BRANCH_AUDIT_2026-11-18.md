@@ -129,3 +129,10 @@ Decision: no merge needed for `feature/ephinta-bytid-kyc-20261108`.
 The branch versions of PublicLanding, AudioExperience, API client and theme-contrast CSS are smaller/older than main. Its public-journey E2E test predates the main device-security gate helper. The only potentially distinct feature is the scheduled read-only YouTube playlist metadata sync, which requires the owner to connect a specific Google/YouTube account and configure OAuth secrets. It is not needed to make the current app work and is not enabled on main.
 
 Decision: preserve current main files; defer YouTube account sync until the owner explicitly asks to connect that account. No OAuth secret should be shared in chat or committed.
+
+
+### Customer journey / landing location branch — preserve main
+
+Direct comparison of `fix/customer-journey-landing-location-20261114` shows that MarketplaceBrowse and MarketplaceAdStrip are byte-for-byte identical to main. Its PublicLanding is shorter/older; at the first substantive divergence, the branch still changes music category as a side effect of planning navigation, while main explicitly keeps planning navigation separate from user-controlled music consent. Its responsive E2E file is also older and lacks the current audio-consent interaction checks. Android/iOS manifest copies are older than main and omit existing permission purpose declarations.
+
+Decision: do not merge this branch wholesale or backport its older landing/E2E/native files.
