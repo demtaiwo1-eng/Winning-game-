@@ -3,7 +3,7 @@ const { findUnique } = vi.hoisted(() => ({ findUnique: vi.fn() }));
 vi.mock("../../../lib/prisma", () => ({ prisma: { platformRuntimeSetting: { findUnique } } }));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { env } from "../../../config/env";
-import { initializeOpay, selectProvider, verifyOpay } from "../providers";
+import { createOpayRefund, initializeOpay, queryOpayRefund, selectProvider, verifyOpay } from "../providers";
 import { refreshPaymentMode } from "../runtimePaymentMode";
 
 const originalMerchantId = env.OPAY_MERCHANT_ID;
@@ -304,5 +304,141 @@ describe("initializeOpay", () => {
       expect.objectContaining({ method: "POST" }),
     );
     expect(result).toMatchObject({ provider: "opay", mode: "live" });
+  });
+});
+
+
+describe("OPay cashier refunds", () => {
+  beforeEach(async () => {
+    env.NODE_ENV = "test";
+    env.PAYMENT_MODE = "test";
+    env.OPAY_MERCHANT_ID = "sandbox-merchant";
+    env.OPAY_SECRET_KEY = "sandbox-secret";
+    findUnique.mockResolvedValue({ paymentMode: "test" });
+    await refreshPaymentMode();
+  });
+
+  afterEach(async () => {
+    env.OPAY_MERCHANT_ID = originalMerchantId;
+    env.OPAY_SECRET_KEY = originalSecretKey;
+    env.PAYMENT_MODE = originalPaymentMode;
+    env.NODE_ENV = originalNodeEnv;
+    vi.unstubAllGlobals();
+    findUnique.mockResolvedValue({ paymentMode: "test" });
+    await refreshPaymentMode();
+  });
+
+  it("creates a refund with the documented sandbox endpoint and exact HMAC-signed body", async () => {
+    const responseBody = {
+      code: "00000",
+      message: "SUCCESSFUL",
+      data: {
+        reference: "refund-001",
+        originalReference: "payment-001",
+        orderNo: "opay-refund-order-001",
+        originalOrderNo: "opay-payment-order-001",
+        refundAmount: { total: 2500, currency: "NGN" },
+        orderStatus: "PENDING",
+      },
+    };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(responseBody), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await createOpayRefund({
+      amountMinor: 2500n,
+      originalReference: "payment-001",
+      reference: "refund-001",
+      callbackUrl: "https://api.ephinta.example.test/api/v1/payments/webhooks/opay-refund",
+      refundWay: "Original",
+      refundReason: "Customer cancellation",
+    });
+
+    const requestBody = JSON.stringify({
+      amount: { currency: "NGN", total: 2500 },
+      callbackUrl: "https://api.ephinta.example.test/api/v1/payments/webhooks/opay-refund",
+      country: "NG",
+      originalReference: "payment-001",
+      reference: "refund-001",
+      refundWay: "Original",
+      refundReason: "Customer cancellation",
+    });
+    const signature = createHmac("sha512", "sandbox-secret").update(requestBody).digest("hex");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://testapi.opaycheckout.com/api/v1/international/payment/refund/create",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          Authorization: "Bearer " + signature,
+          MerchantId: "sandbox-merchant",
+        }),
+        body: requestBody,
+      }),
+    );
+    expect(result).toMatchObject({
+      reference: "refund-001",
+      originalReference: "payment-001",
+      status: "PENDING",
+      amountMinor: 2500n,
+      currency: "NGN",
+    });
+  });
+
+  it("queries refund status using the documented endpoint and validates original payment and amount", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      code: "00000",
+      data: {
+        reference: "refund-002",
+        originalReference: "payment-002",
+        refundAmount: { total: 4000, currency: "NGN" },
+        orderStatus: "SUCCESS",
+      },
+    }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await queryOpayRefund({
+      reference: "refund-002",
+      originalReference: "payment-002",
+      amountMinor: 4000n,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://testapi.opaycheckout.com/api/v1/international/payment/refund/query",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(result.status).toBe("SUCCESS");
+    expect(result.amountMinor).toBe(4000n);
+  });
+
+  it("rejects a refund response for a different original payment", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      code: "00000",
+      data: {
+        reference: "refund-003",
+        originalReference: "some-other-payment",
+        refundAmount: { total: 1000, currency: "NGN" },
+        orderStatus: "SUCCESS",
+      },
+    }), { status: 200 })));
+
+    await expect(createOpayRefund({
+      amountMinor: 1000n,
+      originalReference: "payment-003",
+      reference: "refund-003",
+      callbackUrl: "https://api.ephinta.example.test/refunds/callback",
+      refundWay: "Original",
+    })).rejects.toThrow("original reference does not match");
+  });
+
+  it("rejects bank-account refund requests without receiver details before contacting OPay", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(createOpayRefund({
+      amountMinor: 1000n,
+      originalReference: "payment-004",
+      reference: "refund-004",
+      callbackUrl: "https://api.ephinta.example.test/refunds/callback",
+      refundWay: "BankAccount",
+    })).rejects.toThrow("require receiver bank code and account number");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
