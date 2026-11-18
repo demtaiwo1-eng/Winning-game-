@@ -16,6 +16,21 @@ References:
 - [OPay integration overview](https://documentation.opayweb.com/)
 - [OPay API basics and webhook setup](https://documentation.opayweb.com/doc/offline/api-basics.html)
 - [OPay cashier authentication](https://documentation.opaycheckout.com/payment-authentication.html)
+- [OPay cashier refund creation](https://documentation.opaycheckout.com/payment-refund)
+- [OPay cashier refund status](https://documentation.opaycheckout.com/payment-refund-status)
+
+### OPay cashier refunds — documented contract, implementation pending
+
+OPay's published Cashier API documents these NGN refund operations:
+- Create: `POST https://testapi.opaycheckout.com/api/v1/international/payment/refund/create` in staging; production uses the corresponding `liveapi.opaycheckout.com` host only after provider approval.
+- Query: `POST https://testapi.opaycheckout.com/api/v1/international/payment/refund/query` in staging; production uses the corresponding live host.
+- Both calls use a JSON request body and `Authorization: Bearer {HMAC-SHA512 signature}` plus `MerchantId`; the signature is generated from the exact serialized request body using the merchant secret key.
+- Creation requires a unique merchant refund `reference`, the original payment's `originalReference`, country `NG`, refund amount in minor units, currency `NGN`, `refundWay`, and a callback URL. OPay documents refund-way support by original payment method; bank-account refunds may require receiver bank details.
+- Refund status is not final merely because a request was accepted. OPay documents `INITIAL`, `PENDING`, `SUCCESS`, and `FAIL`; EPHINTA must query/reconcile the refund and only then post the corresponding ledger adjustment.
+
+**Repository status:** EPHINTA currently has no verified OPay cashier refund-create/query adapter or customer refund route. The existing `PAYOUT_REFUND` and `PAYOUT_REVERSAL` ledger entries restore funds after failed/reversed outgoing bank transfers; they are not customer refunds of an original cashier payment. OPay refund callbacks are currently acknowledged/ignored by the collection webhook and must not be interpreted as completed customer refunds.
+
+Before enabling this operation, implement a separately permissioned refund workflow with original-payment ownership/amount checks, a unique idempotency key and merchant refund reference, partial/full-refund limits across prior refunds, durable pending state before the provider call, ambiguous-timeout reconciliation (never blindly retry a create), signed callback validation, server-to-server refund-status verification, and atomic ledger posting only after OPay reports final success. Add tests for duplicate requests/callbacks, wrong original reference, over-refunds, pending/fail/success, timeout, and concurrent refund attempts. Keep it disabled until the merchant account is confirmed to have refund permission and the sandbox workflow passes with provider-issued credentials.
 
 Acceptance evidence required for each enabled operation:
 - Merchant-issued production credentials held only in Render secret settings.
