@@ -111,8 +111,13 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
     },
   });
   createdRefundIds.push(refund.id);
+  // Read the shared account after any fixture drain. The upsert result above
+  // is a stale snapshot when the rollback scenario subtracts the fee.
+  const finalAccount = await prisma.platformRevenueAccount.findUniqueOrThrow({
+    where: { id: account.id },
+  });
   fixtureAccountAdjustments.push({ accountId: account.id, refundId: refund.id, amount: revenueBalance });
-  return { user, intent, wallet, account, refund, startingRevenueBalance: account.balanceMinor - revenueBalance };
+  return { user, intent, wallet, account: finalAccount, refund, startingRevenueBalance: finalAccount.balanceMinor };
 }
 
 async function cleanup() {
