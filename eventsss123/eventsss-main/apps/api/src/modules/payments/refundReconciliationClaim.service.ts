@@ -62,8 +62,8 @@ export async function claimDueOpayRefundReconciliation(
         AND ("reconciliationLockedUntil" IS NULL OR "reconciliationLockedUntil" <= ${now})
         AND ("submittedAt" IS NOT NULL OR "status"::text = 'SUBMISSION_UNKNOWN')
       ORDER BY COALESCE("reconciliationNextAttemptAt", "createdAt"), "createdAt", "id"
-      FOR UPDATE SKIP LOCKED
       LIMIT ${batchSize}
+      FOR UPDATE SKIP LOCKED
     )
     UPDATE "PaymentRefund" AS refund
     SET "reconciliationLockToken" = ${lockToken},
