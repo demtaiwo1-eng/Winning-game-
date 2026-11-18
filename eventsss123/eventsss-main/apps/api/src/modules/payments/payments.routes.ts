@@ -20,6 +20,7 @@ import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { bookingCommissionMinor, walletTopupFeeMinor } from "./feePolicy";
+import { assessOpayRefundFunding } from "./refundFundingAssessment.service";
 import { env } from "../../config/env";
 import {
   initializeFlutterwave,
@@ -120,26 +121,45 @@ paymentsRouter.post(
       if (refund.status !== PaymentRefundStatus.MANUAL_REVIEW) {
         throw new HttpError(409, "REFUND_NOT_REVIEWABLE", "Only requests in MANUAL_REVIEW can receive an administrator decision.");
       }
-      const nextStatus = action === PaymentRefundReviewAction.REJECT
-        ? PaymentRefundStatus.CANCELLED
-        : PaymentRefundStatus.REQUESTED;
+      let nextStatus: PaymentRefundStatus = PaymentRefundStatus.CANCELLED;
+      let assessmentMessage = "Refund request rejected by an administrator. No provider refund was submitted.";
+      if (action === PaymentRefundReviewAction.APPROVE_FOR_PROVIDER_REVIEW) {
+        // The payment row lock serializes funding checks with new refund requests.
+        await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "PaymentIntent" WHERE "id" = ${refund.paymentIntentId} FOR UPDATE`;
+        const assessment = await assessOpayRefundFunding(tx, {
+          paymentIntentId: refund.paymentIntentId,
+          userId: refund.userId,
+          requestedAmountMinor: refund.amountMinor,
+          expectedPlatformFeeMinor: walletTopupFeeMinor(
+            (await tx.paymentIntent.findUniqueOrThrow({ where: { id: refund.paymentIntentId } })).amountMinor,
+            env,
+          ),
+          excludingRefundId: refund.id,
+        });
+        if (assessment.eligible) {
+          nextStatus = PaymentRefundStatus.REQUESTED;
+          assessmentMessage = "Funding assessment passed for an untouched full deposit. Provider submission remains disabled pending separate settlement implementation.";
+        } else {
+          // Keep the request reserved and visible for manual investigation.
+          nextStatus = PaymentRefundStatus.MANUAL_REVIEW;
+          assessmentMessage = `Funding assessment requires manual review: ${assessment.reason}. No provider refund was submitted.`;
+        }
+      }
       const changed = await tx.paymentRefund.updateMany({
         where: { id: refund.id, status: PaymentRefundStatus.MANUAL_REVIEW },
         data: {
           status: nextStatus,
-          reconciliationLastError: action === PaymentRefundReviewAction.REJECT
-            ? "Refund request rejected by an administrator. No provider refund was submitted."
-            : "Approved for a separate provider/accounting review. Provider submission remains disabled.",
+          reconciliationLastError: assessmentMessage,
         },
       });
       if (changed.count !== 1) throw new HttpError(409, "REFUND_REVIEW_CONFLICT", "This refund request was updated by another reviewer.");
       const review = await tx.paymentRefundReview.create({
         data: {
           refundId: refund.id, reviewerId: req.user!.id,
-          action: action as PaymentRefundReviewAction, note,
+          action: action as PaymentRefundReviewAction, note: `${note}\n\n${assessmentMessage}`,
         },
       });
-      return { refundId: refund.id, status: nextStatus, reviewId: review.id };
+      return { refundId: refund.id, status: nextStatus, reviewId: review.id, fundingAssessment: assessmentMessage };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
     res.json({
