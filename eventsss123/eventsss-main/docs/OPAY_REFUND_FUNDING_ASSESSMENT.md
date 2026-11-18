@@ -96,3 +96,12 @@ The refund lifecycle now includes `PROVIDER_SUCCEEDED_PENDING_SETTLEMENT`. A fut
 This intermediate state remains an active refund reservation in both the funding assessment and customer refund-intake amount cap. It must not be treated as a completed refund, and it must not permit another refund request to reuse the same original payment amount. The new enum value is introduced by migration `20261118000300_add_provider_success_pending_settlement`.
 
 No callback handler, provider submission worker, or settlement routine is implemented by this schema change. Until those components exist, do not write this state from application code and do not enable OPay refund submission.
+
+
+## Atomic internal settlement implementation
+
+A settlement service now exists at `apps/api/src/modules/payments/refundSettlement.service.ts`. It accepts only an OPay refund already in `PROVIDER_SUCCEEDED_PENDING_SETTLEMENT`, locks the original payment and wallet rows, reruns the conservative funding assessment, and posts the negative customer-wallet ledger entry and negative platform-fee revenue entry in one serializable database transaction. It uses refund-scoped unique idempotency keys and marks the refund `SUCCEEDED` only after both accounting legs have been written.
+
+The service fails closed if the wallet no longer contains the original net credit, the platform revenue account cannot cover the original fee reversal, or the funding assessment no longer passes. A thrown error rolls back both accounting legs and the status change.
+
+**Important limitation:** this service is not wired to a callback or reconciliation worker. No code currently moves refunds into `PROVIDER_SUCCEEDED_PENDING_SETTLEMENT`, and no OPay refund submission is enabled. It is an internal settlement primitive only; it must be covered by database-backed concurrency and rollback tests before it is called in production.
