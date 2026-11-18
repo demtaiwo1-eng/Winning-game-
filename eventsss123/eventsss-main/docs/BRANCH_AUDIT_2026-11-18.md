@@ -108,3 +108,24 @@ Decision: no merge needed for `feat/planner-operations-finance-kyc-20261109`; do
 The branch's unified design-system CSS is identical to main. The branch's PublicLanding, AudioExperience, API client and theme-contrast CSS are shorter/older than main; its public journey E2E file predates main's device-security setup helper. The branch also introduces a scheduled YouTube playlist sync workflow and OAuth bootstrap scripts that require owner-provided Google OAuth credentials and an explicit choice to connect the named YouTube account.
 
 Decision: do not merge the branch wholesale. Keep the playlist-sync workflow and OAuth scripts out of main until the account owner explicitly confirms this integration and its account scope. The existing main UI and E2E files should be preserved.
+
+
+### Device-security native files — main is newer
+
+Additional direct comparisons confirm that main should be retained:
+- Android manifest on main includes biometric permission plus the existing camera and location permissions; the branch copy is older and would remove the latter permissions.
+- iOS Info.plist on main includes Face ID, camera and location purpose descriptions; the branch copy contains only the Face ID description and would remove current purpose strings.
+- The Android install-smoke workflow on main is deliberately scoped to native Android changes; the branch version triggers on all web/mobile changes and would increase expensive emulator runs.
+- The main Android emulator smoke script is the current version; the branch copy is older.
+
+### Bytid KYC branch — implementation already on main and hardened further
+
+The Bytid client, KYC route integration and environment configuration are present on main. Main's KYC routes include a more conservative rejection classifier than the branch version. The branch documentation and implementation do not need wholesale recovery. Live KYC remains disabled by default; provider credentials and webhook secrets must be configured in the API hosting dashboard.
+
+Decision: no merge needed for `feature/ephinta-bytid-kyc-20261108`.
+
+### Registration / OAuth branch — do not backport stale app files
+
+The branch versions of PublicLanding, AudioExperience, API client and theme-contrast CSS are smaller/older than main. Its public-journey E2E test predates the main device-security gate helper. The only potentially distinct feature is the scheduled read-only YouTube playlist metadata sync, which requires the owner to connect a specific Google/YouTube account and configure OAuth secrets. It is not needed to make the current app work and is not enabled on main.
+
+Decision: preserve current main files; defer YouTube account sync until the owner explicitly asks to connect that account. No OAuth secret should be shared in chat or committed.
