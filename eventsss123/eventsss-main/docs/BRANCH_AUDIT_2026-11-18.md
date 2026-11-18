@@ -83,3 +83,28 @@ These contain release workflows, signing scripts and release documentation. Reco
 ## Current outcome
 
 This audit did not merge or delete any branch. No local/Codespace execution was performed. Main remains at the audited SHA until a reviewed patch is committed. The database-backed OPay refund reconciliation tests and the rest of the application checks still require execution in CI or an available PostgreSQL-backed runner.
+
+
+## Follow-up selective recovery findings
+
+### Device security branch — no merge needed
+
+A direct file comparison confirms the device-security implementation is already present on `main`:
+- `apps/web/src/components/DeviceSecurityGate.tsx` exists on main with additional hardening over the branch version, including guarded localStorage access, account-change reset, and persisted failed-attempt counters.
+- `apps/web/src/App.tsx` already imports and wraps authenticated content with `DeviceSecurityGate`.
+- `apps/web/package.json` already includes `@aparajita/capacitor-biometric-auth`.
+- The device-security documentation is already on main.
+
+Decision: do not merge `feature/ephinta-device-security-20261108`; its relevant functionality is already integrated, and main's version is more recent.
+
+### Planner operations branch — backend/UI implementation already present
+
+Direct content-hash comparisons show that the branch's message service, message routes, message schemas, message API tests, database tests, notification routes, event messages panel, notifications panel and KYC upload component are byte-for-byte identical to main. Its remaining changed schema and enterprise/E2E files are older than main and would roll back newer main behavior (including the payment-refund lifecycle and device-lock-aware E2E helper).
+
+Decision: no merge needed for `feat/planner-operations-finance-kyc-20261109`; do not merge its older schema, E2E or enterprise files over main. This is a strong candidate for later branch deletion once all other paths and commits are accounted for.
+
+### Registration / planner / YouTube branch — newer main already supersedes most UI
+
+The branch's unified design-system CSS is identical to main. The branch's PublicLanding, AudioExperience, API client and theme-contrast CSS are shorter/older than main; its public journey E2E file predates main's device-security setup helper. The branch also introduces a scheduled YouTube playlist sync workflow and OAuth bootstrap scripts that require owner-provided Google OAuth credentials and an explicit choice to connect the named YouTube account.
+
+Decision: do not merge the branch wholesale. Keep the playlist-sync workflow and OAuth scripts out of main until the account owner explicitly confirms this integration and its account scope. The existing main UI and E2E files should be preserved.
