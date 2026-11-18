@@ -50,7 +50,7 @@ export async function claimDueOpayRefundReconciliation(
   const lockToken = randomUUID();
   const lockedUntil = new Date(now.getTime() + leaseMs);
 
-  return prisma.$queryRaw<ClaimedRefundReconciliation[]>\`
+  return prisma.$queryRaw<ClaimedRefundReconciliation[]>`
     WITH due AS (
       SELECT "id"
       FROM "PaymentRefund"
@@ -80,5 +80,5 @@ export async function claimDueOpayRefundReconciliation(
       refund."reconciliationAttempts",
       refund."reconciliationLockToken",
       refund."reconciliationLockedUntil"
-  \`;
+  `;
 }
