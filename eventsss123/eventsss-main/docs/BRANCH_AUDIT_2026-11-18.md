@@ -164,3 +164,10 @@ A critical conflict was found in the branch-only `scripts/payments/set-render-pa
 The branch also carries a 300-persona QA document; do not import it as a replacement for normal focused tests or reintroduce payment-persona journey workflows.
 
 Decision: do not merge `fix/opay-provider-display-20261113`. Preserve main's fee policy and retired-script safeguard.
+
+
+### Android Build 869 compatibility branch — no wholesale recovery
+
+The branch changes the production APK workflow, but main's current workflow is larger and more advanced. The added `complete-ephinta-869-update.sh` explicitly requires a trusted local GitHub Codespace, GitHub CLI authentication, Java and Android SDK tools, then downloads the baseline APK, checks signing identity and dispatches the workflow. It therefore does not meet the no-Codespace requirement and cannot be run through the connected GitHub file-editing interface.
+
+Decision: keep the current main release workflow; do not add a helper that the owner cannot execute. Android signing still requires the original keystore and secrets configured in GitHub Settings. Never generate a replacement key to overwrite the installed app's signing identity.
