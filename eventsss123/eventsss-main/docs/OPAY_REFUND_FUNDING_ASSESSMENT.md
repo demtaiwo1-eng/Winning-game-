@@ -126,3 +126,16 @@ Do not enable a worker or provider submission solely because these columns exist
 `apps/api/src/modules/payments/refundReconciliationClaim.service.ts` now provides a parameterized, single-statement PostgreSQL claim operation. It uses `FOR UPDATE SKIP LOCKED` to claim bounded batches, assigns a fresh lock token and lease expiry, increments the attempt count, and returns the existing provider reference with each claimed row. Only OPay `INITIAL`, `PENDING`, and `SUBMISSION_UNKNOWN` rows are eligible; `REQUESTED`, `MANUAL_REVIEW`, `SUBMITTING`, provider-success-pending-settlement, terminal states, dead-lettered rows, rows not yet due, and rows with an active lease are excluded. A `SUBMISSION_UNKNOWN` row is explicitly query-only and must never trigger a second create request.
 
 This is a claim primitive, not a running worker. It does not call OPay, update retry scheduling, release leases, mark dead letters, process callbacks, or settle balances. A worker must use the returned lock token as a compare-and-set guard for every later update and must reconcile the same `providerRef`. The accompanying unit tests cover returned claims and option validation; SQL concurrency and lease-expiry behavior still require database-backed tests before production use.
+
+
+### Token-guarded reconciliation lease updates
+
+The reconciliation claim module now also exposes three compare-and-set operations:
+
+- `completeRefundReconciliationClaim` releases a still-valid lease after a status-query cycle without changing the refund lifecycle state.
+- `scheduleRefundReconciliationRetry` stores a bounded error message and a future retry time, then releases the lease without changing the provider lifecycle state.
+- `deadLetterRefundReconciliationClaim` records a dead-letter timestamp and error, clears the lease, and preserves the refund status and its financial reservation for audited operator resolution.
+
+Every operation requires both the refund ID and the exact lease token, and updates only a lease that has not expired. A stale token, expired lease, or ineligible refund state produces a zero-row update and returns `false`. Error text is limited to 1,000 characters, and retry times must be later than the supplied clock.
+
+These operations are storage primitives only. They do not call OPay, interpret provider responses, authenticate callbacks, or settle funds. Unit tests cover successful compare-and-set updates, stale-token rejection, retry/dead-letter input validation, and the invariant that the provider lifecycle status is not changed. Database-backed concurrency and SQL validation remain outstanding.
