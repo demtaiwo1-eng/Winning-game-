@@ -238,3 +238,18 @@ Reviewed 2026-11-18:
 - Both `integration/ephinta-unified-20261114` and `integration/ephinta-unified-final-20261114` carry the same older `payouts.routes.ts` blob (SHA `70b68c3cb3f261601aa1ce3dbb340c8c74f555d3`). Main's current payout route is a distinct, newer blob (SHA `70f3ec56316133bffebe74af2c578ec33e3d428e`) and imports the fee-basis-points policy in addition to the fee calculator. Preserve main's version; do not overwrite it with the integration snapshot. The branch route was not merged.
 - The Android verified integration branch's production APK workflow is not a replacement for main's current production-signed workflow. Main retains explicit owner-supplied signing secrets, certificate verification and Build 869 identity checks. The branch Android install workflow expands PR triggers to web source/public assets, while main intentionally scopes the expensive emulator run to native Android inputs and manual dispatch. No workflow change is justified without a verified CI-cost and coverage need.
 - No branch was merged or deleted in this pass. No workflow execution or passing CI result was observed.
+
+
+## Follow-up review: signed mobile release branches
+
+Reviewed 2026-11-18:
+
+- Six release branches were compared individually with main. Their differences are limited to Android/iOS signed-release workflows, signing setup helpers, release documentation, completion notes, and one Gradle wrapper property.
+- The Android signed-release workflow from `release/android-production-ota-main-20261108` is older than main: it omits main's `VITE_UPDATE_URL` and `VITE_APP_VERSION` environment configuration. Main retains the newer workflow and its owner-controlled keystore/certificate checks.
+- The same branch's production APK workflow differs from main and includes a workflow-level `contents: write` permission for publishing release assets. Main's production APK workflow is the current implementation with explicit per-job permissions, health/readiness checks, signing-material validation, and release artifact handling. Do not replace main with the older branch copy or grant broader permissions.
+- `release/android-production-signing-main-20261108` repeats older Android production workflow/helper changes; no missing safe functionality was identified.
+- `release/android-signed-ci-20261108` adds an alternate Android signed-release workflow and modifies the general verification workflow. Main already has the signed release workflow with the same secret-gated build model and more recent update configuration. No merge needed.
+- The Android signing helper branches add scripts and instructions for configuring repository secrets. They do not provide the original keystore or signing identity. Main already has the current signing workflow; helper scripts that require local trusted-machine access do not solve the user's no-Codespace constraint. Do not run scripts that print, upload, or expose secret material, and never ask for keystore/password values in chat.
+- `release/ios-signed-ci-20261108` adds an alternate iOS workflow, while its `IOS_SIGNED_RELEASE.md` documentation is byte-for-byte identical to main. Main already contains the owner-controlled macOS signing workflow and certificate/profile validation. No missing safe iOS release capability was identified.
+- No branch-only signing assets were found to justify a merge. No signing keys, certificates, or profiles were present in the reviewed files; do not replace the established Android signing identity.
+- No branch was merged or deleted in this pass. Signed Android/iOS workflows remain prepared but execution is not confirmed; required owner secrets and platform accounts cannot be inferred from repository files. CI remains unverified.
