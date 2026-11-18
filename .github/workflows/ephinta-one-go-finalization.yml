@@ -52,6 +52,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          # Prisma schema validation only needs a syntactically valid URL; no DB connection is made.
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ephinta_ci?schema=public
         run: bash scripts/one-go-finalize-branches.sh
       - name: Upload finalization reports
         if: always()
