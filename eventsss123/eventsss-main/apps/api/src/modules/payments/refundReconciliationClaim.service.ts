@@ -82,3 +82,112 @@ export async function claimDueOpayRefundReconciliation(
       refund."reconciliationLockedUntil"
   `;
 }
+
+
+export type RefundReconciliationLeaseOptions = {
+  id: string;
+  lockToken: string;
+  now?: Date;
+};
+
+function validateLeaseIdentity(id: string, lockToken: string, now: Date): void {
+  if (!id.trim() || !lockToken.trim()) {
+    throw new TypeError("Refund reconciliation id and lock token are required.");
+  }
+  if (Number.isNaN(now.getTime())) {
+    throw new TypeError("Refund reconciliation now must be a valid date.");
+  }
+}
+
+/**
+ * Releases a lease after a worker has completed a status query. It deliberately
+ * does not change the refund's financial lifecycle status.
+ */
+export async function completeRefundReconciliationClaim(
+  options: RefundReconciliationLeaseOptions,
+): Promise<boolean> {
+  const now = options.now ?? new Date();
+  validateLeaseIdentity(options.id, options.lockToken, now);
+
+  const updated = await prisma.$executeRaw`
+    UPDATE "PaymentRefund"
+    SET "reconciliationLockToken" = NULL,
+        "reconciliationLockedUntil" = NULL,
+        "reconciliationLastError" = NULL,
+        "reconciliationNextAttemptAt" = NULL,
+        "updatedAt" = ${now}
+    WHERE "id" = ${options.id}
+      AND "reconciliationLockToken" = ${options.lockToken}
+      AND "reconciliationLockedUntil" > ${now}
+      AND "status"::text IN ('INITIAL', 'PENDING', 'SUBMISSION_UNKNOWN')
+  `;
+  return updated === 1;
+}
+
+export type ScheduleRefundReconciliationRetryOptions =
+  RefundReconciliationLeaseOptions & {
+    retryAt: Date;
+    error: string;
+  };
+
+/** Releases a valid lease and schedules a bounded retry without changing status. */
+export async function scheduleRefundReconciliationRetry(
+  options: ScheduleRefundReconciliationRetryOptions,
+): Promise<boolean> {
+  const now = options.now ?? new Date();
+  validateLeaseIdentity(options.id, options.lockToken, now);
+  if (Number.isNaN(options.retryAt.getTime()) || options.retryAt.getTime() <= now.getTime()) {
+    throw new TypeError("Refund reconciliation retryAt must be later than now.");
+  }
+  const error = options.error.trim();
+  if (!error || error.length > 1_000) {
+    throw new RangeError("Refund reconciliation error must contain 1 to 1000 characters.");
+  }
+
+  const updated = await prisma.$executeRaw`
+    UPDATE "PaymentRefund"
+    SET "reconciliationLockToken" = NULL,
+        "reconciliationLockedUntil" = NULL,
+        "reconciliationLastError" = ${error},
+        "reconciliationNextAttemptAt" = ${options.retryAt},
+        "updatedAt" = ${now}
+    WHERE "id" = ${options.id}
+      AND "reconciliationLockToken" = ${options.lockToken}
+      AND "reconciliationLockedUntil" > ${now}
+      AND "status"::text IN ('INITIAL', 'PENDING', 'SUBMISSION_UNKNOWN')
+      AND "reconciliationDeadLetteredAt" IS NULL
+  `;
+  return updated === 1;
+}
+
+/**
+ * Stops automatic reconciliation after an operator-defined attempt limit.
+ * The refund status/reservation is preserved; only the lease and dead-letter
+ * metadata change. An audited operator action is required to resolve it.
+ */
+export async function deadLetterRefundReconciliationClaim(
+  options: RefundReconciliationLeaseOptions & { error: string },
+): Promise<boolean> {
+  const now = options.now ?? new Date();
+  validateLeaseIdentity(options.id, options.lockToken, now);
+  const error = options.error.trim();
+  if (!error || error.length > 1_000) {
+    throw new RangeError("Refund reconciliation error must contain 1 to 1000 characters.");
+  }
+
+  const updated = await prisma.$executeRaw`
+    UPDATE "PaymentRefund"
+    SET "reconciliationLockToken" = NULL,
+        "reconciliationLockedUntil" = NULL,
+        "reconciliationDeadLetteredAt" = ${now},
+        "reconciliationLastError" = ${error},
+        "reconciliationNextAttemptAt" = NULL,
+        "updatedAt" = ${now}
+    WHERE "id" = ${options.id}
+      AND "reconciliationLockToken" = ${options.lockToken}
+      AND "reconciliationLockedUntil" > ${now}
+      AND "status"::text IN ('INITIAL', 'PENDING', 'SUBMISSION_UNKNOWN')
+      AND "reconciliationDeadLetteredAt" IS NULL
+  `;
+  return updated === 1;
+}
