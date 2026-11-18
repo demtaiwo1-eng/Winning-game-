@@ -110,3 +110,12 @@ The service fails closed if the wallet no longer contains the original net credi
 ### Settlement unit-test coverage
 
 A mocked Vitest suite now covers the settlement success path, refusal before provider confirmation, insufficient customer wallet funds, insufficient platform revenue funds, already-settled idempotency, and missing refund records. These tests assert that the completion transition is not written when a required accounting leg cannot be posted. They are unit tests with mocked Prisma transactions; they do not replace database-backed rollback, isolation, or concurrent-execution tests, and have not yet been executed in CI.
+
+
+## Durable refund reconciliation lease fields
+
+`PaymentRefund` now has nullable `reconciliationLockToken`, `reconciliationLockedUntil`, and `reconciliationDeadLetteredAt` fields, plus indexes for status/lease-expiry and dead-letter lookup. Migration `20261118000400_add_payment_refund_reconciliation_leases` adds these fields without changing existing refund states or claiming existing rows.
+
+These fields are storage primitives only. No worker currently claims refunds, renews leases, increments attempts, dead-letters exhausted work, or calls OPay. A future worker must atomically claim eligible rows with a unique lock token and bounded lease, verify the token before every state update, recover only expired leases, and never re-submit an ambiguous `SUBMITTING`/`SUBMISSION_UNKNOWN` create request. It must reconcile the same provider reference first. Dead-lettering must preserve the financial reservation until an audited operator action resolves it; it must not silently release reserved refund capacity.
+
+Do not enable a worker or provider submission solely because these columns exist. Callback authentication, provider response capture, idempotent event processing, and database-backed concurrency tests remain required.
