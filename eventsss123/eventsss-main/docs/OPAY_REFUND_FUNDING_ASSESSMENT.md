@@ -132,7 +132,7 @@ This is a claim primitive, not a running worker. It does not call OPay, update r
 
 The reconciliation claim module now also exposes three compare-and-set operations:
 
-- `completeRefundReconciliationClaim` releases a still-valid lease after a status-query cycle without changing the refund lifecycle state.
+- `completeRefundReconciliationClaim` releases a still-valid lease after a status-query cycle, records a future next-poll time, and does not change the refund lifecycle state. This prevents an unchanged pending row from being reclaimed immediately.
 - `scheduleRefundReconciliationRetry` stores a bounded error message and a future retry time, then releases the lease without changing the provider lifecycle state.
 - `deadLetterRefundReconciliationClaim` records a dead-letter timestamp and error, clears the lease, and preserves the refund status and its financial reservation for audited operator resolution.
 
