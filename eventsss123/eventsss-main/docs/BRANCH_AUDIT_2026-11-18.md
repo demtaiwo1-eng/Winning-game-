@@ -391,3 +391,11 @@ Reviewed 2026-11-18:
 - `integration/recover-verified-feature-fixes-20261108` compares 7 ahead and 338 behind with six frontend/E2E snapshot changes. These are older snapshots of audio, public journeys, EnterpriseApp and theme styling; preserve main's newer versions.
 - `integration/ephinta-planner-music-rebased-20261108` compares 24 ahead and 333 behind. It adds a YouTube playlist-sync workflow and OAuth/scheduled sync implementation that would require explicit owner authorization and Google credentials. Its frontend, API, and E2E changes are older snapshots; do not merge pending authorization and a separate current-main compatibility review.
 - No branch was merged, no file copied, and no branch deleted. No completed CI run was verified; CI remains unverified.
+
+
+## Repository inventory checkpoint (2026-11-18)
+
+- Refreshed the GitHub branch listing after the branch-by-branch reviews: 40 branches remain, including `main` and 39 non-main branches.
+- Refreshed open pull requests: zero are currently open. There is therefore no open PR queue to merge or review at this checkpoint.
+- The branch listing reports `protected: false` for every listed branch, including `main`. This is a repository governance risk: configure branch protection/rulesets for `main` (required checks, pull-request review, and prevention of force pushes/deletion) before treating it as release-protected.
+- This inventory check does not imply that the non-main branch contents have been merged. No branch deletion was performed; the available GitHub actions in this session do not expose a safe branch-delete operation.
