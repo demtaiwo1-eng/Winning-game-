@@ -10,6 +10,10 @@ cd "$REPO_ROOT"
 APP="$REPO_ROOT/eventsss123/eventsss-main"
 OUT="$REPO_ROOT/artifacts/one-go-finalization"
 mkdir -p "$OUT"
+# Prisma validate/generate do not connect to a database, but Prisma requires a valid URL.
+# Keep CI independent of Render/Supabase secrets and never print the URL.
+: "${DATABASE_URL:=postgresql://ci:ci@127.0.0.1:5432/ephinta_ci?schema=public}"
+export DATABASE_URL
 REPORT="$OUT/branch-readiness.tsv"
 SUMMARY="$OUT/one-go-summary.md"
 printf 'branch\tclassification\tmerge_tree\topen_pr\tdetail\n' > "$REPORT"
@@ -32,7 +36,6 @@ safe=0; preserved=0; excluded=0; errors=0
 while IFS= read -r branch; do
   [[ -z "$branch" || "$branch" == "main" ]] && continue
   ref="refs/remotes/origin/$branch"
-  [[ -e "$(git rev-parse --git-path "$ref")" ]] || true
   pr="no"
   if grep -Fxq -- "$branch" <<<"$OPEN_PR_BRANCHES"; then pr="yes"; fi
 
@@ -110,6 +113,8 @@ certificate ownership, Render/Supabase production configuration, and Play Consol
 cannot be truthfully certified by a generic CI run.
 EOF
 
+# REPORT is written directly to its final artifact path; do not cp a file onto itself.
+test -s "$REPORT" || die "Branch readiness report was not created."
 echo "Branch report: $REPORT"
 echo "Summary: $SUMMARY"
 if [[ "$quality_status" -ne 0 ]]; then
