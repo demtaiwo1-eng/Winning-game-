@@ -32,6 +32,7 @@ const reservingStatuses: PaymentRefundStatus[] = [
   PaymentRefundStatus.SUBMISSION_UNKNOWN,
   PaymentRefundStatus.INITIAL,
   PaymentRefundStatus.PENDING,
+  PaymentRefundStatus.PROVIDER_SUCCEEDED_PENDING_SETTLEMENT,
   PaymentRefundStatus.SUCCEEDED,
 ];
 
