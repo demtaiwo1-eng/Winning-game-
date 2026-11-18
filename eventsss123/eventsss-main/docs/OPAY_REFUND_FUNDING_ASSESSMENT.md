@@ -105,3 +105,8 @@ A settlement service now exists at `apps/api/src/modules/payments/refundSettleme
 The service fails closed if the wallet no longer contains the original net credit, the platform revenue account cannot cover the original fee reversal, or the funding assessment no longer passes. A thrown error rolls back both accounting legs and the status change.
 
 **Important limitation:** this service is not wired to a callback or reconciliation worker. No code currently moves refunds into `PROVIDER_SUCCEEDED_PENDING_SETTLEMENT`, and no OPay refund submission is enabled. It is an internal settlement primitive only; it must be covered by database-backed concurrency and rollback tests before it is called in production.
+
+
+### Settlement unit-test coverage
+
+A mocked Vitest suite now covers the settlement success path, refusal before provider confirmation, insufficient customer wallet funds, insufficient platform revenue funds, already-settled idempotency, and missing refund records. These tests assert that the completion transition is not written when a required accounting leg cannot be posted. They are unit tests with mocked Prisma transactions; they do not replace database-backed rollback, isolation, or concurrent-execution tests, and have not yet been executed in CI.
