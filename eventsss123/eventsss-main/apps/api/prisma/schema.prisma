@@ -133,6 +133,11 @@ enum RefundWay {
   BankAccount
 }
 
+enum PaymentRefundReviewAction {
+  APPROVE_FOR_PROVIDER_REVIEW
+  REJECT
+}
+
 enum PayoutStatus {
   PENDING
   PROCESSING
@@ -224,6 +229,7 @@ model User {
   reviews          Review[]
   payments         PaymentIntent[]
   paymentRefunds   PaymentRefund[]
+  paymentRefundReviews PaymentRefundReview[]
   eventDeposits    EventDeposit[]
   bookingPaymentRequests BookingPaymentRequest[]
   carts            Cart[]
@@ -680,10 +686,25 @@ model PaymentRefund {
   paymentIntent               PaymentIntent       @relation(fields: [paymentIntentId], references: [id], onDelete: Restrict)
   user                        User                @relation(fields: [userId], references: [id], onDelete: Restrict)
   wallet                      Wallet?             @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  reviews                     PaymentRefundReview[]
 
   @@index([paymentIntentId, status])
   @@index([userId, createdAt])
   @@index([status, reconciliationNextAttemptAt])
+}
+
+model PaymentRefundReview {
+  id          String                    @id @default(uuid())
+  refundId    String
+  reviewerId  String
+  action      PaymentRefundReviewAction
+  note        String
+  createdAt   DateTime                  @default(now())
+  refund      PaymentRefund             @relation(fields: [refundId], references: [id], onDelete: Restrict)
+  reviewer    User                      @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+
+  @@index([refundId, createdAt])
+  @@index([reviewerId, createdAt])
 }
 
 model PaymentProviderThrottle {
