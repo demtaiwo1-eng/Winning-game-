@@ -227,3 +227,14 @@ Reviewed 2026-11-18:
 - The branch-only `.github/workflows/ephinta-maintenance-cleanup.yml` is unsafe to adopt without repair: it declares duplicate top-level job `env:` mappings, so the later Android environment mapping can override database/JWT test settings. It is also narrowly branch-triggered and invokes a large cleanup/test sequence that has not been run against main. No copy made.
 - The README from the audit branch is not a safe replacement for main: it contains a release-candidate PR link and dated paid-access/payment statements that need revalidation against current code. Preserve the existing main README.
 - No new file was copied and no branch was merged or deleted in this pass. The existing payment-persona exclusion remains in force. CI/test execution remains unverified.
+
+
+## Follow-up review: release-candidate workflow and payout implementation
+
+Reviewed 2026-11-18:
+
+- `integration/ephinta-release-candidate-final-20261114` adds `.github/workflows/ephinta-hardcore-acceptance.yml` and `scripts/release/ephinta-hardcore-acceptance.mjs`. The runner is designed to execute checks and explicitly report release blockers rather than fabricate passes; however, the workflow is absent from main and has not been run against the current main tree. Its package/workspace assumptions, database migration sequence, Android build requirements, and invoked script list require validation before adoption. It also includes broad Android acceptance in a single 60-minute job. No copy or run performed.
+- The candidate branch's package manifest contains `qa:worldwide` and `qa:worldwide:headed` scripts. These are not a reason to reintroduce the explicitly excluded payment-persona journey suite; do not import the candidate package manifest wholesale.
+- Both `integration/ephinta-unified-20261114` and `integration/ephinta-unified-final-20261114` carry the same older `payouts.routes.ts` blob (SHA `70b68c3cb3f261601aa1ce3dbb340c8c74f555d3`). Main's current payout route is a distinct, newer blob (SHA `70f3ec56316133bffebe74af2c578ec33e3d428e`) and imports the fee-basis-points policy in addition to the fee calculator. Preserve main's version; do not overwrite it with the integration snapshot. The branch route was not merged.
+- The Android verified integration branch's production APK workflow is not a replacement for main's current production-signed workflow. Main retains explicit owner-supplied signing secrets, certificate verification and Build 869 identity checks. The branch Android install workflow expands PR triggers to web source/public assets, while main intentionally scopes the expensive emulator run to native Android inputs and manual dispatch. No workflow change is justified without a verified CI-cost and coverage need.
+- No branch was merged or deleted in this pass. No workflow execution or passing CI result was observed.
