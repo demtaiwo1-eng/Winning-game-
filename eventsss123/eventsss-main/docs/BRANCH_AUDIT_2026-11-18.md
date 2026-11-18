@@ -276,3 +276,16 @@ Reviewed 2026-11-18:
 - The branch's `scripts/complete-production-apk.sh` is a local-machine helper and does not solve the no-Codespace constraint. The branch's PowerShell verification script is older than main's version; main adds an explicit `-SkipBrowser` mode and clearer unverified reporting. No helper or workflow copied.
 - The Android signing documentation is branch-only and would need review against the current original-keystore requirement before publication; no release instruction was adopted.
 - No branch was merged or deleted. The branch inventory currently contains 40 branches (39 non-main), and there are no open pull requests. The latest audit commit has no reported commit statuses and no associated workflow runs; this is not evidence of passing CI.
+
+
+
+## Follow-up review: release-candidate acceptance and registration/music branch
+
+Reviewed 2026-11-18:
+
+- A deeper review of `integration/ephinta-release-candidate-final-20261114` confirms that its `apps/web/e2e/payment-notification-personas.spec.ts` defines 100 mocked CLIENT/VENDOR payment-and-notification browser journeys. This directly conflicts with the explicit instruction to remove/exclude all 100 vendor payment-persona journeys. Keep this spec and any workflow/package wiring that executes it out of main.
+- The same candidate branch's 5,000-identity deterministic payment simulation is already present on main with the exact same blob SHA (`e1e6291c6ca1230caff9ba83d654fe46028dcd6e`). Its dedicated workflow is also already present on main. This is a mocked simulation, not a provider integration or proof of live settlement; no merge is needed.
+- The candidate's `.github/workflows/ephinta-hardcore-acceptance.yml` and `scripts/release/ephinta-hardcore-acceptance.mjs` are not present on main. The runner invokes multiple npm scripts and workspace commands, installs browser dependencies, runs Android sync/build, and emits release blockers. It has not been run against main, and the workflow's workspace/package assumptions and aggregate job behavior remain unvalidated. Do not copy or enable it as a release gate until adapted and run on a dedicated branch/PR.
+- The candidate's `.github/workflows/ephinta-nonpayment-release-verification.yml` is hard-wired to push events on `fix/ephinta-nonpayment-release-gates-20261114`, rather than main or pull requests. It invokes a branch-only shell script whose compatibility with main was not established. It is not ready to adopt as-is.
+- `fix/ephinta-registration-planner-and-youtube-oauth` remains unsuitable for wholesale integration: it is 335 commits behind main, includes older snapshots of core UI/API/E2E files, and adds YouTube OAuth/scheduled playlist synchronization that requires owner-authorized Google access and secrets. No account authorization was supplied, so leave that automation inactive. No selective file was established as both unique and safe in this pass.
+- No changes were copied, no PR was opened, and no branch was merged or deleted in this pass. The payment-persona exclusion remains active. CI and end-to-end execution remain unverified.
