@@ -310,3 +310,16 @@ Reviewed 2026-11-18:
 - Rechecked `feature/isolated-demo-marketplace-catalogue-20261116` against the current main component. Main's `PublicMarketplaceCatalogue.tsx` generates 2,000 explicitly simulated, non-bookable examples and keeps verified-provider browsing separate. The branch contains 1,200 examples and an older component implementation.
 - Main's catalogue explicitly labels simulated records and disables enquiries/bookings/reviews/payments in demo mode. The branch's alternative component does not improve on the current main implementation and would reduce the sample count. Preserve main; no cherry-pick.
 - The branch changes only the catalogue component and its stylesheet; no other unique capability was identified. No file copied, PR opened, merge or deletion performed. CI remains unverified.
+
+
+
+## Follow-up review: OPay provider display and Build 869 helper
+
+Reviewed 2026-11-18:
+
+- `fix/opay-provider-display-20261113` does not contain a new WalletPanel implementation: its WalletPanel is byte-for-byte identical to main. Its EnterpriseApp snapshot is older and omits current payment-mode administration, ExperienceModeMenu, MusicDspAdminPanel, lazy marketplace loading, current dashboard section navigation, and other main integrations. Do not replace it.
+- The branch's `feePolicy.ts` and fee tests are similar to main and preserve the fixed 2% incoming/outgoing transaction fee. Main already enforces this policy and has the newer payout route. The branch's payout route is an older snapshot missing main's runtime payment-mode locking and related imports; preserve main.
+- The branch-only `scripts/payments/set-render-payment-mode.mjs` is not safe to adopt: it writes Render service environment variables and triggers a deployment, hardcodes service IDs, configures 1% commission values despite the 2% transaction fee policy, and its live-provider allowlist excludes OPay/Cleva/Eversend. No invocation or deployment was performed.
+- The branch's environment schema is older and omits current OPay test/live credential readiness fields and transfer URLs present on main. No missing OPay display or provider capability was established. No copy or merge.
+- `fix/ephinta-869-compatible-release` adds a Build 869 release helper that requires a local Git checkout, GitHub CLI authentication, repository write/Actions access, Java, Android SDK tools, and the original Build 869 signing certificate. It explicitly refuses to proceed on a non-main working branch and cannot be executed through a repository-only workflow without a local environment. It also expects an owner-configured certificate fingerprint and signing secrets. Do not run or adopt this helper as a workaround for the no-Codespace constraint; preserve main's current production APK workflow and signing safeguards.
+- No files copied, PR opened, branch merged, or branch deleted. CI remains unverified.
