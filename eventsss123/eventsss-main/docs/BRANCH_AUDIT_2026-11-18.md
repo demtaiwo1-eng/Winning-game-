@@ -372,3 +372,13 @@ Reviewed 2026-11-18:
 - The dependency licence-inventory workflow is byte-identical on main and the branch; no copy is required.
 - The branch's 5,000-payment simulation workflow is not evidence of live OPay/Cleva settlement and does not justify importing the rest of the branch. The corresponding deterministic simulation asset is already on main.
 - No merge, PR, file copy or branch deletion was performed. CI remains unverified.
+
+
+## Follow-up review: unified and release-candidate integration branches (2026-11-18)
+
+- `integration/ephinta-unified-20261114` (38 ahead/134 behind) and `integration/ephinta-unified-final-20261114` (39 ahead/134 behind) are heavily diverged and carry broad historical Remotion skill/reference removals. Their workflow additions are not a safe wholesale merge; the payment simulation and licence inventory are already on main, and main's IP release gate is more complete.
+- `integration/ephinta-release-candidate-final-20261114` is 91 ahead/134 behind and has the same broad removals. It adds a branch-only hardcore-acceptance workflow and runner; neither has been executed against current main, and the runner must be reviewed and validated before adoption. Do not treat its existence as a passed release gate.
+- The candidate's non-payment release-verification workflow is configured to push on a different branch name (`fix/ephinta-nonpayment-release-gates-20261114`), not the candidate branch itself. It is not a reliable automatic gate for this branch and is not present on main.
+- The candidate's branch-consolidation workflow grants `contents: write`, checks out the integration branch with persistent credentials, and invokes an all-branch consolidation script. This conflicts with the required branch-by-branch semantic review and must not be enabled or run as-is.
+- The candidate's dependency-security workflow changes triggers and report behavior relative to main; no evidence from a completed run supports replacing the main workflow.
+- No merge, PR, file copy or branch deletion was performed. CI remains unverified.
