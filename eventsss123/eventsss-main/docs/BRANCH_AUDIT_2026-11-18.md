@@ -264,3 +264,15 @@ Reviewed 2026-11-18:
 - `verify/ephinta-main-acceptance-20261107` adds responsive UX audit assertions and updates a completion tracker, but its diff removes `.github/workflows/ess-phase12-e2e.yml`, which is present on main and runs browser journeys, API database integration tests, web regressions, and production builds. Preserve the main workflow. The branch's responsive audit is an older snapshot of a test already present on main; no selective copy justified.
 - `fix/ephinta-marketplace-carousel-portal-ui-20261109` adds a remote-update notice component, responsive styling, E2E coverage, an Android splash drawable, and audio-platform verification. The splash drawable and audio verification script are already byte-for-byte present on main. Main also already has the remote-update component, stylesheet, E2E test, OTA API route, and API tests; its component/test versions include a development-only opt-in guard that the branch versions lack. Main's current OTA API implementation is already present and should not be replaced. No selective copy justified. The branch's main-entry wiring and core app/update changes require separate integration review rather than a wholesale merge.
 - None of these four branches was merged or deleted. No CI result or test execution was obtained in this review. The explicit exclusion of all 100 payment-persona journeys remains in force.
+
+
+## Follow-up review: Codespaces release-helper branch
+
+Reviewed 2026-11-18:
+
+- `codespace-fantastic-memory-xrx467jxj56r2j4r` is 358 commits behind main and adds an older production APK workflow, Android signing documentation/helpers, a PowerShell verification script, and an older public-journey test snapshot.
+- Its production APK workflow is shorter and older than main's 16,905-byte workflow. It lacks main's pull-request validation job, physical-device confirmation gate, and current signing/OTA verification safeguards. Preserve main.
+- The branch's `scripts/setup-android-signing-github.sh` generates a new release keystore and writes its private signing material into GitHub Actions secrets. Do not run it: replacing or creating a different signing identity can make existing installed Android applications unable to accept future signed updates. Main's release workflow expects the original Build 869 signing identity and validates its certificate fingerprint.
+- The branch's `scripts/complete-production-apk.sh` is a local-machine helper and does not solve the no-Codespace constraint. The branch's PowerShell verification script is older than main's version; main adds an explicit `-SkipBrowser` mode and clearer unverified reporting. No helper or workflow copied.
+- The Android signing documentation is branch-only and would need review against the current original-keystore requirement before publication; no release instruction was adopted.
+- No branch was merged or deleted. The branch inventory currently contains 40 branches (39 non-main), and there are no open pull requests. The latest audit commit has no reported commit statuses and no associated workflow runs; this is not evidence of passing CI.
