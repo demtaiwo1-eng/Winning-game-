@@ -8,6 +8,7 @@ import {
   LedgerType,
   ListingStatus,
   PaymentStatus,
+  PaymentRefundStatus,
   Prisma,
   type BookingPaymentRequest,
 } from "@prisma/client";
@@ -60,6 +61,80 @@ logger.info({
   paymentMode: getPaymentMode(),
 }, "OPay bank transfer configuration readiness");
 
+
+/** Record a customer refund request for manual review. This endpoint never calls OPay or changes wallet balances. */
+paymentsRouter.post(
+  "/refunds/request",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const paymentIntentId = String(req.body.paymentIntentId || "").trim();
+    const amountRaw = String(req.body.amountMinor ?? "");
+    const reason = String(req.body.reason || "").trim().slice(0, 500);
+    const idempotencyKey = String(req.get("Idempotency-Key") || req.body.idempotencyKey || "");
+
+    if (!paymentIntentId) throw new HttpError(400, "PAYMENT_INTENT_REQUIRED", "Provide the original payment intent ID.");
+    if (!/^[1-9]\d{0,14}$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "amountMinor must be a positive whole number.");
+    if (!/^[A-Za-z0-9._:-]{8,120}$/.test(idempotencyKey)) throw new HttpError(400, "IDEMPOTENCY_KEY_REQUIRED", "Supply an Idempotency-Key header with 8–120 safe characters.");
+
+    const amountMinor = BigInt(amountRaw);
+    const previous = await prisma.paymentRefund.findUnique({ where: { idempotencyKey } });
+    if (previous) {
+      if (previous.userId !== req.user!.id || previous.paymentIntentId !== paymentIntentId || previous.amountMinor !== amountMinor) {
+        throw new HttpError(409, "IDEMPOTENCY_KEY_CONFLICT", "This idempotency key was already used for a different refund request.");
+      }
+      return res.status(200).json({ refund: {
+        id: previous.id, reference: previous.providerRef, amountMinor: previous.amountMinor.toString(),
+        currency: previous.currency, status: previous.status, createdAt: previous.createdAt,
+      }, replayed: true });
+    }
+
+    const refund = await prisma.$transaction(async (tx) => {
+      // Serialize refund reservations against this payment so concurrent
+      // requests cannot both pass the remaining-gross-amount check.
+      const locked = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "PaymentIntent" WHERE "id" = ${paymentIntentId} AND "userId" = ${req.user!.id} FOR UPDATE`;
+      if (!locked.length) throw new HttpError(404, "PAYMENT_NOT_FOUND", "A refundable payment belonging to your account was not found.");
+
+      const intent = await tx.paymentIntent.findUnique({ where: { id: paymentIntentId } });
+      if (!intent || intent.userId !== req.user!.id) throw new HttpError(404, "PAYMENT_NOT_FOUND", "A refundable payment belonging to your account was not found.");
+      if (intent.provider !== "opay" || intent.currency !== "NGN" || intent.status !== PaymentStatus.SUCCEEDED || intent.purpose !== "WALLET_DEPOSIT") {
+        throw new HttpError(409, "PAYMENT_NOT_REFUNDABLE", "Only successful OPay NGN wallet deposits can currently be submitted for refund review.");
+      }
+
+      const activeStatuses: PaymentRefundStatus[] = [
+        PaymentRefundStatus.REQUESTED, PaymentRefundStatus.MANUAL_REVIEW,
+        PaymentRefundStatus.SUBMITTING, PaymentRefundStatus.SUBMISSION_UNKNOWN,
+        PaymentRefundStatus.INITIAL, PaymentRefundStatus.PENDING, PaymentRefundStatus.SUCCEEDED,
+      ];
+      const reserved = await tx.paymentRefund.aggregate({
+        where: { paymentIntentId, status: { in: activeStatuses } },
+        _sum: { amountMinor: true },
+      });
+      const alreadyReserved = reserved._sum.amountMinor || 0n;
+      if (amountMinor > intent.amountMinor - alreadyReserved) {
+        throw new HttpError(409, "REFUND_AMOUNT_EXCEEDS_REMAINING", "The requested refund exceeds the original payment's remaining refundable amount.");
+      }
+
+      return tx.paymentRefund.create({
+        data: {
+          paymentIntentId, userId: req.user!.id, provider: "opay",
+          providerRef: `ephinta_refund_${randomUUID().replace(/-/g, "").slice(0, 20)}`,
+          idempotencyKey, amountMinor, currency: intent.currency,
+          refundReason: reason || null,
+          status: PaymentRefundStatus.MANUAL_REVIEW,
+          reconciliationLastError: "Manual financial review required: wallet funds may have been spent, escrowed, or withdrawn. No provider refund was submitted.",
+        },
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+    res.status(202).json({
+      refund: {
+        id: refund.id, reference: refund.providerRef, amountMinor: refund.amountMinor.toString(),
+        currency: refund.currency, status: refund.status, createdAt: refund.createdAt,
+      },
+      message: "Your refund request was recorded for manual review. No refund has been sent to OPay and no wallet balance has changed.",
+    });
+  }),
+);
 
 /** Create payment intent to fund wallet */
 paymentsRouter.post(
