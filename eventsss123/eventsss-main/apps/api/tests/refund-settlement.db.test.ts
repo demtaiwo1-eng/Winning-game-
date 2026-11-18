@@ -71,7 +71,7 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
     data: {
       accountId: account.id,
       amountMinor: FEE,
-      balanceAfterMinor: revenueBalance,
+      balanceAfterMinor: account.balanceMinor,
       refType: "PAYMENT_INTENT",
       refId: intent.id,
       idempotencyKey: feeKey,
@@ -92,7 +92,7 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
     },
   });
   createdRefundIds.push(refund.id);
-  return { user, intent, wallet, account, refund };
+  return { user, intent, wallet, account, refund, startingRevenueBalance: account.balanceMinor - revenueBalance };
 }
 
 async function cleanup() {
@@ -130,7 +130,7 @@ describe.skipIf(!run)("OPay refund settlement transaction (DB)", () => {
     const account = await prisma.platformRevenueAccount.findUniqueOrThrow({ where: { id: fixture.account.id } });
     const refund = await prisma.paymentRefund.findUniqueOrThrow({ where: { id: fixture.refund.id } });
     expect(wallet.availableMinor).toBe(0n);
-    expect(account.balanceMinor).toBe(0n);
+    expect(account.balanceMinor).toBe(fixture.startingRevenueBalance);
     expect(refund.status).toBe("SUCCEEDED");
     expect(await prisma.ledgerEntry.findUnique({ where: { idempotencyKey: `payment_refund_wallet_reversal:${fixture.refund.id}` } })).toMatchObject({
       amountMinor: -NET,
@@ -159,7 +159,7 @@ describe.skipIf(!run)("OPay refund settlement transaction (DB)", () => {
     const account = await prisma.platformRevenueAccount.findUniqueOrThrow({ where: { id: fixture.account.id } });
     const refund = await prisma.paymentRefund.findUniqueOrThrow({ where: { id: fixture.refund.id } });
     expect(wallet.availableMinor).toBe(NET);
-    expect(account.balanceMinor).toBe(0n);
+    expect(account.balanceMinor).toBe(fixture.startingRevenueBalance);
     expect(refund.status).toBe("PROVIDER_SUCCEEDED_PENDING_SETTLEMENT");
     expect(await prisma.ledgerEntry.findUnique({
       where: { idempotencyKey: `payment_refund_wallet_reversal:${fixture.refund.id}` },
