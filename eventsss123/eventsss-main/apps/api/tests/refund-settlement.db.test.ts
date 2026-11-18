@@ -98,7 +98,6 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
 async function cleanup() {
   for (const refundId of createdRefundIds) {
     await prisma.ledgerEntry.deleteMany({ where: { idempotencyKey: `payment_refund_wallet_reversal:${refundId}` } });
-    await prisma.platformRevenueEntry.deleteMany({ where: { idempotencyKey: `payment_refund_platform_fee_reversal:${refundId}` } });
   }
   await prisma.paymentRefund.deleteMany({ where: { id: { in: createdRefundIds } } });
   await prisma.platformRevenueEntry.deleteMany({ where: { idempotencyKey: { in: createdRevenueKeys } } });
@@ -113,6 +112,9 @@ async function cleanup() {
         data: { balanceMinor: { decrement: adjustment.amount } },
       });
     }
+  }
+  for (const refundId of createdRefundIds) {
+    await prisma.platformRevenueEntry.deleteMany({ where: { idempotencyKey: `payment_refund_platform_fee_reversal:${refundId}` } });
   }
   await prisma.paymentIntent.deleteMany({ where: { id: { in: createdIntentIds } } });
   await prisma.wallet.deleteMany({ where: { id: { in: createdWalletIds } } });
