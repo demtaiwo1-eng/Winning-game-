@@ -300,3 +300,13 @@ Reviewed 2026-11-18:
 - The selected-navigation branch modifies only `apps/web/e2e/payment-notification-personas.spec.ts`; the four QA branches add or modify that same excluded spec, and some also change the browser E2E workflow/package scripts or add worldwide persona data and a runner. These are all excluded by the owner's explicit instruction to remove all 100 vendor payment-persona journeys. Do not merge, cherry-pick, or re-enable their workflow/package wiring.
 - The payment-persona test changes are not required to preserve the independently existing 5,000-identity mocked payment functional simulation already on main; that simulation is a separate script and workflow.
 - No files copied, PR opened, branch merged, or branch deleted. No CI execution was performed.
+
+
+
+## Follow-up review: isolated demo marketplace catalogue
+
+Reviewed 2026-11-18:
+
+- Rechecked `feature/isolated-demo-marketplace-catalogue-20261116` against the current main component. Main's `PublicMarketplaceCatalogue.tsx` generates 2,000 explicitly simulated, non-bookable examples and keeps verified-provider browsing separate. The branch contains 1,200 examples and an older component implementation.
+- Main's catalogue explicitly labels simulated records and disables enquiries/bookings/reviews/payments in demo mode. The branch's alternative component does not improve on the current main implementation and would reduce the sample count. Preserve main; no cherry-pick.
+- The branch changes only the catalogue component and its stylesheet; no other unique capability was identified. No file copied, PR opened, merge or deletion performed. CI remains unverified.
