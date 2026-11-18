@@ -7,7 +7,7 @@ Compared the current `main` head with every branch returned by GitHub's reposito
 - Audited base: `main` at `bbb16ed59c09d8174fa6cac0397819115493c70d`.
 - GitHub reported no open pull requests.
 - The current main commit returned no status-check entries and no associated workflow runs through the queried commit endpoints. This does **not** mean CI passed.
-- The repository contains 38 non-main branches in the listing.
+- The repository contains 39 non-main branches in the listing (40 branches total including main).
 
 ## Branch decisions
 
