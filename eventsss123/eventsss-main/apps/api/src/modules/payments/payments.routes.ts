@@ -94,6 +94,16 @@ paymentsRouter.post(
       const locked = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "PaymentIntent" WHERE "id" = ${paymentIntentId} AND "userId" = ${req.user!.id} FOR UPDATE`;
       if (!locked.length) throw new HttpError(404, "PAYMENT_NOT_FOUND", "A refundable payment belonging to your account was not found.");
 
+      // Recheck the idempotency key after acquiring the payment row lock:
+      // two simultaneous identical requests may both miss the outer lookup.
+      const racedReplay = await tx.paymentRefund.findUnique({ where: { idempotencyKey } });
+      if (racedReplay) {
+        if (racedReplay.userId !== req.user!.id || racedReplay.paymentIntentId !== paymentIntentId || racedReplay.amountMinor !== amountMinor) {
+          throw new HttpError(409, "IDEMPOTENCY_KEY_CONFLICT", "This idempotency key was already used for a different refund request.");
+        }
+        return racedReplay;
+      }
+
       const intent = await tx.paymentIntent.findUnique({ where: { id: paymentIntentId } });
       if (!intent || intent.userId !== req.user!.id) throw new HttpError(404, "PAYMENT_NOT_FOUND", "A refundable payment belonging to your account was not found.");
       if (intent.provider !== "opay" || intent.currency !== "NGN" || intent.status !== PaymentStatus.SUCCEEDED || intent.purpose !== "WALLET_DEPOSIT") {
