@@ -407,3 +407,27 @@ Reviewed 2026-11-18:
 - Although the script checks PR state and CI, it creates PRs for every non-main branch, treats patch-equivalent commits as represented without semantic review, and may merge any clean, green PR under its file/deletion thresholds. It has no explicit denylist for the excluded 100 payment-persona journeys, no policy check for risky provider/credential/cleanup changes, and no independent validation that a green workflow actually covers the changed functionality. A green check is not a substitute for reviewing what a branch changes.
 - It requires a local clone, GitHub CLI authentication, git/jq, and local npm verification; it cannot satisfy the user's no-Codespace/no-local-shell constraint. Its final `npm run mobile:verify` also assumes Android SDK/Java tooling not available through this GitHub-only workflow.
 - No script was run, no PR was opened, no branch was merged or deleted. Preserve branch-by-branch review and explicit exclusion of all 100 vendor payment-persona journeys.
+
+
+## Final all-branch deletion-readiness checkpoint (2026-11-18)
+
+### Inventory and comparison
+
+- Refreshed GitHub inventory: 40 branches total (main + 39 non-main); zero open pull requests at the last inventory refresh.
+- Compared every one of the 39 non-main branch refs against current `main`. GitHub reports each as diverged. Ahead/behind counts are commit-history comparisons, not proof that every ahead commit represents missing functionality: many branches contain old snapshots or changes already represented in main.
+- No blanket merge is safe. The branch set includes broad historical file removals, older snapshots of current app code, unsafe all-branch automation, provider/credential setup requiring owner authorization, and the explicitly excluded 100 payment-persona journey suite.
+
+### Disposition
+
+- **Do not merge wholesale:** the four payment-persona QA branches and `integration/selected-payment-persona-navigation-fix-20261117`; keep all 100 CLIENT/VENDOR payment-persona journeys excluded.
+- **Do not merge wholesale:** the unified/release-candidate/Android-verified integration branches and cleanup, maintenance, audit, paid-access branches with approximately 300 changed paths and extensive historical Remotion asset removals. Preserve current main versions of workflows and release controls.
+- **Do not run or merge:** `automation/integrate-all-branches-one-go-20261117`; it can open/merge PRs across branches without the required semantic exclusions and depends on a local clone, GitHub CLI, and Android build tooling.
+- **Keep current main implementations:** Bytid/KYC, device-security, planner operations, experience modes, global theme, isolated demo catalogue, customer journey, marketplace carousel/remote update, OPay display, responsive music/theme recovery, and acceptance/release branches where the main implementation is newer or already includes the useful change. This is a semantic review conclusion, not a Git ancestry claim.
+- **Owner decision required before discarding branch-only assets:** YouTube playlist OAuth/scheduled sync branches require Google account authorization and secrets; signing-helper branches must not create/replace the existing Android keystore; release-candidate branch-only hardcore acceptance workflow/runner and historical third-party-notices manifest have not been validated against current main. These are not approved for blind merge.
+- **No branch is certified deletion-ready solely from this comparison.** Branches whose useful work is confirmed present in main may be manually deleted after you review this report; preserve the owner-decision items until explicitly accepted or intentionally abandoned. Do not infer that a diverged branch is merged just because its feature appears in main.
+
+### Verification limits
+
+- No merge was performed during this checkpoint; no branch was deleted. There were zero open PRs at the last inventory refresh.
+- Latest audit commits have no associated GitHub status checks or workflow runs. CI, browser E2E, full quality gates, Android signed build/install, and live payment-provider settlement remain unverified by this GitHub-only audit.
+- Branch protection was reported disabled for main in the last inventory refresh. Enable appropriate rulesets/required checks before release.
