@@ -191,6 +191,28 @@ describe("settleProviderConfirmedOpayRefund", () => {
     expect(tx.paymentRefund.updateMany).not.toHaveBeenCalled();
   });
 
+  it("stops after three serializable transaction conflicts", async () => {
+    const conflict = new Prisma.PrismaClientKnownRequestError(
+      "Transaction failed due to a write conflict or a deadlock. Please retry your transaction",
+      { code: "P2034", clientVersion: "5.22.0" },
+    );
+    prismaMock.$transaction
+      .mockRejectedValueOnce(conflict)
+      .mockRejectedValueOnce(conflict)
+      .mockRejectedValueOnce(conflict);
+
+    await expect(settleProviderConfirmedOpayRefund("refund-1")).rejects.toBe(conflict);
+    expect(prismaMock.$transaction).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not retry non-serialization failures", async () => {
+    const failure = new Error("database unavailable");
+    prismaMock.$transaction.mockRejectedValue(failure);
+
+    await expect(settleProviderConfirmedOpayRefund("refund-1")).rejects.toBe(failure);
+    expect(prismaMock.$transaction).toHaveBeenCalledOnce();
+  });
+
   it("reports missing refunds without attempting accounting", async () => {
     const tx = makeTransaction({
       paymentRefund: { findUnique: vi.fn().mockResolvedValue(null), updateMany: vi.fn() },
