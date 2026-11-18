@@ -10,7 +10,7 @@ vi.mock("./refundFundingAssessment.service", () => ({
   assessOpayRefundFunding: assessmentMock,
 }));
 
-import { PaymentRefundStatus } from "@prisma/client";
+import { PaymentRefundStatus, Prisma } from "@prisma/client";
 import {
   RefundSettlementError,
   settleProviderConfirmedOpayRefund,
@@ -107,6 +107,23 @@ describe("settleProviderConfirmedOpayRefund", () => {
       where: { id: "refund-1", status: PaymentRefundStatus.PROVIDER_SUCCEEDED_PENDING_SETTLEMENT },
       data: expect.objectContaining({ status: PaymentRefundStatus.SUCCEEDED }),
     }));
+  });
+
+  it("retries a serializable transaction conflict and then settles", async () => {
+    const conflict = new Prisma.PrismaClientKnownRequestError(
+      "Transaction failed due to a write conflict or a deadlock. Please retry your transaction",
+      { code: "P2034", clientVersion: "5.22.0" },
+    );
+    const tx = makeTransaction();
+    prismaMock.$transaction
+      .mockRejectedValueOnce(conflict)
+      .mockImplementationOnce(async (callback: (tx: any) => unknown) => callback(tx));
+
+    await expect(settleProviderConfirmedOpayRefund("refund-1")).resolves.toEqual({
+      settled: true,
+      alreadySettled: false,
+    });
+    expect(prismaMock.$transaction).toHaveBeenCalledTimes(2);
   });
 
   it("refuses to settle a refund that has not reached provider-confirmed state", async () => {
