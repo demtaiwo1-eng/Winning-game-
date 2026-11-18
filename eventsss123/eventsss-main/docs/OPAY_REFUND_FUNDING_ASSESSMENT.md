@@ -87,3 +87,12 @@ Although `createOpayRefund` and `queryOpayRefund` provider adapters exist, there
 - A timeout after a create request must be reconciled by querying the same `providerRef`; never create a new reference or blindly retry.
 - Provider-reported success must remain distinct from internally settled `SUCCEEDED`. Until an explicit provider-success-awaiting-ledger state and atomic two-ledger settlement exist, do not mark a refund `SUCCEEDED` from a callback or query result.
 - Refund callback authentication, replay protection, out-of-order event handling, durable provider response capture, and database-backed concurrency tests remain release blockers.
+
+
+## Provider success is not settlement
+
+The refund lifecycle now includes `PROVIDER_SUCCEEDED_PENDING_SETTLEMENT`. A future callback or status-polling worker may use this state only after authenticating and validating the provider's final success response. It is deliberately distinct from `SUCCEEDED`, which is reserved for the transaction in which EPHINTA has atomically posted both the wallet-net reversal and the platform-fee reversal.
+
+This intermediate state remains an active refund reservation in both the funding assessment and customer refund-intake amount cap. It must not be treated as a completed refund, and it must not permit another refund request to reuse the same original payment amount. The new enum value is introduced by migration `20261118000300_add_provider_success_pending_settlement`.
+
+No callback handler, provider submission worker, or settlement routine is implemented by this schema change. Until those components exist, do not write this state from application code and do not enable OPay refund submission.
