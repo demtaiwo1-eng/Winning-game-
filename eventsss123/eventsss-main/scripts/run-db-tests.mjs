@@ -5,7 +5,7 @@ const child = spawn(
   ["../../scripts/with-database.mjs", "vitest", "run"],
   {
     cwd: new URL("../apps/api/", import.meta.url),
-    env: { ...process.env, RUN_DB_TESTS: "1" },
+    env: { ...process.env, DATABASE_MODE: "local", RUN_DB_TESTS: "1" },
     stdio: "inherit",
     shell: process.platform === "win32",
   },
