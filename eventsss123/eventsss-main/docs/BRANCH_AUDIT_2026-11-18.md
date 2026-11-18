@@ -353,3 +353,12 @@ Reviewed 2026-11-18:
 - The branch-only staged-cleanup workflow is not suitable to enable as-is: its job declares duplicate top-level `env` keys, so one mapping would override the other in YAML parsers, and its paths/targets include a historical release branch. It is not present on main and was not copied.
 - The branch's third-party-notices file cites a historical package inventory and generated artifact counts; these are not independently verified against the current main lockfile and should not be treated as current release certification.
 - No merge, PR, file copy or branch deletion was performed. CI remains unverified.
+
+
+## Follow-up review: licensed-audio and verification-matrix maintenance branches (2026-11-18)
+
+- `maintenance/licensed-audio-e2e-fix-20261114` compares 126 commits ahead and 136 behind main. Its licensed-audio test policy is already present byte-for-byte on main; no policy copy is needed.
+- `maintenance/verification-matrix-20261114` compares 111 commits ahead and 136 behind main. It adds a useful-looking verification matrix, but the document explicitly depends on the branch-only staged-cleanup workflow. That workflow has duplicate top-level job `env` keys and was not validated against current main; the matrix's command names and acceptance rules were not independently run. Do not copy it as a certified verification checklist.
+- Both branches carry broad removals of bundled Remotion skill/reference assets and historical cleanup manifests. The manifests make claims about quarantined scripts and preserved blob SHAs, but the branch snapshots are not a safe reason to import the accompanying cleanup history or delete files from main.
+- The 5,000-user and one-node test assets are already on main; they are synthetic/non-payment tests, not proof of live provider transactions or production capacity.
+- No branch was merged, no file was copied, and no branch was deleted. CI remains unverified.
