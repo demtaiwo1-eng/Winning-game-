@@ -159,7 +159,10 @@ export async function settleProviderConfirmedOpayRefund(
     } catch (error) {
       const retryable =
         error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2034";
+        (error.code === "P2034" ||
+          (error.code === "P2010" &&
+            typeof error.meta?.code === "string" &&
+            error.meta.code === "40001"));
       if (!retryable || attempt === 3) throw error;
     }
   }
