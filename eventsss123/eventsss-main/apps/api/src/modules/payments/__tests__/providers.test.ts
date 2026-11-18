@@ -383,6 +383,23 @@ describe("OPay cashier refunds", () => {
     });
   });
 
+  it("requires the original payment reference and expected amount before querying", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(queryOpayRefund({
+      reference: "refund-identity-check",
+      originalReference: "",
+      amountMinor: 1000n,
+    })).rejects.toThrow("original payment reference is required");
+    await expect(queryOpayRefund({
+      reference: "refund-identity-check",
+      originalReference: "payment-identity-check",
+      amountMinor: 0n,
+    })).rejects.toThrow("positive safe integer");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("queries refund status using the documented endpoint and validates original payment and amount", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       code: "00000",
