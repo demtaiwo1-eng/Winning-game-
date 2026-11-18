@@ -12,7 +12,7 @@ const createdRefundIds: string[] = [];
 const createdWalletIds: string[] = [];
 const createdLedgerKeys: string[] = [];
 const createdRevenueKeys: string[] = [];
-const revenueAccountAdjustments = new Map<string, bigint>();
+const fixtureAccountAdjustments: Array<{ accountId: string; refundId: string; amount: bigint }> = [];
 
 async function makeFixture(tag: string, revenueBalance: bigint) {
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -66,7 +66,6 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
     update: { balanceMinor: { increment: revenueBalance } },
     create: { currency: "NGN", balanceMinor: revenueBalance },
   });
-  revenueAccountAdjustments.set(account.id, (revenueAccountAdjustments.get(account.id) ?? 0n) + revenueBalance);
   await prisma.platformRevenueEntry.create({
     data: {
       accountId: account.id,
@@ -92,6 +91,7 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
     },
   });
   createdRefundIds.push(refund.id);
+  fixtureAccountAdjustments.push({ accountId: account.id, refundId: refund.id, amount: revenueBalance });
   return { user, intent, wallet, account, refund, startingRevenueBalance: account.balanceMinor - revenueBalance };
 }
 
@@ -103,11 +103,14 @@ async function cleanup() {
   await prisma.paymentRefund.deleteMany({ where: { id: { in: createdRefundIds } } });
   await prisma.platformRevenueEntry.deleteMany({ where: { idempotencyKey: { in: createdRevenueKeys } } });
   await prisma.ledgerEntry.deleteMany({ where: { idempotencyKey: { in: createdLedgerKeys } } });
-  for (const [accountId, amount] of revenueAccountAdjustments) {
-    if (amount !== 0n) {
+  for (const adjustment of fixtureAccountAdjustments) {
+    const reversal = await prisma.platformRevenueEntry.findUnique({
+      where: { idempotencyKey: `payment_refund_platform_fee_reversal:${adjustment.refundId}` },
+    });
+    if (!reversal && adjustment.amount !== 0n) {
       await prisma.platformRevenueAccount.update({
-        where: { id: accountId },
-        data: { balanceMinor: { decrement: amount } },
+        where: { id: adjustment.accountId },
+        data: { balanceMinor: { decrement: adjustment.amount } },
       });
     }
   }
