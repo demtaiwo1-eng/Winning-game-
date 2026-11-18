@@ -265,7 +265,7 @@
   font: inherit;
 }
 .ess-mode-menu .ess-muted, .ess-mode-menu small { margin: 0; font-size: 11px; line-height: 1.45; }
-.ess-mode-menu .ess-outline-button { min-height: 38px; padding: 8px 12px; font-size: 12px; }
+
 
 /* FINAL GLOBAL CONTRAST ENFORCEMENT
    Keep this block after every component rule in this entry file. Legacy page
