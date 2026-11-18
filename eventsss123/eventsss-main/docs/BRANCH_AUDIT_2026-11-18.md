@@ -443,3 +443,12 @@ Reviewed 2026-11-18:
 - **Manual deletion guidance:** do not bulk-delete by assuming every ahead commit was merged. First retain/export any branch-only work you still want. In particular, the YouTube playlist OAuth/scheduled-sync work needs an explicit owner decision; signing-helper branches must not generate or replace the existing Android signing key; and the branch-only hardcore acceptance runner/third-party-notices snapshot remain unvalidated. The 100 vendor payment-persona journey branches remain explicitly excluded and must not be merged.
 - No PRs were opened, no merges were performed, and no branches were deleted by this audit. The connected GitHub toolset does not provide a safe branch-ref deletion action.
 - **Release gate remains open:** run the repository's actual CI, browser/E2E, API/web build, and Android signing/install checks on current main before declaring the application release-ready. No live OPay/Cleva settlement or provider refund callback is certified by this branch audit.
+
+
+## One-go GitHub Actions finalization gate added
+
+- Added `scripts/one-go-finalize-branches.sh` and manual workflow `.github/workflows/ephinta-one-go-finalization.yml`.
+- The workflow runs on GitHub-hosted Ubuntu (no Codespace or local computer required), installs Node 22, Java 21 and Android SDK packages, then runs `npm ci`, `npm run check`, `npm run build`, `npm run build:web`, and `npm run mobile:verify` against current main.
+- It fetches every remote branch and produces a TSV disposition report. It marks a branch `READY_FOR_MANUAL_DELETION` only if Git's merge-tree result is exactly identical to current main and no open PR exists. Conflicts, unique resulting content, open PRs, OAuth/signing helpers, and the one-go auto-merge script are preserved for review. Payment-persona branches are explicitly excluded.
+- It intentionally performs no merge and no deletion. It does not change branch protection, secrets, Render/Supabase configuration, production data, provider payments, or Android signing identity. The user will manually delete only branches marked ready.
+- Workflow must be manually dispatched in GitHub Actions; this connector cannot dispatch it. No run result or quality-gate pass is claimed until GitHub Actions reports one.
