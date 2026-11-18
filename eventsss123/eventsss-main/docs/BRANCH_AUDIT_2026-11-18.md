@@ -171,3 +171,16 @@ Decision: do not merge `fix/opay-provider-display-20261113`. Preserve main's fee
 The branch changes the production APK workflow, but main's current workflow is larger and more advanced. The added `complete-ephinta-869-update.sh` explicitly requires a trusted local GitHub Codespace, GitHub CLI authentication, Java and Android SDK tools, then downloads the baseline APK, checks signing identity and dispatches the workflow. It therefore does not meet the no-Codespace requirement and cannot be run through the connected GitHub file-editing interface.
 
 Decision: keep the current main release workflow; do not add a helper that the owner cannot execute. Android signing still requires the original keystore and secrets configured in GitHub Settings. Never generate a replacement key to overwrite the installed app's signing identity.
+
+
+### Responsive music-player recovery branch — main is substantially newer
+
+The branch versions of AudioExperience, its stylesheet and the audio E2E suite are all materially shorter than main. The current main implementation contains additional playback/consent lifecycle and platform handling. The branch should not overwrite it.
+
+### Planner-budget-format recovery branch — stale integration snapshot
+
+This branch only changes the Android Gradle wrapper, public-journey E2E test and EnterpriseApp. Its 3 unique commits are based on a much older main; no standalone new planner-budget implementation was identified in its changed-file list. Preserve current main.
+
+### Verified-feature recovery branch — overlaps older audio and journey snapshots
+
+Its audio E2E, public journey E2E, EnterpriseApp, main entrypoint and audio CSS overlap earlier snapshots already superseded by main. Its theme-contrast stylesheet is an older copy of the current main stylesheet. Do not merge wholesale.
