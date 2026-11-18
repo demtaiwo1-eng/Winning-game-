@@ -145,7 +145,7 @@ for (const persona of personas) {
     if (persona.role === "CLIENT") {
       await expect(page).toHaveURL(/\/dashboard\/client$/);
       // Use the visible navigation control for the current responsive layout.
-      const clientPaymentsShortcut = page.getByRole("button", { name: "Open payments and wallet" });
+      const clientPaymentsShortcut = page.getByRole("button", { name: /Open Payments & finances|Open payments and wallet/i });
       if (await clientPaymentsShortcut.isVisible()) {
         await clientPaymentsShortcut.click();
       } else {
