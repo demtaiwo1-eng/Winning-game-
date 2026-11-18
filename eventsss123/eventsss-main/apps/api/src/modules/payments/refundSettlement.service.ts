@@ -29,7 +29,7 @@ export class RefundSettlementError extends Error {
 export async function settleProviderConfirmedOpayRefund(
   refundId: string,
 ): Promise<{ settled: boolean; alreadySettled: boolean }> {
-  return prisma.$transaction(async (tx) => {
+  const settleOnce = () => prisma.$transaction(async (tx) => {
     const initial = await tx.paymentRefund.findUnique({ where: { id: refundId } });
     if (!initial) throw new RefundSettlementError("REFUND_NOT_FOUND", "Refund request was not found.");
 
@@ -150,4 +150,18 @@ export async function settleProviderConfirmedOpayRefund(
     }
     return { settled: true, alreadySettled: false };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+  // Serializable transactions can conflict when workers race to settle one refund.
+  // Retry only Prisma's transaction-conflict code; business/provider errors surface.
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await settleOnce();
+    } catch (error) {
+      const retryable =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2034";
+      if (!retryable || attempt === 3) throw error;
+    }
+  }
+  throw new Error("Refund settlement retry limit was exceeded.");
 }
