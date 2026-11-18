@@ -153,3 +153,14 @@ Decision: no merge needed.
 ### Isolated demo marketplace catalogue branch — do not overwrite main
 
 Main already contains the larger 2,000-record clearly labelled demo catalogue. The isolated-catalogue branch's older 1,200-record version is not an improvement and must not replace main.
+
+
+### OPay provider-display branch — reject its Render mode script
+
+The branch's payout documentation is already identical to main, and the branch WalletPanel and payout route are older than main (the branch route lacks main's DEMO-mode payout guard). Main's fee policy already enforces the current 2% wallet-top-up and payout fee rules.
+
+A critical conflict was found in the branch-only `scripts/payments/set-render-payment-mode.mjs`: it directly writes Render environment variables and triggers a deploy, sets incoming/outgoing/booking commission variables to 1%, and switches payment mode outside the database-backed ADMIN control. Main intentionally retires this script and directs mode changes through the authenticated ADMIN dashboard.
+
+The branch also carries a 300-persona QA document; do not import it as a replacement for normal focused tests or reintroduce payment-persona journey workflows.
+
+Decision: do not merge `fix/opay-provider-display-20261113`. Preserve main's fee policy and retired-script safeguard.
