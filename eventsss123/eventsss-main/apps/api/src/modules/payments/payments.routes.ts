@@ -223,7 +223,8 @@ paymentsRouter.post(
       const activeStatuses: PaymentRefundStatus[] = [
         PaymentRefundStatus.REQUESTED, PaymentRefundStatus.MANUAL_REVIEW,
         PaymentRefundStatus.SUBMITTING, PaymentRefundStatus.SUBMISSION_UNKNOWN,
-        PaymentRefundStatus.INITIAL, PaymentRefundStatus.PENDING, PaymentRefundStatus.SUCCEEDED,
+        PaymentRefundStatus.INITIAL, PaymentRefundStatus.PENDING,
+        PaymentRefundStatus.PROVIDER_SUCCEEDED_PENDING_SETTLEMENT, PaymentRefundStatus.SUCCEEDED,
       ];
       const reserved = await tx.paymentRefund.aggregate({
         where: { paymentIntentId, status: { in: activeStatuses } },
