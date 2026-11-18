@@ -110,7 +110,6 @@ certificate ownership, Render/Supabase production configuration, and Play Consol
 cannot be truthfully certified by a generic CI run.
 EOF
 
-cp "$REPORT" "$OUT/branch-readiness.tsv"
 echo "Branch report: $REPORT"
 echo "Summary: $SUMMARY"
 if [[ "$quality_status" -ne 0 ]]; then
