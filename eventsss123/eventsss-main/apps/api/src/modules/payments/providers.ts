@@ -263,6 +263,147 @@ export async function verifyOpay(reference: string): Promise<{
   };
 }
 
+
+export type OpayRefundStatus = "INITIAL" | "PENDING" | "SUCCESS" | "FAIL";
+export type OpayRefundResult = {
+  reference: string;
+  originalReference: string;
+  orderNo?: string;
+  originalOrderNo?: string;
+  status: OpayRefundStatus;
+  amountMinor: bigint;
+  currency: string;
+  raw: unknown;
+};
+
+function opayApiBaseUrl() {
+  return getRuntimePaymentMode() === "test"
+    ? "https://testapi.opaycheckout.com"
+    : "https://liveapi.opaycheckout.com";
+}
+
+async function opayRefundRequest(path: string, body: Record<string, unknown>): Promise<unknown> {
+  const credentials = opayCredentials();
+  if (!credentials.merchantId || !credentials.secretKey) {
+    throw new Error("OPay refund credentials for the selected central mode are not configured");
+  }
+  const serialized = JSON.stringify(body);
+  const signature = createHmac("sha512", credentials.secretKey).update(serialized).digest("hex");
+  const response = await fetch(opayApiBaseUrl() + path, {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + signature,
+      MerchantId: credentials.merchantId,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: serialized,
+    signal: AbortSignal.timeout(15_000),
+  });
+  const data = await response.json() as {
+    code?: string;
+    message?: string;
+    data?: Record<string, any>;
+  };
+  if (!response.ok) throw new Error("OPay refund request failed (" + response.status + ")");
+  if (data.code !== "00000" || !data.data) {
+    throw new Error(data.message || "OPay refund request was unsuccessful");
+  }
+  return data;
+}
+
+function normalizeOpayRefundResult(raw: unknown, expected: {
+  reference: string;
+  originalReference?: string;
+  amountMinor?: bigint;
+}): OpayRefundResult {
+  const data = (raw as { data?: Record<string, any> }).data;
+  if (!data || data.reference !== expected.reference) {
+    throw new Error("OPay refund response reference does not match the requested refund");
+  }
+  if (expected.originalReference && data.originalReference !== expected.originalReference) {
+    throw new Error("OPay refund response original reference does not match the original payment");
+  }
+  if (!["INITIAL", "PENDING", "SUCCESS", "FAIL"].includes(String(data.orderStatus))) {
+    throw new Error("OPay refund response contains an unknown status");
+  }
+  const amount = data.refundAmount?.total ?? data.amount?.total;
+  const currency = String(data.refundAmount?.currency ?? data.amount?.currency ?? "").toUpperCase();
+  if (amount === undefined || amount === null || !/^\d+$/.test(String(amount)) || currency !== "NGN") {
+    throw new Error("OPay refund response is missing a valid NGN refund amount");
+  }
+  const amountMinor = BigInt(String(amount));
+  if (expected.amountMinor !== undefined && amountMinor !== expected.amountMinor) {
+    throw new Error("OPay refund response amount does not match the requested refund");
+  }
+  return {
+    reference: data.reference,
+    originalReference: String(data.originalReference || ""),
+    orderNo: data.orderNo,
+    originalOrderNo: data.originalOrderNo,
+    status: data.orderStatus as OpayRefundStatus,
+    amountMinor,
+    currency,
+    raw,
+  };
+}
+
+/** Submit a cashier refund. The caller must persist a unique refund reference before calling. */
+export async function createOpayRefund(input: {
+  amountMinor: bigint;
+  originalReference: string;
+  reference: string;
+  callbackUrl: string;
+  refundWay: "Original" | "BankAccount";
+  refundReason?: string;
+  receiver?: { bankCode: string; bankAccountNo: string };
+}): Promise<OpayRefundResult> {
+  assertPaymentMode();
+  if (input.amountMinor <= 0n || input.amountMinor > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new Error("OPay refund amount must be a positive safe integer in minor units");
+  }
+  if (!input.reference.trim() || !input.originalReference.trim()) {
+    throw new Error("OPay refund and original payment references are required");
+  }
+  if (!input.callbackUrl.startsWith("https://")) {
+    throw new Error("OPay refund callback URL must use HTTPS");
+  }
+  if (input.refundWay === "BankAccount" && (!input.receiver?.bankCode || !input.receiver.bankAccountNo)) {
+    throw new Error("Bank-account refunds require receiver bank code and account number");
+  }
+  const body: Record<string, unknown> = {
+    amount: { currency: "NGN", total: Number(input.amountMinor) },
+    callbackUrl: input.callbackUrl,
+    country: "NG",
+    originalReference: input.originalReference,
+    reference: input.reference,
+    refundWay: input.refundWay,
+    ...(input.refundReason ? { refundReason: input.refundReason } : {}),
+    ...(input.receiver ? { receiver: input.receiver } : {}),
+  };
+  const raw = await opayRefundRequest("/api/v1/international/payment/refund/create", body);
+  return normalizeOpayRefundResult(raw, {
+    reference: input.reference,
+    originalReference: input.originalReference,
+    amountMinor: input.amountMinor,
+  });
+}
+
+/** Query a previously submitted refund; safe to repeat during reconciliation. */
+export async function queryOpayRefund(input: {
+  reference: string;
+  originalReference?: string;
+  amountMinor?: bigint;
+}): Promise<OpayRefundResult> {
+  assertPaymentMode();
+  if (!input.reference.trim()) throw new Error("OPay refund reference is required");
+  const raw = await opayRefundRequest("/api/v1/international/payment/refund/query", {
+    reference: input.reference,
+    country: "NG",
+  });
+  return normalizeOpayRefundResult(raw, input);
+}
+
 export type InitResult = {
   provider: ProviderName;
   providerRef: string;
