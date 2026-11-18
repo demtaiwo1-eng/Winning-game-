@@ -213,3 +213,17 @@ Reviewed 2026-11-18:
 - `integration/ephinta-planner-music-rebased-20261108` adds YouTube playlist-sync automation and OAuth scripts. This requires explicit owner authorization and configured OAuth credentials; do not activate it or merge it by default. It also changes planner/music navigation and older UI/E2E snapshots. Main already contains the current owner-confirmed audio rights declaration; retain current music product behavior.
 
 No branch was merged or deleted. The 100 payment-persona journey suites remain excluded. CI remains unverified for the candidate workflows described above.
+
+
+## Follow-up review: exact workflow and documentation comparisons
+
+Reviewed 2026-11-18:
+
+- Rechecked the candidate maintenance workflows against current `main` by fetching both refs and comparing blob contents. `.github/workflows/ephinta-5000-payment-functional.yml`, `.github/workflows/ephinta-license-inventory.yml`, and `.github/workflows/ephinta-one-node-load.yml` are already byte-for-byte identical on `main`; no merge is needed.
+- `.github/workflows/ephinta-ip-release-gate.yml` also exists on `main`, but the branch copy is older and omits current path triggers for AudioExperience and the licence-inventory script, plus the current dependency-install and timeout setup. Keep the main version.
+- `docs/maintenance/VERIFICATION_MATRIX.md` already exists on main and has a more current required-gates list, including the APK, IP, licence and browser E2E workflows. The branch copy does not add a missing matrix capability.
+- `docs/maintenance/LICENSED_AUDIO_TEST_POLICY.md` is byte-for-byte identical to main. No merge is needed.
+- The candidate `THIRD_PARTY_NOTICES.md` is not present at the same path on main; however, it contains a dated package inventory snapshot and generated-artifact claims that were not independently verified in this review. Main already has the current third-party audit and licence inventory workflow. Do not copy this historical notice as a release certification.
+- The branch-only `.github/workflows/ephinta-maintenance-cleanup.yml` is unsafe to adopt without repair: it declares duplicate top-level job `env:` mappings, so the later Android environment mapping can override database/JWT test settings. It is also narrowly branch-triggered and invokes a large cleanup/test sequence that has not been run against main. No copy made.
+- The README from the audit branch is not a safe replacement for main: it contains a release-candidate PR link and dated paid-access/payment statements that need revalidation against current code. Preserve the existing main README.
+- No new file was copied and no branch was merged or deleted in this pass. The existing payment-persona exclusion remains in force. CI/test execution remains unverified.
