@@ -104,22 +104,26 @@ function validateLeaseIdentity(id: string, lockToken: string, now: Date): void {
  * does not change the refund's financial lifecycle status.
  */
 export async function completeRefundReconciliationClaim(
-  options: RefundReconciliationLeaseOptions,
+  options: RefundReconciliationLeaseOptions & { nextAttemptAt: Date },
 ): Promise<boolean> {
   const now = options.now ?? new Date();
   validateLeaseIdentity(options.id, options.lockToken, now);
+  if (Number.isNaN(options.nextAttemptAt.getTime()) || options.nextAttemptAt.getTime() <= now.getTime()) {
+    throw new TypeError("Refund reconciliation nextAttemptAt must be later than now.");
+  }
 
   const updated = await prisma.$executeRaw`
     UPDATE "PaymentRefund"
     SET "reconciliationLockToken" = NULL,
         "reconciliationLockedUntil" = NULL,
         "reconciliationLastError" = NULL,
-        "reconciliationNextAttemptAt" = NULL,
+        "reconciliationNextAttemptAt" = ${options.nextAttemptAt},
         "updatedAt" = ${now}
     WHERE "id" = ${options.id}
       AND "reconciliationLockToken" = ${options.lockToken}
       AND "reconciliationLockedUntil" > ${now}
       AND "status"::text IN ('INITIAL', 'PENDING', 'SUBMISSION_UNKNOWN')
+      AND "reconciliationDeadLetteredAt" IS NULL
   `;
   return updated === 1;
 }
