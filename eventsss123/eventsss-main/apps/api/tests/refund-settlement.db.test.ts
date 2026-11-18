@@ -12,6 +12,7 @@ const createdRefundIds: string[] = [];
 const createdWalletIds: string[] = [];
 const createdLedgerKeys: string[] = [];
 const createdRevenueKeys: string[] = [];
+const createdRevenueDrainKeys: string[] = [];
 const fixtureAccountAdjustments: Array<{ accountId: string; refundId: string; amount: bigint }> = [];
 
 async function makeFixture(tag: string, revenueBalance: bigint) {
@@ -63,8 +64,8 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
 
   const account = await prisma.platformRevenueAccount.upsert({
     where: { currency: "NGN" },
-    update: { balanceMinor: { increment: revenueBalance } },
-    create: { currency: "NGN", balanceMinor: revenueBalance },
+    update: { balanceMinor: { increment: FEE } },
+    create: { currency: "NGN", balanceMinor: FEE },
   });
   await prisma.platformRevenueEntry.create({
     data: {
@@ -76,6 +77,25 @@ async function makeFixture(tag: string, revenueBalance: bigint) {
       idempotencyKey: feeKey,
     },
   });
+
+  if (revenueBalance < FEE) {
+    const drainKey = `refund-test-revenue-drain:${intent.id}`;
+    createdRevenueDrainKeys.push(drainKey);
+    await prisma.platformRevenueAccount.update({
+      where: { id: account.id },
+      data: { balanceMinor: { decrement: FEE - revenueBalance } },
+    });
+    await prisma.platformRevenueEntry.create({
+      data: {
+        accountId: account.id,
+        amountMinor: -(FEE - revenueBalance),
+        balanceAfterMinor: revenueBalance,
+        refType: "REFUND_TEST_FIXTURE",
+        refId: intent.id,
+        idempotencyKey: drainKey,
+      },
+    });
+  }
 
   const refund = await prisma.paymentRefund.create({
     data: {
@@ -100,7 +120,7 @@ async function cleanup() {
     await prisma.ledgerEntry.deleteMany({ where: { idempotencyKey: `payment_refund_wallet_reversal:${refundId}` } });
   }
   await prisma.paymentRefund.deleteMany({ where: { id: { in: createdRefundIds } } });
-  await prisma.platformRevenueEntry.deleteMany({ where: { idempotencyKey: { in: createdRevenueKeys } } });
+  await prisma.platformRevenueEntry.deleteMany({ where: { idempotencyKey: { in: [...createdRevenueKeys, ...createdRevenueDrainKeys] } } });
   await prisma.ledgerEntry.deleteMany({ where: { idempotencyKey: { in: createdLedgerKeys } } });
   for (const adjustment of fixtureAccountAdjustments) {
     const reversal = await prisma.platformRevenueEntry.findUnique({
