@@ -1,6 +1,8 @@
 name: EPHINTA one-go finalization and branch readiness
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -55,6 +57,22 @@ jobs:
           # Prisma schema validation only needs a syntactically valid URL; no DB connection is made.
           DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ephinta_ci?schema=public
         run: bash scripts/one-go-finalize-branches.sh
+      - name: Upload Android debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-android-debug-apk
+          path: eventsss123/eventsss-main/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload production web bundle
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-web-production-build
+          path: eventsss123/eventsss-main/apps/web/dist/
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload finalization reports
         if: always()
         uses: actions/upload-artifact@v4
