@@ -1330,3 +1330,24 @@ body:has(.ephinta-marketing-zone) {
   text-shadow: none !important;
 }
 
+
+/* EPHINTA landing right-panel contrast: dark copy on the new light surface. */
+.eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-copy-description-force,
+.eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-copy-tagline-force,
+.eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-force-visible-description,
+.eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-force-visible-tagline {
+  color: #55586d !important;
+  -webkit-text-fill-color: #55586d !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-shadow: none !important;
+}
+.eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-copy-eyebrow-force,
+.eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-force-visible-eyebrow {
+  color: #5b36b8 !important;
+  -webkit-text-fill-color: #5b36b8 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-shadow: none !important;
+}
+
