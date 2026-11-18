@@ -15,7 +15,7 @@
     "db:deploy": "node ../../scripts/with-database.mjs prisma migrate deploy",
     "db:seed": "node ../../scripts/with-database.mjs tsx prisma/seed.ts",
     "db:studio": "node ../../scripts/with-database.mjs prisma studio",
-    "test:db": "node ../../scripts/with-database.mjs vitest run"
+    "test:db": "node ../../scripts/run-db-tests.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
