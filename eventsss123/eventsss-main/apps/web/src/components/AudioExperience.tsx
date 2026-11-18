@@ -130,6 +130,14 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   }, []);
 
   useEffect(() => {
+    const promptOpen = showPrompt && preferencesLoaded && consent === null && !authDialogOpen;
+    if (!promptOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [showPrompt, preferencesLoaded, consent, authDialogOpen]);
+
+  useEffect(() => {
     if (!autoPlay || consent !== true || !preferencesLoaded) return;
     if (skipNextAutoPlay.current) { skipNextAutoPlay.current = false; return; }
     const audio = audioRef.current;
@@ -137,7 +145,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     // Browsers and Android WebView may reject background autoplay. The visible
     // play control remains available and the rejection is reported accessibly.
     void audio.play().catch(() => setStatus("Tap Play to start music; this browser requires a user gesture."));
-  }, [autoPlay, consent, preferencesLoaded, source]);
+  }, [autoPlay, consent, preferencesLoaded]);
 
   useEffect(() => () => { audioRef.current?.pause(); }, []);
 
