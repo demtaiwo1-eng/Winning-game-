@@ -392,11 +392,17 @@ export async function createOpayRefund(input: {
 /** Query a previously submitted refund; safe to repeat during reconciliation. */
 export async function queryOpayRefund(input: {
   reference: string;
-  originalReference?: string;
-  amountMinor?: bigint;
+  originalReference: string;
+  amountMinor: bigint;
 }): Promise<OpayRefundResult> {
   assertPaymentMode();
   if (!input.reference.trim()) throw new Error("OPay refund reference is required");
+  if (!input.originalReference.trim()) {
+    throw new Error("OPay original payment reference is required for refund reconciliation");
+  }
+  if (input.amountMinor <= 0n || input.amountMinor > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new Error("Expected OPay refund amount must be a positive safe integer in minor units");
+  }
   const raw = await opayRefundRequest("/api/v1/international/payment/refund/query", {
     reference: input.reference,
     country: "NG",
