@@ -342,3 +342,14 @@ Reviewed 2026-11-18:
 - `fix/customer-journey-landing-location-20261114`: earlier comparisons found MarketplaceBrowse and MarketplaceAdStrip identical to main; its PublicLanding, audio and responsive journey tests are older snapshots. Its Android/iOS manifests also predate main's permission-purpose descriptions. No safe missing change identified.
 - `fix/ephinta-marketplace-carousel-portal-ui-20261109`: main already has the remote-update notice, but the branch versions of RemoteUpdateNotice and its E2E spec differ and are shorter; main's versions include additional safeguards. The audio-platform verification script is byte-for-byte identical. Branch workflow, splash, audio, live-update and landing changes are older or already represented more safely on main. Preserve main.
 - These branches were not merged or deleted. No files copied and no PR opened. CI remains unverified.
+
+
+## Follow-up review: staged cleanup and maintenance branch (2026-11-18)
+
+- `maintenance/final-cleanup-20261114` compares as 143 commits ahead and 135 behind main. Its broad diff removes many bundled Remotion skill/reference assets and licensed audio files; do not merge the branch wholesale.
+- The 5,000-user bounded load-test script and workflow are byte-for-byte identical to main. This campaign is explicitly synthetic and does not exercise provider checkout, webhooks, payouts or live-money settlement; it is not proof of production capacity or payment correctness.
+- The dependency licence inventory workflow and licensed-audio browser-test policy are byte-for-byte identical to main. The branch's licence-inventory script differs from main, so retain the main version rather than importing the older branch snapshot.
+- The branch's IP release-gate workflow and script differ from main. Main already contains both, with different current content; no evidence justifies replacing the main versions with the branch snapshots.
+- The branch-only staged-cleanup workflow is not suitable to enable as-is: its job declares duplicate top-level `env` keys, so one mapping would override the other in YAML parsers, and its paths/targets include a historical release branch. It is not present on main and was not copied.
+- The branch's third-party-notices file cites a historical package inventory and generated artifact counts; these are not independently verified against the current main lockfile and should not be treated as current release certification.
+- No merge, PR, file copy or branch deletion was performed. CI remains unverified.
