@@ -489,8 +489,10 @@ test("each self-registering role gets its own signup dialog and profile fields",
     const dialog = page.locator(".ess-auth-modal");
     await expect(dialog).toHaveAttribute("data-role", registration.role.toLowerCase());
     await expect(dialog.getByRole("heading", { name: `Create your ${registration.label.toLowerCase()} account` })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: registration.label })).toHaveClass(/active/);
-    await expect(dialog.locator(".ess-auth-roles button")).toHaveCount(6);
+    const accountType = dialog.getByLabel("Registration account type");
+    await expect(accountType).toHaveValue(registration.role);
+    await expect(accountType.locator("option")).toHaveCount(6);
+    await expect(dialog.locator(".ess-auth-roles")).toHaveCount(0);
 
     await dialog.getByLabel("Full name").fill(`Account ${index + 1}`);
     await dialog.getByLabel("Email address").fill(`account${index + 1}@example.test`);
