@@ -25,6 +25,7 @@ const entry = read("src/main.tsx");
 const globalCss = read("src/styles/ephinta-global.css");
 const themeCss = read("src/styles/ephinta-global-theme-contract.css");
 const introCss = read("src/components/branding/ephinta-intro.css");
+const audioCss = read("src/styles/ephinta-audio.css");
 
 check(entry.includes("import './styles/ephinta-global.css';"),
   "Application entry imports the centralized global stylesheet.");
@@ -54,6 +55,8 @@ for (const token of ["--epg-page", "--epg-surface", "--epg-ink", "--epg-muted", 
 }
 check(/background:\s*var\(--epg-page/.test(introCss) && /color:\s*var\(--epg-ink/.test(introCss),
   "Intro splash background and foreground consume global theme tokens.");
+check(audioCss.includes("var(--epg-page") && audioCss.includes("var(--epg-surface") && audioCss.includes("var(--epg-ink") && audioCss.includes("var(--epg-accent") && audioCss.includes("var(--epg-focus"),
+  "Audio consent, player, restore button and focus states consume global theme tokens.");
 check(globalCss.includes(".ephinta-startup-screen") && globalCss.includes("var(--epg-accent)"),
   "Startup and fatal-error surfaces consume global theme tokens.");
 check(/@media\s*\(max-width:\s*390px\)/.test(globalCss),
