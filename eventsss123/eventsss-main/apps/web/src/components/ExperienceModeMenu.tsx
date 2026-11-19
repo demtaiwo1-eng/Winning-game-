@@ -10,9 +10,15 @@ const descriptions: Record<Mode, string> = {
   live: "Real users, real listings and production payments.",
 };
 
+const choices: Array<{ value: Mode; label: string; detail: string }> = [
+  { value: "demo", label: "Demo", detail: "Simulated" },
+  { value: "test", label: "Test", detail: "Sandbox" },
+  { value: "live", label: "Live", detail: "Real transactions" },
+];
+
 export default function ExperienceModeMenu({ role }: Props) {
-  const [mode, setMode] = useState<Mode>("test");
-  const [selected, setSelected] = useState<Mode>("test");
+  const [mode, setMode] = useState<Mode | null>(null);
+  const [selected, setSelected] = useState<Mode | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -20,12 +26,17 @@ export default function ExperienceModeMenu({ role }: Props) {
 
   const refresh = async () => {
     setLoading(true);
+    setError("");
     try {
       const result = await api<{ paymentMode: Mode }>("/runtime/config");
+      if (!choices.some((choice) => choice.value === result.paymentMode)) {
+        throw new Error("The server returned an unknown platform mode.");
+      }
       setMode(result.paymentMode);
       setSelected(result.paymentMode);
-      setError("");
     } catch (cause) {
+      setMode(null);
+      setSelected(null);
       setError(cause instanceof Error ? cause.message : "Unable to read the active experience mode.");
     } finally {
       setLoading(false);
@@ -35,7 +46,7 @@ export default function ExperienceModeMenu({ role }: Props) {
   useEffect(() => { void refresh(); }, []);
 
   const apply = async () => {
-    if (role !== "ADMIN" || selected === mode) return;
+    if (role !== "ADMIN" || !selected || selected === mode) return;
     if (selected === "live") {
       if (!window.confirm("Switch the entire EPHINTA platform to LIVE? Real payments and withdrawals may be initiated.")) return;
       const typed = window.prompt("Type LIVE to confirm production mode.");
@@ -63,23 +74,23 @@ export default function ExperienceModeMenu({ role }: Props) {
     <section className="ess-mode-menu" aria-label="Platform experience mode">
       <div className="ess-menu-heading">
         <span>Experience mode</span>
-        <small>Choose a safe operating environment</small>
+        <small>Platform-wide payment and workflow environment</small>
+      </div>
+      <div className="ess-mode-menu__active" aria-live="polite">
+        {loading ? "Checking active mode…" : mode ? `Active mode: ${mode.toUpperCase()}` : "Active mode unavailable"}
       </div>
       <div className="ess-mode-menu-control">
-        <span id="ess-platform-mode-label">Platform mode</span>
+        <span id="ess-platform-mode-label">Choose mode</span>
         <div className="ess-mode-switch" role="group" aria-labelledby="ess-platform-mode-label">
-          {([
-            ["demo", "Demo", "Simulated"],
-            ["test", "Test", "Sandbox"],
-            ["live", "Live", "Real transactions"],
-          ] as const).map(([value, label, detail]) => (
+          {choices.map(({ value, label, detail }) => (
             <button
               key={value}
               type="button"
               className={`ess-mode-choice ${selected === value ? "is-selected" : ""} ess-mode-choice--${value}`}
+              aria-label={`${label}: ${detail}`}
               aria-pressed={selected === value}
-              disabled={loading || saving || role !== "ADMIN"}
-              onClick={() => setSelected(value)}
+              disabled={loading || saving || !!error || role !== "ADMIN"}
+              onClick={() => { setSelected(value); setMessage(""); }}
             >
               <strong>{label}</strong>
               <small>{detail}</small>
@@ -87,15 +98,20 @@ export default function ExperienceModeMenu({ role }: Props) {
           ))}
         </div>
       </div>
-      <p className="ess-muted">{loading ? "Checking active mode…" : descriptions[mode]}</p>
+      {mode && <p className="ess-muted">{descriptions[mode]}</p>}
       {role === "ADMIN" ? (
-        <button className="ess-outline-button" type="button" disabled={loading || saving || selected === mode} onClick={() => void apply()}>
-          {saving ? "Applying…" : "Apply platform mode"}
-        </button>
+        <div className="ess-mode-menu__actions">
+          <button className="ess-outline-button" type="button" disabled={loading || saving || !!error || !selected || selected === mode} onClick={() => void apply()}>
+            {saving ? "Applying…" : "Apply platform mode"}
+          </button>
+          <button className="ess-mode-menu__refresh" type="button" disabled={loading || saving} onClick={() => void refresh()}>
+            Refresh
+          </button>
+        </div>
       ) : (
-        <small className="ess-muted">Only an authorized administrator can change the platform-wide mode.</small>
+        <small className="ess-muted">Mode is visible to all accounts. Only an authorized administrator can change the platform-wide mode.</small>
       )}
-      {error && <p className="ess-form-error" role="alert">{error}</p>}
+      {error && <div className="ess-mode-menu__error" role="alert">{error}<button type="button" onClick={() => void refresh()}>Retry</button></div>}
       {message && <p className="ess-auth-notice" role="status">{message}</p>}
     </section>
   );
