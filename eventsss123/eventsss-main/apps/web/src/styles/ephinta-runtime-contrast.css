@@ -41,6 +41,15 @@ html[data-ephinta-theme="colorful"] {
   --ephinta-action-fg: #ffffff;
 }
 
+/* Structural text containers inherit the selected ink even when old
+   components assigned a foreground color to a wrapper instead of its text. */
+html[data-ephinta-theme] body {
+  color: var(--ephinta-fg) !important;
+}
+html[data-ephinta-theme] body :is(div,section,article,header,footer,main,nav,aside) {
+  color: var(--ephinta-fg) !important;
+}
+
 /* High-specificity text selectors beat legacy component selectors and
    legacy !important declarations. Do not blanket-color SVG/icon elements. */
 html[data-ephinta-theme] body :is(
@@ -104,7 +113,7 @@ html[data-ephinta-theme] body :is(
   .dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel,
   .eph-marketplace-advertising,.eph-promo-shell,.ess-marketplace-welcome,
   .ess-marketplace-feature-tile,.ess-marketplace-float
-) :is(h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,li,a) {
+) :is(div,section,article,header,footer,main,nav,aside,h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,li,a) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
