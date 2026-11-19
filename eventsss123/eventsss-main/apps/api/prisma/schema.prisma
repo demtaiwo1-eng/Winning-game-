@@ -218,6 +218,7 @@ model User {
 
   refreshTokens    RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
   vendorProfile    VendorProfile?
   events           Event[]
   wallets          Wallet[]
