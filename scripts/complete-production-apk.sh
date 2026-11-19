@@ -68,9 +68,12 @@ printf '\nHave you downloaded the encrypted backup from Codespaces and stored it
 read -r -p 'Type YES to confirm: ' backup_confirm
 [[ "$backup_confirm" == "YES" ]] || fail "Not confirmed. Stop here, download and safely store the encrypted backup, then rerun."
 
-step "5/5 — Start production APK build"
-gh workflow run "$WORKFLOW" --repo "$REPO" --ref "$CURRENT_BRANCH"
-sleep 3
+step "5/5 — Confirm physical-device acceptance and start production APK build"
+printf '\\nHave you installed the latest passing test APK on a physical Android phone and verified registration/sign-in, planner/vendor journeys, navigation, API connectivity and sandbox payments?\\n'
+read -r -p 'Type YES only after completing that real-device test: ' device_confirm
+[[ "$device_confirm" == "YES" ]] || fail "Production signing was not dispatched. Complete the physical-device acceptance test first."
+gh workflow run "$WORKFLOW" --repo "$REPO" --ref "$CURRENT_BRANCH" \
+  --field minimum_version_code=870 --field confirm_device_tested=true
 RUN_ID="$(gh run list --repo "$REPO" --workflow "$WORKFLOW" --branch "$CURRENT_BRANCH" --limit 1 --json databaseId --jq '.[0].databaseId')"
 [[ -n "$RUN_ID" && "$RUN_ID" != "null" ]] || fail "Workflow was dispatched, but its run ID could not be retrieved. Open GitHub Actions and inspect the latest EPHINTA Production-Signed Android APK run."
 printf 'Workflow run: %s\n' "$RUN_ID"
