@@ -46,20 +46,40 @@ jobs:
               const runs = response.data.workflow_runs.filter(run =>
                 run.head_sha === sha &&
                 run.head_branch === context.payload.workflow_run.head_branch &&
-                run.event === "push"
+                ["push", "workflow_dispatch"].includes(run.event)
               );
               const states = required.map(name => {
-                const matches = runs.filter(run => run.name === name)
-                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                const run = matches[0];
-                return { name, status: run?.status ?? "missing", conclusion: run?.conclusion ?? null, url: run?.html_url ?? null };
+                const matches = runs.filter(run => run.name === name);
+                const successful = matches.find(run =>
+                  run.status === "completed" && run.conclusion === "success"
+                );
+                const active = matches.find(run =>
+                  run.status !== "completed"
+                );
+                const failed = matches.find(run =>
+                  run.status === "completed" &&
+                  !["success", "cancelled", "skipped"].includes(run.conclusion)
+                );
+                // A cancelled duplicate must not mask a successful run for this SHA,
+                // nor should it cause premature publication failure while a rerun is active.
+                const selected = successful || active || failed || matches[0];
+                return {
+                  name,
+                  status: successful ? "completed" : active?.status ?? selected?.status ?? "missing",
+                  conclusion: successful ? "success" : failed?.conclusion ?? selected?.conclusion ?? null,
+                  url: successful?.html_url ?? selected?.html_url ?? null
+                };
               });
               core.info(JSON.stringify(states));
               const failed = states.find(state =>
-                state.status === "completed" && state.conclusion !== "success"
+                state.status === "completed" &&
+                state.conclusion !== "success" &&
+                !["cancelled", "skipped", null].includes(state.conclusion)
               );
-              if (failed) core.setFailed(`Quality gate failed: ${failed.name} (${failed.conclusion}). APK and OTA publication blocked.`);
-              if (failed) return;
+              if (failed) {
+                core.setFailed(`Quality gate failed: ${failed.name} (${failed.conclusion}). APK and OTA publication blocked.`);
+                return;
+              }
               if (states.every(state => state.status === "completed" && state.conclusion === "success")) {
                 core.notice("All required quality gates passed for the exact APK commit.");
                 return;
