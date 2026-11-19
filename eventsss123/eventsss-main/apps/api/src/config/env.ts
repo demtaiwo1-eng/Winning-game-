@@ -28,6 +28,7 @@ const schema = z.object({
   BREVO_SENDER_EMAIL: z.string().email().optional(),
   BREVO_SENDER_NAME: z.string().optional(),
   PAYSTACK_SECRET_KEY: z.string().optional(),
+  SOURCE_ACCESS_CHECKOUT_ENABLED: z.enum(["true", "false"]).default("false"),
   PAYSTACK_WEBHOOK_SECRET: z.string().optional(),
   FLUTTERWAVE_SECRET_KEY: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
