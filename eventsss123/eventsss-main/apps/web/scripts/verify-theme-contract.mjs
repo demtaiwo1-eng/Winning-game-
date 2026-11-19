@@ -49,6 +49,8 @@ for (const mode of ["light", "dark", "colorful"]) {
   const declared = themeCss.includes('data-ephinta-theme="' + mode + '"') ||
     themeCss.includes('data-theme="' + mode + '"') || themeCss.includes(".theme-" + mode);
   check(declared, "Theme contract declares the " + mode + " mode.");
+  const selectorCount = (themeCss.match(new RegExp('html\\\\[data-ephinta-theme="' + mode + '"\\\\]', "g")) ?? []).length;
+  check(selectorCount === 1, "Theme contract defines the " + mode + " palette exactly once.");
 }
 for (const token of ["--epg-page", "--epg-surface", "--epg-ink", "--epg-muted", "--epg-border", "--epg-link", "--epg-focus", "--epg-accent", "--epg-accent-ink"]) {
   check(themeCss.includes(token), "Global theme token exists: " + token);
