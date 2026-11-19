@@ -187,3 +187,15 @@ html[data-ephinta-theme] :is(.primary-button,.continue-action,.select-listing,
   border-color:var(--epg-accent) !important;
 }
 
+
+/* Respect system motion preferences across the application. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
