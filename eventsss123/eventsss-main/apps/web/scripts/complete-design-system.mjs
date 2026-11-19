@@ -148,6 +148,9 @@ function main() {
   console.log("Duplicate selector groups for review: " + report.duplicateSelectors.length);
   console.log("Hard-coded colour occurrences for review: " + report.hardCodedColorUsage.reduce((sum, item) => sum + item.total, 0));
   console.log("Unresolved CSS imports: " + report.missingImports.length);
+  for (const item of report.missingImports) {
+    console.error("MISSING CSS IMPORT: " + item.from + " -> " + item.import);
+  }
 
   if (report.missingImports.length) {
     report.result = "failed";
