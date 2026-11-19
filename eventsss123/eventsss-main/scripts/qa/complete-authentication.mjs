@@ -110,10 +110,12 @@ if (installOk) {
   run("Prisma client generation", "npm", ["run", "prisma:generate", "-w", "apps/api"]);
   run("API typecheck", "npm", ["run", "typecheck", "-w", "apps/api"]);
   run("API automated tests", "npm", ["run", "test", "-w", "apps/api"]);
+  run("Apply database migrations", "npm", ["run", "db:deploy", "-w", "apps/api"]);
+  run("Database-backed API tests", "npm", ["run", "test:db", "-w", "apps/api"]);
   run("Web component tests", "npm", ["run", "test", "-w", "apps/web"]);
   run("Web production build", "npm", ["run", "build", "-w", "apps/web"]);
 } else {
-  for (const name of ["Prisma schema validation", "Prisma client generation", "API typecheck", "API automated tests", "Web component tests", "Web production build"]) {
+  for (const name of ["Prisma schema validation", "Prisma client generation", "API typecheck", "API automated tests", "Apply database migrations", "Database-backed API tests", "Web component tests", "Web production build"]) {
     commands.push({ name, status: "SKIP", output: "Dependency installation failed." });
   }
 }
