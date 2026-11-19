@@ -1,0 +1,48 @@
+name: EPHINTA complete readiness runner
+
+on:
+  pull_request:
+    branches: [main, fix/global-theme-contract-cleanup-20261119]
+    paths:
+      - 'eventsss123/eventsss-main/**'
+      - '.github/workflows/ephinta-readiness-runner.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ephinta-readiness-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  readiness:
+    name: Run full EPHINTA readiness script
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run full readiness suite
+        run: npm run qa:readiness
+
+      - name: Upload readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-readiness-report
+          path: eventsss123/eventsss-main/artifacts/readiness/
+          if-no-files-found: warn
+          retention-days: 30
