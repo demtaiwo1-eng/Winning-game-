@@ -42,7 +42,7 @@ add("Duplicate account handling",
   /P2002/.test(authService) && /ALREADY_EXISTS/.test(authService),
   "Unique database conflicts must be translated to a safe client error.");
 add("Account status enforced at login and refresh",
-  /found\.status/.test(authService) && /user\.status/.test(authService),
+  /found\.status/.test(authService) && /userWithStatus\.status/.test(authService) && /status !== "ACTIVE"/.test(authService),
   "Suspended/pending accounts must not receive refreshed sessions.");
 add("Hashed, expiring, single-use password reset tokens",
   /passwordResetToken/.test(authService) && /usedAt/.test(authService) && /expiresAt/.test(authService),
