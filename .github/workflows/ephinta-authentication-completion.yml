@@ -1,0 +1,55 @@
+name: EPHINTA Authentication Completion Gate
+
+on:
+  push:
+    branches:
+      - feat/authentication-completion-runner-20261119
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authentication-completion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ephinta
+          POSTGRES_PASSWORD: ephinta_ci_only
+          POSTGRES_DB: ephinta_auth_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ephinta -d ephinta_auth_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://ephinta:ephinta_ci_only@localhost:5432/ephinta_auth_ci?schema=public
+      JWT_SECRET: ci-only-secret-not-for-deployment-0123456789
+      APP_BASE_URL: https://example.invalid
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - name: Enter application workspace
+        working-directory: eventsss123/eventsss-main
+        run: node --version && npm --version
+      - name: Run authentication completion gate
+        working-directory: eventsss123/eventsss-main
+        run: node scripts/qa/complete-authentication.mjs
+      - name: Upload authentication report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-authentication-readiness
+          path: eventsss123/eventsss-main/artifacts/authentication/
+          if-no-files-found: warn
+          retention-days: 30
