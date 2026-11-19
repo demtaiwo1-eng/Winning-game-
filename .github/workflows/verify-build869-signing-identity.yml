@@ -18,7 +18,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Set up Android SDK command-line tools
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
 
       - name: Install Android build tools
         shell: bash
