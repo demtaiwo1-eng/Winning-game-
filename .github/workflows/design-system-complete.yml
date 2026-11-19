@@ -1,0 +1,65 @@
+name: EPHINTA one-go design-system completion
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'eventsss123/eventsss-main/apps/web/**'
+      - '.github/workflows/design-system-complete.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ephinta-design-system-complete-\${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  complete:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ess
+          POSTGRES_PASSWORD: ess
+          POSTGRES_DB: ess
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ess -d ess"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      NODE_ENV: test
+      DATABASE_MODE: local
+      DATABASE_URL_LOCAL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
+      DATABASE_URL: postgresql://ess:ess@127.0.0.1:5432/ess?schema=public
+      JWT_SECRET: ephinta-ci-only-secret-not-for-production-000000000000
+    defaults:
+      run:
+        working-directory: eventsss123/eventsss-main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: eventsss123/eventsss-main/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run one-command design-system completion
+        run: npm run design:complete -w apps/web
+      - name: Upload design-system reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephinta-design-system-completion
+          if-no-files-found: warn
+          path: |
+            eventsss123/eventsss-main/apps/web/design-system-completion-report.json
+            eventsss123/eventsss-main/apps/web/design-quality-report.json
+            eventsss123/eventsss-main/apps/web/theme-contract-report.json
