@@ -6,6 +6,7 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './EnterpriseApp';
 import EphintaHelpAssistant from "./components/EphintaHelpAssistant";
 import './styles/ephinta-global.css';
+import './styles/ephinta-runtime-contrast.css';
 import EphintaIntro from './components/branding/EphintaIntro';
 import AudioExperience from "./components/AudioExperience";
 import OfflineStatus from './components/OfflineStatus';
