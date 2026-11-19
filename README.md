@@ -11,7 +11,7 @@
 [![API health](https://img.shields.io/badge/API-health-16a34a?style=for-the-badge)](https://ephinta-wss.onrender.com/health)
 [![API readiness](https://img.shields.io/badge/API-ready-16a34a?style=for-the-badge)](https://ephinta-wss.onrender.com/ready)
 
-[🌐 Open the app](https://ephinta-web.onrender.com/) · [📡 API health](https://ephinta-wss.onrender.com/health) · [🧭 Product acceptance guide](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md) · [🛠️ CI workflows](.github/workflows)
+[🌐 Open the app](https://ephinta-web.onrender.com/) · [📡 API health](https://ephinta-wss.onrender.com/health) · [🧭 Product acceptance guide](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md) · [🛠️ CI workflows](.github/workflows) · [💵 US$60 source-access plan](docs/COMMERCIAL_SOURCE_ACCESS_PLAN.md) · [📋 IP clearance register](docs/CONTRIBUTOR_AND_IP_CLEARANCE_REGISTER.md)
 
 </div>
 
@@ -82,10 +82,10 @@ EPHINTA is being built as one connected workspace for planning an event and coor
 
 - Role-aware registration, sign-in and session workflows.
 - Password recovery and account-security controls.
-- Email verification work is included in the open application-completion pull request and is not yet merged into `main`.
+- Email verification with hashed, expiring, single-use tokens, verification/resend endpoints and session-security checks is merged into `main`.
 - Device PIN / security gate and optional native biometric capability where supported.
 - In-app notifications and event-scoped messaging.
-- Brevo transactional email support is prepared in the open completion work; real delivery still requires secure credentials and a verified sender configuration.
+- Brevo transactional email support is implemented; real delivery still requires `BREVO_API_KEY`, a verified sender and a successful inbox test in Render.
 
 </details>
 
@@ -131,16 +131,16 @@ These checks do **not** prove that a user can complete every registration, booki
 | Area | Evidence available | Status / limitation |
 |---|---|---|
 | Web and API | Live web page; API health and readiness responded | <span style="color:#16a34a"><strong>Reachable</strong></span>; full customer journey not proven by health checks |
-| API, web and database test gates | Latest application-completion CI on PR #249 | <strong>Passed in that CI run</strong> |
-| Browser regression and responsive audit | PR #249 workflow results | <strong>Passed in that CI run</strong> |
+| API, web and database test gates | Merged application-completion CI (PR #249) | <strong>Passed in that CI run</strong> |
+| Browser regression and responsive audit | Merged PR #249 workflow results | <strong>Passed in that CI run</strong> |
 | Scale QA and security audit | PR #249 workflow results | <strong>Passed in that CI run</strong> |
 | Android | CI web checks and Android APK workflow | <strong>Build passed</strong>; physical-device installation still needs confirmation |
 | iOS simulator | PR #249 workflow | <strong>Not verified</strong>; simulator job was cancelled |
-| Email delivery | Brevo integration work is in open PR #249 | Requires merge, Brevo API key, verified sender and delivery test |
+| Email delivery | Brevo integration code is merged in PR #249 | Requires Brevo API key, verified sender and real delivery test |
 | Live payments | Provider integration and sandbox prerequisites documented | Requires provider credentials and real sandbox transaction evidence |
 | Production mobile release | Android signing and Apple signing prerequisites documented | Not a signed production release |
 
-The latest one-go completion work is proposed in [PR #249](https://github.com/demtaiwo1-eng/Winning-game-/pull/249) and is **not yet merged into `main`**. PR #248 also contains overlapping authentication work and needs reconciliation after the completion change is accepted. Do not treat open pull-request code as already released to production.
+The one-go application-completion and authentication work is merged into `main` through [PR #249](https://github.com/demtaiwo1-eng/Winning-game-/pull/249); it includes the authentication work previously developed in PR #248. The automated CI completion job passed, while the iOS simulator job was cancelled and physical-device, live email, provider sandbox and production-signing checks remain separate acceptance gates.
 
 For the detailed requirement-by-requirement baseline and acceptance journeys, read [Product Requirements & Acceptance](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md) and [Verification Matrix](docs/maintenance/VERIFICATION_MATRIX.md).
 
