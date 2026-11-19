@@ -119,12 +119,15 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
           const rect = element.getBoundingClientRect();
           return {
             backgroundImage: promptStyle?.backgroundImage ?? "",
+            backgroundColor: promptStyle?.backgroundColor ?? "",
+            foregroundColor: promptStyle?.color ?? "",
             backdropPointerEvents: backdropStyle.pointerEvents,
             promptPointerEvents: promptStyle?.pointerEvents ?? "none",
             coversViewport: rect.left <= 0 && rect.top <= 0 && rect.right >= innerWidth && rect.bottom >= innerHeight,
           };
         });
-        expect(overlay.backgroundImage, "Audio consent must use its branded surface").toContain("linear-gradient");
+        expect(overlay.backgroundColor, "Audio consent must use the active theme surface").not.toBe("rgba(0, 0, 0, 0)");
+        expect(overlay.foregroundColor, "Audio consent text must remain explicitly themed").not.toBe("");
         expect(overlay.backdropPointerEvents, "Audio consent backdrop must not intercept app interactions").toBe("none");
         expect(overlay.promptPointerEvents, "Audio consent card must remain interactive").toBe("auto");
         expect(overlay.coversViewport, "Audio consent must remain a compact prompt, not a full-screen overlay").toBe(false);
@@ -158,4 +161,67 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
     contentType: "application/json"
   });
   expect(pageErrors, "No uncaught event-planner browser errors").toEqual([]);
+});
+
+
+test("EPHINTA planner theme contract screenshots cover all three themes and breakpoints", async ({ page }, testInfo) => {
+  const themes = ["light", "dark", "colorful"] as const;
+  const report: Array<Record<string, unknown>> = [];
+  const observedTokens = new Map<string, Set<string>>(
+    ["page", "surface", "ink", "accent"].map(token => [token, new Set<string>()])
+  );
+
+  for (const theme of themes) {
+    for (const viewport of viewports) {
+      await test.step(`${theme} theme at ${viewport.name}`, async () => {
+        await page.setViewportSize({ width: viewport.width, height: viewport.height });
+        await page.goto("/plan", { waitUntil: "networkidle" });
+        await page.evaluate((selectedTheme) => {
+          document.documentElement.dataset.ephintaTheme = selectedTheme;
+        }, theme);
+        await expect(page.locator(".ess-builder-card").first()).toBeVisible();
+
+        const visual = await page.evaluate(() => {
+          const root = getComputedStyle(document.documentElement);
+          const body = getComputedStyle(document.body);
+          return {
+            page: root.getPropertyValue("--epg-page").trim(),
+            surface: root.getPropertyValue("--epg-surface").trim(),
+            ink: root.getPropertyValue("--epg-ink").trim(),
+            accent: root.getPropertyValue("--epg-accent").trim(),
+            bodyBackground: body.backgroundColor,
+            viewportWidth: innerWidth,
+            documentWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+          };
+        });
+
+        expect(visual.page, `${theme} page token must be defined`).not.toBe("");
+        expect(visual.surface, `${theme} surface token must be defined`).not.toBe("");
+        expect(visual.ink, `${theme} ink token must be defined`).not.toBe("");
+        expect(visual.accent, `${theme} accent token must be defined`).not.toBe("");
+        for (const token of ["page", "surface", "ink", "accent"] as const) {
+          observedTokens.get(token)!.add(visual[token]);
+        }
+        expect(visual.documentWidth, `No horizontal overflow for ${theme} at ${viewport.name}`).toBeLessThanOrEqual(visual.viewportWidth + 1);
+
+        const screenshot = testInfo.outputPath(`planner-${theme}-${viewport.name}.png`);
+        await page.screenshot({ path: screenshot, fullPage: true, animations: "disabled" });
+        await testInfo.attach(`planner-${theme}-${viewport.name}`, { path: screenshot, contentType: "image/png" });
+        report.push({ theme, viewport: viewport.name, ...visual, screenshot: path.basename(screenshot) });
+      });
+    }
+  }
+
+  // Light and colorful intentionally share a neutral white card surface; the
+  // page, ink and accent tokens distinguish all three palettes. Surface must
+  // still vary between light and dark to prove the active theme is applied.
+  for (const token of ["page", "ink", "accent"] as const) {
+    expect(observedTokens.get(token)?.size, `The three themes must produce distinct ${token} tokens`).toBe(3);
+  }
+  expect(observedTokens.get("surface")?.size, "The neutral surface must change between light and dark modes").toBeGreaterThanOrEqual(2);
+
+  fs.mkdirSync(testInfo.outputDir, { recursive: true });
+  const reportPath = path.join(testInfo.outputDir, "planner-theme-breakpoint-audit.json");
+  fs.writeFileSync(reportPath, JSON.stringify({ generatedAt: new Date().toISOString(), themes, viewports, results: report }, null, 2));
+  await testInfo.attach("planner-theme-breakpoint-audit", { path: reportPath, contentType: "application/json" });
 });

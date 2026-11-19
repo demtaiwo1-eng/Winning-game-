@@ -64,36 +64,15 @@ class StartupErrorBoundary extends React.Component<
   render(): React.ReactNode {
     if (this.state.hasError) {
       return (
-        <main
-          role="alert"
-          style={{
-            minHeight: '100vh',
-            display: 'grid',
-            placeContent: 'center',
-            gap: 16,
-            padding: 24,
-            textAlign: 'center',
-            background: '#10002f',
-            color: '#fff',
-            fontFamily: 'system-ui, sans-serif',
-          }}
-        >
-          <h1 style={{ margin: 0 }}>EPHINTA needs to reload</h1>
-          <p style={{ maxWidth: 420, margin: 0, lineHeight: 1.6 }}>
+        <main role="alert" className="ephinta-startup-screen ephinta-startup-screen--error">
+          <h1 className="ephinta-startup-screen__title">EPHINTA needs to reload</h1>
+          <p className="ephinta-startup-screen__message">
             Something interrupted this screen. Your saved account and planning data have not been cleared.
           </p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            style={{
-              minHeight: 48,
-              padding: '12px 20px',
-              border: 0,
-              borderRadius: 12,
-              background: '#f97316',
-              color: '#16052c',
-              fontWeight: 700,
-            }}
+            className="ephinta-startup-screen__action"
           >
             Reload EPHINTA
           </button>
@@ -109,17 +88,7 @@ function StartupLoadingScreen(): React.ReactElement {
     <main
       role="status"
       aria-live="polite"
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeContent: 'center',
-        gap: 12,
-        padding: 24,
-        textAlign: 'center',
-        background: '#10002f',
-        color: '#fff',
-        fontFamily: 'system-ui, sans-serif',
-      }}
+      className="ephinta-startup-screen"
     >
       <img
         src={`${import.meta.env.BASE_URL}brand/ephinta_logo2.png`}
@@ -127,9 +96,9 @@ function StartupLoadingScreen(): React.ReactElement {
         width={112}
         height={112}
         fetchPriority="high"
-        style={{ width: 112, height: 112, objectFit: "contain", margin: "0 auto 8px", filter: "drop-shadow(0 10px 28px rgba(124, 77, 255, .28))" }}
+        className="ephinta-startup-screen__logo"
       />
-      <strong style={{ fontSize: 24, letterSpacing: 2, fontWeight: 900 }}>EPHINTA</strong>
+      <strong className="ephinta-startup-screen__brand">EPHINTA</strong>
       <span>Preparing your workspace…</span>
     </main>
   );

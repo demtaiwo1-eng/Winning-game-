@@ -191,3 +191,88 @@
   .eph-audio__choices { display: flex; }
   .eph-audio__choices button { min-height: 38px; }
 }
+
+
+/* Audio consent and playback controls follow the active global theme.
+   Translucent overlays remain translucent; text, controls and focus states
+   all derive from the shared accessible palette. */
+.eph-audio__prompt,
+.eph-audio__player,
+.eph-audio__youtube {
+  color: var(--epg-ink, #17152b);
+  background: color-mix(in srgb, var(--epg-surface, #fff) 96%, transparent);
+  border-color: var(--epg-border, #d7dbea);
+  box-shadow: var(--epg-shadow, 0 12px 32px rgb(25 28 55 / 9%));
+}
+.eph-audio__prompt h2,
+.eph-audio__track-copy strong {
+  color: var(--epg-ink, #17152b);
+}
+.eph-audio__prompt > p:not(.eph-audio__eyebrow),
+.eph-audio__volume-label,
+.eph-audio__progress,
+.eph-audio__youtube .eph-audio__status {
+  color: var(--epg-muted, #4b5268);
+}
+.eph-audio__eyebrow,
+.eph-audio__player-label {
+  color: var(--epg-link, #4b35b5);
+}
+.eph-audio__prompt-icon,
+.eph-audio__player-art {
+  color: var(--epg-accent, #5b35d5);
+  background: var(--epg-surface-soft, #eef1fa);
+}
+.eph-audio__choices button,
+.eph-audio__control,
+.eph-audio__player-footer select {
+  color: var(--epg-ink, #17152b);
+  background: var(--epg-surface-raised, #f9f8fc);
+  border-color: var(--epg-border, #d7dbea);
+}
+.eph-audio__accept,
+.eph-audio__control.eph-audio__play {
+  color: var(--epg-accent-ink, #fff);
+  background: var(--epg-accent, #5b35d5);
+  border-color: transparent;
+}
+.eph-audio__accept:hover,
+.eph-audio__control.eph-audio__play:hover {
+  filter: brightness(1.08);
+}
+.eph-audio__decline,
+.eph-audio__dismiss {
+  color: var(--epg-muted, #4b5268) !important;
+}
+.eph-audio__decline:hover,
+.eph-audio__control:hover {
+  background: var(--epg-surface-soft, #eef1fa);
+}
+.eph-audio__restore {
+  color: var(--epg-accent-ink, #fff);
+  background: var(--epg-accent, #5b35d5);
+  border-color: var(--epg-border, #d7dbea);
+  box-shadow: var(--epg-shadow, 0 12px 32px rgb(25 28 55 / 9%));
+}
+.eph-audio__playing-indicator.is-playing {
+  background: var(--epg-success, #176b42);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--epg-success, #176b42) 14%, transparent);
+}
+.eph-audio__choices button:focus-visible,
+.eph-audio__player button:focus-visible,
+.eph-audio__player input:focus-visible,
+.eph-audio__player select:focus-visible {
+  outline: 3px solid var(--epg-focus, #075fcc);
+  outline-offset: 3px;
+}
+.eph-audio__player input,
+.eph-audio__progress input { accent-color: var(--epg-accent, #5b35d5); }
+.eph-audio__backdrop {
+  background: color-mix(in srgb, var(--epg-page, #f6f7fc) 28%, transparent);
+}
+.eph-audio__youtube iframe { background: var(--epg-page, #f6f7fc); }
+@media (prefers-reduced-motion: reduce) {
+  .eph-audio__player,
+  .eph-audio__prompt,
+  .eph-audio__restore { transition: none !important; }
+}

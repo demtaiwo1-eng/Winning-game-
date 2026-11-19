@@ -13,7 +13,7 @@ npx playwright install chromium
 npm run ux:audit
 ```
 
-The Playwright configuration starts the API and Vite app against a local test database. The audit visits the real public landing route at 390×844 (phone), 768×1024 (tablet) and 1440×900 (desktop), captures full-page PNG screenshots and records overflow, visible-control counts, large images, page errors and page content length.
+The Playwright configuration starts the API and Vite app against a local test database. The audit visits the public landing route and event-planner route at 390×844 (phone), 768×1024 (tablet) and 1440×900 (desktop). It also captures the event-planner surface under light, dark and colorful theme tokens at all three breakpoints. Full-page PNG screenshots and JSON reports are attached to the run and uploaded as a GitHub Actions artifact.
 
 ## Run without a computer
 
@@ -28,6 +28,6 @@ The workflow needs the repository's normal GitHub Actions permission to read the
 
 ## Important scope boundary
 
-This initial automated audit tests the public landing page at the three requested breakpoints. It does not sign into private role dashboards, execute real bookings/payments, or certify every workflow. Those require owner-provisioned synthetic test accounts and sandbox payment credentials. Never put account passwords, production API keys, customer data or payment credentials in the repository or screenshots.
+This automated audit covers the public landing and event-planner surfaces, including the three global themes at the requested breakpoints. It still does not sign into private customer, vendor, planner, wallet, messaging or admin dashboards, execute real bookings/payments, or certify every workflow. Those require owner-provisioned synthetic test accounts and sandbox payment credentials. Never put account passwords, production API keys, customer data or payment credentials in the repository or screenshots.
 
 A failed overflow/page-error assertion is a finding to fix; the workflow intentionally does not silently rewrite production UI. Re-run the audit after fixes and retain the artifacts as visual evidence.
