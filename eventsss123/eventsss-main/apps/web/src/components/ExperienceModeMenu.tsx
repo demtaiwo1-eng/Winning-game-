@@ -63,28 +63,37 @@ export default function ExperienceModeMenu({ role }: Props) {
     <section className="ess-mode-menu" aria-label="Platform experience mode">
       <div className="ess-menu-heading">
         <span>Experience mode</span>
-        <small>Demo · Test · Live</small>
+        <small>Choose a safe operating environment</small>
       </div>
-      <label className="ess-mode-menu-control">
-        <span>Platform mode</span>
-        <select
-          aria-label="Platform experience mode"
-          value={selected}
-          disabled={loading || saving || role !== "ADMIN"}
-          onChange={(event) => setSelected(event.target.value as Mode)}
-        >
-          <option value="demo">Demo — simulated</option>
-          <option value="test">Test — sandbox</option>
-          <option value="live">Live — real transactions</option>
-        </select>
-      </label>
+      <div className="ess-mode-menu-control">
+        <span id="ess-platform-mode-label">Platform mode</span>
+        <div className="ess-mode-switch" role="group" aria-labelledby="ess-platform-mode-label">
+          {([
+            ["demo", "Demo", "Simulated"],
+            ["test", "Test", "Sandbox"],
+            ["live", "Live", "Real transactions"],
+          ] as const).map(([value, label, detail]) => (
+            <button
+              key={value}
+              type="button"
+              className={`ess-mode-choice ${selected === value ? "is-selected" : ""} ess-mode-choice--${value}`}
+              aria-pressed={selected === value}
+              disabled={loading || saving || role !== "ADMIN"}
+              onClick={() => setSelected(value)}
+            >
+              <strong>{label}</strong>
+              <small>{detail}</small>
+            </button>
+          ))}
+        </div>
+      </div>
       <p className="ess-muted">{loading ? "Checking active mode…" : descriptions[mode]}</p>
       {role === "ADMIN" ? (
         <button className="ess-outline-button" type="button" disabled={loading || saving || selected === mode} onClick={() => void apply()}>
           {saving ? "Applying…" : "Apply platform mode"}
         </button>
       ) : (
-        <small className="ess-muted">Mode changes are managed by an authorized administrator.</small>
+        <small className="ess-muted">Only an authorized administrator can change the platform-wide mode.</small>
       )}
       {error && <p className="ess-form-error" role="alert">{error}</p>}
       {message && <p className="ess-auth-notice" role="status">{message}</p>}
