@@ -1,4 +1,5 @@
 import './lib/nativeFetch';
+import { initializeEphintaTheme } from './lib/ephintaTheme';
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, HashRouter } from 'react-router-dom';
@@ -25,6 +26,7 @@ const capacitor = (window as unknown as {
 const isNative = !!capacitor?.isNativePlatform?.();
 const AppRouter = isNative ? HashRouter : BrowserRouter;
 
+initializeEphintaTheme();
 installEphintaIntroWatchdog();
 
 if (!isNative) {
