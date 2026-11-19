@@ -46,7 +46,8 @@
     "payments:mode": "node scripts/payments/set-render-payment-mode.mjs",
     "qa:seed:portals": "node scripts/qa/seed-portal-personas.mjs",
     "qa:worldwide": "node scripts/qa/run-worldwide-personas.mjs",
-    "qa:worldwide:headed": "node scripts/qa/run-worldwide-personas.mjs --headed"
+    "qa:worldwide:headed": "node scripts/qa/run-worldwide-personas.mjs --headed",
+    "complete:application": "node scripts/qa/complete-application.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.4",
