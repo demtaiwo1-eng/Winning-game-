@@ -6,6 +6,7 @@ import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { prisma } from "../../lib/prisma";
 import { requireAuth } from "../../middleware/auth";
+import { paymentModeGuard } from "../payments/runtimePaymentMode";
 import { getPaymentMode, verifyPaystack } from "../payments/providers";
 import {
   assertVerifiedPayment,
@@ -14,6 +15,7 @@ import {
 } from "../payments/webhookVerification";
 
 export const sourceAccessRouter = Router();
+sourceAccessRouter.use(paymentModeGuard);
 
 const PRODUCT_CODE = "EPHINTA_SOURCE_ACCESS_60";
 const PRICE_MINOR = 6000n;
@@ -22,6 +24,9 @@ const CURRENCY = "USD";
 function assertTestCheckoutReady() {
   if (env.SOURCE_ACCESS_CHECKOUT_ENABLED !== "true") {
     throw new HttpError(503, "SOURCE_ACCESS_CHECKOUT_CLOSED", "Paid source access is not open yet.");
+  }
+  if (env.NODE_ENV === "production") {
+    throw new HttpError(503, "SOURCE_ACCESS_STAGING_ONLY", "Source-access checkout must be tested on a non-production API deployment.");
   }
   if (getPaymentMode() !== "test") {
     throw new HttpError(503, "SOURCE_ACCESS_TEST_MODE_REQUIRED", "Source-access checkout is restricted to Paystack test mode until merchant and release approval.");
@@ -132,10 +137,10 @@ sourceAccessRouter.post("/webhooks/paystack", asyncHandler(async (req, res) => {
   const rawBody = (req as typeof req & { rawBody?: Buffer }).rawBody;
   const signature = String(req.headers["x-paystack-signature"] || "");
   const timestampedSignature = String(req.headers["paystack-signature"] || "");
-  const secret = env.PAYSTACK_WEBHOOK_SECRET || env.PAYSTACK_SECRET_KEY;
-  if (!rawBody || !secret) throw new HttpError(503, "PAYSTACK_WEBHOOK_NOT_CONFIGURED", "Paystack webhook verification is not configured.");
-  const valid = (signature && verifyPaystackSignature(rawBody, signature, secret)) ||
-    (timestampedSignature && verifyPaystackWebhookSignature(rawBody, timestampedSignature, secret));
+  const timestampedSecret = env.PAYSTACK_WEBHOOK_SECRET || env.PAYSTACK_SECRET_KEY;
+  if (!rawBody || (!env.PAYSTACK_SECRET_KEY && !timestampedSecret)) throw new HttpError(503, "PAYSTACK_WEBHOOK_NOT_CONFIGURED", "Paystack webhook verification is not configured.");
+  const valid = (signature && env.PAYSTACK_SECRET_KEY && verifyPaystackSignature(rawBody, signature, env.PAYSTACK_SECRET_KEY)) ||
+    (timestampedSignature && timestampedSecret && verifyPaystackWebhookSignature(rawBody, timestampedSignature, timestampedSecret));
   if (!valid) throw new HttpError(401, "INVALID_WEBHOOK_SIGNATURE", "Invalid Paystack webhook signature.");
 
   if (String(req.body?.event || "") !== "charge.success") {
