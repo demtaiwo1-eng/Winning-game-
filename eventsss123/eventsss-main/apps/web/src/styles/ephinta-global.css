@@ -741,3 +741,91 @@ html:is([data-ephinta-theme],[data-theme],.theme-light,.theme-dark,.theme-colorf
   .ephinta-startup-screen { padding-inline: 16px; }
   .ephinta-startup-screen__logo { width: 96px; height: 96px; }
 }
+
+
+/* Accessible segmented Demo / Test / Live control in the account menu. */
+.ess-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.ess-mode-choice {
+  display: grid;
+  min-width: 0;
+  min-height: 56px;
+  gap: 3px;
+  align-content: center;
+  padding: 8px 5px;
+  border: 1px solid var(--epg-border);
+  border-radius: 10px;
+  background: var(--epg-surface-raised);
+  color: var(--epg-ink);
+  text-align: center;
+  cursor: pointer;
+}
+.ess-mode-choice strong { color: inherit; font-size: 12px; }
+.ess-mode-choice small { color: var(--epg-muted); font-size: 9px; line-height: 1.2; }
+.ess-mode-choice.is-selected {
+  border: 2px solid var(--epg-accent);
+  background: color-mix(in srgb, var(--epg-accent) 12%, var(--epg-surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--epg-accent) 16%, transparent);
+}
+.ess-mode-choice:disabled { cursor: not-allowed; opacity: .72; }
+.ess-mode-choice:focus-visible { outline: 3px solid var(--epg-focus); outline-offset: 2px; }
+@media (max-width: 360px) {
+  .ess-mode-choice small { font-size: 8px; }
+  .ess-mode-choice { padding-inline: 3px; }
+}
+
+/* Final text contrast contract: dark = light copy; light and colorful = dark copy.
+   Explicit dark-branded panels remain white-on-dark by their existing exceptions. */
+html[data-ephinta-theme="dark"] {
+  --epg-ink: #f7f8ff;
+  --epg-muted: #d7dcef;
+  --epg-subtle: #bdc7dc;
+}
+html[data-ephinta-theme="light"] {
+  --epg-ink: #151827;
+  --epg-muted: #30384b;
+  --epg-subtle: #4b566c;
+}
+html[data-ephinta-theme="colorful"] {
+  color-scheme: light;
+  --epg-page: #fbf8ff;
+  --epg-surface: #ffffff;
+  --epg-surface-raised: #f7f2ff;
+  --epg-surface-soft: #efe6fb;
+  --epg-ink: #21172f;
+  --epg-muted: #41354f;
+  --epg-subtle: #594b68;
+  --epg-link: #4c258d;
+  --epg-border: #d6c8e7;
+  --epg-accent: #6735b5;
+  --epg-accent-ink: #ffffff;
+  --epg-focus: #244fb8;
+}
+html[data-ephinta-theme] body,
+html[data-ephinta-theme] #root {
+  color: var(--epg-ink) !important;
+}
+html[data-ephinta-theme] body #root :where(
+  h1,h2,h3,h4,h5,h6,strong,b,th,label,legend,output,
+  .page-title,.dashboard-title,.section-header,.metric-value
+) {
+  color: var(--epg-ink) !important;
+}
+html[data-ephinta-theme] body #root :where(
+  p,li,dt,dd,small,summary,figcaption,caption,blockquote,
+  .muted,.text-muted,.helper-text,.form-hint,.empty-state,
+  .workspace-subtitle,.section-description,.metric-label
+) {
+  color: var(--epg-muted) !important;
+}
+html[data-ephinta-theme] body #root :where(input,select,textarea,option) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: var(--epg-ink) !important;
+  background-color: var(--epg-surface-raised) !important;
+}
+html[data-ephinta-theme="dark"] body #root :where(a) { color: #a9d8ff !important; }
+html[data-ephinta-theme="light"] body #root :where(a) { color: #4338a8 !important; }
+html[data-ephinta-theme="colorful"] body #root :where(a) { color: #4c258d !important; }
