@@ -1,144 +1,302 @@
-# EPHINTA
+<div align="center">
 
-EPHINTA is a multi-role event-planning and entertainment-services platform. It brings event owners, organizations, service providers, vendors, guests, readiness verifiers and platform operators into one workflow for planning events, discovering services, coordinating delivery and tracking payments.
+# ✨ EPHINTA
 
-> **Project status:** Active development. This repository contains web, API and Capacitor mobile applications plus automated verification workflows. A successful build or mocked test does not by itself prove production payment settlement, email/push delivery, KYC approval, production database health, or successful installation on every physical device. See [the product requirements and release acceptance document](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md).
+### Plan beautifully. Book confidently. Bring every occasion together.
 
-## Product areas
+**An event-planning, services marketplace and event-delivery workspace — connecting organisers, vendors, guests, verifiers and platform operators.**
 
-- **Accounts and access:** registration, sign-in, password recovery, session handling, role-aware workspaces and device-security checks.
-- **Event planning:** create events, manage budgets, tasks, guests and RSVPs, track readiness, coordinate teams and communicate with individuals or groups.
-- **Marketplace:** discover venues, goods and services; manage vendor profiles, listings, enquiries, bookings, promotions and reviews.
-- **Vendor operations:** storefront management, KYC submission, booking/payment requests and fulfilment tracking.
-- **Wallet and payments:** currency-aware wallet/ledger, collection, payout, refunds, escrow-related booking flows, payment reconciliation and provider integrations. Provider capabilities depend on configured credentials and account approval; test in sandbox first.
-- **Notifications and messaging:** in-app notifications, event conversations and optional native push registration where configured.
-- **Music and rights administration:** music experience, rights-owner records and DSP administration surfaces. Rights attribution and royalty settlement require verified repertoire, contracts, usage accounting and finance/legal sign-off.
-- **Global catalogue and experience modes:** localized/currency-aware workflows, marketplace discovery and role-based experience modes.
-- **Mobile:** Capacitor Android and iOS shells around the web application, with native app lifecycle, update and device capabilities where enabled.
+[![Repository](https://img.shields.io/badge/GitHub-EPHINTA-181717?style=for-the-badge&logo=github)](https://github.com/demtaiwo1-eng/Winning-game-)
+[![Web app](https://img.shields.io/badge/Live-Web%20App-0ea5e9?style=for-the-badge&logo=googlechrome&logoColor=white)](https://ephinta-web.onrender.com/)
+[![API health](https://img.shields.io/badge/API-health-16a34a?style=for-the-badge)](https://ephinta-wss.onrender.com/health)
+[![API readiness](https://img.shields.io/badge/API-ready-16a34a?style=for-the-badge)](https://ephinta-wss.onrender.com/ready)
 
-See the [full role, workflow and acceptance matrix](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md) for intended behaviour and completion criteria.
+[🌐 Open the app](https://ephinta-web.onrender.com/) · [📡 API health](https://ephinta-wss.onrender.com/health) · [🧭 Product acceptance guide](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md) · [🛠️ CI workflows](.github/workflows)
 
-## Repository layout
+</div>
 
-The project is an npm workspaces monorepo. The application workspace lives under `eventsss123/eventsss-main`.
+---
 
-| Path | Purpose |
-| --- | --- |
-| `eventsss123/eventsss-main/apps/api` | Express + TypeScript API, Prisma schema and PostgreSQL integration |
-| `eventsss123/eventsss-main/apps/web` | React + TypeScript + Vite web/PWA frontend and Playwright journeys |
-| `eventsss123/eventsss-main/apps/mobile` | Capacitor Android/iOS wrappers and native projects |
-| `eventsss123/eventsss-main/scripts` | Development, database, QA, security, payment-mode and operational scripts |
-| `.github/workflows` | CI, browser tests, Android builds, release and maintenance workflows |
-| `docs` | Operational and product documentation |
+## 🌟 The product
 
-## Requirements
+EPHINTA is being built as one connected workspace for planning an event and coordinating the people and services that make it happen. Instead of spreading event briefs, vendor conversations, budgets, bookings, deposits and service checks across disconnected tools, EPHINTA brings those workflows into a shared experience.
+
+**The product promise:** plan the occasion, discover the right services, coordinate delivery, track agreed payments and see what still needs attention.
+
+## 🎯 Who EPHINTA serves
+
+| Workspace | What the user can do |
+|---|---|
+| 🎉 **Client / event planner** | Create events, set budgets and timelines, manage guests and RSVPs, discover providers, request bookings, track deposits and communicate with participants. |
+| 🏢 **Organisation / organiser** | Coordinate teams and organisation events with role-appropriate workspace access. |
+| 🛍️ **Vendor / service provider** | Manage a business profile and services, receive enquiries and bookings, submit KYC information, request eligible part-payments and follow fulfilment. |
+| 👥 **Guest / invitee** | Receive event information, respond to invitations and use permitted event-specific features. |
+| 🛡️ **Verifier** | Review assigned service-readiness checks, record evidence and timestamps, and report completion status. |
+| 🤝 **Consultant** | Work on assigned event operations, track progress and communicate within the permitted scope. |
+| ⚙️ **Administrator / operations** | Oversee users, roles, marketplace operations, verification, payments oversight and platform reporting. |
+| 📣 **Affiliate / growth partner** | Support approved referral programmes and view eligible referral records and statements. |
+
+> **Permission principle:** protected actions must be authorised by the API. Hiding a control in the interface is not a security boundary.
+
+## 🧩 What the application contains
+
+<details open>
+<summary><strong>🗓️ Event planning and delivery</strong></summary>
+
+- Event briefs, event types, dates, locations, guest ranges, budgets and currencies.
+- Planning tasks, timelines, guest lists, invitations and RSVP workflows.
+- Service discovery and booking coordination.
+- Event readiness, outstanding items and service verification.
+- Direct and group conversations connected to an event.
+- Deposit and payment-milestone visibility in the event and account workflow.
+
+</details>
+
+<details>
+<summary><strong>🛒 Marketplace and vendor operations</strong></summary>
+
+- Venue, goods and service discovery.
+- Vendor profiles, storefronts, listings, pricing and availability.
+- Enquiries, booking requests, vendor responses and fulfilment tracking.
+- KYC submission and review-status workflows.
+- Eligible deposit and part-payment request workflows.
+- Reviews, promotions and marketplace discovery surfaces.
+
+</details>
+
+<details>
+<summary><strong>💳 Wallet, billing and payment infrastructure</strong></summary>
+
+- Currency-aware wallet and ledger data model.
+- Payment intents, booking deposits, payout and refund workflows.
+- Provider adapter structure and payment-mode controls.
+- Reconciliation, idempotency and webhook-safety requirements.
+- OPay is the first provider intended for sandbox validation; Eversend and Cleva remain subject to account access, credentials, API validation and sandbox evidence.
+
+**Important:** payment screens, provider adapters and mocked tests do not prove that real money has moved. Do not enable live payments until provider-backed collection, payout, refund, webhook and reconciliation tests have been signed off.
+
+</details>
+
+<details>
+<summary><strong>🔐 Identity, account security and notifications</strong></summary>
+
+- Role-aware registration, sign-in and session workflows.
+- Password recovery and account-security controls.
+- Email verification work is included in the open application-completion pull request and is not yet merged into `main`.
+- Device PIN / security gate and optional native biometric capability where supported.
+- In-app notifications and event-scoped messaging.
+- Brevo transactional email support is prepared in the open completion work; real delivery still requires secure credentials and a verified sender configuration.
+
+</details>
+
+<details>
+<summary><strong>🎵 Music and rights administration</strong></summary>
+
+- Music playback and audio experience surfaces.
+- Music / DSP administration and rights-owner data structures.
+- Rights and usage reporting concepts.
+
+Track-level ownership, performer/publisher permissions, territory and term, revenue allocation and royalty settlement require documented rights and finance/legal approval. A player or rights-owner record alone does not establish a cleared catalogue or payable royalties.
+
+</details>
+
+<details>
+<summary><strong>📱 Web, PWA and mobile</strong></summary>
+
+- React web application and responsive layouts.
+- Capacitor Android and iOS application shells.
+- Android debug/test APK generation in CI.
+- Native capabilities and update paths where configured.
+
+A successful Android build is not proof of installation on every phone. A web deployment does not automatically update every installed native app. Production Android distribution needs the correct persistent signing key; iOS distribution needs Apple signing and provisioning.
+
+</details>
+
+## 🟢 Live service check
+
+The deployed endpoints were checked on **19 November 2026**:
+
+| Check | Observed result | What it means |
+|---|---|---|
+| [Public web app](https://ephinta-web.onrender.com/) | Responded with the EPHINTA landing page | The public web surface is reachable. |
+| [API health](https://ephinta-wss.onrender.com/health) | `{"status":"ok"}` | The API process responded to its health endpoint. |
+| [API readiness](https://ephinta-wss.onrender.com/ready) | `{"status":"ready"}` | The API readiness endpoint reported ready. |
+
+These checks do **not** prove that a user can complete every registration, booking, payment, email, KYC or mobile-install journey. The deployed landing page describes event planning and provider discovery; authenticated workflows require separate end-to-end testing.
+
+## 📊 Engineering and release status
+
+**Audited checkpoint: 19 November 2026**
+
+| Area | Evidence available | Status / limitation |
+|---|---|---|
+| Web and API | Live web page; API health and readiness responded | <span style="color:#16a34a"><strong>Reachable</strong></span>; full customer journey not proven by health checks |
+| API, web and database test gates | Latest application-completion CI on PR #249 | <strong>Passed in that CI run</strong> |
+| Browser regression and responsive audit | PR #249 workflow results | <strong>Passed in that CI run</strong> |
+| Scale QA and security audit | PR #249 workflow results | <strong>Passed in that CI run</strong> |
+| Android | CI web checks and Android APK workflow | <strong>Build passed</strong>; physical-device installation still needs confirmation |
+| iOS simulator | PR #249 workflow | <strong>Not verified</strong>; simulator job was cancelled |
+| Email delivery | Brevo integration work is in open PR #249 | Requires merge, Brevo API key, verified sender and delivery test |
+| Live payments | Provider integration and sandbox prerequisites documented | Requires provider credentials and real sandbox transaction evidence |
+| Production mobile release | Android signing and Apple signing prerequisites documented | Not a signed production release |
+
+The latest one-go completion work is proposed in [PR #249](https://github.com/demtaiwo1-eng/Winning-game-/pull/249) and is **not yet merged into `main`**. PR #248 also contains overlapping authentication work and needs reconciliation after the completion change is accepted. Do not treat open pull-request code as already released to production.
+
+For the detailed requirement-by-requirement baseline and acceptance journeys, read [Product Requirements & Acceptance](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md) and [Verification Matrix](docs/maintenance/VERIFICATION_MATRIX.md).
+
+## 🏗️ Technology and repository map
+
+| Layer | Technology / location |
+|---|---|
+| Web frontend | React 18, TypeScript, Vite, React Router and PWA tooling |
+| API | Express, TypeScript and modular REST API |
+| Database | PostgreSQL with Prisma ORM |
+| Mobile | Capacitor 6, Android and iOS native projects |
+| Browser testing | Playwright |
+| Automation | GitHub Actions workflows |
+| Hosting configuration | Render manifests |
+| Main application workspace | `eventsss123/eventsss-main` |
+
+**Repository structure**
+
+```text
+.
+├── .github/workflows/             # CI, quality gates and build automation
+├── docs/                           # Product, release and operations guidance
+├── eventsss123/eventsss-main/
+│   ├── apps/api/                   # Express API, Prisma schema and migrations
+│   ├── apps/web/                   # React web application
+│   ├── apps/mobile/                # Capacitor Android and iOS projects
+│   ├── scripts/                    # QA, build and operational scripts
+│   └── package.json                # Main npm workspace manifest
+├── scripts/                        # Repository-level helper scripts
+├── render.yaml                     # Render service configuration
+└── README.md
+```
+
+The API is organised into modules including authentication, admin, billing, checkout, events, KYC, marketplace, music/DSP, notifications, payments, readiness, RSVP and wallet.
+
+## 🚀 Run the project
+
+### Requirements
 
 - Node.js 20 or newer.
-- npm (use the committed root `package-lock.json`).
-- PostgreSQL for API/database-backed development.
-- Java 17 or 21 for Android Gradle builds (use the version required by the current Android Gradle configuration).
-- Android SDK for local Android builds; Xcode/macOS for local iOS builds.
+- npm.
+- PostgreSQL for API-backed development.
+- Java 17 or 21 and Android SDK for Android builds.
+- macOS with Xcode for local iOS builds.
 
-## Quick start
+### Install and start
 
 From the repository root:
 
 ```bash
+cd eventsss123/eventsss-main
 npm ci
+cp .env.example .env
 ```
 
-Configure the API and web environment using the committed example files and the configuration schema in `apps/api/src/config`. At minimum, local API execution requires a valid PostgreSQL `DATABASE_URL` and the required authentication secrets. Never commit production secrets or paste provider credentials into issues or chat.
-
-Start the development environment using the repository helper:
+Configure the required local environment values, including a development PostgreSQL `DATABASE_URL` and strong development-only authentication secrets. Then run:
 
 ```bash
 npm run dev
 ```
 
-Useful alternatives:
+Never commit `.env`, API keys, payment credentials, database dumps, customer records, signing keys or private certificates.
+
+### Useful verification commands
+
+Run these from `eventsss123/eventsss-main`:
 
 ```bash
-npm run dev:api
-npm run dev:web
-npm run web:preview
-```
-
-The root workspace is nested one directory below the repository root. If running workspace-specific commands manually, change into `eventsss123/eventsss-main` first, or use the root scripts shown below.
-
-## Verification commands
-
-Run the checks relevant to the code you changed:
-
-```bash
-# API schema validation, Prisma generation, TypeScript and API tests;
-# then web unit tests and the KYC research self-test
+# API schema, TypeScript and API tests; web tests and KYC research self-test
 npm run check
 
 # API production build
 npm run build
 
-# Web TypeScript and production bundle
+# Web production build
 npm run build:web
 
-# Web tests and production build
-npm run web:check
-
-# Database migrations and integration tests (requires configured PostgreSQL)
+# Database migrations and integration tests (configured PostgreSQL required)
 npm run db:deploy
 npm run test:db
 
-# Device security and responsive/design checks
+# Device security and responsive UX audit
 npm run device-security:verify
 npm run ux:audit
 
 # Android sync, lint, unit tests and debug APK
 npm run mobile:verify
-
-# Browser journeys (from apps/web workspace)
-npm run test:e2e -w apps/web
 ```
 
-Some workflows use additional environment secrets, disposable databases, provider sandboxes, Android signing material or hosted services. A skipped, cancelled, setup-failed or mocked job must not be reported as a production pass. Read [the verification matrix](docs/maintenance/VERIFICATION_MATRIX.md).
+Some tests require a disposable database, browser dependencies, Java/Android SDK or provider sandbox configuration. A skipped, cancelled or mocked test must be reported as such, not as a pass.
 
-## Payments and financial safety
+## 💰 Commercial source package — US$60
 
-- Keep development and CI in **sandbox/test mode**.
-- OPay is the first provider integration to validate end-to-end. Eversend and Cleva must remain explicitly marked unavailable/not configured until their accounts, API contracts, credentials and tests are verified.
-- Do not enable live collection, payout or refunds without provider approval, secure secret configuration, webhook signature validation, idempotency, reconciliation and an authorised staging sign-off.
-- Store credentials in the deployment platform's secret/environment-variable manager, never in source control.
-- Amounts are represented in integer minor units with an ISO currency code; do not use floating-point arithmetic for money.
-- A green mocked E2E test is not evidence of real settlement.
+<div align="center">
 
-## Deployment
+### Planned one-time source-access price
 
-The repository includes Render deployment manifests. Review `render.yaml` and `render.ephinta-web.yaml` before applying changes. Preserve the project's Render Free operating constraint unless the owner explicitly changes it. Confirm the selected service type, build/start commands, health checks, database availability and environment variables in the Render dashboard. Never assume a deploy succeeded solely because a manifest exists.
+# **US$60**
 
-## Android and iOS
+**A proposed one-time price for an authorised EPHINTA source-code package.**
 
-- Android verification: `npm run mobile:verify`.
-- Debug APK: `npm run mobile:build` (requires Java and Android SDK).
-- Signed release workflows require the documented signing secrets; see [Android GitHub signing](docs/ANDROID-GITHUB-SIGNING.md).
-- iOS builds/signing require macOS/Xcode and the relevant Apple signing configuration.
-- Test the produced APK on a physical Android device, including install, cold start, login, navigation, offline/reconnect and update behaviour. A CI build alone does not prove device compatibility.
+</div>
 
-## Security, privacy and operations
+The commercial offer is **not yet open for checkout**. This GitHub repository is currently public, so visitors can view and download the source without paying. No payment link or automatic paid-access delivery is active in this repository today.
 
-- Use least-privilege roles and enforce authorization in the API, not only in the UI.
-- Protect passwords with the configured password hashing; use short-lived access tokens and revocable refresh tokens.
-- Validate uploads, limit request rates, avoid logging credentials/tokens/payment data and keep audit trails for sensitive operations.
-- Treat KYC documents and personal data as sensitive; use restricted storage and retention controls.
-- Use synthetic test personas only for test environments. Never present synthetic businesses, addresses, images, reviews or phone numbers as real listings.
-- Back up production data and rehearse restoration before high-risk migrations.
+Before accepting the US$60 payment, the owner must:
 
-## Contributing and change control
+1. Confirm the legal rights holder and obtain written contributor assignments or licences for all contributed code and assets.
+2. Complete third-party dependency, music, image, font and other asset licence reviews.
+3. Approve the commercial licence terms, permitted use, support scope, refund policy and update entitlement.
+4. Move the sale copy to a private repository or controlled delivery package; a public GitHub repository cannot enforce a paywall.
+5. Connect a real checkout provider and implement verified payment confirmation before granting repository/package access.
+6. Test the complete purchase → verified payment → access delivery → revocation/refund process.
 
-1. Work from an up-to-date branch based on `main`.
-2. Keep changes focused; do not merge large divergent branches wholesale.
-3. Review file-level diffs, generated files, migrations, assets and deletions before integration.
-4. Add or update unit, API, browser and mobile tests for changed behaviour.
-5. Run all required CI gates and resolve failures; do not bypass required checks.
-6. Merge only after review and passing checks. Delete a branch only after verifying its unique commits and files are integrated or intentionally archived.
+**Do not send payment for source access until an official checkout and delivery process is published.** A README price is a product offer description, not a payment processor or access-control system.
 
-## Product scope and release criteria
+## 🔒 Security, payments and deployment safeguards
 
-The authoritative working scope, personas, end-to-end journeys, external dependencies and acceptance gates are maintained in [docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md). Production readiness requires passing automated checks **and** separate verification of hosted services, provider credentials, webhooks, real devices, operational recovery and legal/commercial rights.
+- Keep all provider integrations in sandbox/test mode until formally approved.
+- Store Brevo, OPay, Cleva, Eversend and other secrets in Render or GitHub's secure secret stores.
+- Validate payment webhook signatures, enforce idempotency and reconcile provider records against the ledger.
+- Use least-privilege roles and enforce permissions in API handlers.
+- Protect KYC documents and personal data with access and retention controls.
+- Keep money in integer minor units with an ISO currency code.
+- Back up production data and rehearse restoration before risky migrations.
+- Preserve the Render Free deployment constraint unless the owner approves a change.
+- Never use synthetic test businesses, reviews, identities or transactions as proof of real-world activity.
+
+## 🧭 Release checklist
+
+- [ ] Merge the reviewed application-completion and authentication work only after resolving overlapping PRs and passing required checks.
+- [ ] Verify registration, wrong-password handling, password reset and email verification with real controlled test accounts.
+- [ ] Verify planner → booking → sandbox deposit → ledger/dashboard journey.
+- [ ] Verify vendor → KYC → part-payment request → fulfilment journey.
+- [ ] Verify direct and group event messaging permissions.
+- [ ] Complete OPay sandbox collection, payout, refund and webhook reconciliation.
+- [ ] Configure and test Brevo sender authentication and real delivery.
+- [ ] Install and exercise the APK on a physical Android phone.
+- [ ] Complete Android signing and iOS signing before public store distribution.
+- [ ] Complete legal ownership, third-party rights and paid-access checkout controls before commercial sale.
+
+## 🤝 Contributing and change control
+
+1. Branch from the latest `main`.
+2. Keep changes focused and review the complete diff.
+3. Add regression tests for changed behaviour.
+4. Run relevant checks and resolve failures.
+5. Open a pull request and wait for required checks.
+6. Merge only after review and verification; delete branches only after confirming their unique work is integrated or intentionally archived.
+
+---
+
+<div align="center">
+
+**EPHINTA — one place to plan, connect, coordinate and deliver.** ✨
+
+<sub>Product and engineering status is evidence-based and may change as open pull requests are merged and external services are configured.</sub>
+
+</div>
