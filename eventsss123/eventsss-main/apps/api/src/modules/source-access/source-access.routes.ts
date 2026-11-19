@@ -37,6 +37,9 @@ function assertTestCheckoutReady() {
 sourceAccessRouter.post("/orders", requireAuth, asyncHandler(async (req, res) => {
   assertTestCheckoutReady();
 
+  const buyer = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true } });
+  if (!buyer?.email) throw new HttpError(404, "BUYER_NOT_FOUND", "Buyer account was not found.");
+
   const reference = `ephinta_source_${randomUUID().replace(/-/g, "")}`;
   const order = await prisma.sourceAccessOrder.create({
     data: {
@@ -58,7 +61,7 @@ sourceAccessRouter.post("/orders", requireAuth, asyncHandler(async (req, res) =>
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: req.user!.email,
+        email: buyer.email,
         amount: Number(PRICE_MINOR),
         currency: CURRENCY,
         reference,
