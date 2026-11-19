@@ -49,7 +49,7 @@ export function createApp() {
   app.use(express.json({
     limit: "1mb",
     verify(req, _res, buf) {
-      if (req.url?.startsWith("/api/v1/payments/webhooks/") || req.url?.startsWith("/api/v1/kyc/bytid/webhook")) {
+      if (req.url?.startsWith("/api/v1/payments/webhooks/") || req.url?.startsWith("/api/v1/kyc/bytid/webhook") || req.url?.startsWith("/api/v1/source-access/webhooks/")) {
         (req as express.Request & { rawBody?: Buffer }).rawBody = Buffer.from(buf);
       }
     },
