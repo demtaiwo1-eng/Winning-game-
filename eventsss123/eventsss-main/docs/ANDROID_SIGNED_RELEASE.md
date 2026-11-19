@@ -14,7 +14,9 @@ The production release workflow is prepared, but it cannot produce a signed APK 
 
 The separate `.github/workflows/ephinta-android-signed-release.yml` is a manual signed APK/AAB artifact workflow. It also verifies the certificate fingerprint, but the production workflow above is the release path that includes OTA publication.
 
-## One-time owner setup from GitHub Codespaces
+## One-time owner setup
+
+**Important:** the original Build 869 private keystore is required to update existing installations. The APK does not contain the private key, and it cannot be reconstructed from the APK. If the original key is lost, stop: do not generate a replacement and assume it can update existing installs. If Google Play App Signing was enabled, check Play Console's upload-key reset process; otherwise a new signing identity requires a deliberate migration plan.
 
 Run these commands from the **repository root** in a private GitHub Codespace:
 
