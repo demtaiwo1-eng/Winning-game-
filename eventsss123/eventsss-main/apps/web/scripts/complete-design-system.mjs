@@ -50,7 +50,9 @@ function resolveImports(file, visited = new Set(), missing = []) {
   const source = fs.readFileSync(absolute, "utf8");
   for (const match of source.matchAll(/^\s*@import\s+(?:url\()?["']([^"']+)["']\)?[^;]*;/gm)) {
     const specifier = match[1];
-    if (/^(?:https?:|data:|\/\/)/i.test(specifier)) continue;
+    // Bare imports (for example Tailwind CSS) are package dependencies resolved by Vite,
+    // not relative files in this stylesheet graph. The production build validates them.
+    if (/^(?:https?:|data:|\/\/)/i.test(specifier) || (!specifier.startsWith(".") && !specifier.startsWith("/"))) continue;
     const target = path.resolve(path.dirname(absolute), specifier.split("?")[0]);
     if (!fs.existsSync(target)) {
       missing.push({ from: path.relative(APP_ROOT, absolute), import: specifier });
