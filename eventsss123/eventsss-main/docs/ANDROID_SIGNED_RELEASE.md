@@ -18,7 +18,7 @@ The separate `.github/workflows/ephinta-android-signed-release.yml` is a manual 
 
 **Important:** the original Build 869 private keystore is required to update existing installations. The APK does not contain the private key, and it cannot be reconstructed from the APK. If the original key is lost, stop: do not generate a replacement and assume it can update existing installs. If Google Play App Signing was enabled, check Play Console's upload-key reset process; otherwise a new signing identity requires a deliberate migration plan.
 
-Run these commands from the **repository root** in a private GitHub Codespace:
+Run these commands from the **repository root** in a private environment with GitHub CLI, Java, Android SDK build-tools, OpenSSL and access to the original keystore. A Codespace is one possible environment:
 
 ```bash
 bash scripts/setup-android-signing-github.sh
@@ -33,9 +33,9 @@ The setup script:
 5. Creates an encrypted keystore recovery copy and a SHA-256 checksum in `~/.ephinta-android-signing/`.
 6. Verifies that the encrypted backup decrypts to the original keystore, then removes the plaintext keystore from the Codespace.
 
-You will be prompted for a strong keystore password and a separate private-key password. Save both in a password manager. The encrypted backup uses the keystore password.
+You will be prompted for the original keystore password and a separate private-key password. Save both securely. The encrypted backup uses the keystore password.
 
-**Before closing the Codespace:** download both `ephinta-release.jks.enc` and `ephinta-release.jks.enc.sha256` from `~/.ephinta-android-signing/` and store them in a secure owner-controlled location. Keep the password separately. Do not commit either file or upload it as a normal repository artifact.
+**Before closing the environment:** download both `ephinta-release.jks.enc` and `ephinta-release.jks.enc.sha256` from `~/.ephinta-android-signing/` and store them in a secure owner-controlled location. Keep the password separately. Do not commit either file or upload it as a normal repository artifact.
 
 If GitHub reports that your account cannot manage repository Actions secrets or variables, stop and have a repository administrator perform this one-time setup. Do not paste signing credentials into chat or workflow inputs.
 
