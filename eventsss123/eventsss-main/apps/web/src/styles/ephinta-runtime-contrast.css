@@ -1,0 +1,127 @@
+/*
+ * EPHINTA runtime contrast contract.
+ * Imported from main.tsx AFTER the complete legacy stylesheet hub. This is
+ * intentionally the final application CSS layer so old component rules cannot
+ * silently restore low-contrast text in any selected theme.
+ */
+html[data-ephinta-theme="light"] {
+  color-scheme: light;
+  --ephinta-fg: #171b2b;
+  --ephinta-fg-muted: #354057;
+  --ephinta-fg-subtle: #4d5a72;
+  --ephinta-link-fg: #38258f;
+  --ephinta-field-bg: #ffffff;
+  --ephinta-field-border: #aeb9cc;
+  --ephinta-field-placeholder: #56627a;
+  --ephinta-action-bg: #4338a8;
+  --ephinta-action-fg: #ffffff;
+}
+html[data-ephinta-theme="dark"] {
+  color-scheme: dark;
+  --ephinta-fg: #f7f9ff;
+  --ephinta-fg-muted: #e0e7f3;
+  --ephinta-fg-subtle: #c5d0e2;
+  --ephinta-link-fg: #b9dcff;
+  --ephinta-field-bg: #172338;
+  --ephinta-field-border: #71819b;
+  --ephinta-field-placeholder: #b7c4d8;
+  --ephinta-action-bg: #c4b5fd;
+  --ephinta-action-fg: #17112b;
+}
+html[data-ephinta-theme="colorful"] {
+  color-scheme: light;
+  --ephinta-fg: #21172f;
+  --ephinta-fg-muted: #3e3450;
+  --ephinta-fg-subtle: #554967;
+  --ephinta-link-fg: #4b278f;
+  --ephinta-field-bg: #ffffff;
+  --ephinta-field-border: #ad9fbe;
+  --ephinta-field-placeholder: #5b506c;
+  --ephinta-action-bg: #6335ad;
+  --ephinta-action-fg: #ffffff;
+}
+
+/* High-specificity text selectors beat legacy component selectors and
+   legacy !important declarations. Do not blanket-color SVG/icon elements. */
+html[data-ephinta-theme] body :is(
+  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,
+  li,dt,dd,th,td,caption,summary,figcaption,blockquote,
+  output,mark,time,address,cite,code
+):not(svg):not([aria-hidden="true"]):not(.icon):not([class*="icon-"]) {
+  color: var(--ephinta-fg) !important;
+  -webkit-text-fill-color: currentColor;
+}
+html[data-ephinta-theme] body :is(
+  p,small,li,dt,dd,figcaption,blockquote,
+  .muted,.text-muted,.helper-text,.form-hint,.workspace-subtitle,
+  .section-description,.empty-state,.eyebrow,.field-description
+):not([aria-hidden="true"]) {
+  color: var(--ephinta-fg-muted) !important;
+  -webkit-text-fill-color: currentColor;
+}
+html[data-ephinta-theme] body a:not(.button):not([role="button"]) {
+  color: var(--ephinta-link-fg) !important;
+  -webkit-text-fill-color: currentColor;
+}
+html[data-ephinta-theme] body :is(input,select,textarea) {
+  color: var(--ephinta-fg) !important;
+  -webkit-text-fill-color: var(--ephinta-fg) !important;
+  background-color: var(--ephinta-field-bg) !important;
+  border-color: var(--ephinta-field-border) !important;
+  opacity: 1;
+}
+html[data-ephinta-theme] body :is(input,textarea)::placeholder {
+  color: var(--ephinta-field-placeholder) !important;
+  -webkit-text-fill-color: var(--ephinta-field-placeholder) !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme] body select option {
+  color: var(--ephinta-fg) !important;
+  background: var(--ephinta-field-bg) !important;
+}
+html[data-ephinta-theme] body :is(input,select,textarea):disabled {
+  color: var(--ephinta-fg-muted) !important;
+  -webkit-text-fill-color: var(--ephinta-fg-muted) !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme] body :is(button,[role="button"],.button) {
+  color: inherit;
+}
+html[data-ephinta-theme] body :is(
+  .primary-button,.continue-action,.select-listing,.ess-primary,
+  .pl-btn-primary,.pl-primary,.esg-btn.p
+) {
+  color: var(--ephinta-action-fg) !important;
+  -webkit-text-fill-color: var(--ephinta-action-fg) !important;
+  background-color: var(--ephinta-action-bg) !important;
+  border-color: var(--ephinta-action-bg) !important;
+}
+
+/* Intentional dark brand/hero surfaces retain their own white-on-dark palette
+   in light, dark and colorful application themes. */
+html[data-ephinta-theme] body :is(
+  .workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
+  .dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel,
+  .eph-marketplace-advertising,.eph-promo-shell,.ess-marketplace-welcome,
+  .ess-marketplace-feature-tile,.ess-marketplace-float
+) :is(h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,li,a) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+html[data-ephinta-theme] body :is(
+  .workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
+  .dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel,
+  .eph-marketplace-advertising,.eph-promo-shell,.ess-marketplace-welcome,
+  .ess-marketplace-feature-tile,.ess-marketplace-float
+) :is(small,p,.muted,.text-muted,.helper-text) {
+  color: #e7edf7 !important;
+  -webkit-text-fill-color: #e7edf7 !important;
+}
+
+/* Native autofill must not reintroduce browser-controlled low contrast. */
+html[data-ephinta-theme] body input:-webkit-autofill,
+html[data-ephinta-theme] body input:-webkit-autofill:hover,
+html[data-ephinta-theme] body input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ephinta-fg) !important;
+  caret-color: var(--ephinta-fg);
+}
