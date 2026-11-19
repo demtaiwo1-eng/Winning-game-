@@ -10,7 +10,7 @@
 set -Eeuo pipefail
 set +x
 
-REPO="demtaiwo1-eng/winning-game-"
+REPO="demtaiwo1-eng/Winning-game-"
 WORKFLOW=".github/workflows/ephinta-production-apk.yml"
 BACKUP="$HOME/.ephinta-android-signing/ephinta-release.jks.enc"
 BACKUP_SHA256="$BACKUP.sha256"
