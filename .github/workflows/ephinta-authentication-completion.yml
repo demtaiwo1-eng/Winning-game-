@@ -36,6 +36,8 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://ephinta:ephinta_ci_only@localhost:5432/ephinta_auth_ci?schema=public
+      DATABASE_URL_LOCAL: postgresql://ephinta:ephinta_ci_only@localhost:5432/ephinta_auth_ci?schema=public
+      DATABASE_MODE: local
       JWT_SECRET: ci-only-secret-not-for-deployment-0123456789
       APP_BASE_URL: https://example.invalid
     steps:
