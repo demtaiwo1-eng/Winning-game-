@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 const contract = readFileSync(new URL("./ephinta-global-theme-contract.css", import.meta.url), "utf8");
 const globalCss = readFileSync(new URL("./ephinta-global.css", import.meta.url), "utf8");
 const themeRuntime = readFileSync(new URL("../lib/ephintaTheme.ts", import.meta.url), "utf8");
+const runtimeCss = readFileSync(new URL("./ephinta-runtime-contrast.css", import.meta.url), "utf8");
+const appEntry = readFileSync(new URL("../main.tsx", import.meta.url), "utf8");
 
 function token(block: string, name: string): string {
   const value = block.match(new RegExp(`--epg-${name}:\\s*(#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)\\b`))?.[1];
@@ -53,6 +55,20 @@ describe("EPHINTA global theme contrast", () => {
     expect(contract).toContain("--ess-surface:var(--epg-surface)");
     expect(contract).toContain("background-image:none !important");
     expect(contract).toContain("html[data-ephinta-theme=\"colorful\"],html[data-theme=\"colorful\"]");
+  });
+
+  it("initializes the saved theme before rendering authenticated routes", () => {
+    expect(appEntry).toContain("import { initializeEphintaTheme } from './lib/ephintaTheme'");
+    expect(appEntry).toContain("initializeEphintaTheme();");
+    expect(appEntry.indexOf("initializeEphintaTheme();")).toBeLessThan(appEntry.indexOf("ReactDOM.createRoot"));
+  });
+
+  it("uses text-level theme rules without forcing colors onto layout wrappers", () => {
+    expect(runtimeCss).toContain("Text-only enforcement");
+    expect(runtimeCss).toContain("h1,h2,h3,h4,h5,h6,p,span");
+    expect(runtimeCss).toContain("button *");
+    expect(runtimeCss).toContain(".status-pill *");
+    expect(runtimeCss).not.toContain("body :is(div,section,article,header,footer,main,nav,aside)");
   });
 
   it("keeps native controls aligned with the selected colorful palette", () => {
