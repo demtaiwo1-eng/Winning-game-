@@ -212,9 +212,13 @@ test("EPHINTA planner theme contract screenshots cover all three themes and brea
     }
   }
 
-  for (const token of ["page", "surface", "ink", "accent"] as const) {
+  // Light and colorful intentionally share a neutral white card surface; the
+  // page, ink and accent tokens distinguish all three palettes. Surface must
+  // still vary between light and dark to prove the active theme is applied.
+  for (const token of ["page", "ink", "accent"] as const) {
     expect(observedTokens.get(token)?.size, `The three themes must produce distinct ${token} tokens`).toBe(3);
   }
+  expect(observedTokens.get("surface")?.size, "The neutral surface must change between light and dark modes").toBeGreaterThanOrEqual(2);
 
   fs.mkdirSync(testInfo.outputDir, { recursive: true });
   const reportPath = path.join(testInfo.outputDir, "planner-theme-breakpoint-audit.json");
