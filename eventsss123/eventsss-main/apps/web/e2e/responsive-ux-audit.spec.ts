@@ -94,6 +94,7 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
         const fieldStyle = field ? getComputedStyle(field) : null;
         return {
           backgroundImage: cardStyle.backgroundImage,
+          backgroundColor: cardStyle.backgroundColor,
           color: cardStyle.color,
           borderColor: cardStyle.borderColor,
           borderRadius: Number.parseFloat(cardStyle.borderRadius),
@@ -104,7 +105,8 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
         };
       });
 
-      expect(theme.backgroundImage, "Planner card must use the shared light parent surface").toContain("linear-gradient");
+      expect(theme.backgroundImage, "Planner card must not reintroduce competing legacy gradients").toBe("none");
+      expect(theme.backgroundColor, "Planner card must use the shared neutral parent surface").toBe("rgb(255, 255, 255)");
       expect(theme.color, "Planner card text must use the shared dark parent ink").toBe("rgb(33, 29, 55)");
       expect(theme.borderRadius, "Planner card must use the parent rounded surface").toBeGreaterThanOrEqual(16);
       expect(theme.fieldBackground, "Planner inputs must use the shared muted surface").toBe("rgb(249, 248, 252)");
@@ -178,6 +180,7 @@ test("EPHINTA planner theme contract screenshots cover all three themes and brea
         await page.goto("/plan", { waitUntil: "networkidle" });
         await page.evaluate((selectedTheme) => {
           document.documentElement.dataset.ephintaTheme = selectedTheme;
+          document.documentElement.dataset.theme = selectedTheme;
         }, theme);
         await expect(page.locator(".ess-builder-card").first()).toBeVisible();
 
