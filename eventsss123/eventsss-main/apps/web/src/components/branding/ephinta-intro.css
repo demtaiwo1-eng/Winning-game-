@@ -1,9 +1,23 @@
 .ephinta-intro {
-  position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center;
-  overflow: hidden; background: #090909;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--epg-page, #090909);
+  color: var(--epg-ink, #ffffff);
   animation: ephinta-fade-in .28s ease-out both;
 }
-.ephinta-intro__logo { display:block; width:clamp(112px,30vw,168px); height:clamp(112px,30vw,168px); object-fit:contain; filter:drop-shadow(0 8px 26px rgba(255,106,0,.20)); }
-.ephinta-intro--closing { opacity:0; transition:opacity .35s ease; }
-@keyframes ephinta-fade-in { from { opacity:0 } to { opacity:1 } }
-@media(prefers-reduced-motion:reduce) { .ephinta-intro,.ephinta-intro--closing { animation:none !important; transition:none !important; } }
+.ephinta-intro__logo {
+  display: block;
+  width: clamp(112px, 30vw, 168px);
+  height: clamp(112px, 30vw, 168px);
+  object-fit: contain;
+  filter: drop-shadow(0 8px 26px rgb(255 106 0 / 20%));
+}
+.ephinta-intro--closing { opacity: 0; transition: opacity .35s ease; }
+@keyframes ephinta-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .ephinta-intro, .ephinta-intro--closing { animation: none !important; transition: none !important; }
+}
