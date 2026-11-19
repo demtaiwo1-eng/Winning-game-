@@ -20,7 +20,7 @@ permissions:
 
 concurrency:
   group: ephinta-ios-simulator-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   ios-simulator:
