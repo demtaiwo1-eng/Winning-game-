@@ -1,0 +1,108 @@
+name: Verify Build 869 Android Signing Identity
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: ephinta-build869-signing-verification
+  cancel-in-progress: false
+
+jobs:
+  verify-original-key:
+    name: Match stored keystore to Build 869
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install Android build tools
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Download immutable Build 869 APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ephinta-869"
+          curl --fail --location --retry 3 \
+            "https://github.com/demtaiwo1-eng/Winning-game-/releases/download/ephinta-apk-42547397876/ephinta-869.apk" \
+            --output "$RUNNER_TEMP/ephinta-869/ephinta-869.apk"
+          test -s "$RUNNER_TEMP/ephinta-869/ephinta-869.apk"
+
+      - name: Verify stored keystore against Build 869 and set fingerprint
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          KEYSTORE="$RUNNER_TEMP/ephinta-original.jks"
+          CERT="$RUNNER_TEMP/ephinta-original-cert.der"
+          CSR="$RUNNER_TEMP/ephinta-check.csr"
+          trap 'rm -f "$KEYSTORE" "$CERT" "$CSR"' EXIT
+
+          for name in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Required signing secret is missing: $name"
+              exit 1
+            fi
+          done
+
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$KEYSTORE"
+          chmod 600 "$KEYSTORE"
+          test -s "$KEYSTORE"
+
+          # Confirm the alias, store password, and private-key password work.
+          keytool -list -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+          keytool -certreq -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" -alias "$KEY_ALIAS" -file "$CSR" >/dev/null
+
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          test -x "$APKSIGNER" && test -x "$AAPT"
+
+          BASELINE="$RUNNER_TEMP/ephinta-869/ephinta-869.apk"
+          PACKAGE="$("$AAPT" dump badging "$BASELINE" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)"
+          [[ "$PACKAGE" == "com.ephinta.app" ]] || {
+            echo "::error::Build 869 baseline package mismatch."
+            exit 1
+          }
+
+          BASELINE_CERT="$("$APKSIGNER" verify --print-certs "$BASELINE" 2>&1 | \
+            sed -n 's/.*certificate SHA-256 digest: *//Ip' | head -n 1 | tr -d ' :\r\n' | tr '[:upper:]' '[:lower:]')"
+          keytool -exportcert -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" \
+            -alias "$KEY_ALIAS" -file "$CERT" >/dev/null
+          STORED_CERT="$(sha256sum "$CERT" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')"
+
+          [[ "$BASELINE_CERT" =~ ^[a-f0-9]{64}$ && "$STORED_CERT" =~ ^[a-f0-9]{64}$ ]] || {
+            echo "::error::Could not extract a valid SHA-256 signing fingerprint."
+            exit 1
+          }
+          if [[ "$BASELINE_CERT" != "$STORED_CERT" ]]; then
+            echo "::error::Stored keystore does NOT match Build 869. No repository variable was changed."
+            exit 1
+          fi
+
+          echo "Verified: stored keystore certificate matches the Build 869 APK."
+          echo "Certificate SHA-256: $STORED_CERT"
+
+          # Create or update the repository Actions variable only after exact match.
+          if gh api "repos/$GH_REPO/actions/variables/ANDROID_CERT_SHA256" >/dev/null 2>&1; then
+            gh api --method PATCH "repos/$GH_REPO/actions/variables/ANDROID_CERT_SHA256" \
+              -f name="ANDROID_CERT_SHA256" -f value="$STORED_CERT" >/dev/null
+          else
+            gh api --method POST "repos/$GH_REPO/actions/variables" \
+              -f name="ANDROID_CERT_SHA256" -f value="$STORED_CERT" >/dev/null
+          fi
+          echo "Repository variable ANDROID_CERT_SHA256 has been set from the verified Build 869 certificate."
