@@ -119,12 +119,15 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
           const rect = element.getBoundingClientRect();
           return {
             backgroundImage: promptStyle?.backgroundImage ?? "",
+            backgroundColor: promptStyle?.backgroundColor ?? "",
+            foregroundColor: promptStyle?.color ?? "",
             backdropPointerEvents: backdropStyle.pointerEvents,
             promptPointerEvents: promptStyle?.pointerEvents ?? "none",
             coversViewport: rect.left <= 0 && rect.top <= 0 && rect.right >= innerWidth && rect.bottom >= innerHeight,
           };
         });
-        expect(overlay.backgroundImage, "Audio consent must use its branded surface").toContain("linear-gradient");
+        expect(overlay.backgroundColor, "Audio consent must use the active theme surface").not.toBe("rgba(0, 0, 0, 0)");
+        expect(overlay.foregroundColor, "Audio consent text must remain explicitly themed").not.toBe("");
         expect(overlay.backdropPointerEvents, "Audio consent backdrop must not intercept app interactions").toBe("none");
         expect(overlay.promptPointerEvents, "Audio consent card must remain interactive").toBe("auto");
         expect(overlay.coversViewport, "Audio consent must remain a compact prompt, not a full-screen overlay").toBe(false);
@@ -164,6 +167,9 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
 test("EPHINTA planner theme contract screenshots cover all three themes and breakpoints", async ({ page }, testInfo) => {
   const themes = ["light", "dark", "colorful"] as const;
   const report: Array<Record<string, unknown>> = [];
+  const observedTokens = new Map<string, Set<string>>(
+    ["page", "surface", "ink", "accent"].map(token => [token, new Set<string>()])
+  );
 
   for (const theme of themes) {
     for (const viewport of viewports) {
@@ -193,6 +199,9 @@ test("EPHINTA planner theme contract screenshots cover all three themes and brea
         expect(visual.surface, `${theme} surface token must be defined`).not.toBe("");
         expect(visual.ink, `${theme} ink token must be defined`).not.toBe("");
         expect(visual.accent, `${theme} accent token must be defined`).not.toBe("");
+        for (const token of ["page", "surface", "ink", "accent"] as const) {
+          observedTokens.get(token)!.add(visual[token]);
+        }
         expect(visual.documentWidth, `No horizontal overflow for ${theme} at ${viewport.name}`).toBeLessThanOrEqual(visual.viewportWidth + 1);
 
         const screenshot = testInfo.outputPath(`planner-${theme}-${viewport.name}.png`);
@@ -201,6 +210,10 @@ test("EPHINTA planner theme contract screenshots cover all three themes and brea
         report.push({ theme, viewport: viewport.name, ...visual, screenshot: path.basename(screenshot) });
       });
     }
+  }
+
+  for (const token of ["page", "surface", "ink", "accent"] as const) {
+    expect(observedTokens.get(token)?.size, `The three themes must produce distinct ${token} tokens`).toBe(3);
   }
 
   fs.mkdirSync(testInfo.outputDir, { recursive: true });
