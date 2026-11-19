@@ -149,7 +149,7 @@ export async function settleProviderConfirmedOpayRefund(
       throw new Error("Refund settlement state changed during the transaction.");
     }
     return { settled: true, alreadySettled: false };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
 
   // Serializable transactions can conflict when workers race to settle one refund.
   // Retry only Prisma's transaction-conflict code; business/provider errors surface.
@@ -159,7 +159,8 @@ export async function settleProviderConfirmedOpayRefund(
     } catch (error) {
       const retryable =
         error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2034";
+        (error.code === "P2034" ||
+          (error.code === "P2010" && error.meta?.code === "40001"));
       if (!retryable || attempt === 3) throw error;
     }
   }

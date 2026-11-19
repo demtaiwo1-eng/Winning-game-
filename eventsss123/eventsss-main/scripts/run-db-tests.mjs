@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 
 const child = spawn(
   process.execPath,
-  ["../../scripts/with-database.mjs", "vitest", "run"],
+  ["../../scripts/with-database.mjs", "vitest", "run", "--no-file-parallelism"],
   {
     cwd: new URL("../apps/api/", import.meta.url),
     env: { ...process.env, DATABASE_MODE: "local", RUN_DB_TESTS: "1" },
