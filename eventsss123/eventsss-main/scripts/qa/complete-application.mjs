@@ -72,7 +72,7 @@ results.push({ name: "Node.js >= 20", status: nodeMajor >= 20 ? "PASS" : "FAIL",
 
 const installOk = run("Install exact lockfile dependencies", "npm", ["ci"]);
 if (installOk) {
-  // Run independently: a failure in one stage must not hide later diagnostics.
+  // Install the exact Playwright browser revision after npm ci; workflow-level installs can be invalidated by this clean install.\n  run("Install matching Playwright Chromium", "npx", ["playwright", "install", "--with-deps", "chromium"], { retries: 2 });\n  // Run independently: a failure in one stage must not hide later diagnostics.
   run("Authentication capability, API and database readiness gate", "node", ["scripts/qa/complete-authentication.mjs"]);
   run("Full API, web and KYC automated checks", "npm", ["run", "check"]);
   run("API production build and Prisma client generation", "npm", ["run", "build"]);
