@@ -83,7 +83,7 @@ export async function register(input: RegisterInput, userAgent?: string) {
     await prisma.emailVerificationToken.create({ data: { userId: user.id, tokenHash: sha256(verificationToken), expiresAt: new Date(Date.now() + 24 * 60 * 60_000) } });
     try {
       await sendVerificationEmail(user.email, `${env.APP_BASE_URL}/verify-email?token=${encodeURIComponent(verificationToken)}`);
-    } catch (error) {
+    } catch {
       // Registration remains usable; the authenticated resend endpoint can retry delivery.
       await recordSecurityEvent(user.id, "EMAIL_VERIFICATION_DELIVERY_FAILED", userAgent);
     }
