@@ -25,12 +25,12 @@ async function sendTransactionalEmail(to: string, subject: string, textContent: 
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   await sendTransactionalEmail(to, "Reset your EPHINTA password",
-    `Reset your password using this link: ${resetUrl}\\n\\nThis link expires in 30 minutes.`,
+    `Reset your password using this link: ${resetUrl}\n\nThis link expires in 30 minutes.`,
     `<p>Reset your EPHINTA password.</p><p><a href="${resetUrl}">Create a new password</a></p><p>This link expires in 30 minutes.</p>`);
 }
 
 export async function sendVerificationEmail(to: string, verificationUrl: string) {
   await sendTransactionalEmail(to, "Verify your EPHINTA email address",
-    `Verify your email address using this link: ${verificationUrl}\\n\\nThis link expires in 24 hours. If you did not create an EPHINTA account, ignore this email.`,
+    `Verify your email address using this link: ${verificationUrl}\n\nThis link expires in 24 hours. If you did not create an EPHINTA account, ignore this email.`,
     `<p>Welcome to EPHINTA. Confirm your email address to complete account setup.</p><p><a href="${verificationUrl}">Verify email address</a></p><p>This link expires in 24 hours. If you did not create an account, ignore this email.</p>`);
 }
