@@ -13,7 +13,8 @@ fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 command -v gh >/dev/null 2>&1 || fail "GitHub CLI (gh) is required. Install it and run: gh auth login"
 command -v keytool >/dev/null 2>&1 || fail "Java keytool is required (JDK 17 or 21 recommended)."
 command -v curl >/dev/null 2>&1 || fail "curl is required."
-command -v awk >/dev/null 2>&1 || fail "awk is required."\ncommand -v openssl >/dev/null 2>&1 || fail "OpenSSL is required."
+command -v awk >/dev/null 2>&1 || fail "awk is required."
+command -v openssl >/dev/null 2>&1 || fail "OpenSSL is required."
 gh auth status >/dev/null 2>&1 || fail "Not authenticated. Run: gh auth login"
 gh api "repos/$REPO" >/dev/null || fail "Cannot access $REPO."
 
@@ -43,7 +44,8 @@ SECURITY CHECK:
 - A different signing certificate will not update Build 869 in place.
 - Passwords are entered silently and piped directly to GitHub CLI.
 - This script checks the certificate against the published Build 869 APK
-  before it changes any GitHub secret.
+  before it changes any GitHub secret. The encrypted recovery copy is also
+# created and verified before any GitHub secret or variable is changed.
 NOTICE
 
 KEYSTORE_FILE=""
@@ -110,19 +112,6 @@ if (( ${#EXISTING[@]} > 0 )) || [[ "$VARIABLE_EXISTS" == true ]]; then
   [[ "$CONFIRM" == "REPLACE" ]] || fail "Cancelled. Existing GitHub configuration was left unchanged."
 fi
 
-KEYSTORE_B64="$(base64 < "$KEYSTORE_FILE" | tr -d '\r\n')"
-[[ -n "$KEYSTORE_B64" ]] || fail "Could not encode keystore."
-printf '%s' "$KEYSTORE_B64" | gh secret set ANDROID_KEYSTORE_BASE64 --repo "$REPO" \
-  || fail "Failed setting ANDROID_KEYSTORE_BASE64."
-printf '%s' "$STORE_PASSWORD" | gh secret set ANDROID_KEYSTORE_PASSWORD --repo "$REPO" \
-  || fail "Failed setting ANDROID_KEYSTORE_PASSWORD."
-printf '%s' "$KEY_ALIAS" | gh secret set ANDROID_KEY_ALIAS --repo "$REPO" \
-  || fail "Failed setting ANDROID_KEY_ALIAS."
-printf '%s' "$KEY_PASSWORD" | gh secret set ANDROID_KEY_PASSWORD --repo "$REPO" \
-  || fail "Failed setting ANDROID_KEY_PASSWORD."
-gh variable set ANDROID_CERT_SHA256 --repo "$REPO" --body "$KEY_CERT" \
-  || fail "Secrets were saved, but the certificate variable failed. Rerun after granting Variables: Read and write."
-
 # Keep an encrypted recovery copy so the production handoff script can verify
 # that the owner has retained a recoverable copy of the exact signing key.
 BACKUP_DIR="$HOME/.ephinta-android-signing"
@@ -143,6 +132,21 @@ openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
   || fail "Encrypted recovery backup could not be decrypted."
 cmp -s "$KEYSTORE_FILE" "$TMP_DIR/recovered.jks" \
   || fail "Encrypted recovery backup does not match the original keystore."
+
+
+KEYSTORE_B64="$(base64 < "$KEYSTORE_FILE" | tr -d '\r\n')"
+[[ -n "$KEYSTORE_B64" ]] || fail "Could not encode keystore."
+printf '%s' "$KEYSTORE_B64" | gh secret set ANDROID_KEYSTORE_BASE64 --repo "$REPO" \
+  || fail "Failed setting ANDROID_KEYSTORE_BASE64."
+printf '%s' "$STORE_PASSWORD" | gh secret set ANDROID_KEYSTORE_PASSWORD --repo "$REPO" \
+  || fail "Failed setting ANDROID_KEYSTORE_PASSWORD."
+printf '%s' "$KEY_ALIAS" | gh secret set ANDROID_KEY_ALIAS --repo "$REPO" \
+  || fail "Failed setting ANDROID_KEY_ALIAS."
+printf '%s' "$KEY_PASSWORD" | gh secret set ANDROID_KEY_PASSWORD --repo "$REPO" \
+  || fail "Failed setting ANDROID_KEY_PASSWORD."
+gh variable set ANDROID_CERT_SHA256 --repo "$REPO" --body "$KEY_CERT" \
+  || fail "Secrets were saved, but the certificate variable failed. Rerun after granting Variables: Read and write."
+
 
 unset STORE_PASSWORD KEY_PASSWORD KEYSTORE_B64 EPHINTA_STORE_PASSWORD EPHINTA_KEY_PASSWORD
 printf '\nSUCCESS: GitHub Actions received all four signing secrets.\n'
