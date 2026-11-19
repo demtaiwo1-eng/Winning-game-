@@ -90,27 +90,46 @@ test("EPHINTA event planner inherits the parent design system on every viewport"
 
       const theme = await card.evaluate(element => {
         const cardStyle = getComputedStyle(element);
+        const root = getComputedStyle(document.documentElement);
         const field = element.querySelector("input, select, textarea");
         const fieldStyle = field ? getComputedStyle(field) : null;
+        const colorProbe = document.createElement("span");
+        colorProbe.style.color = root.getPropertyValue("--epg-ink").trim();
+        document.body.appendChild(colorProbe);
+        const expectedInk = getComputedStyle(colorProbe).color;
+        colorProbe.remove();
+        const surfaceProbe = document.createElement("div");
+        surfaceProbe.style.backgroundColor = root.getPropertyValue("--epg-surface").trim();
+        document.body.appendChild(surfaceProbe);
+        const expectedSurface = getComputedStyle(surfaceProbe).backgroundColor;
+        surfaceProbe.remove();
+        const fieldProbe = document.createElement("div");
+        fieldProbe.style.backgroundColor = root.getPropertyValue("--epg-surface-raised").trim();
+        document.body.appendChild(fieldProbe);
+        const expectedFieldBackground = getComputedStyle(fieldProbe).backgroundColor;
+        fieldProbe.remove();
         return {
           backgroundImage: cardStyle.backgroundImage,
           backgroundColor: cardStyle.backgroundColor,
+          expectedSurface,
           color: cardStyle.color,
+          expectedInk,
           borderColor: cardStyle.borderColor,
           borderRadius: Number.parseFloat(cardStyle.borderRadius),
           fontFamily: cardStyle.fontFamily,
           fieldBackground: fieldStyle?.backgroundColor ?? null,
+          expectedFieldBackground,
           fieldBorderColor: fieldStyle?.borderColor ?? null,
           fieldColor: fieldStyle?.color ?? null,
         };
       });
 
       expect(theme.backgroundImage, "Planner card must not reintroduce competing legacy gradients").toBe("none");
-      expect(theme.backgroundColor, "Planner card must use the shared neutral parent surface").toBe("rgb(255, 255, 255)");
-      expect(theme.color, "Planner card text must use the shared dark parent ink").toBe("rgb(33, 29, 55)");
+      expect(theme.backgroundColor, "Planner card must use the selected theme surface").toBe(theme.expectedSurface);
+      expect(theme.color, "Planner card text must use the selected theme ink").toBe(theme.expectedInk);
       expect(theme.borderRadius, "Planner card must use the parent rounded surface").toBeGreaterThanOrEqual(16);
-      expect(theme.fieldBackground, "Planner inputs must use the shared muted surface").toBe("rgb(249, 248, 252)");
-      expect(theme.fieldColor, "Planner input text must use the shared parent ink").toBe("rgb(33, 29, 55)");
+      expect(theme.fieldBackground, "Planner inputs must use the selected theme raised surface").toBe(theme.expectedFieldBackground);
+      expect(theme.fieldColor, "Planner input text must use the selected theme ink").toBe(theme.expectedInk);
 
       const prompt = page.locator('.eph-audio__prompt[role="dialog"]');
       if (await prompt.isVisible()) {
