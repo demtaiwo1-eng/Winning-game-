@@ -48,6 +48,11 @@ html[data-ephinta-theme] body #root :is(
 ):not([aria-hidden="true"]):not(:is(
   .ess-status,.status-pill,.badge,.tag,.text-success,.text-danger,.text-warning,
   .success,.danger,.warning,[class*="status-"],[class*="badge-"],[class*="tag-"],
+  .ess-muted,.muted,.text-muted,.helper-text,.form-hint,.form-description,
+  .field-description,.section-description,.workspace-subtitle,.empty-state,.eyebrow,.text-secondary,
+  .ess-muted *, .muted *, .text-muted *, .helper-text *, .form-hint *,
+  .form-description *, .field-description *, .section-description *, .workspace-subtitle *,
+  .empty-state *, .eyebrow *, .text-secondary *,
   .status-pill *, .badge *, .tag *, .ess-status *,
   button *, [role="button"] *, .button *, a *
 )) {
