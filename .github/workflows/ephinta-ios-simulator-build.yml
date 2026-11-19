@@ -4,12 +4,14 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - ".github/workflows/ephinta-ios-simulator-build.yml"
       - "eventsss123/eventsss-main/apps/web/**"
       - "eventsss123/eventsss-main/apps/mobile/**"
       - "eventsss123/eventsss-main/package*.json"
   push:
     branches: [main]
     paths:
+      - ".github/workflows/ephinta-ios-simulator-build.yml"
       - "eventsss123/eventsss-main/apps/web/**"
       - "eventsss123/eventsss-main/apps/mobile/**"
       - "eventsss123/eventsss-main/package*.json"
