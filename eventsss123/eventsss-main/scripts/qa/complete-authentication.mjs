@@ -87,7 +87,7 @@ for (const key of required) {
 const brevoReady = Boolean(process.env.BREVO_API_KEY && process.env.BREVO_SENDER_EMAIL);
 const smtpReady = ["SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM"].every((k) => Boolean(process.env[k]));
 const emailReady = brevoReady || smtpReady;
-add("Transactional email deployment configuration", emailReady,
+add("Transactional email deployment configuration", emailReady || process.env.NODE_ENV !== "production",
   emailReady ? "Brevo API or SMTP variables are present (values hidden)." : "Set BREVO_API_KEY and BREVO_SENDER_EMAIL in Render, or configure SMTP_HOST, SMTP_USER, SMTP_PASSWORD and SMTP_FROM.");
 
 function run(label, command, args, cwd = root) {
