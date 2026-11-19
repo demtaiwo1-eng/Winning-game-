@@ -45,11 +45,12 @@ html[data-ephinta-theme] body #root :is(
   h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,
   li,dt,dd,th,td,caption,summary,figcaption,blockquote,
   output,mark,time,address,cite,code
-):not([aria-hidden="true"])
- :not(.ess-status):not(.status-pill):not(.badge):not(.tag)
- :not(.text-success):not(.text-danger):not(.text-warning)
- :not(.success):not(.danger):not(.warning)
- :not([class*="status-"]):not([class*="badge-"]):not([class*="tag-"]) {
+):not([aria-hidden="true"]):not(:is(
+  .ess-status,.status-pill,.badge,.tag,.text-success,.text-danger,.text-warning,
+  .success,.danger,.warning,[class*="status-"],[class*="badge-"],[class*="tag-"],
+  .status-pill *, .badge *, .tag *, .ess-status *,
+  button *, [role="button"] *, .button *, a *
+)) {
   color: var(--ephinta-fg) !important;
   -webkit-text-fill-color: currentColor;
 }
@@ -132,6 +133,51 @@ html[data-ephinta-theme] body #root :is(
 ) :is(small,p,.muted,.text-muted,.helper-text) {
   color: #e7edf7 !important;
   -webkit-text-fill-color: #e7edf7 !important;
+}
+
+
+html[data-ephinta-theme] body #root .ess-mode-menu__active {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 9px;
+  border: 1px solid var(--epg-border, var(--ephinta-field-border));
+  border-radius: 999px;
+  color: var(--ephinta-fg) !important;
+  background: var(--epg-surface-raised, var(--ephinta-field-bg));
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+html[data-ephinta-theme] body #root .ess-mode-menu__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+html[data-ephinta-theme] body #root .ess-mode-menu__refresh,
+html[data-ephinta-theme] body #root .ess-mode-menu__error button {
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid var(--epg-border, var(--ephinta-field-border));
+  border-radius: 9px;
+  color: var(--ephinta-fg) !important;
+  background: var(--epg-surface-raised, var(--ephinta-field-bg));
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+html[data-ephinta-theme] body #root .ess-mode-menu__refresh:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+html[data-ephinta-theme] body #root .ess-mode-menu__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #b42335;
+  font-size: 12px;
 }
 
 /* Native autofill must not reintroduce browser-controlled low contrast. */
