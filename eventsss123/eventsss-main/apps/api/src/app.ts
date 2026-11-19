@@ -20,6 +20,7 @@ import { storeKycDocument } from "./lib/kyc-storage";
 import { paymentsRouter } from "./modules/payments/payments.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { checkoutRouter } from "./modules/checkout/checkout.routes";
+import { sourceAccessRouter } from "./modules/source-access/source-access.routes";
 import { readinessRouter } from "./modules/readiness/readiness.routes";
 import { adminRouter } from "./modules/admin/admin.routes";
 import { appUpdatesRouter } from "./modules/app-updates/app-updates.routes";
@@ -48,7 +49,7 @@ export function createApp() {
   app.use(express.json({
     limit: "1mb",
     verify(req, _res, buf) {
-      if (req.url?.startsWith("/api/v1/payments/webhooks/") || req.url?.startsWith("/api/v1/kyc/bytid/webhook")) {
+      if (req.url?.startsWith("/api/v1/payments/webhooks/") || req.url?.startsWith("/api/v1/source-access/webhooks/") || req.url?.startsWith("/api/v1/kyc/bytid/webhook")) {
         (req as express.Request & { rawBody?: Buffer }).rawBody = Buffer.from(buf);
       }
     },
@@ -98,6 +99,7 @@ export function createApp() {
   app.use("/api/v1/kyc", kycRouter);
   app.use("/api/v1/payments", paymentsRouter);
   app.use("/api/v1/checkout", checkoutRouter);
+  app.use("/api/v1/source-access", sourceAccessRouter);
   app.use("/api/v1/notifications", notificationsRouter);
   app.use("/api/v1/readiness", readinessRouter);
   app.use("/api/v1/admin", adminRouter);
