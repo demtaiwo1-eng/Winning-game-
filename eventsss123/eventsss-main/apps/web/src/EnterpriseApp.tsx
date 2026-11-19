@@ -3470,18 +3470,6 @@ function AuthModal({
               ))}
             </select>
           </label>
-          <div className="ess-auth-roles" aria-label="Account type">
-            {(mode === "signup" ? SELF_REGISTER_ROLES : Object.keys(roleMeta) as Role[]).map((item) => (
-              <button
-                className={role === item ? "active" : ""}
-                key={item}
-                type="button"
-                onClick={() => onRole(item)}
-              >
-                {roleLabel(item)}
-              </button>
-            ))}
-          </div>
           </>
         )}
         <form onSubmit={onSubmit}>
