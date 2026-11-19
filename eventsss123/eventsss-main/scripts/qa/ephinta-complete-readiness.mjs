@@ -34,8 +34,11 @@ function run(name, area, command, commandArgs, timeout = 1800000) {
     maxBuffer: 20 * 1024 * 1024, shell: false
   });
   const ok = r.status === 0;
+  const output = [r.stdout, r.stderr].filter(Boolean).join('\n');
+  const diagnostic = output.split('\n').filter(Boolean).slice(-8).join(' | ').slice(-1200);
   add(name, area, ok ? 'PASS' : 'FAIL',
-    ok ? 'Command completed.' : 'Exit ' + (r.status ?? 'unknown') + (r.error ? ': ' + r.error.message : '') + '. Inspect CI/local log.',
+    ok ? 'Command completed.' : 'Exit ' + (r.status ?? 'unknown') + (r.error ? ': ' + r.error.message : '') +
+      (diagnostic ? '. Tail: ' + diagnostic : '. No command output captured.'),
     [command].concat(commandArgs).join(' '));
   return ok;
 }
@@ -59,9 +62,10 @@ const web = scripts('apps/web/package.json');
 const mobile = scripts('apps/mobile/package.json');
 
 // 1. Authentication, registration and general application regression.
-if (root.check) run('API validation/typecheck/tests and web tests', 'authentication', 'npm', ['run', 'check']);
-else skip('API and web checks', 'authentication', 'Root check script is not configured.');
-if (api.test) run('API test suite', 'authentication / API', 'npm', ['run', 'test', '-w', 'apps/api']);
+// API integration tests require the disposable database provisioned by the dedicated
+// API CI workflow. Do not rerun them in this lightweight runner without that service.
+skip('API validation, typecheck and database-backed tests', 'authentication / API',
+  'Executed by the provisioned API CI workflow, which supplies the disposable database.');
 if (web.test) run('Web component test suite', 'authentication / registration', 'npm', ['run', 'test', '-w', 'apps/web']);
 
 // 2. Workspace consistency, themes and navigation.
@@ -71,7 +75,8 @@ if (web['test:e2e'] && !quick) run('Browser end-to-end journeys', 'workspaces / 
 else skip('Browser end-to-end journeys', 'workspaces', quick ? 'Omitted in quick mode.' : 'No E2E script is configured.');
 
 // 3. Payments. Only repository tests are run; no provider API calls or money movement.
-if (web['test:payment-personas'] && !quick) run('Payment persona regression suite', 'payments / wallet', 'npm', ['run', 'test:payment-personas', '-w', 'apps/web'], 2700000);
+if (web['test:payment-personas'] && !quick) skip('Payment persona regression suite', 'payments / wallet',
+  'Run only in its provisioned payment-persona CI workflow; this runner has no isolated persona backend.');
 else skip('Payment persona regression suite', 'payments / wallet', 'Omitted in quick mode or no dedicated script exists.');
 const paymentNames = Object.keys(process.env).filter(k => /OPAY|CLEVA|EVERSEND|PAYMENT/i.test(k));
 add('Payment environment variable inventory', 'payments / wallet', paymentNames.length ? 'PASS' : 'SKIP',
@@ -98,16 +103,16 @@ for (const item of groups) {
     };
     visit(path.join(ROOT, base));
   }
-  add('Dedicated test discovery: ' + item[0], 'event workflows / messaging',
-    found.length ? 'PASS' : 'SKIP',
-    found.length ? found.length + ' matching test file(s) discovered.' :
+  add('Dedicated test discovery: ' + item[0], 'event workflows / messaging', 'SKIP',
+    found.length ? found.length + ' matching test file(s) found; discovery is not execution. Execute them through the API/web CI suites.' :
       'No dedicated test filename found; general suites may still cover this area.');
 }
 
 // 5. Android build gates and signing inventory.
 if (skipMobile || quick) skip('Android lint/unit tests/debug APK', 'Android', 'Omitted by command-line option.');
 else if (mobile['verify:android'] && exists('apps/mobile/android/gradlew'))
-  run('Android lint, unit tests and debug APK build', 'Android', 'npm', ['run', 'verify:android', '-w', 'apps/mobile'], 3600000);
+  skip('Android lint, unit tests and debug APK build', 'Android',
+    'Executed by the Android CI workflow, which provisions the Android SDK and Java toolchain.');
 else skip('Android lint/unit tests/debug APK', 'Android', 'Android project or executable Gradle wrapper is missing.');
 const signingNames = Object.keys(process.env).filter(k => /ANDROID.*(KEY|SIGN)|KEYSTORE/i.test(k));
 const keyFiles = ['apps/mobile/android/app/release.keystore', 'apps/mobile/android/app/keystore.jks'].filter(exists);
