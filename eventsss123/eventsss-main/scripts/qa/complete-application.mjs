@@ -29,16 +29,25 @@ function redact(value = "") {
   return result;
 }
 
-function run(name, command, args, { optional = false, env = process.env } = {}) {
+function run(name, command, args, { optional = false, env = process.env, retries = 0 } = {}) {
   console.log("\\n" + "=".repeat(72) + "\\n" + name + "\\n" + "=".repeat(72));
-  const r = spawnSync(command, args, {
-    cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
-    env, maxBuffer: 20 * 1024 * 1024,
-  });
+  let r;
+  let attempt = 0;
+  do {
+    attempt += 1;
+    r = spawnSync(command, args, {
+      cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+      env, maxBuffer: 20 * 1024 * 1024,
+    });
+    const combined = [r.stdout, r.stderr, r.error?.message].filter(Boolean).join("\\n");
+    const transient = /429|Too Many Requests|502 Bad Gateway|503 Service Unavailable|ECONNRESET|ETIMEDOUT/i.test(combined);
+    if (r.status === 0 || !transient || attempt > retries) break;
+    console.log(`[RETRY] ${name}: transient dependency/network failure (${attempt}/${retries})`);
+  } while (attempt <= retries);
   const output = redact([r.stdout, r.stderr, r.error?.message].filter(Boolean).join("\\n")).slice(-18000);
   const passed = r.status === 0;
   const status = passed ? "PASS" : optional && r.error?.code === "ENOENT" ? "BLOCKED" : "FAIL";
-  results.push({ name, status, exitCode: r.status, output });
+  results.push({ name, status, exitCode: r.status, attempts: attempt, output });
   console.log(output.slice(-6500));
   console.log(`[${status}] ${name}`);
   return passed;
@@ -82,7 +91,7 @@ if (installOk) {
 const java = spawnSync("java", ["-version"], { encoding: "utf8" });
 const sdk = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
 if (java.status === 0 && sdk) {
-  run("Android sync, lint, unit tests and debug APK verification", "npm", ["run", "mobile:verify"]);
+  run("Android sync, lint, unit tests and debug APK verification", "npm", ["run", "mobile:verify"], { retries: 2 });
 } else {
   results.push({
     name: "Android verification",
