@@ -1,6 +1,12 @@
 name: EPHINTA Authentication Completion Gate
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/ephinta-authentication-completion.yml'
+      - 'eventsss123/eventsss-main/apps/api/**'
+      - 'eventsss123/eventsss-main/apps/web/**'
+      - 'eventsss123/eventsss-main/scripts/qa/complete-authentication.mjs'
   push:
     branches:
       - feat/authentication-completion-runner-20261119
