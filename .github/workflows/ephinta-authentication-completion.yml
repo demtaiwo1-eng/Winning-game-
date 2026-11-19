@@ -69,6 +69,9 @@ jobs:
           test -n "$SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Chromium for responsive UX audit
+        working-directory: eventsss123/eventsss-main/apps/web
+        run: npx playwright install --with-deps chromium
       - name: Run one-go application completion
         working-directory: eventsss123/eventsss-main
         run: npm run complete:application
