@@ -84,9 +84,11 @@ for (const key of required) {
   add(`CI environment: ${key}`, Boolean(value && (key !== "JWT_SECRET" || value.length >= 32)),
     value ? "Present (value hidden)." : "Missing; configure as a protected GitHub Actions/Render secret.");
 }
+const brevoReady = Boolean(process.env.BREVO_API_KEY && process.env.BREVO_SENDER_EMAIL);
 const smtpReady = ["SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM"].every((k) => Boolean(process.env[k]));
-add("SMTP deployment configuration", smtpReady,
-  smtpReady ? "All required SMTP variables are present (values hidden)." : "Not configured in this CI run. Set SMTP_HOST, SMTP_USER, SMTP_PASSWORD and SMTP_FROM in Render before production email tests.");
+const emailReady = brevoReady || smtpReady;
+add("Transactional email deployment configuration", emailReady,
+  emailReady ? "Brevo API or SMTP variables are present (values hidden)." : "Set BREVO_API_KEY and BREVO_SENDER_EMAIL in Render, or configure SMTP_HOST, SMTP_USER, SMTP_PASSWORD and SMTP_FROM.");
 
 function run(label, command, args, cwd = root) {
   const result = spawnSync(command, args, {
@@ -130,7 +132,7 @@ const report = {
     commandsPassed: commands.filter((c) => c.status === "PASS").length,
     commandsFailed: failedCommands.length },
   checks, commands,
-  productionSignoff: failedChecks.length === 0 && failedCommands.length === 0 && smtpReady
+  productionSignoff: failedChecks.length === 0 && failedCommands.length === 0 && emailReady
     ? "AUTOMATED GATE PASSED; live email delivery, Android device journeys, and deployment secrets still require independent evidence."
     : "NOT READY: resolve failed capability/configuration checks and command failures; do not treat skipped live acceptance as passed.",
 };
