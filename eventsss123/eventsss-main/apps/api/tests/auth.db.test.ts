@@ -75,4 +75,19 @@ describe.skipIf(!run)("authentication flow (DB)", () => {
     expect(response.body.refreshToken).toEqual(expect.any(String));
     expect(response.body.user.passwordHash).toBeUndefined();
   });
+
+  it("revokes refresh sessions and blocks token rotation for suspended accounts", async () => {
+    const signedIn = await request(app).post("/api/v1/auth/login").send({ email, password });
+    expect(signedIn.status).toBe(200);
+    const refreshToken = signedIn.body.refreshToken as string;
+
+    await prisma.user.update({ where: { id: userId! }, data: { status: "SUSPENDED" } });
+    const refreshed = await request(app).post("/api/v1/auth/refresh").send({ refreshToken });
+
+    expect(refreshed.status).toBe(403);
+    expect(refreshed.body.error.code).toBe("ACCOUNT_DISABLED");
+    expect(refreshed.body.accessToken).toBeUndefined();
+    expect(await prisma.refreshToken.count({ where: { userId: userId!, revokedAt: null } })).toBe(0);
+    await prisma.user.update({ where: { id: userId! }, data: { status: "ACTIVE" } });
+  });
 });
