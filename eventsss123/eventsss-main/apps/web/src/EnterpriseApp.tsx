@@ -2101,6 +2101,22 @@ export default function EnterpriseApp() {
       }
     }
   }, [routeAuthMode, location.search, navigate]);
+  const resendVerification = async () => {
+    setAuthError("");
+    setAuthNotice("");
+    if (!email) { setAuthError("Enter your email address first."); return; }
+    try {
+      const response = await fetch("/api/v1/auth/resend-verification", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result?.error?.message || "Unable to request a verification email.");
+      setAuthNotice(result.message || "If the address needs verification, a new link has been sent.");
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Unable to request a verification email.");
+    }
+  };
+
   const submitAuth = async (event: React.FormEvent) => {
     event.preventDefault();
     setAuthError("");
