@@ -17,8 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Install Android build tools
+      - name: Set up Android SDK command-line tools
         uses: android-actions/setup-android@v3
+
+      - name: Install Android build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Download immutable Build 869 APK
         shell: bash
@@ -43,7 +49,8 @@ jobs:
           set -euo pipefail
           KEYSTORE="$RUNNER_TEMP/ephinta-original.jks"
           CERT="$RUNNER_TEMP/ephinta-original-cert.der"
-          trap 'rm -f "$KEYSTORE" "$CERT"' EXIT
+          CSR="$RUNNER_TEMP/ephinta-check.csr"
+          trap 'rm -f "$KEYSTORE" "$CERT" "$CSR"' EXIT
 
           for name in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
             if [[ -z "${!name:-}" ]]; then
@@ -59,8 +66,7 @@ jobs:
           # Confirm the alias, store password, and private-key password work.
           keytool -list -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
           keytool -certreq -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" \
-            -keypass "$KEY_PASSWORD" -alias "$KEY_ALIAS" -file "$RUNNER_TEMP/ephinta-check.csr" >/dev/null
-          rm -f "$RUNNER_TEMP/ephinta-check.csr"
+            -keypass "$KEY_PASSWORD" -alias "$KEY_ALIAS" -file "$CSR" >/dev/null
 
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
