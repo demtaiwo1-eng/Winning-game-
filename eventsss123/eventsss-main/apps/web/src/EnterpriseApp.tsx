@@ -2017,6 +2017,7 @@ export default function EnterpriseApp() {
   const [listings, setListings] = useState(initialListings);
   const [gigs, setGigs] = useState(initialGigs);
   const resetToken = new URLSearchParams(location.search).get("token");
+  const verificationToken = new URLSearchParams(location.search).get("token");
   const routeAuthMode = location.pathname.match(/^\/auth\/(signin|signup|forgot)\/?$/)?.[1] as
     | "signin"
     | "signup"
@@ -2376,6 +2377,7 @@ export default function EnterpriseApp() {
             path={APP_ROUTE_PATHS.auth}
             element={authOpen ? publicLandingContent : <Navigate to="/" replace />}
           />
+          <Route path="/verify-email" element={verificationToken ? <VerifyEmailPage token={verificationToken} /> : <Navigate to="/" replace />} />
           <Route
             path={APP_ROUTE_PATHS.resetPassword}
             element={resetToken ? <ResetPasswordPage token={resetToken} /> : <Navigate to="/" replace />}
@@ -2738,6 +2740,44 @@ export default function EnterpriseApp() {
   return session ? (
     <DeviceSecurityGate userId={session.id} onSignOut={signOut}>{content}</DeviceSecurityGate>
   ) : content;
+}
+
+
+function VerifyEmailPage({ token }: { token: string }) {
+  const [feedback, setFeedback] = useState("Confirming your email address...");
+  const [verified, setVerified] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/v1/auth/verify-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    })
+      .then(async (response) => {
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result?.error?.message || "Unable to verify this email address.");
+        return result;
+      })
+      .then(() => {
+        if (!active) return;
+        setVerified(true);
+        setFeedback("Your email address has been verified. You can now sign in to EPHINTA.");
+      })
+      .catch((error: Error) => { if (active) setFeedback(error.message); });
+    return () => { active = false; };
+  }, [token]);
+  return (
+    <div className="ess-app">
+      <main className="ess-content">
+        <div className="ess-auth-modal" role="status" aria-live="polite">
+          <p className="ess-eyebrow">EPHINTA account security</p>
+          <h2>{verified ? "Email verified" : "Verify your email"}</h2>
+          <p className="ess-muted">{feedback}</p>
+          <a className="ess-primary ess-full-button" href="/auth/signin">Continue to sign in</a>
+        </div>
+      </main>
+    </div>
+  );
 }
 
 function ResetPasswordPage({ token }: { token: string }) {
