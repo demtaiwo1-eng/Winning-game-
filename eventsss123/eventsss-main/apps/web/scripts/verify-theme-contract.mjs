@@ -37,8 +37,8 @@ check(!/#(?:[0-9a-f]{3,8})\b/i.test(entry),
   "Application entry contains no hard-coded hexadecimal UI colours.");
 
 const imports = [...globalCss.matchAll(/^\s*@import\s+["']([^"']+)["'];/gm)].map((match) => match[1]);
-check(imports.at(-1) === "./ephinta-global-theme-contract.css",
-  "Global theme contract is the final imported stylesheet.");
+check(imports.at(-2) === "./ephinta-global-theme-contract.css" && imports.at(-1) === "./ephinta-runtime-contrast.css",
+  "Global theme tokens are followed by the final runtime contrast stylesheet.");
 const missingImports = imports.filter((specifier) =>
   !fs.existsSync(path.resolve(SRC, "styles", specifier))
 );
