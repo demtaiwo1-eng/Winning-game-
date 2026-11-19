@@ -5,7 +5,7 @@ import { Prisma } from "@prisma/client";
 import { env } from "../../config/env";
 import { HttpError } from "../../lib/errors";
 import { prisma } from "../../lib/prisma";
-import { sendPasswordResetEmail } from "../../lib/mail";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../../lib/mail";
 import type { LoginInput, RegisterInput } from "./auth.schemas";
 
 const sha256 = (v: string) => createHash("sha256").update(v).digest("hex");
@@ -79,15 +79,68 @@ export async function register(input: RegisterInput, userAgent?: string) {
       }
       return u;
     }, { maxWait: 15_000, timeout: 30_000 });
+    const verificationToken = randomBytes(48).toString("base64url");
+    await prisma.emailVerificationToken.create({ data: { userId: user.id, tokenHash: sha256(verificationToken), expiresAt: new Date(Date.now() + 24 * 60 * 60_000) } });
+    try {
+      await sendVerificationEmail(user.email, `${env.APP_BASE_URL}/verify-email?token=${encodeURIComponent(verificationToken)}`);
+    } catch (error) {
+      // Registration remains usable; the authenticated resend endpoint can retry delivery.
+      await recordSecurityEvent(user.id, "EMAIL_VERIFICATION_DELIVERY_FAILED", userAgent);
+    }
     const tokens = await issueTokens(user, userAgent);
     await recordSecurityEvent(user.id, "ACCOUNT_REGISTERED", userAgent);
-    return { user, ...tokens };
+    return { user, ...tokens, emailVerificationRequired: true };
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       throw new HttpError(409, "ALREADY_EXISTS", "Email or phone already registered");
     }
     throw e;
   }
+}
+
+
+export async function verifyEmail(token: string) {
+  const record = await prisma.emailVerificationToken.findUnique({ where: { tokenHash: sha256(token) } });
+  const now = new Date();
+  if (!record || record.usedAt || record.expiresAt <= now) {
+    throw new HttpError(400, "INVALID_VERIFICATION_TOKEN", "This email verification link is invalid or expired");
+  }
+  await prisma.$transaction(async (tx) => {
+    const consumed = await tx.emailVerificationToken.updateMany({
+      where: { id: record.id, usedAt: null, expiresAt: { gt: now } },
+      data: { usedAt: now },
+    });
+    if (consumed.count !== 1) {
+      throw new HttpError(400, "INVALID_VERIFICATION_TOKEN", "This email verification link is invalid or expired");
+    }
+    await tx.user.update({ where: { id: record.userId }, data: { emailVerifiedAt: now } });
+    await tx.emailVerificationToken.updateMany({
+      where: { userId: record.userId, id: { not: record.id }, usedAt: null },
+      data: { usedAt: now },
+    });
+    await tx.auditLog.create({
+      data: { actorId: record.userId, action: "EMAIL_VERIFIED", entity: "AccountSecurity", meta: {} },
+    });
+  });
+  return { verified: true };
+}
+
+export async function resendVerification(email: string) {
+  const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, emailVerifiedAt: true } });
+  // Always return the same response to avoid exposing whether an address is registered.
+  if (!user || user.emailVerifiedAt) return;
+  const rawToken = randomBytes(48).toString("base64url");
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60_000);
+  await prisma.$transaction([
+    prisma.emailVerificationToken.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() },
+    }),
+    prisma.emailVerificationToken.create({
+      data: { userId: user.id, tokenHash: sha256(rawToken), expiresAt },
+    }),
+  ]);
+  await sendVerificationEmail(user.email, `${env.APP_BASE_URL}/verify-email?token=${encodeURIComponent(rawToken)}`);
 }
 
 export async function login(input: LoginInput, userAgent?: string) {
