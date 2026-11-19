@@ -13,7 +13,7 @@ fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 command -v gh >/dev/null 2>&1 || fail "GitHub CLI (gh) is required. Install it and run: gh auth login"
 command -v keytool >/dev/null 2>&1 || fail "Java keytool is required (JDK 17 or 21 recommended)."
 command -v curl >/dev/null 2>&1 || fail "curl is required."
-command -v awk >/dev/null 2>&1 || fail "awk is required."
+command -v awk >/dev/null 2>&1 || fail "awk is required."\ncommand -v openssl >/dev/null 2>&1 || fail "OpenSSL is required."
 gh auth status >/dev/null 2>&1 || fail "Not authenticated. Run: gh auth login"
 gh api "repos/$REPO" >/dev/null || fail "Cannot access $REPO."
 
@@ -122,6 +122,27 @@ printf '%s' "$KEY_PASSWORD" | gh secret set ANDROID_KEY_PASSWORD --repo "$REPO" 
   || fail "Failed setting ANDROID_KEY_PASSWORD."
 gh variable set ANDROID_CERT_SHA256 --repo "$REPO" --body "$KEY_CERT" \
   || fail "Secrets were saved, but the certificate variable failed. Rerun after granting Variables: Read and write."
+
+# Keep an encrypted recovery copy so the production handoff script can verify
+# that the owner has retained a recoverable copy of the exact signing key.
+BACKUP_DIR="$HOME/.ephinta-android-signing"
+mkdir -p "$BACKUP_DIR"
+chmod 700 "$BACKUP_DIR"
+BACKUP_PATH="$BACKUP_DIR/ephinta-release.jks.enc"
+BACKUP_TMP="$BACKUP_PATH.tmp"
+openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
+  -in "$KEYSTORE_FILE" -out "$BACKUP_TMP" -pass env:EPHINTA_STORE_PASSWORD \
+  || fail "Could not create encrypted keystore recovery backup."
+mv "$BACKUP_TMP" "$BACKUP_PATH"
+chmod 600 "$BACKUP_PATH"
+(cd "$BACKUP_DIR" && sha256sum ephinta-release.jks.enc > ephinta-release.jks.enc.sha256)
+chmod 600 "$BACKUP_DIR/ephinta-release.jks.enc.sha256"
+# Verify decryptability without leaving a plaintext copy behind.
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+  -in "$BACKUP_PATH" -pass env:EPHINTA_STORE_PASSWORD -out "$TMP_DIR/recovered.jks" \
+  || fail "Encrypted recovery backup could not be decrypted."
+cmp -s "$KEYSTORE_FILE" "$TMP_DIR/recovered.jks" \
+  || fail "Encrypted recovery backup does not match the original keystore."
 
 unset STORE_PASSWORD KEY_PASSWORD KEYSTORE_B64 EPHINTA_STORE_PASSWORD EPHINTA_KEY_PASSWORD
 printf '\nSUCCESS: GitHub Actions received all four signing secrets.\n'
