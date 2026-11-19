@@ -4,7 +4,7 @@ import rateLimit from "express-rate-limit";
 import { asyncHandler } from "../../lib/async";
 import { requireAuth } from "../../middleware/auth";
 import { validateBody } from "../../middleware/validate";
-import { forgotPasswordSchema, loginSchema, refreshSchema, registerSchema, resetPasswordSchema } from "./auth.schemas";
+import { forgotPasswordSchema, loginSchema, refreshSchema, registerSchema, resetPasswordSchema, verifyEmailSchema, resendVerificationSchema } from "./auth.schemas";
 import * as auth from "./auth.service";
 
 const limiter = rateLimit({ windowMs: 15 * 60_000, limit: 30, standardHeaders: true, legacyHeaders: false });
@@ -13,6 +13,13 @@ authRouter.use(limiter);
 
 authRouter.post("/register", validateBody(registerSchema), asyncHandler(async (req, res) => {
   res.status(201).json(await auth.register(req.body, req.get("user-agent")));
+}));
+authRouter.post("/verify-email", validateBody(verifyEmailSchema), asyncHandler(async (req, res) => {
+  res.json(await auth.verifyEmail(req.body.token));
+}));
+authRouter.post("/resend-verification", validateBody(resendVerificationSchema), asyncHandler(async (req, res) => {
+  await auth.resendVerification(req.body.email);
+  res.json({ message: "If the address needs verification, a new link has been sent." });
 }));
 authRouter.post("/login", validateBody(loginSchema), asyncHandler(async (req, res) => {
   res.json(await auth.login(req.body, req.get("user-agent")));

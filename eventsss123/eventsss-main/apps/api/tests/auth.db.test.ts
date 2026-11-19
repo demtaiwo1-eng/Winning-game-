@@ -1,5 +1,6 @@
 // Real authentication regression coverage. Run against a migrated disposable/test DB with `npm run test:db`.
 import request from "supertest";
+import { createHash, randomBytes } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
@@ -13,6 +14,7 @@ let userId: string | undefined;
 describe.skipIf(!run)("authentication flow (DB)", () => {
   afterAll(async () => {
     if (userId) {
+      await prisma.emailVerificationToken.deleteMany({ where: { userId } });
       await prisma.refreshToken.deleteMany({ where: { userId } });
       await prisma.auditLog.deleteMany({ where: { actorId: userId } });
       await prisma.wallet.deleteMany({ where: { userId } });
@@ -49,6 +51,32 @@ describe.skipIf(!run)("authentication flow (DB)", () => {
     expect(duplicate.body.error.code).toBe("ALREADY_EXISTS");
   });
 
+
+  it("verifies an email with a hashed, expiring, single-use token", async () => {
+    const token = randomBytes(48).toString("base64url");
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId: userId!,
+        tokenHash: createHash("sha256").update(token).digest("hex"),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
+    const verified = await request(app).post("/api/v1/auth/verify-email").send({ token });
+    expect(verified.status).toBe(200);
+    expect(verified.body.verified).toBe(true);
+    const account = await prisma.user.findUniqueOrThrow({ where: { id: userId! } });
+    expect(account.emailVerifiedAt).toBeInstanceOf(Date);
+    const reused = await request(app).post("/api/v1/auth/verify-email").send({ token });
+    expect(reused.status).toBe(400);
+    expect(reused.body.error.code).toBe("INVALID_VERIFICATION_TOKEN");
+  });
+
+  it("does not disclose whether an email needs verification when resending", async () => {
+    const response = await request(app).post("/api/v1/auth/resend-verification").send({ email });
+    expect(response.status).toBe(200);
+    expect(response.body.message).toContain("If the address needs verification");
+  });
+
   it("returns the same safe credential error for wrong passwords and unknown emails", async () => {
     const wrongPassword = await request(app).post("/api/v1/auth/login").send({
       email,
@@ -74,5 +102,20 @@ describe.skipIf(!run)("authentication flow (DB)", () => {
     expect(response.body.accessToken).toEqual(expect.any(String));
     expect(response.body.refreshToken).toEqual(expect.any(String));
     expect(response.body.user.passwordHash).toBeUndefined();
+  });
+
+  it("revokes refresh sessions and blocks token rotation for suspended accounts", async () => {
+    const signedIn = await request(app).post("/api/v1/auth/login").send({ email, password });
+    expect(signedIn.status).toBe(200);
+    const refreshToken = signedIn.body.refreshToken as string;
+
+    await prisma.user.update({ where: { id: userId! }, data: { status: "SUSPENDED" } });
+    const refreshed = await request(app).post("/api/v1/auth/refresh").send({ refreshToken });
+
+    expect(refreshed.status).toBe(403);
+    expect(refreshed.body.error.code).toBe("ACCOUNT_DISABLED");
+    expect(refreshed.body.accessToken).toBeUndefined();
+    expect(await prisma.refreshToken.count({ where: { userId: userId!, revokedAt: null } })).toBe(0);
+    await prisma.user.update({ where: { id: userId! }, data: { status: "ACTIVE" } });
   });
 });
