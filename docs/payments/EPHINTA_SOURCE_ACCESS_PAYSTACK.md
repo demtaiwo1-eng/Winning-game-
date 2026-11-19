@@ -26,7 +26,6 @@ The raw request body is retained only for webhook signature verification. Webhoo
 Set these only in the API service's secret environment settings:
 
 - `PAYMENT_MODE=test`
-- `ALLOW_PRODUCTION_TEST_MODE=true` only if test checkout is intentionally being exercised on a production-hosted API; prefer a staging service.
 - `PAYSTACK_SECRET_KEY=sk_test_...`
 - `PAYSTACK_WEBHOOK_SECRET=...` (if Paystack supplies a separate webhook signing secret)
 - `SOURCE_ACCESS_CHECKOUT_ENABLED=true` only when test checkout is ready to be exercised.
