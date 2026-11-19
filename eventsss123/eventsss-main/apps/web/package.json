@@ -13,7 +13,8 @@
     "design:audit:strict": "node scripts/design-quality-gate.mjs --strict && node scripts/verify-theme-contract.mjs",
     "audio:verify": "node scripts/verify-audio-platforms.mjs",
     "test:worldwide": "playwright test e2e/worldwide-personas.spec.ts",
-    "test:payment-personas": "playwright test e2e/payment-notification-personas.spec.ts"
+    "test:payment-personas": "playwright test e2e/payment-notification-personas.spec.ts",
+    "design:complete": "node scripts/complete-design-system.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^6.0.3",
