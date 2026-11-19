@@ -115,11 +115,21 @@ export async function refresh(token: string, userAgent?: string) {
   }
   if (rec.expiresAt < new Date()) throw new HttpError(401, "INVALID_TOKEN", "Refresh token expired");
   await prisma.refreshToken.update({ where: { id: rec.id }, data: { revokedAt: new Date() } });
-  const user = await prisma.user.findUnique({ where: { id: rec.userId }, select: publicUserSelect });
-  if (!user) throw new HttpError(401, "INVALID_TOKEN", "User not found");
-  if (user.role === "RIDER") {
-    throw new HttpError(403, "ACCOUNT_DISABLED", "Rider accounts are no longer supported");
+  const userWithStatus = await prisma.user.findUnique({
+    where: { id: rec.userId },
+    select: { ...publicUserSelect, status: true },
+  });
+  if (!userWithStatus) throw new HttpError(401, "INVALID_TOKEN", "User not found");
+  if (userWithStatus.role === "RIDER" || userWithStatus.status !== "ACTIVE") {
+    // Do not allow a suspended or pending account to mint another access token.
+    // Revoke every outstanding refresh token so an old session cannot recover later.
+    await prisma.refreshToken.updateMany({
+      where: { userId: userWithStatus.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    throw new HttpError(403, "ACCOUNT_DISABLED", "Account is not active");
   }
+  const { status: _status, ...user } = userWithStatus;
   const tokens = await issueTokens(user, userAgent);
   await recordSecurityEvent(user.id, "SESSION_REFRESHED", userAgent);
   return { user, ...tokens };
