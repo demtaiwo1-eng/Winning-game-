@@ -26,14 +26,13 @@ bash scripts/setup-android-signing-github.sh
 
 The setup script:
 
-1. Checks that no Android signing secrets or certificate variable already exist. It refuses to create a second key or rotate a partially configured signing identity.
-2. Generates a dedicated RSA-4096 JKS release key inside the Codespace.
-3. Sends the keystore Base64 and passwords directly to GitHub Actions repository secrets using the authenticated GitHub CLI. Secret values are never printed.
-4. Stores the certificate fingerprint as the `ANDROID_CERT_SHA256` repository variable.
-5. Creates an encrypted keystore recovery copy and a SHA-256 checksum in `~/.ephinta-android-signing/`.
-6. Verifies that the encrypted backup decrypts to the original keystore, then removes the plaintext keystore from the Codespace.
+1. Checks that the supplied original Build 869 keystore, alias and passwords are valid.
+2. Downloads the published Build 869 APK and verifies that the supplied keystore certificate exactly matches its signing certificate and package ID. A mismatch stops the script before any GitHub configuration changes.
+3. Creates an encrypted recovery copy and SHA-256 checksum in `~/.ephinta-android-signing/`, then decrypts the copy temporarily and verifies it byte-for-byte against the original keystore.
+4. Only after those checks succeed, sends the keystore Base64 and passwords directly to GitHub Actions repository secrets using the authenticated GitHub CLI. Secret values are never printed.
+5. Stores the verified certificate fingerprint as the `ANDROID_CERT_SHA256` repository variable.
 
-You will be prompted for the original keystore password and a separate private-key password. Save both securely. The encrypted backup uses the keystore password.
+You will be prompted for the original keystore path, alias, keystore password and separate private-key password. Save both passwords securely. The encrypted backup uses the keystore password.
 
 **Before closing the environment:** download both `ephinta-release.jks.enc` and `ephinta-release.jks.enc.sha256` from `~/.ephinta-android-signing/` and store them in a secure owner-controlled location. Keep the password separately. Do not commit either file or upload it as a normal repository artifact.
 
