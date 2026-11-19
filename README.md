@@ -11,7 +11,7 @@
 [![API health](https://img.shields.io/badge/API-health-16a34a?style=for-the-badge)](https://ephinta-wss.onrender.com/health)
 [![API readiness](https://img.shields.io/badge/API-ready-16a34a?style=for-the-badge)](https://ephinta-wss.onrender.com/ready)
 
-[🌐 Open the app](https://ephinta-web.onrender.com/) · [📡 API health](https://ephinta-wss.onrender.com/health) · [🧭 Product acceptance guide](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md) · [🛠️ CI workflows](.github/workflows)
+[🌐 Open the app](https://ephinta-web.onrender.com/) · [📡 API health](https://ephinta-wss.onrender.com/health) · [🧭 Product acceptance guide](docs/PRODUCT_REQUIREMENTS_AND_ACCEPTANCE.md) · [🛠️ CI workflows](.github/workflows) · [💵 US$60 source-access plan](docs/COMMERCIAL_SOURCE_ACCESS_PLAN.md) · [📋 IP clearance register](docs/CONTRIBUTOR_AND_IP_CLEARANCE_REGISTER.md)
 
 </div>
 
