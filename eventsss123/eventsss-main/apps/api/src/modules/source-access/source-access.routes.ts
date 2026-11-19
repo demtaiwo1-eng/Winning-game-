@@ -37,8 +37,14 @@ function assertTestCheckoutReady() {
 sourceAccessRouter.post("/orders", requireAuth, asyncHandler(async (req, res) => {
   assertTestCheckoutReady();
 
-  const buyer = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true } });
+  const buyer = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true, emailVerifiedAt: true } });
   if (!buyer?.email) throw new HttpError(404, "BUYER_NOT_FOUND", "Buyer account was not found.");
+  if (!buyer.emailVerifiedAt) throw new HttpError(403, "EMAIL_VERIFICATION_REQUIRED", "Verify your account email before purchasing source access.");
+  const activeOrder = await prisma.sourceAccessOrder.findFirst({
+    where: { userId: req.user!.id, status: SourceAccessOrderStatus.PENDING, createdAt: { gte: new Date(Date.now() - 30 * 60_000) } },
+    select: { id: true },
+  });
+  if (activeOrder) throw new HttpError(409, "SOURCE_ACCESS_ORDER_PENDING", "You already have a pending source-access checkout. Complete it or wait for it to expire.");
 
   const reference = `ephinta_source_${randomUUID().replace(/-/g, "")}`;
   const order = await prisma.sourceAccessOrder.create({
@@ -91,6 +97,7 @@ sourceAccessRouter.post("/orders", requireAuth, asyncHandler(async (req, res) =>
       checkoutUrl: checkoutUrl.toString(),
       mode: "test",
       productCode: PRODUCT_CODE,
+      webhookUrl: new URL("/api/v1/source-access/webhooks/paystack", env.API_BASE_URL).toString(),
     });
   } catch (error) {
     await prisma.sourceAccessOrder.updateMany({
