@@ -1,8 +1,8 @@
 /*
- * EPHINTA runtime contrast contract.
- * Imported from main.tsx AFTER the complete legacy stylesheet hub. This is
- * intentionally the final application CSS layer so old component rules cannot
- * silently restore low-contrast text in any selected theme.
+ * EPHINTA theme runtime contract.
+ * This is the final CSS layer, but deliberately does NOT recolor layout
+ * wrappers (div/section/etc.). Text inherits from the active theme unless a
+ * component has an intentional semantic or branded color.
  */
 html[data-ephinta-theme="light"] {
   color-scheme: light;
@@ -13,8 +13,6 @@ html[data-ephinta-theme="light"] {
   --ephinta-field-bg: #ffffff;
   --ephinta-field-border: #aeb9cc;
   --ephinta-field-placeholder: #56627a;
-  --ephinta-action-bg: #4338a8;
-  --ephinta-action-fg: #ffffff;
 }
 html[data-ephinta-theme="dark"] {
   color-scheme: dark;
@@ -25,8 +23,6 @@ html[data-ephinta-theme="dark"] {
   --ephinta-field-bg: #172338;
   --ephinta-field-border: #71819b;
   --ephinta-field-placeholder: #b7c4d8;
-  --ephinta-action-bg: #c4b5fd;
-  --ephinta-action-fg: #17112b;
 }
 html[data-ephinta-theme="colorful"] {
   color-scheme: light;
@@ -37,87 +33,98 @@ html[data-ephinta-theme="colorful"] {
   --ephinta-field-bg: #ffffff;
   --ephinta-field-border: #ad9fbe;
   --ephinta-field-placeholder: #5b506c;
-  --ephinta-action-bg: #6335ad;
-  --ephinta-action-fg: #ffffff;
 }
 
-/* Structural text containers inherit the selected ink even when old
-   components assigned a foreground color to a wrapper instead of its text. */
 html[data-ephinta-theme] body {
   color: var(--ephinta-fg) !important;
 }
-html[data-ephinta-theme] body :is(div,section,article,header,footer,main,nav,aside) {
-  color: var(--ephinta-fg) !important;
-}
 
-/* High-specificity text selectors beat legacy component selectors and
-   legacy !important declarations. Do not blanket-color SVG/icon elements. */
-html[data-ephinta-theme] body :is(
+/* Text-only enforcement. Do not target layout containers, buttons, icons,
+   status labels, badges, or components that intentionally signal a state. */
+html[data-ephinta-theme] body #root :is(
   h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,
   li,dt,dd,th,td,caption,summary,figcaption,blockquote,
   output,mark,time,address,cite,code
-):not(svg):not([aria-hidden="true"]):not(.icon):not([class*="icon-"]) {
+):not([aria-hidden="true"])
+ :not(.ess-status):not(.status-pill):not(.badge):not(.tag)
+ :not(.text-success):not(.text-danger):not(.text-warning)
+ :not(.success):not(.danger):not(.warning)
+ :not([class*="status-"]):not([class*="badge-"]):not([class*="tag-"]) {
   color: var(--ephinta-fg) !important;
   -webkit-text-fill-color: currentColor;
 }
-html[data-ephinta-theme] body :is(
-  p,small,li,dt,dd,figcaption,blockquote,
-  .muted,.text-muted,.helper-text,.form-hint,.workspace-subtitle,
-  .section-description,.empty-state,.eyebrow,.field-description
-):not([aria-hidden="true"]) {
+
+/* Muted copy remains softer, but still has readable contrast in every mode. */
+html[data-ephinta-theme] body #root :is(
+  .ess-muted,.muted,.text-muted,.helper-text,.form-hint,.form-description,
+  .field-description,.section-description,.workspace-subtitle,.empty-state,
+  .eyebrow,.text-secondary
+) {
   color: var(--ephinta-fg-muted) !important;
   -webkit-text-fill-color: currentColor;
 }
-html[data-ephinta-theme] body a:not(.button):not([role="button"]) {
+
+/* Links, fields and placeholders use dedicated palette values. */
+html[data-ephinta-theme] body #root a:not(.button):not([role="button"]) {
   color: var(--ephinta-link-fg) !important;
   -webkit-text-fill-color: currentColor;
 }
-html[data-ephinta-theme] body :is(input,select,textarea) {
+html[data-ephinta-theme] body #root :is(input,select,textarea) {
   color: var(--ephinta-fg) !important;
   -webkit-text-fill-color: var(--ephinta-fg) !important;
-  background-color: var(--ephinta-field-bg) !important;
-  border-color: var(--ephinta-field-border) !important;
-  opacity: 1;
+  background-color: var(--ephinta-field-bg);
+  border-color: var(--ephinta-field-border);
 }
-html[data-ephinta-theme] body :is(input,textarea)::placeholder {
+html[data-ephinta-theme] body #root :is(input,textarea)::placeholder {
   color: var(--ephinta-field-placeholder) !important;
   -webkit-text-fill-color: var(--ephinta-field-placeholder) !important;
   opacity: 1 !important;
 }
-html[data-ephinta-theme] body select option {
+html[data-ephinta-theme] body #root select option {
   color: var(--ephinta-fg) !important;
   background: var(--ephinta-field-bg) !important;
 }
-html[data-ephinta-theme] body :is(input,select,textarea):disabled {
+html[data-ephinta-theme] body #root :is(input,select,textarea):disabled {
   color: var(--ephinta-fg-muted) !important;
   -webkit-text-fill-color: var(--ephinta-fg-muted) !important;
   opacity: 1 !important;
 }
-html[data-ephinta-theme] body :is(button,[role="button"],.button) {
-  color: inherit;
+
+/* Menu switch is legible and usable in all themes, including disabled
+   read-only presentation for non-admin accounts. */
+html[data-ephinta-theme] body #root .ess-mode-menu {
+  color: var(--ephinta-fg) !important;
+  background: var(--epg-surface, var(--ephinta-field-bg)) !important;
+  border-color: var(--epg-border, var(--ephinta-field-border)) !important;
 }
-html[data-ephinta-theme] body :is(
-  .primary-button,.continue-action,.select-listing,.ess-primary,
-  .pl-btn-primary,.pl-primary,.esg-btn.p
-) {
-  color: var(--ephinta-action-fg) !important;
-  -webkit-text-fill-color: var(--ephinta-action-fg) !important;
-  background-color: var(--ephinta-action-bg) !important;
-  border-color: var(--ephinta-action-bg) !important;
+html[data-ephinta-theme] body #root .ess-mode-menu :is(.ess-menu-heading, .ess-mode-menu-control, .ess-mode-menu__active) {
+  color: var(--ephinta-fg) !important;
+}
+html[data-ephinta-theme] body #root .ess-mode-choice {
+  color: var(--ephinta-fg) !important;
+  background: var(--epg-surface-raised, var(--ephinta-field-bg)) !important;
+  border-color: var(--epg-border, var(--ephinta-field-border)) !important;
+}
+html[data-ephinta-theme] body #root .ess-mode-choice :is(strong,small) {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor;
+}
+html[data-ephinta-theme] body #root .ess-mode-choice.is-selected {
+  border: 2px solid var(--epg-accent, #6335ad) !important;
+  background: color-mix(in srgb, var(--epg-accent, #6335ad) 13%, var(--epg-surface, #fff)) !important;
 }
 
-/* Intentional dark brand/hero surfaces retain their own white-on-dark palette
-   in light, dark and colorful application themes. */
-html[data-ephinta-theme] body :is(
+/* Branded dark surfaces keep their white-on-dark identity in every theme. */
+html[data-ephinta-theme] body #root :is(
   .workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
   .dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel,
   .eph-marketplace-advertising,.eph-promo-shell,.ess-marketplace-welcome,
   .ess-marketplace-feature-tile,.ess-marketplace-float
-) :is(div,section,article,header,footer,main,nav,aside,h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,li,a) {
+) :is(h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,li,a) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
-html[data-ephinta-theme] body :is(
+html[data-ephinta-theme] body #root :is(
   .workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
   .dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel,
   .eph-marketplace-advertising,.eph-promo-shell,.ess-marketplace-welcome,
@@ -128,9 +135,9 @@ html[data-ephinta-theme] body :is(
 }
 
 /* Native autofill must not reintroduce browser-controlled low contrast. */
-html[data-ephinta-theme] body input:-webkit-autofill,
-html[data-ephinta-theme] body input:-webkit-autofill:hover,
-html[data-ephinta-theme] body input:-webkit-autofill:focus {
+html[data-ephinta-theme] body #root input:-webkit-autofill,
+html[data-ephinta-theme] body #root input:-webkit-autofill:hover,
+html[data-ephinta-theme] body #root input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--ephinta-fg) !important;
   caret-color: var(--ephinta-fg);
 }
