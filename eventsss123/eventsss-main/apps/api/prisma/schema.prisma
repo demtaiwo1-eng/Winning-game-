@@ -116,6 +116,12 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum SourceAccessOrderStatus {
+  PENDING
+  PAID_PENDING_RELEASE
+  CANCELLED
+}
+
 enum PaymentRefundStatus {
   REQUESTED
   MANUAL_REVIEW
@@ -228,6 +234,7 @@ model User {
   sentMessages     Message[]             @relation("SentMessages")
   receivedMessages Message[]             @relation("ReceivedMessages")
   reviews          Review[]
+  sourceAccessOrders SourceAccessOrder[]
   payments         PaymentIntent[]
   paymentRefunds   PaymentRefund[]
   paymentRefundReviews PaymentRefundReview[]
@@ -660,6 +667,22 @@ model PaymentIntent {
 }
 
 
+
+model SourceAccessOrder {
+  id          String                 @id @default(uuid())
+  userId      String
+  providerRef String                 @unique
+  amountMinor BigInt                 @default(6000)
+  currency    String                 @default("USD")
+  status      SourceAccessOrderStatus @default(PENDING)
+  paidAt      DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
 
 /// Durable provider refund request. Creating this row never changes a wallet balance.
 model PaymentRefund {
