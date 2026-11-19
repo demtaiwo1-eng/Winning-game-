@@ -9,8 +9,8 @@
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "test": "vitest run src",
     "test:e2e": "playwright test --grep-invert \"payment \\\\+ notification click journey\"",
-    "design:audit": "node scripts/design-quality-gate.mjs",
-    "design:audit:strict": "node scripts/design-quality-gate.mjs --strict",
+    "design:audit": "node scripts/design-quality-gate.mjs && node scripts/verify-theme-contract.mjs",
+    "design:audit:strict": "node scripts/design-quality-gate.mjs --strict && node scripts/verify-theme-contract.mjs",
     "audio:verify": "node scripts/verify-audio-platforms.mjs",
     "test:worldwide": "playwright test e2e/worldwide-personas.spec.ts",
     "test:payment-personas": "playwright test e2e/payment-notification-personas.spec.ts"
