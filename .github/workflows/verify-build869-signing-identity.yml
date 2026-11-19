@@ -38,7 +38,7 @@ jobs:
             --output "$RUNNER_TEMP/ephinta-869/ephinta-869.apk"
           test -s "$RUNNER_TEMP/ephinta-869/ephinta-869.apk"
 
-      - name: Verify stored keystore against Build 869 and set fingerprint
+      - name: Inspect every keystore alias against Build 869
         shell: bash
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -50,8 +50,8 @@ jobs:
         run: |
           set -euo pipefail
           KEYSTORE="$RUNNER_TEMP/ephinta-original.jks"
-          CERT="$RUNNER_TEMP/ephinta-original-cert.der"
-          CSR="$RUNNER_TEMP/ephinta-check.csr"
+          CERT="$RUNNER_TEMP/ephinta-candidate-cert.der"
+          CSR="$RUNNER_TEMP/ephinta-candidate.csr"
           trap 'rm -f "$KEYSTORE" "$CERT" "$CSR"' EXIT
 
           for name in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
@@ -65,11 +65,6 @@ jobs:
           chmod 600 "$KEYSTORE"
           test -s "$KEYSTORE"
 
-          # Confirm the alias, store password, and private-key password work.
-          keytool -list -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
-          keytool -certreq -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" \
-            -keypass "$KEY_PASSWORD" -alias "$KEY_ALIAS" -file "$CSR" >/dev/null
-
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
           test -x "$APKSIGNER" && test -x "$AAPT"
@@ -82,29 +77,67 @@ jobs:
           }
 
           BASELINE_CERT="$("$APKSIGNER" verify --print-certs "$BASELINE" 2>&1 | \
-            sed -n 's/.*certificate SHA-256 digest: *//Ip' | head -n 1 | tr -d ' :\r\n' | tr '[:upper:]' '[:lower:]')"
-          keytool -exportcert -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" \
-            -alias "$KEY_ALIAS" -file "$CERT" >/dev/null
-          STORED_CERT="$(sha256sum "$CERT" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')"
-
-          [[ "$BASELINE_CERT" =~ ^[a-f0-9]{64}$ && "$STORED_CERT" =~ ^[a-f0-9]{64}$ ]] || {
-            echo "::error::Could not extract a valid SHA-256 signing fingerprint."
+            sed -n 's/.*certificate SHA-256 digest: *//Ip' | head -n 1 | tr -d ' :\\r\\n' | tr '[:upper:]' '[:lower:]')"
+          [[ "$BASELINE_CERT" =~ ^[a-f0-9]{64}$ ]] || {
+            echo "::error::Could not extract Build 869 SHA-256 signing fingerprint."
             exit 1
           }
-          if [[ "$BASELINE_CERT" != "$STORED_CERT" ]]; then
-            echo "::error::Stored keystore does NOT match Build 869. No repository variable was changed."
+          echo "Build 869 certificate SHA-256: $BASELINE_CERT"
+
+          # List private-key aliases only; never print passwords, key material, or keystore bytes.
+          keytool -J-Duser.language=en -list -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" >/dev/null
+          mapfile -t ALIASES < <(
+            keytool -J-Duser.language=en -list -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" |
+              awk -F, '/PrivateKeyEntry/ { alias=$1; gsub(/^[[:space:]]+|[[:space:]]+$/, "", alias); if (alias != "") print alias }'
+          )
+          if (( ${#ALIASES[@]} == 0 )); then
+            echo "::error::No private-key aliases were found in the stored keystore."
             exit 1
           fi
 
-          echo "Verified: stored keystore certificate matches the Build 869 APK."
-          echo "Certificate SHA-256: $STORED_CERT"
+          MATCHED_ALIAS=""
+          MATCHED_FINGERPRINT=""
+          for alias in "${ALIASES[@]}"; do
+            rm -f "$CERT" "$CSR"
+            if ! keytool -exportcert -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" \
+              -alias "$alias" -file "$CERT" >/dev/null 2>&1; then
+              echo "Alias inspected (certificate export unavailable): $alias"
+              continue
+            fi
+            fingerprint="$(sha256sum "$CERT" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')"
+            echo "Inspected private-key alias: $alias (SHA-256: $fingerprint)"
+            if [[ "$fingerprint" == "$BASELINE_CERT" ]]; then
+              MATCHED_ALIAS="$alias"
+              MATCHED_FINGERPRINT="$fingerprint"
+              break
+            fi
+          done
 
-          # Create or update the repository Actions variable only after exact match.
+          if [[ -z "$MATCHED_ALIAS" ]]; then
+            echo "::error::No private-key alias in the stored keystore matches Build 869. No repository variable or secret was changed."
+            exit 1
+          fi
+
+          echo "MATCH FOUND: alias '$MATCHED_ALIAS' matches Build 869."
+          # Confirm this alias has a usable private key and that the configured key password opens it.
+          if ! keytool -certreq -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" -alias "$MATCHED_ALIAS" -file "$CSR" >/dev/null 2>&1; then
+            echo "::error::The matching certificate alias was found, but ANDROID_KEY_PASSWORD did not unlock its private key. No repository setting was changed."
+            exit 1
+          fi
+
+          if [[ "$MATCHED_ALIAS" != "$KEY_ALIAS" ]]; then
+            echo "::error::The original Build 869 key is present under alias '$MATCHED_ALIAS', but ANDROID_KEY_ALIAS is currently configured as '$KEY_ALIAS'. Update the GitHub Actions secret ANDROID_KEY_ALIAS to the exact matching alias, then rerun this workflow. No secret or variable was changed."
+            exit 1
+          fi
+
+          echo "Configured alias and private-key password verified against Build 869."
+          # Create/update the public fingerprint variable only after an exact match.
           if gh api "repos/$GH_REPO/actions/variables/ANDROID_CERT_SHA256" >/dev/null 2>&1; then
             gh api --method PATCH "repos/$GH_REPO/actions/variables/ANDROID_CERT_SHA256" \
-              -f name="ANDROID_CERT_SHA256" -f value="$STORED_CERT" >/dev/null
+              -f name="ANDROID_CERT_SHA256" -f value="$MATCHED_FINGERPRINT" >/dev/null
           else
             gh api --method POST "repos/$GH_REPO/actions/variables" \
-              -f name="ANDROID_CERT_SHA256" -f value="$STORED_CERT" >/dev/null
+              -f name="ANDROID_CERT_SHA256" -f value="$MATCHED_FINGERPRINT" >/dev/null
           fi
-          echo "Repository variable ANDROID_CERT_SHA256 has been set from the verified Build 869 certificate."
+          echo "Repository variable ANDROID_CERT_SHA256 set from the verified Build 869 certificate."
