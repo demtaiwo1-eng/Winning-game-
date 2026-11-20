@@ -819,9 +819,11 @@ export default function PublicLanding({
         .eph-landing .eph-brand span { font-size: clamp(19px, 2vw, 24px); letter-spacing: .14em; }
         .eph-landing .eph-title { font-size: clamp(3rem, 6.2vw, 5.25rem); line-height: 1.02; }
         .eph-landing .eph-subtitle { font-size: clamp(17px, 1.45vw, 20px); line-height: 1.75; }
-        .eph-landing .eph-promo-shell { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--line) !important; box-shadow: none !important; }
-        .eph-landing .eph-promo-shell h2 { color: var(--ink) !important; }
-        .eph-landing .eph-promo-shell p, .eph-landing .eph-promo-shell .eph-promo-placeholder { color: var(--muted) !important; }
+        /* Promotional cards retain their dark campaign surface, so their
+           headings and supporting copy stay high-contrast at every breakpoint. */
+        .eph-landing .eph-promo-shell { background: linear-gradient(135deg,#0f172a,#1f2a46) !important; color: #fff !important; border: 1px solid rgba(255,255,255,.12) !important; box-shadow: 0 18px 30px rgba(15,23,42,.15) !important; }
+        .eph-landing .eph-promo-shell h2 { color: #fff !important; }
+        .eph-landing .eph-promo-shell p, .eph-landing .eph-promo-shell .eph-promo-placeholder { color: #dce5ff !important; }
         .eph-landing .eph-promo-marketplace-cta { color: #fff !important; background: var(--purple) !important; }
         .eph-landing .eph-promo-kicker {
           color: var(--purple) !important; -webkit-text-fill-color: currentColor !important;
