@@ -783,3 +783,47 @@ html[data-ephinta-theme] .eph-audio__backdrop > .eph-audio__prompt {
     width: min(320px, calc(100vw - 20px)) !important;
   }
 }
+
+
+/* Final unconditional audio-consent geometry guard. Keep this prompt compact
+   even before theme initialization and in every public/authenticated route. */
+html body #root .eph-audio__backdrop {
+  position: fixed !important;
+  top: auto !important;
+  right: max(14px, env(safe-area-inset-right)) !important;
+  bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  left: auto !important;
+  inset: auto max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) auto !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  width: min(340px, calc(100vw - 28px)) !important;
+  max-width: calc(100vw - 28px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  pointer-events: none !important;
+  place-items: initial !important;
+}
+html body #root .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
+  position: static !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+}
+@media (max-width: 600px) {
+  html body #root .eph-audio__backdrop {
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    width: min(320px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+}
