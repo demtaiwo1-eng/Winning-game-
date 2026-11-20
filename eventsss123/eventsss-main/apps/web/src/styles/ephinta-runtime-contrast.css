@@ -432,7 +432,7 @@ html[data-ephinta-theme] body #root .ephinta-experience-menu-control small {
    mobile. Individual features own behaviour and content, never their palette
    or responsive dialog geometry.
    ------------------------------------------------------------------------- */
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .eph-modal-backdrop,
   .ess-modal-backdrop,
   .ess-auth-backdrop,
@@ -460,7 +460,7 @@ html[data-ephinta-theme] body #root :is(
   background: rgb(4 7 18 / 76%) !important;
   backdrop-filter: blur(10px) !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -527,7 +527,7 @@ html[data-ephinta-theme] body #root .ess-device-lock-card {
   color: var(--epg-ink) !important;
   box-shadow: var(--epg-shadow) !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -540,7 +540,7 @@ html[data-ephinta-theme] body #root :is(
   color: var(--epg-ink) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -553,7 +553,7 @@ html[data-ephinta-theme] body #root :is(
   color: var(--epg-muted) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -574,7 +574,7 @@ html[data-ephinta-theme] body #root :is(
   font: inherit !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -588,7 +588,7 @@ html[data-ephinta-theme] body #root :is(
   opacity: 1 !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -601,20 +601,20 @@ html[data-ephinta-theme] body #root :is(
   outline: 3px solid var(--epg-focus) !important;
   outline-offset: 2px !important;
 }
-html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(button,a) {
+html[data-ephinta-theme] :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(button,a) {
   max-width: 100%;
   overflow-wrap: anywhere;
 }
-html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-error,.eph-auth-error,.ess-device-lock-error,[role="alert"]) {
+html[data-ephinta-theme] :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-error,.eph-auth-error,.ess-device-lock-error,[role="alert"]) {
   color: var(--epg-danger) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-success,.eph-auth-notice,[role="status"]) {
+html[data-ephinta-theme] :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-success,.eph-auth-notice,[role="status"]) {
   color: var(--epg-success) !important;
   -webkit-text-fill-color: currentColor !important;
 }
 @media (max-width: 640px) {
-  html[data-ephinta-theme] body #root :is(
+  html[data-ephinta-theme] :is(
     .eph-modal-backdrop,
     .ess-modal-backdrop,
     .ess-auth-backdrop,
@@ -628,7 +628,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
     place-items: center !important;
     padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
   }
-  html[data-ephinta-theme] body #root :is(
+  html[data-ephinta-theme] :is(
     .ess-auth-modal,
     .eph-modal,
     .ess-journey-card,
@@ -646,7 +646,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
   }
 }
 @media (min-width: 641px) and (max-width: 1024px) {
-  html[data-ephinta-theme] body #root :is(
+  html[data-ephinta-theme] :is(
     .ess-auth-modal,
     .eph-modal,
     .ess-journey-card,
@@ -665,7 +665,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
 /* Desktop dialogs deliberately keep the compact, phone-like footprint.
    The overlay dims the desktop canvas; the dialog itself stays centered and
    never expands into a wide desktop panel. */
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -689,7 +689,7 @@ html[data-ephinta-theme] body #root .ess-device-lock-card {
   margin: auto !important;
 }
 @media (max-width: 480px) {
-  html[data-ephinta-theme] body #root :is(
+  html[data-ephinta-theme] :is(
     .ess-auth-modal,
     .eph-modal,
     .ess-journey-card,
@@ -723,7 +723,7 @@ html[data-ephinta-theme="dark"] {
   --eph-dialog-border: rgba(180,157,226,.30);
   --eph-dialog-shadow: 0 28px 78px rgba(0,0,0,.42);
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
   .ess-dialog-surface, .dialog-panel, .modal-panel,
   [role="dialog"], [aria-modal="true"], dialog[open]
@@ -737,21 +737,21 @@ html[data-ephinta-theme] body #root :is(
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
   .ess-dialog-surface, .dialog-panel, .modal-panel,
   [role="dialog"], [aria-modal="true"], dialog[open]
 ) :is(h1,h2,h3,h4,strong,b,label) {
   color: var(--ephinta-theme-ink) !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
   .ess-dialog-surface, .dialog-panel, .modal-panel,
   [role="dialog"], [aria-modal="true"], dialog[open]
 ) :is(p,small,li,.muted,.text-muted,.helper-text) {
   color: var(--ephinta-theme-muted) !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
   .ess-dialog-surface, .dialog-panel, .modal-panel,
   [role="dialog"], [aria-modal="true"], dialog[open]
