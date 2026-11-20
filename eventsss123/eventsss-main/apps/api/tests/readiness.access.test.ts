@@ -4,6 +4,7 @@ import {
   canManageReadinessZones,
   canReadReadinessEvent,
   hasGroundConfirmationNote,
+  isPaymentMilestonePaid,
 } from "../src/modules/readiness/accessPolicy";
 
 describe("readiness event access policy", () => {
@@ -61,5 +62,13 @@ describe("verifier ground confirmation", () => {
     expect(hasGroundConfirmationNote("GREEN", "   setup confirmed   ")).toBe(true);
     expect(hasGroundConfirmationNote("AMBER", "")).toBe(true);
     expect(hasGroundConfirmationNote("RED", "")).toBe(true);
+  });
+});
+
+describe("payment milestone readiness", () => {
+  it("requires an EPHINTA paid status and paid timestamp", () => {
+    expect(isPaymentMilestonePaid("PENDING", null)).toBe(false);
+    expect(isPaymentMilestonePaid("PAID", null)).toBe(false);
+    expect(isPaymentMilestonePaid("PAID", new Date())).toBe(true);
   });
 });
