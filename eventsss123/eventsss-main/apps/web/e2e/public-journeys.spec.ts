@@ -851,6 +851,17 @@ test("background music starts only after consent and advances automatically", as
   )).toBe(2);
 });
 
+test("saved sound-off preference keeps a visible way to reopen music consent", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("ephinta:sound", "off"));
+  await page.goto("/");
+  const enableMusic = page.getByRole("button", { name: "Enable EPHINTA music" });
+  await expect(enableMusic).toBeVisible();
+  await enableMusic.click();
+  await expect(page.getByRole("dialog", { name: "Enjoy background music?" })).toBeVisible();
+  await page.getByRole("button", { name: "Yes, play music" }).click();
+  await expect(page.getByRole("button", { name: /Music (playing|paused)/ })).toBeVisible();
+});
+
 test("music player respects a saved sound-off choice after reload", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("ephinta:sound", "off"));
   await page.goto("/");
