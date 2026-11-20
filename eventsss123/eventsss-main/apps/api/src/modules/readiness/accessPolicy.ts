@@ -29,3 +29,7 @@ export function canAssignReadinessVerifier(input: {
   if (input.targetVerifierId === input.userId) return input.role === "VERIFIER";
   return input.ownerId === input.userId || input.role === "ADMIN" || input.role === "CONSULTANT";
 }
+
+export function hasGroundConfirmationNote(status: string, notes: string): boolean {
+  return status !== "GREEN" || notes.trim().length >= 8;
+}
