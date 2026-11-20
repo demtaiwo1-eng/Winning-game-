@@ -790,10 +790,10 @@ html[data-ephinta-theme] .eph-audio__backdrop > .eph-audio__prompt {
 html body #root .eph-audio__backdrop {
   position: fixed !important;
   top: auto !important;
-  right: max(14px, env(safe-area-inset-right)) !important;
+  left: max(14px, env(safe-area-inset-left)) !important;
+  right: auto !important;
   bottom: max(14px, env(safe-area-inset-bottom)) !important;
-  left: auto !important;
-  inset: auto max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) auto !important;
+  inset: auto auto max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)) !important;
   display: block !important;
   box-sizing: border-box !important;
   width: min(340px, calc(100vw - 28px)) !important;
@@ -821,8 +821,10 @@ html body #root .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
 }
 @media (max-width: 600px) {
   html body #root .eph-audio__backdrop {
-    right: max(10px, env(safe-area-inset-right)) !important;
+    left: max(10px, env(safe-area-inset-left)) !important;
+    right: auto !important;
     bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    inset: auto auto max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)) !important;
     width: min(320px, calc(100vw - 20px)) !important;
     max-width: calc(100vw - 20px) !important;
   }
