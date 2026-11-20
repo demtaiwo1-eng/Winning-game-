@@ -90,7 +90,7 @@ describe("EPHINTA global theme contrast", () => {
   });
 
   it("keeps native controls aligned with the selected colorful palette", () => {
-    expect(themeRuntime).toContain('document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light"');
+    expect(themeRuntime).toContain('document.documentElement.style.colorScheme = theme === "light" ? "light" : "dark"');
   });
 
   it("does not reintroduce a second blanket contrast layer after the shared theme contract", () => {
