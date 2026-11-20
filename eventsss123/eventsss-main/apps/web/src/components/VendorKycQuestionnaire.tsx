@@ -3,9 +3,7 @@ import { useMemo, useState } from "react";
 export type VendorKycAnswers = {
   legalForm?: string;
   registrationStatus?: string;
-  registrationNumber?: string;
   taxStatus?: string;
-  taxIdentifier?: string;
   operatingAddress?: string;
   regulatedActivity?: string;
   regulatoryLicence?: string;
@@ -39,9 +37,9 @@ export default function VendorKycQuestionnaire({
   const questions = useMemo(() => [
     { title: "How is your business legally organised?", help: "This helps us identify the right business verification route.", key: "legalForm" as const, type: "select", options: LEGAL_FORMS },
     { title: "Is the business registered with the relevant authority?", help: "Choose the status that best describes the business today.", key: "registrationStatus" as const, type: "select", options: ["Yes, registered", "Registration in progress", "Not registered", "Not required for my business type"] },
-    { title: "What is your business registration number?", help: "Enter it if registered. You can leave this blank if registration is in progress or not required.", key: "registrationNumber" as const, type: "text" },
-    { title: "What is your tax registration status?", help: "Tax identifiers and thresholds differ by country. We use this answer to determine the next appropriate step.", key: "taxStatus" as const, type: "select", options: ["I have a tax identifier", "Application in progress", "Not issued / not applicable", "I am not sure"] },
-    { title: `What is your ${taxLabel}?`, help: "Optional at this stage. Do not enter personal banking credentials or passwords.", key: "taxIdentifier" as const, type: "text" },
+    { title: "Can you provide business registration evidence if requested?", help: "We will only request supporting documents when required for your country and business type.", key: "registrationEvidence" as const, type: "select", options: ["Yes", "Application in progress", "Not applicable"] },
+    
+    { title: `Have you been issued a ${taxLabel}?`, help: "We only need to know the status at registration. Do not enter your tax number here.", key: "taxStatus" as const, type: "select", options: ["Yes", "Application in progress", "Not issued / not applicable", "I am not sure"] },
     { title: "What is your main operating business address?", help: "Provide the street address and city where the business operates. A PO box alone may not be sufficient for later verification.", key: "operatingAddress" as const, type: "text" },
     { title: "Do your services require a special permit or professional licence?", help: "For example, regulated transport, security, health, alcohol, or financial services. Requirements vary by country and service.", key: "regulatedActivity" as const, type: "select", options: ["Yes", "No", "Not sure"] },
     { title: "What licence or permit do you hold?", help: "If you selected Yes, tell us the licence name and issuing authority. Do not upload documents here.", key: "regulatoryLicence" as const, type: "text" },
@@ -54,7 +52,6 @@ export default function VendorKycQuestionnaire({
   const required = ["legalForm", "registrationStatus", "taxStatus", "operatingAddress", "regulatedActivity"].includes(current.key);
   const canContinue = conditional || !required || Boolean(valueForStep.trim());
   const setAnswer = (answer: string) => onChange({ ...value, [current.key]: answer });
-  const visibleStep = conditional ? Math.min(step + 1, questions.length - 1) : step;
   return (
     <section className="ess-registration-note" aria-label="Vendor KYC questionnaire" style={{ display: "grid", gap: 12, marginTop: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
