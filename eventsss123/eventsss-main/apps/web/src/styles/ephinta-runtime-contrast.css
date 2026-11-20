@@ -1,5 +1,7 @@
 /*
  * EPHINTA accessible runtime typography and contrast contract.
+ * Text inherits from its component where semantic colour is meaningful.
+ * Final readable type system keeps normal copy high-contrast in every mode.
  * Light mode uses dark text on light surfaces. Dark and colourful modes use
  * light text on dark surfaces. Colour is reserved for hierarchy and accents;
  * contrast, not hue, carries readability.
