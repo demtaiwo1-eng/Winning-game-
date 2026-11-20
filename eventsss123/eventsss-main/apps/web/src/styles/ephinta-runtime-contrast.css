@@ -437,7 +437,6 @@ html[data-ephinta-theme] :is(
   .ess-modal-backdrop,
   .ess-auth-backdrop,
   .ess-journey-overlay,
-  .eph-audio__backdrop,
   .ess-dialog-overlay,
   [data-dialog-backdrop],
   .dialog-backdrop,
@@ -619,8 +618,7 @@ html[data-ephinta-theme] :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-d
     .ess-modal-backdrop,
     .ess-auth-backdrop,
     .ess-journey-overlay,
-    .eph-audio__backdrop,
-    .ess-dialog-overlay,
+      .ess-dialog-overlay,
     [data-dialog-backdrop],
     .dialog-backdrop,
     .modal-backdrop
@@ -759,4 +757,29 @@ html[data-ephinta-theme] :is(
   background: var(--ephinta-theme-surface-soft) !important;
   color: var(--ephinta-theme-ink) !important;
   border-color: var(--ephinta-theme-border) !important;
+}
+
+
+/* Audio consent is a compact, non-blocking prompt, not a full-screen modal. */
+html[data-ephinta-theme] .eph-audio__backdrop {
+  position: fixed !important;
+  inset: auto max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) auto !important;
+  width: min(340px, calc(100vw - 28px)) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  display: block !important;
+  padding: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  pointer-events: none !important;
+}
+html[data-ephinta-theme] .eph-audio__backdrop > .eph-audio__prompt {
+  pointer-events: auto !important;
+}
+@media (max-width: 600px) {
+  html[data-ephinta-theme] .eph-audio__backdrop {
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    width: min(320px, calc(100vw - 20px)) !important;
+  }
 }
