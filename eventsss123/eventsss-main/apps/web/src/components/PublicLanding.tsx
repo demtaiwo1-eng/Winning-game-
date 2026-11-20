@@ -1143,6 +1143,15 @@ export default function PublicLanding({
           .eph-landing .eph-footer .eph-footer-copyright { overflow-wrap: anywhere; }
         }
 
+        /* The marketing spotlight uses a pale surface in light/colorful themes. */
+        .eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone h2 {
+          color: #251633 !important;
+          -webkit-text-fill-color: #251633 !important;
+        }
+        .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2 {
+          color: #f8fafc !important;
+          -webkit-text-fill-color: #f8fafc !important;
+        }
       `}</style>
 
 
