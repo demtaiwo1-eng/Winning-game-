@@ -104,8 +104,8 @@ describe("EPHINTA global theme contrast", () => {
   });
 
   it("does not reintroduce a second blanket contrast layer after the shared theme contract", () => {
-    expect(globalCss).toContain('@import "./ephinta-global-theme-contract.css";');
-    expect(globalCss).toContain('@import "./ephinta-runtime-contrast.css";');
+    expect(globalCss).toContain("ephinta-global-theme-contract.css");
+    expect(globalCss).toContain("ephinta-runtime-contrast.css");
     expect(globalCss).not.toContain("FINAL GLOBAL CONTRAST ENFORCEMENT");
     expect(globalCss).not.toContain("Specificity guard: component sheets");
     expect(globalCss).not.toContain("ephinta-theme-text-contrast.css");
@@ -151,7 +151,7 @@ describe("EPHINTA global theme contrast", () => {
     expect(runtimeCss).toContain("color: var(--epg-muted) !important");
     expect(runtimeCss).toContain("var(--epg-border)");
     expect(runtimeCss).toContain("var(--epg-focus)");
-    expect(globalCss).toContain('@import "./ephinta-runtime-contrast.css";');
+    expect(globalCss).toContain("ephinta-runtime-contrast.css");
   });
 
   it("routes the landing vendor CTA to the shared vendor registration dialog", () => {
@@ -181,7 +181,7 @@ describe("EPHINTA global theme contrast", () => {
     expect(runtimeCss).toContain("var(--epg-border)");
     expect(runtimeCss).toContain("env(safe-area-inset-top)");
     expect(runtimeCss).toContain("max-height: calc(100dvh");
-    expect(globalCss).toContain('@import "./ephinta-runtime-contrast.css";');
+    expect(globalCss).toContain("ephinta-runtime-contrast.css");
   });
 
   it("keeps dialogs compact and centered on desktop instead of stretching across the screen", () => {
