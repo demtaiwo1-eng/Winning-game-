@@ -10,6 +10,13 @@ type Check = {
   status: "PENDING" | "GREEN" | "AMBER" | "RED";
   notes?: string | null;
   checkedAt?: string | null;
+  taskId?: string | null;
+  verifiedBy?: { id: string; name: string } | null;
+};
+
+type BookingPayment = {
+  id: string; status: string; currency: string; totalMinor: string; paidMinor: string; vendorName: string;
+  paymentRequests: Array<{ id: string; amountMinor: string; reason: string; status: string; paidAt?: string | null; createdAt?: string; requestedBy: string }>;
 };
 
 type Readiness = {
@@ -34,6 +41,12 @@ type EventInfo = {
   status: string;
   endsAt?: string | null;
 };
+
+function formatMoney(minor: string, currency: string) {
+  const amount = Number(minor) / 100;
+  try { return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 2 }).format(amount); }
+  catch { return currency + " " + amount.toFixed(2); }
+}
 
 function formatCountdown(ms: number | null | undefined) {
   if (ms == null) return "—";
@@ -66,6 +79,8 @@ export default function EventReadinessBoard({
   mode?: "client" | "verifier";
 }) {
   const [checks, setChecks] = useState<Check[]>([]);
+  const [bookingPayments, setBookingPayments] = useState<BookingPayment[]>([]);
+  const [checkNotes, setCheckNotes] = useState<Record<string, string>>({});
   const [readiness, setReadiness] = useState<Readiness | null>(null);
   const [event, setEvent] = useState<EventInfo | null>(null);
   const [canFinalize, setCanFinalize] = useState(false);
@@ -84,12 +99,15 @@ export default function EventReadinessBoard({
         event: EventInfo;
         readiness: Readiness;
         checks: Check[];
+        bookingPayments: BookingPayment[];
         canFinalize: boolean;
       }>(`/readiness/events/${eventId}`);
       setTitle(data.event.title);
       setEvent(data.event);
       setReadiness(data.readiness);
       setChecks(data.checks || []);
+      setBookingPayments(data.bookingPayments || []);
+      setCheckNotes((current) => Object.fromEntries((data.checks || []).map((check) => [check.id, current[check.id] ?? check.notes ?? ""])));
       setCanFinalize(data.canFinalize);
       if (data.readiness?.allGreen && !seenGreen) {
         setSeenGreen(true);
@@ -102,7 +120,16 @@ export default function EventReadinessBoard({
   }, [eventId]);
 
   useEffect(() => {
-    load();
+    let active = true;
+    api(`/readiness/events/${eventId}/sync`, { method: "POST", body: "{}" })
+      .catch(() => undefined)
+      .finally(() => { if (active) void load(); });
+    return () => { active = false; };
+  }, [eventId, load]);
+
+  useEffect(() => {
+    const id = setInterval(() => { void load(); }, 20000);
+    return () => clearInterval(id);
   }, [load]);
 
   useEffect(() => {
@@ -120,11 +147,16 @@ export default function EventReadinessBoard({
   void tick;
 
   const setCheck = async (checkId: string, status: string) => {
+    const notes = (checkNotes[checkId] || "").trim();
+    if (status === "GREEN" && notes.length < 8) {
+      setError("Add an on-the-ground confirmation note of at least 8 characters before marking an item ready.");
+      return;
+    }
     setBusy(true);
     try {
       await api(`/readiness/checks/${checkId}`, {
         method: "PATCH",
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, notes }),
       });
       await load();
     } catch (e) {
