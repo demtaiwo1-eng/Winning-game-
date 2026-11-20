@@ -125,6 +125,16 @@ describe("EPHINTA global theme contrast", () => {
     expect(enterpriseApp).not.toContain('className="ess-brand-mark"');
   });
 
+  it("enforces readable text and a visible EPHINTA wordmark throughout all themes", () => {
+    expect(runtimeCss).toContain("FINAL EPHINTA TEXT VISIBILITY CONTRACT");
+    expect(runtimeCss).toContain("--ephinta-readable-text: #17152b");
+    expect(runtimeCss).toContain("--ephinta-readable-text: #f7f9ff");
+    expect(runtimeCss).toContain('[class*="landing"]');
+    expect(runtimeCss).toContain(".ess-brand-wordmark strong");
+    expect(runtimeCss).toContain("-webkit-text-fill-color: var(--epg-ink) !important");
+    expect(runtimeCss).toContain('html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown');
+  });
+
   it("uses light readable surfaces for the multicolour and light account menus", () => {
     expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown');
     expect(runtimeCss).toContain('html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown');
