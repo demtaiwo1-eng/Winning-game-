@@ -723,3 +723,40 @@
 @media (prefers-reduced-motion: reduce) {
   .ess-planning-question-card { animation: none; }
 }
+
+
+/* Shared dashboard shell coverage for every signed-in portal, including
+   fragment-rendered admin and affiliate workspaces. */
+:where(.ess-shell,.ess-portal-stack) {
+  color: var(--epg-ink, var(--ephinta-theme-ink, inherit));
+  background: var(--epg-page, var(--ephinta-theme-page, transparent));
+}
+:where(.ess-shell,.ess-portal-stack) :where(.ess-page-heading,.ess-topbar) {
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+}
+:where(.ess-shell,.ess-portal-stack) :where(.ess-page-heading p,.ess-muted,.ess-eyebrow) {
+  color: var(--epg-muted, var(--ephinta-theme-muted));
+}
+:where(.ess-shell,.ess-portal-stack) :where(.ess-panel,.ess-card,.ess-metric,.ess-empty-dashboard) {
+  border-color: var(--epg-border, var(--ephinta-theme-border));
+  background-color: var(--epg-surface, var(--ephinta-theme-surface));
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--epg-accent, #7654d8) 7%, transparent);
+}
+:where(.ess-shell,.ess-portal-stack) :where(h1,h2,h3,h4,strong,th,td,label) {
+  color: inherit;
+}
+:where(.ess-shell,.ess-portal-stack) :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  border-color: var(--epg-border, var(--ephinta-theme-border));
+  background: var(--epg-surface-raised, var(--ephinta-theme-surface));
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+}
+:where(.ess-shell,.ess-portal-stack) :where(.ess-primary,.ess-chip-active) {
+  background: linear-gradient(112deg, var(--epg-accent, #7654d8), color-mix(in srgb, var(--epg-link, #2d8eaa) 72%, var(--epg-accent, #7654d8)));
+  color: var(--epg-accent-ink, #fff);
+}
+:where(.ess-shell,.ess-portal-stack) :where(.ess-outline-button,.ess-quiet-button,.ess-chip) {
+  border-color: var(--epg-border, var(--ephinta-theme-border));
+  background: var(--epg-surface-raised, var(--ephinta-theme-surface));
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+}
