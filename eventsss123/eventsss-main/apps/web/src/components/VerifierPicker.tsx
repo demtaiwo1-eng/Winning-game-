@@ -29,6 +29,7 @@ const TIER_LABEL: Record<string, string> = {
   TOP_LOCAL: "Top · closest",
   NEARBY: "Nearby",
   SAME_CITY: "Same city",
+  SAME_COUNTRY: "Same country",
   STANDARD: "Available",
 };
 
