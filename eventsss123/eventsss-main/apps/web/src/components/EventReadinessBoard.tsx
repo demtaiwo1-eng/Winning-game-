@@ -97,6 +97,7 @@ export default function EventReadinessBoard({
   const load = useCallback(async () => {
     try {
       setError("");
+      await api(`/readiness/events/${eventId}/sync`, { method: "POST", body: "{}" }).catch(() => undefined);
       const data = await api<{
         event: EventInfo;
         readiness: Readiness;
@@ -122,12 +123,8 @@ export default function EventReadinessBoard({
   }, [eventId]);
 
   useEffect(() => {
-    let active = true;
-    api(`/readiness/events/${eventId}/sync`, { method: "POST", body: "{}" })
-      .catch(() => undefined)
-      .finally(() => { if (active) void load(); });
-    return () => { active = false; };
-  }, [eventId, load]);
+    void load();
+  }, [load]);
 
   useEffect(() => {
     const id = setInterval(() => { void load(); }, 20000);
