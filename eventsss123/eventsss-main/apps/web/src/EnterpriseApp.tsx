@@ -1426,6 +1426,10 @@ function VerifierPortal() {
       status?: string;
       city?: string | null;
       bookingCount?: number;
+      bookings?: Array<{
+        id: string; status: string; currency: string; totalMinor: string; paidMinor: string; vendorName: string;
+        paymentRequests: Array<{ id: string; amountMinor: string; reason: string; status: string; paidAt?: string | null }>;
+      }>;
       readiness?: { status: string; greenCount: number; totalChecks: number; allGreen?: boolean } | null;
     }>
   >([]);
@@ -1444,6 +1448,11 @@ function VerifierPortal() {
       .finally(() => { if (active) setQueueLoading(false); });
     return () => { active = false; };
   }, [queueRefresh]);
+
+  useEffect(() => {
+    const id = setInterval(() => setQueueRefresh((value) => value + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const needsAttention = queue.filter((event) =>
     event.readiness?.status === "BLOCKED" || event.readiness?.status === "AT_RISK",
@@ -1483,7 +1492,7 @@ function VerifierPortal() {
           </div>
           <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
             {queueLoading && <li className="ess-muted">Loading assigned events…</li>}
-            {!queueLoading && queue.length === 0 && <li className="ess-muted">No recent or upcoming events need verifier action.</li>}
+            {!queueLoading && queue.length === 0 && <li className="ess-muted">No events are currently assigned to your verifier profile.</li>}
             {queue.map((e) => (
               <li key={e.id} className="ess-wallet-card" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                 <div>
@@ -1499,6 +1508,19 @@ function VerifierPortal() {
                       ? ` · ${e.readiness.greenCount}/${e.readiness.totalChecks} green · ${e.readiness.status}`
                       : " · not synced"}
                   </div>
+                  {e.bookings?.length ? (
+                    <details className="ess-dashboard-fold" style={{ marginTop: 8 }}>
+                      <summary>Payment milestones · {e.bookings.length} bookings</summary>
+                      <div style={{ display: "grid", gap: 6, margin: "0 12px 12px" }}>
+                        {e.bookings.map((booking) => (
+                          <p className="ess-muted" key={booking.id}>
+                            {booking.vendorName}: {booking.status} · paid {formatQueueMoney(booking.paidMinor, booking.currency)} / {formatQueueMoney(booking.totalMinor, booking.currency)}
+                            {booking.paymentRequests.length ? " · " + booking.paymentRequests.map((request) => request.status + " " + formatQueueMoney(request.amountMinor, booking.currency)).join(", ") : ""}
+                          </p>
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
                 </div>
                 <button type="button" className="ess-primary" onClick={() => setSelected(e.id)}>
                   {e.status === "COMPLETED" ? "Retry escrow release" : "Open checks & escrow"}
@@ -1530,6 +1552,12 @@ function VerifierPortal() {
       </div>
     </div>
   );
+}
+
+function formatQueueMoney(minor: string, currency: string) {
+  const amount = Number(minor) / 100;
+  try { return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 2 }).format(amount); }
+  catch { return currency + " " + amount.toFixed(2); }
 }
 
 function ConsultantPortal() {
