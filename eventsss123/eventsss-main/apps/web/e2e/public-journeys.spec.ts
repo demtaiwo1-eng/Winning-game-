@@ -281,18 +281,29 @@ test("event builder inherits the global parent theme and saves a brief", async (
   await expect(page.getByLabel("Event name")).toHaveValue("ESS E2E Test Event");
   await page.getByRole("button", { name: /Next question/ }).click();
 
+  await expect(page.getByLabel("Event format")).toBeVisible();
+  await expect(page.getByLabel("Primary goal")).toHaveCount(0);
+  await page.getByLabel("Event format").selectOption("SOCIAL");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Primary goal").selectOption("Celebrate");
   await page.getByRole("button", { name: /Next question/ }).click();
-
+  await page.getByLabel("Top priority").selectOption("Guest experience");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Next question/ }).click(); // Event date is optional.
   await page.getByLabel("City or venue area").fill("Ibadan");
   await page.getByRole("button", { name: /Next question/ }).click();
-
+  await page.getByLabel("Venue status").selectOption("Still deciding");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Expected guests").fill("120");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Food direction").selectOption("Mixed menu");
   await page.getByRole("button", { name: /Next question/ }).click();
 
   const planningBudget = page.getByLabel("Planning budget");
   await planningBudget.fill("NGN 2500000");
   await expect(planningBudget).toHaveValue("2,500,000");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Atmosphere").selectOption("Warm and social");
   await page.getByRole("button", { name: /Build my event brief/ }).click();
   await expect(page.getByText("2,500,000.00")).toBeVisible();
 
@@ -417,9 +428,14 @@ test("vendor introduction carries profile answers into signup", async ({ page })
   await page.getByRole("navigation", { name: "Main navigation" })
     .getByRole("button", { name: "Create vendor account" }).click();
 
+  await expect(page.getByLabel("Business name")).toBeVisible();
+  await expect(page.getByLabel("Primary service")).toHaveCount(0);
   await page.getByLabel("Business name").fill("Bright Day Catering");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Primary service").selectOption("Catering");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Main service city").fill("Lagos");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("What do you provide?").fill("Seasonal event menus");
   await page.getByRole("button", { name: /Continue to signup/ }).click();
 
@@ -442,7 +458,12 @@ test("affiliate introduction preselects a matching referral channel during signu
     .getByRole("button", { name: "Create affiliate account" }).click();
 
   await page.getByLabel("What is your primary referral channel?").selectOption("Social media");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Who do you expect to refer?").selectOption("Event planners");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("How would you describe your reach?").selectOption("Growing audience");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Where do you connect with them?").fill("Local business community");
   await page.getByRole("button", { name: /Continue to signup/ }).click();
 
   const dialog = page.locator("#eph-auth-dialog");
