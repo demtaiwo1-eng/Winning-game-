@@ -12,7 +12,7 @@ import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { createNotification, pushToUser } from "../notifications/notifications.service";
 import { assertEventFinalizationAllowed } from "../payments/escrowPolicy";
-import { canAssignReadinessVerifier, canManageReadinessZones, canReadReadinessEvent, hasGroundConfirmationNote } from "./accessPolicy";
+import { canAssignReadinessVerifier, canManageReadinessZones, canReadReadinessEvent, hasGroundConfirmationNote, isPaymentMilestonePaid } from "./accessPolicy";
 
 export const readinessRouter = Router();
 
@@ -301,7 +301,7 @@ readinessRouter.get(
     const checks = await prisma.eventServiceCheck.findMany({
       where: { eventId: event.id },
       orderBy: { createdAt: "asc" },
-      include: { verifiedBy: { select: { id: true, name: true } }, task: { select: { status: true, tier: true, dueAt: true } }, paymentRequest: { select: { id: true, amountMinor: true, status: true, paidAt: true, reason: true } } },
+      include: { verifiedBy: { select: { id: true, name: true } }, task: { select: { status: true, tier: true, dueAt: true } }, paymentRequest: { select: { id: true, amountMinor: true, status: true, paidAt: true, reason: true, booking: { select: { currency: true } } } } },
     });
     const bookingPayments = await prisma.booking.findMany({
       where: { eventId: event.id },
@@ -499,7 +499,7 @@ readinessRouter.patch(
 
     const confirmationNotes = typeof req.body.notes === "string" ? req.body.notes.trim() : "";
     if (status === "GREEN" && check.paymentRequestId && (
-      !check.paymentRequest || check.paymentRequest.status !== "PAID" || !check.paymentRequest.paidAt
+      !check.paymentRequest || !isPaymentMilestonePaid(check.paymentRequest.status, check.paymentRequest.paidAt)
     )) {
       throw new HttpError(409, "PAYMENT_NOT_CONFIRMED", "This part-payment milestone cannot be marked ready until EPHINTA records the payment as paid.");
     }
