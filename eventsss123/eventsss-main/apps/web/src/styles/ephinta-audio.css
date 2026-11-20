@@ -237,3 +237,17 @@
   .eph-audio__prompt,
   .eph-audio__restore { transition: none !important; }
 }
+
+
+/* Keep the declined-music re-entry action quieter than the active player. */
+.eph-audio__restore.eph-audio__enable {
+  min-height: 34px;
+  padding: 0 12px;
+  border-color: var(--epg-border, rgb(255 255 255 / 22%));
+  color: var(--epg-muted, #d9d5eb);
+  background: color-mix(in srgb, var(--epg-surface, #30245a) 92%, transparent);
+  box-shadow: 0 6px 18px rgb(12 8 30 / 18%);
+  font-size: 11px;
+  opacity: .92;
+}
+.eph-audio__restore.eph-audio__enable:hover { opacity: 1; }
