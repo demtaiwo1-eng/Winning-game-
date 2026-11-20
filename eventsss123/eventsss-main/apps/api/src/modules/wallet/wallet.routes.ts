@@ -289,8 +289,8 @@ walletRouter.post("/funding-submissions", asyncHandler(async (req, res) => {
   const transferReference = String(req.body.transferReference ?? "").trim().slice(0, 120);
   const receiptUrl = String(req.body.receiptUrl ?? "").trim();
   const idempotencyKey = String(req.get("Idempotency-Key") || req.body.idempotencyKey || "");
-  if (!/^[1-9]\\d{0,14}$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "Enter a valid transfer amount in minor units.");
-  if (!senderName || !transferReference || !/^https:\\/\\//i.test(receiptUrl)) throw new HttpError(400, "RECEIPT_DETAILS_REQUIRED", "Provide sender name, transfer reference and a secure HTTPS receipt link.");
+  if (!/^[1-9]\d{0,14}$/.test(amountRaw)) throw new HttpError(400, "INVALID_AMOUNT", "Enter a valid transfer amount in minor units.");
+  if (!senderName || !transferReference || !/^https:\/\//i.test(receiptUrl)) throw new HttpError(400, "RECEIPT_DETAILS_REQUIRED", "Provide sender name, transfer reference and a secure HTTPS receipt link.");
   if (!/^[A-Za-z0-9._:-]{8,120}$/.test(idempotencyKey)) throw new HttpError(400, "IDEMPOTENCY_KEY_REQUIRED", "Provide a valid Idempotency-Key.");
   const amountMinor = BigInt(amountRaw);
   const existing = await prisma.walletFundingSubmission.findUnique({ where: { idempotencyKey } });
