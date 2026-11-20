@@ -185,4 +185,11 @@ describe("EPHINTA global theme contrast", () => {
     expect(appEntry).toContain("import './styles/ephinta-runtime-contrast.css';");
   });
 
+  it("keeps dialogs compact and centered on desktop instead of stretching across the screen", () => {
+    expect(runtimeCss).toContain("Desktop dialogs deliberately keep the compact");
+    expect(runtimeCss).toContain("width: min(92vw, 420px) !important;");
+    expect(runtimeCss).toContain("max-width: 420px !important;");
+    expect(runtimeCss).toContain("margin: auto !important;");
+  });
+
 });
