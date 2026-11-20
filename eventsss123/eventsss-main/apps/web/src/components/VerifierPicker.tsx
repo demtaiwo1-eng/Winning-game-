@@ -50,6 +50,7 @@ export default function VerifierPicker({
   lng?: number;
 }) {
   const [items, setItems] = useState<VerifierCard[]>([]);
+  const [assignments, setAssignments] = useState<Array<{ verifierId: string; zone: string; isLead: boolean; verifier: { id: string; name: string; email: string } }>>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [detail, setDetail] = useState<{
     profile: VerifierCard & { bio?: string | null; isAvailable?: boolean };
@@ -74,6 +75,21 @@ export default function VerifierPicker({
     load();
   }, [eventId, city, country, lat, lng]);
 
+  useEffect(() => {
+    if (!eventId) { setAssignments([]); setSelected(new Set()); return; }
+    let active = true;
+    api<{ items: Array<{ verifierId: string; zone: string; isLead: boolean; verifier: { id: string; name: string; email: string } }> }>("/readiness/events/" + eventId + "/verifiers")
+      .then((result) => {
+        if (!active) return;
+        const current = result.items || [];
+        setAssignments(current);
+        const lead = current.find((item) => item.isLead);
+        setSelected(lead ? new Set([lead.verifierId]) : new Set());
+      })
+      .catch(() => { if (active) setAssignments([]); });
+    return () => { active = false; };
+  }, [eventId]);
+
   const openPopup = async (id: string) => {
     try {
       const res = await api<{
@@ -87,12 +103,7 @@ export default function VerifierPicker({
   };
 
   const toggle = (id: string) => {
-    setSelected((prev) => {
-      const n = new Set(prev);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
+    setSelected((prev) => prev.has(id) ? new Set() : new Set([id]));
   };
 
   const confirmSelect = async () => {
@@ -107,7 +118,9 @@ export default function VerifierPicker({
         method: "POST",
         body: JSON.stringify({ verifierIds: [...selected], zone: "GENERAL" }),
       });
-      setMsg(`${res.notified} verifier(s) selected and notified.`);
+      setMsg(res.notified + " lead verifier assignment confirmed and notification sent.");
+      const current = await api<{ items: Array<{ verifierId: string; zone: string; isLead: boolean; verifier: { id: string; name: string; email: string } }> }>("/readiness/events/" + eventId + "/verifiers");
+      setAssignments(current.items || []);
       setSelected(new Set());
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Selection failed");
@@ -121,9 +134,18 @@ export default function VerifierPicker({
       <p className="ess-eyebrow">Choose verifiers early</p>
       <h2>Verifier directory</h2>
       <p className="ess-muted">
-        Closest to your event location rank first (Top local → Nearby → Same city). Open a card for bio,
-        ratings from past jobs, and specialties. Selected verifiers receive an in-app notification; device push alerts will be enabled when the notification provider is configured.
+        Select the lead verifier who will follow this event from planning through ground checks, part-payment milestones and go-live. You can change the lead here; the new lead is notified and becomes the verifier responsible for the event readiness board.
       </p>
+      {assignments.length > 0 && (
+        <div className="ess-verifier-assignment-summary">
+          <strong>Current event verification team</strong>
+          {assignments.map((assignment) => (
+            <p key={assignment.verifierId + "-" + assignment.zone} className="ess-muted">
+              {assignment.isLead ? "Lead verifier" : "Support verifier"}: {assignment.verifier.name} · {assignment.zone}
+            </p>
+          ))}
+        </div>
+      )}
       {events.length > 0 && (
         <label className="ess-verifier-event-select">
           Select the event this verifier will support
@@ -200,7 +222,7 @@ export default function VerifierPicker({
                 className={selected.has(v.id) ? "ess-primary" : "ess-outline-button"}
                 onClick={() => toggle(v.id)}
               >
-                {selected.has(v.id) ? "Selected" : "Select"}
+                {selected.has(v.id) ? "Lead selected" : "Select as lead"}
               </button>
             </div>
           </div>
@@ -213,7 +235,7 @@ export default function VerifierPicker({
         disabled={busy || selected.size === 0 || !eventId}
         onClick={confirmSelect}
       >
-        {busy ? "Notifying…" : `Confirm ${selected.size || ""} verifier(s) & notify`}
+        {busy ? "Notifying…" : "Confirm lead verifier & notify"}
       </button>
       {msg && (
         <div
