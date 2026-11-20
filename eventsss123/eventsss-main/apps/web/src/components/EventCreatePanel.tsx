@@ -74,7 +74,7 @@ export default function EventCreatePanel({ onCreated }: { onCreated?: (id: strin
         if (active) {
           const items = result.items || [];
           setVerifiers(items);
-          if (selectedVerifierId && !items.some((item) => item.id === selectedVerifierId)) setSelectedVerifierId("");
+          setSelectedVerifierId((current) => current && items.some((item) => item.id === current) ? current : "");
         }
       })
       .catch(() => { if (active) setVerifiers([]); })
