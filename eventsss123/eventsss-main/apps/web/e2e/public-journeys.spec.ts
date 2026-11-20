@@ -58,6 +58,8 @@ test("landing page vendor join opens the shared vendor registration dialog", asy
   await expect(dialog).toHaveAttribute("data-role", "vendor");
   await expect(dialog.getByLabel("Registration account type")).toHaveValue("VENDOR");
   await dialog.getByLabel("Full name").fill("Vendor Journey Test");
+  await dialog.getByLabel("Email address").fill("vendor-journey@example.test");
+  await dialog.getByLabel("Password", { exact: true }).fill("QaVendorJourney123!");
   await dialog.getByRole("button", { name: /Next/ }).click();
   await expect(dialog.getByLabel("Business name")).toBeVisible();
 });
