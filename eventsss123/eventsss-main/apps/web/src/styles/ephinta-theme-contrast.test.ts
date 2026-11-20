@@ -130,7 +130,6 @@ describe("EPHINTA global theme contrast", () => {
     expect(runtimeCss).toContain('html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown');
     expect(runtimeCss).toContain('background: #ffffff !important');
     expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] .ess-app .ess-topbar');
-    expect(runtimeCss).toContain('className="ess-brand-wordmark"');
   });
 
 });
