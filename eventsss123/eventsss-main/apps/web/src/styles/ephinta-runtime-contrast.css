@@ -104,6 +104,17 @@ html[data-ephinta-theme] body #root :where(
   .ess-marketplace-feature-tile,.ess-marketplace-float
 ) :where(small,p,.muted,.text-muted,.helper-text) { color: #e7edf7; }
 
+/* Branded landing copy remains legible on its intentional coloured surfaces. */
+html[data-ephinta-theme] body #root .eph-promo-heading h2 {
+  color: #ffffff;
+}
+html[data-ephinta-theme] body #root .ephinta-marketing-zone h2 {
+  color: #251633;
+}
+html[data-ephinta-theme] body #root .ephinta-bright-slogan {
+  color: #251a36;
+}
+
 html[data-ephinta-theme] body #root .ess-mode-menu__active {
   display: inline-flex;
   width: fit-content;
