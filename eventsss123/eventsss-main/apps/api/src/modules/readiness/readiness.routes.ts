@@ -964,12 +964,19 @@ readinessRouter.post(
       throw new HttpError(403, "FORBIDDEN", "Only the event owner can select verifiers");
     }
     const verifierIds: string[] = Array.isArray(req.body.verifierIds)
-      ? req.body.verifierIds
+      ? [...new Set(req.body.verifierIds.filter((id: unknown): id is string => typeof id === "string"))]
       : req.body.verifierId
-        ? [req.body.verifierId]
+        ? [String(req.body.verifierId)]
         : [];
     if (!verifierIds.length) throw new HttpError(400, "VALIDATION_ERROR", "verifierIds required");
     const zone = String(req.body.zone || "GENERAL").toUpperCase();
+    const activeVerifiers = await prisma.user.findMany({
+      where: { id: { in: verifierIds }, role: "VERIFIER", status: "ACTIVE" },
+      select: { id: true },
+    });
+    if (activeVerifiers.length !== verifierIds.length) {
+      throw new HttpError(404, "VERIFIER_NOT_FOUND", "One or more selected verifier accounts are unavailable");
+    }
     // Reassignment is authoritative: the newly selected first verifier becomes lead.
     await prisma.eventVerifierAssignment.updateMany({ where: { eventId, zone }, data: { isLead: false } });
     const assigned: Array<{ verifierId: string }> = [];
