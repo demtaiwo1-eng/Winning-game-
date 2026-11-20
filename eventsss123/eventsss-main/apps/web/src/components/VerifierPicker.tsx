@@ -226,6 +226,7 @@ export default function VerifierPicker({
 
       {detail && (
         <div
+          className="ess-dialog-overlay"
           role="dialog"
           style={{
             position: "fixed",
