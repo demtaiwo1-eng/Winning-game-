@@ -363,7 +363,7 @@ readinessRouter.get(
         city: e.city,
         country: e.country,
         owner: e.owner,
-        bookingCount: e.bookings.length,
+        bookingCount: e.bookings.filter((booking) => ["PAID", "CONFIRMED"].includes(booking.status)).length,
         bookings: e.bookings.map((booking) => ({
           id: booking.id, status: booking.status, currency: booking.currency,
           totalMinor: booking.totalMinor.toString(), paidMinor: booking.paidMinor.toString(),
