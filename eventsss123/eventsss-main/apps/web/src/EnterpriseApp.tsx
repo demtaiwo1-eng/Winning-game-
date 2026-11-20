@@ -3507,7 +3507,7 @@ function AuthModal({
             ? [
                 `Create your ${roleLabel(role).toLowerCase()} account`,
                 `Set up your ${registrationProfileLabel[role as SelfRegisterRole]}`,
-                "Choose your preferences",
+                (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) ? "Country & business checks" : "Choose your preferences",
               ][registrationStep]
             : mode === "forgot"
               ? "Reset your password"
@@ -3537,7 +3537,7 @@ function AuthModal({
             <div className="ess-registration-progress" aria-label={`Registration step ${registrationStep + 1} of 3`}>
               <div className="ess-registration-progress-copy">
                 <strong>Step {registrationStep + 1} of 3</strong>
-                <span>{["Account details", registrationProfileLabel[role as SelfRegisterRole], "Preferences"][registrationStep]}</span>
+                <span>{["Account details", registrationProfileLabel[role as SelfRegisterRole], (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) ? "Country & business checks" : "Preferences"][registrationStep]}</span>
               </div>
               <div className="ess-registration-progress-track"><span style={{ width: `${((registrationStep + 1) / 3) * 100}%` }} /></div>
             </div>
