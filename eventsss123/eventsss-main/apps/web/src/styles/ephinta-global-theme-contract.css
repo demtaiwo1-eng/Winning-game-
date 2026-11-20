@@ -32,19 +32,19 @@ html[data-ephinta-theme="light"],html[data-theme="light"],html.theme-light,.them
 }
 html[data-ephinta-theme="dark"],html[data-theme="dark"],html.theme-dark,.theme-dark {
   color-scheme:dark;
-  --epg-page:#101827; --epg-surface:#182337; --epg-surface-raised:#202d43; --epg-surface-soft:#26354d;
-  --epg-ink:#f4f7fc; --epg-muted:#c4cede; --epg-subtle:#b3bfd0; --epg-border:#43516a;
-  --epg-link:#a9d8ff; --epg-focus:#ffd166; --epg-accent:#a99af7; --epg-accent-ink:#1c1730;
-  --epg-success:#8bd8ad; --epg-warning:#ffd28a; --epg-danger:#ff9eae;
-  --epg-shadow:0 12px 30px rgb(0 0 0 / 25%);
+  --epg-page:#0b1220; --epg-surface:#121d30; --epg-surface-raised:#1a2940; --epg-surface-soft:#22344e;
+  --epg-ink:#f7f9ff; --epg-muted:#e0e8f7; --epg-subtle:#cbd8ee; --epg-border:#526581;
+  --epg-link:#a9e7ff; --epg-focus:#ffe18a; --epg-accent:#c4b5fd; --epg-accent-ink:#17122b;
+  --epg-success:#9cf2c4; --epg-warning:#ffe09a; --epg-danger:#ffb4c0;
+  --epg-shadow:0 12px 30px rgb(0 0 0 / 32%);
 }
 html[data-ephinta-theme="colorful"],html[data-theme="colorful"],html.theme-colorful,.theme-colorful {
-  color-scheme:light;
-  --epg-page:#f7f5fb; --epg-surface:#ffffff; --epg-surface-raised:#faf8ff; --epg-surface-soft:#f0ebf8;
-  --epg-ink:#241b35; --epg-muted:#554b67; --epg-subtle:#655a76; --epg-border:#d9d0e5;
-  --epg-link:#5635a8; --epg-focus:#285bd4; --epg-accent:#633db5; --epg-accent-ink:#ffffff;
-  --epg-success:#176b48; --epg-warning:#805000; --epg-danger:#a51f35;
-  --epg-shadow:0 8px 26px rgb(42 27 67 / 9%);
+  color-scheme:dark;
+  --epg-page:#160f2b; --epg-surface:#211638; --epg-surface-raised:#2c1d49; --epg-surface-soft:#392454;
+  --epg-ink:#fffaff; --epg-muted:#f0e5ff; --epg-subtle:#dfd0f5; --epg-border:#75579a;
+  --epg-link:#9cecff; --epg-focus:#ffe18a; --epg-accent:#d5b4ff; --epg-accent-ink:#20132f;
+  --epg-success:#a5f3ce; --epg-warning:#ffe09a; --epg-danger:#ffb8d0;
+  --epg-shadow:0 12px 30px rgb(15 7 28 / 35%);
 }
 
 /* Compatibility tokens point to the selected palette, not to a second theme. */
@@ -93,14 +93,15 @@ body { color-scheme:inherit; }
 :where(a,.text-action,.back-button) { color:var(--epg-link); }
 :where(table,th,td,.detail-list li,.event-row,.vendor-metric-row,.budget-row) { border-color:var(--epg-border); }
 
-/* Dark brand panels keep their intended white-on-dark treatment. */
+/* Brand panels retain contrast through the same semantic light palette. */
 :where(.workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
-.dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel) { color:#fff; }
+.dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel) {
+  color:var(--epg-ink);
+  background-color:var(--epg-surface);
+}
 :where(.workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
 .dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel)
 :where(h1,h2,h3,h4,strong,b,p,span,small,label,a,li) { color:inherit; }
-:where(.workspace-intro,.vendor-hero-card,.hero-dark,.dark-panel)
-:where(p,small,.muted) { color:#e7edf7; }
 
 :where(button,a,input,select,textarea,[tabindex]):focus-visible {
   outline:3px solid var(--epg-focus);
