@@ -829,3 +829,11 @@ html body #root .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
     max-width: calc(100vw - 20px) !important;
   }
 }
+
+
+/* Never place music consent or floating player controls over active interviews. */
+body:has(.ess-builder, .ess-role-questionnaire, .ess-interview-card) #root .eph-audio__backdrop,
+body:has(.ess-builder, .ess-role-questionnaire, .ess-interview-card) #root .eph-audio__restore,
+body:has(.ess-builder, .ess-role-questionnaire, .ess-interview-card) #root .eph-audio__player {
+  display: none !important;
+}
