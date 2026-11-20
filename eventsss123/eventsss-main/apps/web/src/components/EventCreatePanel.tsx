@@ -24,6 +24,11 @@ const SCALES = [
 
 const FORMATS = ["IN_PERSON", "HYBRID", "VIRTUAL", "ROADSHOW", "INVITE_ONLY"] as const;
 
+type VerifierOption = {
+  id: string; name: string; headline?: string | null; city?: string | null; country?: string | null;
+  ratingAvg: number; ratingCount: number; jobsCompleted: number; specialties: string[];
+};
+
 export default function EventCreatePanel({ onCreated }: { onCreated?: (id: string) => void }) {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<(typeof EVENT_TYPES)[number]>("CORPORATE");
@@ -45,6 +50,9 @@ export default function EventCreatePanel({ onCreated }: { onCreated?: (id: strin
   const [parentEventId, setParentEventId] = useState("");
   const [parentOptions, setParentOptions] = useState<Array<{ id: string; title: string }>>([]);
   const [templateId, setTemplateId] = useState("");
+  const [verifiers, setVerifiers] = useState<VerifierOption[]>([]);
+  const [selectedVerifierId, setSelectedVerifierId] = useState("");
+  const [verifierLoading, setVerifierLoading] = useState(false);
 
   useEffect(() => {
     api<{ items?: Array<{ id: string; title: string }> }>("/events")
@@ -54,6 +62,25 @@ export default function EventCreatePanel({ onCreated }: { onCreated?: (id: strin
       })
       .catch(() => setParentOptions([]));
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    setVerifierLoading(true);
+    const query = new URLSearchParams();
+    if (city.trim()) query.set("city", city.trim());
+    if (country.trim()) query.set("country", country.trim().toUpperCase());
+    api<{ items: VerifierOption[] }>("/readiness/verifiers/directory?" + query.toString())
+      .then((result) => {
+        if (active) {
+          const items = result.items || [];
+          setVerifiers(items);
+          if (selectedVerifierId && !items.some((item) => item.id === selectedVerifierId)) setSelectedVerifierId("");
+        }
+      })
+      .catch(() => { if (active) setVerifiers([]); })
+      .finally(() => { if (active) setVerifierLoading(false); });
+    return () => { active = false; };
+  }, [city, country]);
 
   const applyTemplate = (t: CompendiumTemplate) => {
     setTemplateId(t.id);
@@ -102,16 +129,27 @@ export default function EventCreatePanel({ onCreated }: { onCreated?: (id: strin
         }),
       });
       if (scaleTier === "LARGE" || scaleTier === "MEGA" || scaleTier === "MEDIUM" || format === "HYBRID") {
+        try { await api(`/readiness/events/${res.event.id}/seed-zones`, { method: "POST", body: "{}" }); }
+        catch { /* zone templates remain optional while a deployment is migrating */ }
+      }
+      try { await api(`/readiness/events/${res.event.id}/sync`, { method: "POST", body: "{}" }); }
+      catch { /* planner workspace retries the idempotent sync when it opens */ }
+      let verifierMessage = "No lead verifier selected yet. You can assign one from the planner workspace.";
+      if (selectedVerifierId) {
         try {
-          await api(`/readiness/events/${res.event.id}/seed-zones`, {
+          await api(`/readiness/events/${res.event.id}/select-verifiers`, {
             method: "POST",
-            body: "{}",
+            body: JSON.stringify({ verifierIds: [selectedVerifierId], zone: "GENERAL" }),
           });
-        } catch {
-          /* optional until migrate */
+          const selected = verifiers.find((item) => item.id === selectedVerifierId);
+          verifierMessage = "Lead verifier " + (selected?.name || "selected") + " assigned and notified.";
+        } catch (assignmentError) {
+          verifierMessage = assignmentError instanceof Error
+            ? "Event created, but verifier assignment needs attention: " + assignmentError.message
+            : "Event created, but verifier assignment needs attention.";
         }
       }
-      setMsg(`Event “${res.event.title}” created — production path ready (zones + checklist).`);
+      setMsg("Event “" + res.event.title + "” created. " + verifierMessage);
       onCreated?.(res.event.id);
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "Create failed");
@@ -245,6 +283,22 @@ export default function EventCreatePanel({ onCreated }: { onCreated?: (id: strin
             />
           </label>
         </div>
+        <section className="ess-verifier-first-assignment">
+          <p className="ess-eyebrow">Set up your ground team</p>
+          <h3>Choose your lead verifier now</h3>
+          <p className="ess-muted">Your verifier follows this event from planning, monitors the checklist and payment milestones, and reports what is confirmed on the ground.</p>
+          <label>Lead verifier
+            <select value={selectedVerifierId} onChange={(e) => setSelectedVerifierId(e.target.value)}>
+              <option value="">Choose later from the planner workspace</option>
+              {verifiers.map((verifier) => <option key={verifier.id} value={verifier.id}>{verifier.name} · ★ {Number(verifier.ratingAvg || 0).toFixed(1)} · {verifier.city || "Location not set"}</option>)}
+            </select>
+          </label>
+          <p className="ess-muted">{verifierLoading ? "Finding available verifiers near your event…" : verifiers.length ? verifiers.length + " available verifier profile(s) found for this location." : "No available verifier profiles found for this location yet. You can assign one later."}</p>
+          {selectedVerifierId && (() => {
+            const verifier = verifiers.find((item) => item.id === selectedVerifierId);
+            return verifier ? <div className="ess-card"><strong>{verifier.name}</strong><p className="ess-muted">{verifier.headline || "Event readiness verifier"} · {verifier.jobsCompleted} completed jobs · {verifier.ratingCount} ratings</p>{verifier.specialties?.length ? <p className="ess-muted">Specialties: {verifier.specialties.join(", ")}</p> : null}</div> : null;
+          })()}
+        </section>
         <label>
           Currency
           <input value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase())} maxLength={3} />
