@@ -3471,6 +3471,8 @@ function AuthModal({
   const [vendorKycAnswers, setVendorKycAnswers] = useState<VendorKycAnswers>({});
   const [touched, setTouched] = useState<Partial<Record<RegistrationField, boolean>>>({});
   const internal = role === "VERIFIER" || role === "ADMIN";
+  const isVendorRegistration = mode === "signup" && (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER"));
+  const vendorKycComplete = Boolean(vendorKycAnswers.legalForm && vendorKycAnswers.registrationStatus && vendorKycAnswers.taxStatus && vendorKycAnswers.operatingAddress?.trim() && vendorKycAnswers.regulatedActivity);
   useEffect(() => { setTouched({}); setRegistrationStep(0); }, [role, mode]);
   const touch = (field: RegistrationField) => setTouched((current) => ({ ...current, [field]: true }));
   const fieldError = (field: RegistrationField, value: string) =>
@@ -3853,7 +3855,7 @@ function AuthModal({
                   Next <span>→</span>
                 </button>
               ) : (
-                <button className="ess-primary ess-full-button" type="submit">
+                <button className="ess-primary ess-full-button" type="submit" disabled={isVendorRegistration && !vendorKycComplete} title={isVendorRegistration && !vendorKycComplete ? "Complete the required business verification questions first." : undefined}>
                   Create account <span>→</span>
                 </button>
               )}
