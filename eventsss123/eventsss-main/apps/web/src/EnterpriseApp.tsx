@@ -1502,7 +1502,7 @@ function VerifierPortal() {
                   <div className="ess-muted" style={{ fontSize: 13 }}>
                     {e.startsAt ? new Date(e.startsAt).toLocaleString() : "No start time"}
                     {e.endsAt ? ` – ${new Date(e.endsAt).toLocaleString()}` : ""}
-                    {" · "}{e.city || "—"} · {e.status || "PLANNING"} · {e.isLeadVerifier ? "Lead verifier" : "Supporting verifier"}
+                    {" · "}{e.city || "—"} · {e.status || "PLANNING"} · {e.isLeadVerifier ? "Lead verifier" : e.verifierZones?.length ? "Supporting verifier" : "Operations view"}
                     {e.status === "COMPLETED" && e.bookingCount
                       ? ` · ${e.bookingCount} escrow release${e.bookingCount === 1 ? "" : "s"} pending`
                       : ""}
