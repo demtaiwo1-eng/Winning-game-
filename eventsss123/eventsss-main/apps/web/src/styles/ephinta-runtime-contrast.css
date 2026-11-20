@@ -181,3 +181,123 @@ html[data-ephinta-theme="colorful"] .ess-app .ess-menu-option b {
   .ess-app .ess-brand-wordmark strong { font-size: 13px; }
   .ess-app .ess-brand-wordmark small { font-size: 9px; }
 }
+
+/* FINAL EPHINTA TEXT VISIBILITY CONTRACT
+   The selected theme controls foreground contrast everywhere, including the
+   public landing page, navigation, nested cards, forms and mobile layouts. */
+html[data-ephinta-theme="light"] body #root,
+html[data-ephinta-theme="colorful"] body #root {
+  --ephinta-readable-text: #17152b;
+  --ephinta-readable-muted: #41445a;
+}
+html[data-ephinta-theme="dark"] body #root {
+  --ephinta-readable-text: #f7f9ff;
+  --ephinta-readable-muted: #e0e8f7;
+}
+html[data-ephinta-theme] body #root :where(
+  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,li,dt,dd,
+  th,td,caption,figcaption,summary,blockquote,code,pre,output,
+  .ess-eyebrow,.ess-muted,.muted,.text-muted,.text-secondary,
+  .helper-text,.form-hint,.form-description,.field-description,
+  .section-description,.workspace-subtitle,.empty-state,
+  .landing-page,.landing-page *,[class*="landing"] p,
+  [class*="landing"] span,[class*="landing"] small,
+  [class*="landing"] h1,[class*="landing"] h2,
+  [class*="landing"] h3,[class*="landing"] h4,
+  [class*="landing"] li,[class*="landing"] label
+) {
+  color: var(--ephinta-readable-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root :where(
+  .ess-muted,.muted,.text-muted,.text-secondary,.helper-text,
+  .form-hint,.form-description,.field-description,.section-description,
+  .workspace-subtitle,.empty-state,.ess-eyebrow
+) {
+  color: var(--ephinta-readable-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root a,
+html[data-ephinta-theme] body #root [role="link"] {
+  color: var(--epg-link) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root :where(input,select,textarea,option) {
+  color: var(--epg-ink) !important;
+  background-color: var(--epg-surface-raised) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root :where(input,textarea)::placeholder {
+  color: var(--epg-subtle) !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* The EPHINTA wordmark is deliberately opaque and high-contrast so it cannot
+   disappear into colorful gradients, inherited opacity or menu effects. */
+html[data-ephinta-theme] .ess-app .ess-topbar .ess-brand {
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+  color: var(--epg-ink) !important;
+}
+html[data-ephinta-theme] .ess-app .ess-topbar .ess-brand-wordmark,
+html[data-ephinta-theme] .ess-app .ess-topbar .ess-brand-wordmark strong {
+  opacity: 1 !important;
+  visibility: visible !important;
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: var(--epg-ink) !important;
+  text-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+html[data-ephinta-theme] .ess-app .ess-topbar .ess-brand-wordmark strong {
+  display: block !important;
+  font-size: clamp(14px, 1.2vw, 17px) !important;
+  font-weight: 950 !important;
+  letter-spacing: .08em !important;
+  line-height: 1.15 !important;
+}
+html[data-ephinta-theme] .ess-app .ess-topbar .ess-brand-wordmark small {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  color: var(--epg-muted) !important;
+  -webkit-text-fill-color: var(--epg-muted) !important;
+  font-weight: 650 !important;
+  line-height: 1.35 !important;
+}
+html[data-ephinta-theme] .ess-app .ess-topbar .ess-app-brand-logo {
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+html[data-ephinta-theme="colorful"] .ess-app .ess-topbar,
+html[data-ephinta-theme="light"] .ess-app .ess-topbar {
+  background: #ffffff !important;
+}
+html[data-ephinta-theme] .ess-app .ess-menu-dropdown,
+html[data-ephinta-theme] .ess-app .ess-menu-dropdown * {
+  opacity: 1;
+  visibility: visible;
+}
+html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown,
+html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown {
+  background: #ffffff !important;
+  color: #17152b !important;
+}
+html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown :where(*),
+html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown :where(*) {
+  color: #17152b !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown {
+  background: #121d30 !important;
+  color: #f7f9ff !important;
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown :where(*) {
+  color: #f7f9ff !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
