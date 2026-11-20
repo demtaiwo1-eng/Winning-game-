@@ -852,7 +852,15 @@ test("background music starts only after consent and advances automatically", as
 });
 
 test("saved sound-off preference keeps a visible way to reopen music consent", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("ephinta:sound", "off"));
+  await page.addInitScript(() => {
+    localStorage.setItem("ephinta:sound", "off");
+    document.addEventListener("DOMContentLoaded", () => {
+      const hiddenAuthShell = document.createElement("div");
+      hiddenAuthShell.className = "ess-auth-modal";
+      hiddenAuthShell.style.display = "none";
+      document.body.append(hiddenAuthShell);
+    }, { once: true });
+  });
   await page.goto("/");
   const enableMusic = page.getByRole("button", { name: "Enable EPHINTA music" });
   await expect(enableMusic).toBeVisible();
