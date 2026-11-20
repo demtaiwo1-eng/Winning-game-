@@ -1152,6 +1152,12 @@ export default function PublicLanding({
           color: #f8fafc !important;
           -webkit-text-fill-color: #f8fafc !important;
         }
+        /* Final light-mode slogan fill: preserve readable ink on pale surfaces. */
+        .eph-landing:not([data-theme="dark"]):not([data-theme="colorful"]) .ephinta-bright-slogan {
+          color: #251a36 !important;
+          -webkit-text-fill-color: #251a36 !important;
+          background: none !important;
+        }
       `}</style>
 
 
