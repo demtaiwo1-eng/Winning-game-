@@ -224,17 +224,6 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         </div>
       )}
 
-      {consent === false && !authDialogOpen && (
-        <button
-          type="button"
-          className="eph-audio__restore"
-          onClick={() => setConsent(null)}
-          aria-label="Enable EPHINTA music"
-        >
-          ♫ Enable music
-        </button>
-      )}
-
       {consent === true && !authDialogOpen && (!expanded ? (
         <button type="button" className="eph-audio__restore" onClick={() => setExpanded(true)} aria-label="Open music player">
           ♫ Music {playing ? "playing" : "paused"}
