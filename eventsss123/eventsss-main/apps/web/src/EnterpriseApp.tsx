@@ -1630,6 +1630,9 @@ function FinanceOperationsPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [fundingQueue, setFundingQueue] = useState<Array<{ id: string; customer: { id: string; name: string; email: string }; amountMinor: string; currency: string; senderName: string; senderBank: string | null; transferReference: string; receiptUrl: string; createdAt: string }>>([]);
+  const [fundingNotes, setFundingNotes] = useState<Record<string, string>>({});
+  const [fundingWorking, setFundingWorking] = useState("");
   const [exporting, setExporting] = useState<"payments" | "ledger" | null>(null);
   const exportCsv = async (kind: "payments" | "ledger") => {
     setExporting(kind);
@@ -1661,7 +1664,19 @@ function FinanceOperationsPanel() {
   return (
     <section className="ess-panel">
       <SectionTitle eyebrow="Finance · read only" title="Payment and wallet operations" />
-      <p className="ess-muted">This view reads payment intents and append-only ledger entries. It cannot move funds, settle payments, or issue refunds.</p>
+      <p className="ess-muted">Compare each receipt with the actual credit in the bank/provider portal before approving. Approval credits the customer’s NGN wallet and records an append-only ledger entry; rejection never moves funds.</p>
+      {fundingQueue.length === 0 ? <p className="ess-muted">No bank-transfer receipts are awaiting review.</p> : fundingQueue.map(item => <article className="ess-wallet-card" key={item.id} style={{ margin: "12px 0" }}>
+        <strong>{item.customer.name} · {item.customer.email}</strong>
+        <p>{financeAmount(item.amountMinor, item.currency)} · {item.senderName} · {item.senderBank || "Bank not supplied"}</p>
+        <p className="ess-muted">Transfer reference: {item.transferReference} · Submitted {new Date(item.createdAt).toLocaleString()}</p>
+        <a href={item.receiptUrl} target="_blank" rel="noreferrer">Open transfer receipt</a>
+        <label style={{ display: "block", marginTop: 10 }}>Bank verification note<textarea value={fundingNotes[item.id] || ""} onChange={event => setFundingNotes(notes => ({ ...notes, [item.id]: event.target.value }))} placeholder="Record the bank statement/provider transaction match and amount received." /></label>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+          <button className="ess-primary" type="button" disabled={fundingWorking === item.id} onClick={() => void reviewFunding(item.id, "APPROVE")}>Approve and credit wallet</button>
+          <button className="ess-outline-button" type="button" disabled={fundingWorking === item.id} onClick={() => void reviewFunding(item.id, "REJECT")}>Reject receipt</button>
+        </div>
+      </article>)}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}><button className="ess-outline-button" type="button" onClick={() => setRefreshKey(key => key + 1)}>Refresh receipt queue</button></div>
       <div className="ess-form-grid">
         <label>Provider<select value={provider} onChange={(event) => setProvider(event.target.value)}><option value="">All providers</option><option value="opay">OPay</option><option value="paystack">Paystack</option><option value="flutterwave">Flutterwave</option><option value="stripe">Stripe</option><option value="demo">Demo</option></select></label>
         <label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option><option value="PENDING">Pending</option><option value="SUCCEEDED">Succeeded</option><option value="FAILED">Failed</option><option value="REFUNDED">Refunded</option></select></label>
