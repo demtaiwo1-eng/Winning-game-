@@ -9,7 +9,8 @@ type Props = {
 };
 type MusicCategory = "featured" | keyof typeof EPHINTA_MUSIC.categoryTracks;
 
-const CATEGORY_LABELS: Record<MusicCategory, string> = {\n  featured: "Wale Waves favourites",
+const CATEGORY_LABELS: Record<MusicCategory, string> = {
+  featured: "Wale Waves favourites",
   wedding: "Wedding",
   naming: "Naming ceremony",
   burial: "Burial",
@@ -271,7 +272,8 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
             <label>
               <span className="eph-audio__volume-label">Event music</span>
               <select aria-label="Music category" value={category} onChange={(event) => setCategory(event.target.value as MusicCategory)}>
-                <option value="featured">Wale Waves favourites</option>\n                <option value="wedding">Wedding</option>
+                <option value="featured">Wale Waves favourites</option>
+                <option value="wedding">Wedding</option>
                 <option value="naming">Naming ceremony</option>
                 <option value="burial">Burial</option>
               </select>
