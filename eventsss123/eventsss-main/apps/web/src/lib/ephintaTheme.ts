@@ -20,7 +20,7 @@ export function applyEphintaTheme(value: unknown): EphintaTheme {
   if (typeof document !== "undefined") {
     document.documentElement.dataset.ephintaTheme = theme;
     document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light";
+    document.documentElement.style.colorScheme = theme === "light" ? "light" : "dark";
   }
   try {
     window.localStorage.setItem(STORAGE_KEY, theme);
