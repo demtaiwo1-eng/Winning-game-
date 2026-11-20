@@ -1,7 +1,7 @@
 {
   "name": "EPHINTA",
   "short_name": "EPHINTA",
-  "description": "Event planning and management platform",
+  "description": "EPHINTA — event planning, vendors, guests, budgets and event operations.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "theme_color": "#f97316",
   "icons": [
     {
-      "src": "/brand/ephinta_logo2.png",
+      "src": "/icons/ess-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
