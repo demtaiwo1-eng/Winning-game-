@@ -204,26 +204,26 @@ readinessRouter.post(
     });
     for (const request of paymentRequests) {
       const existing = await prisma.eventServiceCheck.findUnique({ where: { paymentRequestId: request.id } });
+      // Rejected requests remain visible in the financial history but do not permanently block a replacement request.
+      if (request.status === "REJECTED") {
+        if (existing) await prisma.eventServiceCheck.delete({ where: { id: existing.id } });
+        continue;
+      }
       if (!existing) {
         await prisma.eventServiceCheck.create({
           data: {
             eventId, bookingId: request.booking.id, paymentRequestId: request.id,
             label: "Part payment: " + request.reason, category: "PAYMENT_MILESTONE",
-            zone: "FINANCE", status: request.status === "REJECTED" ? "RED" : "PENDING",
+            zone: "FINANCE", status: "PENDING",
             notes: request.status === "PAID"
               ? "Payment recorded in EPHINTA; verifier ground confirmation is still required."
-              : request.status === "REJECTED" ? "Payment request was rejected; planner action is required." : "Awaiting recorded payment before this milestone can be verified.",
+              : "Awaiting recorded payment before this milestone can be verified.",
           },
         });
       } else if (request.status === "PAID" && existing.status === "PENDING" && !existing.verifiedById) {
         await prisma.eventServiceCheck.update({
           where: { id: existing.id },
           data: { notes: "Payment recorded in EPHINTA; verifier ground confirmation is still required." },
-        });
-      } else if (request.status === "REJECTED" && existing.status === "PENDING") {
-        await prisma.eventServiceCheck.update({
-          where: { id: existing.id },
-          data: { status: "RED", notes: "Payment request was rejected; planner action is required." },
         });
       }
     }
