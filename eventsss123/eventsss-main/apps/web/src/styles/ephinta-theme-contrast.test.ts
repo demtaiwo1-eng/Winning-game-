@@ -50,10 +50,11 @@ describe("EPHINTA global theme contrast", () => {
     expect(contrast(accentInk, accent)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("uses one neutral surface system and maps legacy tokens to it", () => {
+  it("maps legacy tokens without flattening intentionally colourful component surfaces", () => {
     expect(contract).toContain("--ephinta-theme-page:var(--epg-page)");
     expect(contract).toContain("--ess-surface:var(--epg-surface)");
-    expect(contract).toContain("background-image:none !important");
+    expect(contract).toContain("Feature components own their surfaces");
+    expect(contract).not.toContain("background-image:none !important");
     expect(contract).toContain("html[data-ephinta-theme=\"colorful\"],html[data-theme=\"colorful\"]");
   });
 
@@ -63,25 +64,26 @@ describe("EPHINTA global theme contrast", () => {
     expect(appEntry.indexOf("initializeEphintaTheme();")).toBeLessThan(appEntry.indexOf("ReactDOM.createRoot"));
   });
 
-  it("uses text-level theme rules without forcing colors onto layout wrappers", () => {
-    expect(runtimeCss).toContain("Text-only enforcement");
-    expect(runtimeCss).toContain("h1,h2,h3,h4,h5,h6,p,span");
-    expect(runtimeCss).toContain("button *");
-    expect(runtimeCss).toContain(".status-pill *");
-    expect(runtimeCss).not.toContain("body :is(div,section,article,header,footer,main,nav,aside)");
+  it("lets component text retain semantic colours while shared controls use theme tokens", () => {
+    expect(runtimeCss).toContain("Text inherits from its component");
+    expect(runtimeCss).toContain("--ephinta-link-fg");
+    expect(runtimeCss).toContain("--ephinta-field-bg");
+    expect(runtimeCss).not.toContain("html[data-ephinta-theme] body #root :is(h1,h2,h3,h4,h5,h6");
+    expect(runtimeCss).not.toContain("button *");
+    expect(runtimeCss).not.toContain(".status-pill *");
   });
 
   it("keeps native controls aligned with the selected colorful palette", () => {
     expect(themeRuntime).toContain('document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light"');
   });
 
-  it("keeps the final override after legacy component rules", () => {
-    const marker = "FINAL GLOBAL CONTRAST ENFORCEMENT";
-    expect(globalCss).toContain(marker);
-    expect(globalCss.lastIndexOf(marker)).toBeGreaterThan(globalCss.indexOf("@import"));
+  it("does not reintroduce a second blanket contrast layer after the shared theme contract", () => {
+    expect(globalCss).toContain('@import "./ephinta-global-theme-contract.css";');
+    expect(globalCss).toContain('@import "./ephinta-runtime-contrast.css";');
+    expect(globalCss).not.toContain("FINAL GLOBAL CONTRAST ENFORCEMENT");
+    expect(globalCss).not.toContain("Specificity guard: component sheets");
+    expect(globalCss).not.toContain("ephinta-theme-text-contrast.css");
+    expect(globalCss).not.toContain("ephinta-accessible-contrast.css");
     expect(globalCss.trimEnd().endsWith("}")).toBe(true);
-    expect(globalCss).toContain("Branded dark feature panels deliberately retain their dark surfaces.");
-    expect(globalCss).toContain("Specificity guard: component sheets contain several legacy !important rules.");
-    expect(globalCss.lastIndexOf("Preserve the intentional dark feature panels")).toBeGreaterThan(globalCss.lastIndexOf("Specificity guard"));
   });
 });
