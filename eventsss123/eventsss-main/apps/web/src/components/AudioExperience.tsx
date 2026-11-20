@@ -225,7 +225,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       )}
 
 
-      {consent === false && !authDialogOpen && !questionnaireActive && (
+      {consent === false && !authDialogOpen && (
         <button
           type="button"
           className="eph-audio__restore eph-audio__enable"
@@ -236,7 +236,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         </button>
       )}
 
-      {consent === true && !authDialogOpen && !questionnaireActive && (!expanded ? (
+      {consent === true && !authDialogOpen && (!expanded ? (
         <button type="button" className="eph-audio__restore" onClick={() => setExpanded(true)} aria-label="Open music player">
           ♫ Music {playing ? "playing" : "paused"}
         </button>
