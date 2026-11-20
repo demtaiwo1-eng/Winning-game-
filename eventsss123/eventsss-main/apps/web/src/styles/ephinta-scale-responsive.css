@@ -165,3 +165,14 @@ button, a, input, select, textarea { touch-action: manipulation; }
   -webkit-text-fill-color: #251a36 !important;
   text-shadow: none !important;
 }
+
+
+/* Highest-priority contrast guard for the landing marketplace campaign. */
+html body #root .eph-landing .eph-promotions .eph-promo-shell.eph-marketplace-advertising {
+  color: #ffffff !important;
+  background: radial-gradient(circle at 88% 12%,rgba(166,122,255,.25),transparent 34%),linear-gradient(125deg,#12152f 0%,#28204b 52%,#192e4a 100%) !important;
+}
+html body #root .eph-landing .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-heading h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
