@@ -343,6 +343,10 @@ readinessRouter.get(
       include: {
         readiness: true,
         owner: { select: { id: true, name: true, email: true } },
+        verifierAssignments: {
+          where: req.user!.role === "VERIFIER" ? { verifierId: req.user!.id } : {},
+          select: { verifierId: true, isLead: true, zone: true },
+        },
         bookings: {
           where: { status: { in: ["PENDING", "PAID", "CONFIRMED", "FULFILLED"] } },
           include: {
@@ -363,6 +367,8 @@ readinessRouter.get(
         city: e.city,
         country: e.country,
         owner: e.owner,
+        isLeadVerifier: e.verifierAssignments.some((assignment) => assignment.isLead),
+        verifierZones: e.verifierAssignments.map((assignment) => assignment.zone),
         bookingCount: e.bookings.filter((booking) => ["PAID", "CONFIRMED"].includes(booking.status)).length,
         bookings: e.bookings.map((booking) => ({
           id: booking.id, status: booking.status, currency: booking.currency,
