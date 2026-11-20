@@ -75,6 +75,14 @@ export async function register(input: RegisterInput, userAgent?: string) {
         });
         if (input.kycDocumentUrl) {
           await tx.verificationRequest.create({ data: { userId: u.id, kind: "BUSINESS", documentUrl: input.kycDocumentUrl } });
+        } else if (input.kycQuestionnaire && Object.keys(input.kycQuestionnaire).length > 0) {
+          await tx.verificationRequest.create({
+            data: {
+              userId: u.id,
+              kind: "BUSINESS",
+              notes: JSON.stringify({ country: input.country || null, answers: input.kycQuestionnaire }),
+            },
+          });
         }
       }
       return u;
