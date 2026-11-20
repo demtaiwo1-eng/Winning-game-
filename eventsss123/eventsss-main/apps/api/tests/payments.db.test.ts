@@ -15,7 +15,18 @@ async function register(tag: string, role: "CLIENT" | "VENDOR" | "VERIFIER" = "C
     password: "correct-horse-1",
     name: `User ${tag}`,
     role,
-    ...(role === "VENDOR" ? { businessName: `Test business ${tag}` } : {}),
+    ...(role === "VENDOR" ? {
+      businessName: `Test business ${tag}`,
+      country: "NG",
+      kycQuestionnaire: {
+        legalForm: "Sole trader / individual",
+        registrationStatus: "Yes, registered",
+        businessEvidence: "Certificate of incorporation",
+        taxStatus: "Yes",
+        operatingAddress: "1 Test Road, Lagos",
+        regulatedActivity: "No",
+      },
+    } : {}),
   });
   expect(response.status).toBe(201);
   return { token: response.body.accessToken as string, id: response.body.user.id as string };
