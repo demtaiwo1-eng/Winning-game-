@@ -317,12 +317,25 @@ readinessRouter.get(
   "/queue",
   requireAuth,
   requireRole("VERIFIER", "CONSULTANT", "ADMIN"),
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
     const now = new Date();
     const horizon = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    const eventScope = req.user!.role === "VERIFIER"
+      ? [
+          { status: { in: ["PLANNING", "LIVE", "DRAFT"] as never } },
+          { status: "COMPLETED" as const, bookings: { some: { status: { in: ["PAID", "CONFIRMED"] as never } } } },
+        ]
+      : [
+          { status: { in: ["PLANNING", "LIVE", "DRAFT"] as never }, OR: [
+            { startsAt: { gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), lte: horizon } },
+            { endsAt: { gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), lte: horizon } },
+          ] },
+          { status: "COMPLETED" as const, bookings: { some: { status: { in: ["PAID", "CONFIRMED"] as never } } } },
+        ];
     const events = await prisma.event.findMany({
       where: {
-        OR: [
+        ...(req.user!.role === "VERIFIER" ? { verifierAssignments: { some: { verifierId: req.user!.id } } } : {}),
+        OR: eventScope,
           {
             status: { in: ["PLANNING", "LIVE", "DRAFT"] },
             OR: [
@@ -342,8 +355,11 @@ readinessRouter.get(
         readiness: true,
         owner: { select: { id: true, name: true, email: true } },
         bookings: {
-          where: { status: { in: ["PAID", "CONFIRMED"] } },
-          select: { id: true },
+          where: { status: { in: ["PENDING", "PAID", "CONFIRMED", "FULFILLED"] } },
+          include: {
+            vendor: { select: { businessName: true } },
+            paymentRequests: { orderBy: { createdAt: "asc" }, select: { id: true, amountMinor: true, reason: true, status: true, paidAt: true } },
+          },
         },
       },
     });
@@ -359,6 +375,15 @@ readinessRouter.get(
         country: e.country,
         owner: e.owner,
         bookingCount: e.bookings.length,
+        bookings: e.bookings.map((booking) => ({
+          id: booking.id, status: booking.status, currency: booking.currency,
+          totalMinor: booking.totalMinor.toString(), paidMinor: booking.paidMinor.toString(),
+          vendorName: booking.vendor.businessName,
+          paymentRequests: booking.paymentRequests.map((request) => ({
+            id: request.id, amountMinor: request.amountMinor.toString(), reason: request.reason,
+            status: request.status, paidAt: request.paidAt,
+          })),
+        })),
         readiness: e.readiness ? serializeReadiness(e.readiness) : null,
       })),
       rule: {
@@ -445,11 +470,15 @@ readinessRouter.patch(
       );
     }
 
+    const confirmationNotes = typeof req.body.notes === "string" ? req.body.notes.trim() : "";
+    if (status === "GREEN" && confirmationNotes.length < 8) {
+      throw new HttpError(400, "CONFIRMATION_REQUIRED", "Add an on-the-ground confirmation note (at least 8 characters) before marking this item ready");
+    }
     const updated = await prisma.eventServiceCheck.update({
       where: { id: check.id },
       data: {
         status: status as never,
-        notes: typeof req.body.notes === "string" ? req.body.notes.slice(0, 500) : check.notes,
+        notes: typeof req.body.notes === "string" ? confirmationNotes.slice(0, 500) : check.notes,
         verifiedById: req.user!.id,
         checkedAt: new Date(),
       },
@@ -471,8 +500,15 @@ readinessRouter.patch(
         await createNotification({
           userId: event.ownerId,
           type: "READINESS_BLOCKED",
-          title: "Service needs attention",
-          body: `“${updated.label}” was marked RED. Contact support or your verifier before the event.`,
+          title: "Ground check needs attention",
+          body: `“${updated.label}” was marked RED by the verifier. ${updated.notes || "Review the issue and agree the next action."}`,
+        });
+      } else {
+        await createNotification({
+          userId: event.ownerId,
+          type: "READINESS_UPDATE",
+          title: `Ground update: ${updated.label}`,
+          body: `Verifier marked this item ${status}. ${updated.notes || "Open the event readiness board for details."}`,
         });
       }
       if (board.pastGreenDeadline && !board.allGreen) {
