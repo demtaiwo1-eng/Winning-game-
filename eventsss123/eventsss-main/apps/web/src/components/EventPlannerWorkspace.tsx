@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, paymentsApi } from "../lib/api";
+import VerifierPicker from "./VerifierPicker";
 
-type EventOption = { id: string; title: string; startsAt?: string | null; endsAt?: string | null; city?: string | null; currency?: string };
+type EventOption = { id: string; title: string; startsAt?: string | null; endsAt?: string | null; city?: string | null; country?: string | null; currency?: string };
 type Task = { id: string; title: string; tier: "ESSENTIAL" | "RECOMMENDED" | "OPTIONAL"; status: "TODO" | "DOING" | "DONE"; dueAt?: string | null };
 type Guest = { id: string; name: string; email?: string | null; phone?: string | null; rsvp: string; checkedInAt?: string | null; checkInMethod?: string | null; plusOnes: number };
 type BudgetItem = { id: string; label: string; category?: string | null; plannedMinor: string; actualMinor: string };
@@ -247,6 +248,11 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
             <label>Ends at<input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} /></label>
             <button className="ess-primary" type="submit" disabled={busy || !title.trim()}>Save event changes</button>
           </form>
+        </section>
+        <section style={{ marginTop: 22 }}>
+          <h3>Lead verifier and ground operations</h3>
+          <p className="ess-muted">Keep your lead verifier attached to this event from the start. They will report ground conditions, checklist confirmation and part-payment milestones here.</p>
+          <VerifierPicker events={events} eventId={eventId} onEventChange={setEventId} city={event.city || undefined} country={event.country || undefined} />
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Planning answers</h3>
