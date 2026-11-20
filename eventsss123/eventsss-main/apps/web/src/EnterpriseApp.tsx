@@ -2860,6 +2860,7 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [activeQuestion, setActiveQuestion] = useState(0);
   const questions = [
     ["desiredOutcome", "What would make this event a success for you?"],
     ["audienceNeeds", "Who is attending, and what should their experience include?"],
@@ -2887,7 +2888,7 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
     return () => { active = false; };
   }, [eventId, onComplete]);
 
-  const save = async () => {
+  const save = async (finish = false): Promise<boolean> => {
     setSaving(true);
     setError("");
     setNotice("");
@@ -2896,10 +2897,12 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
         method: "PUT",
         body: JSON.stringify({ answers }),
       });
-      if (result.complete) onComplete();
-      else setNotice("Your answers are saved. Complete every prompt when you are ready to finish.");
+      if (result.complete && finish) onComplete();
+      else setNotice("Saved. Your planning brief is ready whenever you want to continue.");
+      return true;
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Unable to save your answers.");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -2914,30 +2917,35 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
       <h2 id="planning-questions-title">Plan the details for {eventTitle}</h2>
       <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits. Share only details that help us plan the event well.</p>
       <div className="ess-question-progress">
-        <span>{answered} of {questions.length} planning prompts answered</span>
-        <progress value={answered} max={questions.length} aria-label="Planning questionnaire progress" />
+        <div className="ess-question-progress-copy"><span>Step {activeQuestion + 1} of {questions.length}</span><strong>{answered} answered</strong></div>
+        <progress value={activeQuestion + 1} max={questions.length} aria-label="Planning questionnaire step" />
       </div>
-      {questions.map(([key, label]) => (
-        <label key={key} style={{ display: "block", marginTop: 12 }}>
-          {label}
-          <textarea
-            value={answers[key] || ""}
-            maxLength={2000}
-            rows={3}
-            onChange={(event) => setAnswers((current) => ({ ...current, [key]: event.target.value }))}
-          />
-        </label>
-      ))}
+      <article className="ess-planning-question-card" key={questions[activeQuestion][0]}>
+        <span className="ess-planning-question-number">PROMPT {String(activeQuestion + 1).padStart(2, "0")}</span>
+        <h3>{questions[activeQuestion][1]}</h3>
+        <p className="ess-muted">{["Start with the feeling or result you want guests to remember.","Think about who is coming and what would help them feel welcome.","Tell us what will make the venue and experience accessible.","Include any food, cultural or personal requirements we should respect.","Outline the moments that will make the day feel special.","Share anything we should plan for to keep everyone safe and compliant.","Choose a practical way to know the event achieved its purpose."][activeQuestion]}</p>
+        <label className="ess-planning-answer-label" htmlFor={`planning-answer-${questions[activeQuestion][0]}`}>Your answer</label>
+        <textarea
+          id={`planning-answer-${questions[activeQuestion][0]}`}
+          value={answers[questions[activeQuestion][0]] || ""}
+          maxLength={2000}
+          rows={4}
+          placeholder="Add a few details…"
+          onChange={(event) => setAnswers((current) => ({ ...current, [questions[activeQuestion][0]]: event.target.value }))}
+        />
+      </article>
+      <div className="ess-planning-question-nav">
+        <button className="ess-outline-button" type="button" disabled={saving || activeQuestion === 0} onClick={() => setActiveQuestion((current) => Math.max(0, current - 1))}>Back</button>
+        <span>{answered} of {questions.length} answered</span>
+        {activeQuestion < questions.length - 1 ? (
+          <button className="ess-primary" type="button" disabled={saving} onClick={async () => { if (await save(false)) setActiveQuestion((current) => Math.min(questions.length - 1, current + 1)); }}>Next question</button>
+        ) : (
+          <button className="ess-primary" type="button" disabled={saving || !complete} onClick={() => void save(true)}>{saving ? "Saving…" : "Save and finish"}</button>
+        )}
+      </div>
       {error && <p className="ess-form-error" role="alert">{error}</p>}
       {notice && <p className="ess-muted" role="status">{notice}</p>}
-      <div className="ess-builder-actions">
-        <button className="ess-outline-button" type="button" disabled={saving} onClick={() => void save()}>
-          {saving ? "Saving…" : "Save progress"}
-        </button>
-        <button className="ess-primary" type="button" disabled={saving || !complete} onClick={() => void save()}>
-          Save and finish
-        </button>
-      </div>
+      <button className="ess-quiet-button" type="button" disabled={saving} onClick={() => void save(false)}>{saving ? "Saving…" : "Save progress and come back later"}</button>
     </section>
   );
 }
