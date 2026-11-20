@@ -133,6 +133,28 @@ test("signed-out marketplace visitors can browse verified public listings before
   await expect(page.getByRole("link", { name: "Create account" })).toHaveAttribute("href", /auth\/signup\?role=CLIENT/);
 });
 
+test("public marketplace back link returns visitors to the landing page", async ({ page }) => {
+  await page.route("**/api/v1/marketplace/public**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [], pagination: { page: 1, take: 24, total: 0, totalPages: 1 } }),
+    });
+  });
+
+  await page.goto("/marketplace");
+  const backLink = page.getByRole("link", { name: "Back to landing page" });
+  await expect(backLink).toBeVisible();
+  await expect(backLink).toHaveAttribute("href", "/");
+  const titleGradient = await page.getByRole("heading", { name: "Discover trusted event services" })
+    .evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(titleGradient).toContain("linear-gradient");
+
+  await backLink.click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { name: /Plan the event you imagine/i })).toBeVisible();
+});
+
 test("marketplace deep links open the marketplace tab in an authenticated customer workspace", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("ess_user", JSON.stringify({
