@@ -1143,14 +1143,19 @@ export default function PublicLanding({
           .eph-landing .eph-footer .eph-footer-copyright { overflow-wrap: anywhere; }
         }
 
-        /* The marketing spotlight uses a pale surface in light/colorful themes. */
-        .eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone h2 {
+        /* The marketing spotlight uses dark ink only in light mode. */
+        .eph-landing[data-theme="light"] .ephinta-marketing-zone h2 {
           color: #251633 !important;
           -webkit-text-fill-color: #251633 !important;
+          background: none !important;
         }
+        /* Dark and colorful modes retain the brand gradient heading treatment. */
         .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2 {
-          color: #f8fafc !important;
-          -webkit-text-fill-color: #f8fafc !important;
+          color: #fff !important;
+          background-image: linear-gradient(95deg,#72eaff 0%,#c5a5ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
+          background-clip: text !important;
+          -webkit-background-clip: text !important;
+          -webkit-text-fill-color: transparent !important;
         }
         /* Final light-mode slogan fill: preserve readable ink on pale surfaces. */
         .eph-landing:not([data-theme="dark"]):not([data-theme="colorful"]) .ephinta-bright-slogan {
