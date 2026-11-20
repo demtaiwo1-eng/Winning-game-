@@ -1,8 +1,7 @@
 /*
  * EPHINTA GLOBAL THEME CONTRACT
- * The final stylesheet in the app's global CSS chain owns the shared light,
- * dark and colorful palettes. Feature styles should consume these variables
- * rather than hard-code foreground/background pairs.
+ * Shared semantic palette only. Feature components own their surfaces,
+ * gradients and brand accents; the global layer must not flatten them.
  */
 :root {
   color-scheme: light;
@@ -23,11 +22,6 @@
   --epg-danger: #a51f35;
   --epg-shadow: 0 12px 32px rgb(25 28 55 / 9%);
 }
-
-/* COHESIVE GLOBAL SURFACE SYSTEM
-   One neutral foundation per mode; brand colour is reserved for actions,
-   links and small accents. This deliberately neutralizes legacy orange,
-   teal and purple page-level fills that previously competed with one another. */
 html[data-ephinta-theme="light"],html[data-theme="light"],html.theme-light,.theme-light {
   color-scheme:light;
   --epg-page:#f5f7fb; --epg-surface:#ffffff; --epg-surface-raised:#f8f9fc; --epg-surface-soft:#edf1f7;
@@ -53,7 +47,7 @@ html[data-ephinta-theme="colorful"],html[data-theme="colorful"],html.theme-color
   --epg-shadow:0 8px 26px rgb(42 27 67 / 9%);
 }
 
-/* Keep every legacy token family pointed at the same selected palette. */
+/* Compatibility tokens point to the selected palette, not to a second theme. */
 html[data-ephinta-theme],html[data-theme],html.theme-light,html.theme-dark,html.theme-colorful {
   --ephinta-theme-page:var(--epg-page); --ephinta-theme-surface:var(--epg-surface);
   --ephinta-theme-surface-soft:var(--epg-surface-raised); --ephinta-theme-ink:var(--epg-ink);
@@ -74,128 +68,51 @@ html[data-ephinta-theme],html[data-theme],html.theme-light,html.theme-dark,html.
   --muted:var(--epg-muted); --border:var(--epg-border);
 }
 
-html,body,#root {
-  color:var(--epg-ink) !important;
-  background:var(--epg-page) !important;
-}
+html,body,#root { color:var(--epg-ink); background-color:var(--epg-page); }
 body { color-scheme:inherit; }
-.workspace-shell,.workspace-header h1,.workspace-card h2,
-.page-title,.dashboard-title { color:var(--epg-ink); }
-.workspace-subtitle,.workspace-card>p { color:var(--epg-muted); }
+:where(.workspace-shell,.page-title,.dashboard-title) { color:var(--epg-ink); }
+:where(.workspace-subtitle,.workspace-card>p) { color:var(--epg-muted); }
 
-/* Neutral cards, menus, forms and data surfaces; no accidental mixed palettes. */
-:where(.workspace-card,.dashboard-card,.metric-card,.stat-card,.panel-card,
-.surface-card,.card,.panel,.surface,.listing-card,.vendor-card,.marketplace-card,
-.detail-section-card,.cart-summary,.ess-card,.ess-builder-card,.ess-mode-menu,
-.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
-[aria-modal="true"],dialog[open]) {
-  color:var(--epg-ink) !important;
-  background-color:var(--epg-surface) !important;
-  background-image:none !important;
-  border-color:var(--epg-border) !important;
-  box-shadow:var(--epg-shadow);
-}
-:where(.workspace-card,.dashboard-card,.metric-card,.stat-card,.panel-card,
-.surface-card,.card,.panel,.surface,.listing-card,.vendor-card,.marketplace-card,
-.detail-section-card,.cart-summary,.ess-card,.ess-builder-card,.ess-mode-menu,
-.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
-[aria-modal="true"],dialog[open]) :where(h1,h2,h3,h4,h5,h6,strong,b,th,label,legend) {
-  color:var(--epg-ink) !important;
-}
-:where(.workspace-card,.dashboard-card,.metric-card,.stat-card,.panel-card,
-.surface-card,.card,.panel,.surface,.listing-card,.vendor-card,.marketplace-card,
-.detail-section-card,.cart-summary,.ess-card,.ess-builder-card,.ess-mode-menu,
-.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
-[aria-modal="true"],dialog[open]) :where(p,li,small,span,dd,dt,.muted,.text-muted,.helper-text,.eyebrow) {
-  color:var(--epg-muted);
-}
+/* Native form fields and primary actions use the selected palette. Cards and
+   feature surfaces are intentionally excluded so multicolour designs survive. */
 :where(input,select,textarea,option) {
-  color:var(--epg-ink) !important;
-  background-color:var(--epg-surface-raised) !important;
-  border-color:var(--epg-border) !important;
+  color:var(--epg-ink);
+  background-color:var(--epg-surface-raised);
+  border-color:var(--epg-border);
   accent-color:var(--epg-accent);
 }
-:where(input,textarea)::placeholder { color:var(--epg-subtle) !important; opacity:1; }
+:where(input,textarea)::placeholder { color:var(--epg-subtle); opacity:1; }
 :where(button,.button,[role="button"],.primary-button,.continue-action,.select-listing,
-.ess-primary,.pl-btn-primary,.pl-primary,.esg-btn.p) {
-  accent-color:var(--epg-accent);
-}
+.ess-primary,.pl-btn-primary,.pl-primary,.esg-btn.p) { accent-color:var(--epg-accent); }
 :where(.primary-button,.continue-action,.select-listing,.ess-primary,
 .pl-btn-primary,.pl-primary,.esg-btn.p) {
-  color:var(--epg-accent-ink) !important;
-  background:var(--epg-accent) !important;
-  border-color:var(--epg-accent) !important;
+  color:var(--epg-accent-ink);
+  background:var(--epg-accent);
+  border-color:var(--epg-accent);
 }
 :where(a,.text-action,.back-button) { color:var(--epg-link); }
-:where(table,th,td,.detail-list li,.event-row,.vendor-metric-row,.budget-row) {
-  border-color:var(--epg-border);
-}
+:where(table,th,td,.detail-list li,.event-row,.vendor-metric-row,.budget-row) { border-color:var(--epg-border); }
 
-/* Dark brand panels are intentional; keep their own high-contrast treatment. */
+/* Dark brand panels keep their intended white-on-dark treatment. */
 :where(.workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
-.dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel) {
-  color:#ffffff !important;
-}
+.dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel) { color:#fff; }
 :where(.workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
 .dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel)
-:where(h1,h2,h3,h4,strong,b,p,span,small,label,a,li) { color:inherit !important; }
+:where(h1,h2,h3,h4,strong,b,p,span,small,label,a,li) { color:inherit; }
 :where(.workspace-intro,.vendor-hero-card,.hero-dark,.dark-panel)
-:where(p,small,.muted) { color:#e7edf7 !important; }
+:where(p,small,.muted) { color:#e7edf7; }
 
 :where(button,a,input,select,textarea,[tabindex]):focus-visible {
-  outline:3px solid var(--epg-focus) !important;
-  outline-offset:3px !important;
+  outline:3px solid var(--epg-focus);
+  outline-offset:3px;
 }
 ::selection { color:var(--epg-ink); background:var(--epg-surface-soft); }
 
-
-/* High-specificity final guard: legacy component sheets include !important
-   declarations, so the selected theme must win regardless of import order. */
-html[data-ephinta-theme] :is(.workspace-card,.dashboard-card,.metric-card,.stat-card,
-.panel-card,.surface-card,.card,.panel,.surface,.listing-card,.vendor-card,
-.marketplace-card,.detail-section-card,.cart-summary,.ess-card,.ess-builder-card,
-.ess-mode-menu,.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
-[aria-modal="true"],dialog[open]) {
-  color:var(--epg-ink) !important;
-  background:var(--epg-surface) !important;
-  background-image:none !important;
-  border-color:var(--epg-border) !important;
-}
-html[data-ephinta-theme] :is(.workspace-card,.dashboard-card,.metric-card,.stat-card,
-.panel-card,.surface-card,.card,.panel,.surface,.listing-card,.vendor-card,
-.marketplace-card,.detail-section-card,.cart-summary,.ess-card,.ess-builder-card,
-.ess-mode-menu,.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
-[aria-modal="true"],dialog[open]) :is(h1,h2,h3,h4,h5,h6,strong,b,th,label,legend) {
-  color:var(--epg-ink) !important;
-}
-html[data-ephinta-theme] :is(.workspace-card,.dashboard-card,.metric-card,.stat-card,
-.panel-card,.surface-card,.card,.panel,.surface,.listing-card,.vendor-card,
-.marketplace-card,.detail-section-card,.cart-summary,.ess-card,.ess-builder-card,
-.ess-mode-menu,.dropdown-menu,.popover,.modal,.dialog,[role="dialog"],[role="menu"],
-[aria-modal="true"],dialog[open]) :is(p,li,small,span,dd,dt,.muted,.text-muted,.helper-text,.eyebrow) {
-  color:var(--epg-muted) !important;
-}
-html[data-ephinta-theme] :is(input,select,textarea,option) {
-  color:var(--epg-ink) !important;
-  background:var(--epg-surface-raised) !important;
-  border-color:var(--epg-border) !important;
-}
-html[data-ephinta-theme] :is(.primary-button,.continue-action,.select-listing,
-.ess-primary,.pl-btn-primary,.pl-primary,.esg-btn.p) {
-  color:var(--epg-accent-ink) !important;
-  background:var(--epg-accent) !important;
-  border-color:var(--epg-accent) !important;
-}
-
-
-/* Respect system motion preferences across the application. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  *,*::before,*::after {
+    scroll-behavior:auto !important;
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
   }
 }
