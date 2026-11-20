@@ -453,7 +453,7 @@ export default function EventReadinessBoard({
               <strong>{c.label}</strong>
               <div className="ess-muted" style={{ fontSize: 13 }}>
                 {c.zone || "GENERAL"} · {c.category || "Service"} · {c.status}
-                {c.taskId ? " · Planner checklist: " + (c.task?.status || "added") + (c.task?.tier ? " · " + c.task.tier : "") : ""}
+                {c.taskId ? " · Planner checklist: " + (c.task?.status || "added") + (c.task?.tier ? " · " + c.task.tier : "") + (c.task?.dueAt ? " · Due " + new Date(c.task.dueAt).toLocaleDateString() : "") : ""}
                 {c.notes ? ` · ${c.notes}` : ""}
                 {c.verifiedBy?.name ? " · Verified by " + c.verifiedBy.name : ""}
                 {c.checkedAt ? " · " + new Date(c.checkedAt).toLocaleString() : ""}
