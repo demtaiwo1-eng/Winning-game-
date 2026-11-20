@@ -12,6 +12,7 @@ type Check = {
   checkedAt?: string | null;
   taskId?: string | null;
   task?: { status: string; tier: string; dueAt?: string | null } | null;
+  paymentRequest?: { id: string; amountMinor: string; status: string; paidAt?: string | null; reason: string; booking: { currency: string } } | null;
   verifiedBy?: { id: string; name: string } | null;
 };
 
@@ -454,6 +455,7 @@ export default function EventReadinessBoard({
               <div className="ess-muted" style={{ fontSize: 13 }}>
                 {c.zone || "GENERAL"} · {c.category || "Service"} · {c.status}
                 {c.taskId ? " · Planner checklist: " + (c.task?.status || "added") + (c.task?.tier ? " · " + c.task.tier : "") + (c.task?.dueAt ? " · Due " + new Date(c.task.dueAt).toLocaleDateString() : "") : ""}
+                {c.paymentRequest ? " · Part payment " + c.paymentRequest.status + " · " + formatMoney(c.paymentRequest.amountMinor, c.paymentRequest.booking.currency) : ""}
                 {c.notes ? ` · ${c.notes}` : ""}
                 {c.verifiedBy?.name ? " · Verified by " + c.verifiedBy.name : ""}
                 {c.checkedAt ? " · " + new Date(c.checkedAt).toLocaleString() : ""}
