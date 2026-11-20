@@ -1612,6 +1612,7 @@ type FinancePaymentFeed = {
   summary: Array<{ provider: string; currency: string; status: string; count: number; amountMinor: string }>;
   items: Array<{ id: string; provider: string; providerRef?: string | null; amountMinor: string; currency: string; status: string; createdAt: string; user: { name: string; email: string } }>;
 };
+type FundingQueueItem = { id: string; customer: { id: string; name: string; email: string }; amountMinor: string; currency: string; senderName: string; senderBank: string | null; transferReference: string; receiptUrl: string; createdAt: string };
 type FinanceLedgerFeed = {
   total: number;
   items: Array<{ id: string; type: string; amountMinor: string; balanceAfterMinor: string; provider: string; createdAt: string; wallet: { currency: string; user: { name: string; email: string } } }>;
@@ -1631,10 +1632,33 @@ function FinanceOperationsPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
-  const [fundingQueue, setFundingQueue] = useState<Array<{ id: string; customer: { id: string; name: string; email: string }; amountMinor: string; currency: string; senderName: string; senderBank: string | null; transferReference: string; receiptUrl: string; createdAt: string }>>([]);
+  const [fundingQueue, setFundingQueue] = useState<FundingQueueItem[]>([]);
   const [fundingNotes, setFundingNotes] = useState<Record<string, string>>({});
   const [fundingWorking, setFundingWorking] = useState("");
   const [exporting, setExporting] = useState<"payments" | "ledger" | null>(null);
+  const reviewFunding = async (submissionId: string, action: "APPROVE" | "REJECT") => {
+    const note = (fundingNotes[submissionId] || "").trim();
+    if (note.length < 10) {
+      setError("Add a bank verification note of at least 10 characters before reviewing this receipt.");
+      return;
+    }
+    setFundingWorking(submissionId);
+    setError("");
+    try {
+      await api(`/wallet/admin/funding-submissions/${encodeURIComponent(submissionId)}/review`, {
+        method: "POST",
+        body: JSON.stringify({ action, note }),
+      });
+      setFundingQueue((current) => current.filter((item) => item.id !== submissionId));
+      setFundingNotes((current) => { const next = { ...current }; delete next[submissionId]; return next; });
+      setError("");
+      setRefreshKey((key) => key + 1);
+    } catch (reviewError) {
+      setError(reviewError instanceof Error ? reviewError.message : "Unable to review this funding receipt.");
+    } finally {
+      setFundingWorking("");
+    }
+  };
   const exportCsv = async (kind: "payments" | "ledger") => {
     setExporting(kind);
     setError("");
@@ -1656,8 +1680,9 @@ function FinanceOperationsPanel() {
     Promise.all([
       api<FinancePaymentFeed>(`/admin/finance/payment-intents?${query}`),
       api<FinanceLedgerFeed>(`/admin/finance/ledger?${ledgerQuery}`),
-    ]).then(([paymentData, ledgerData]) => {
-      if (active) { setPayments(paymentData); setLedger(ledgerData); setError(""); }
+      api<{ items: FundingQueueItem[] }>("/wallet/admin/funding-submissions"),
+    ]).then(([paymentData, ledgerData, fundingData]) => {
+      if (active) { setPayments(paymentData); setLedger(ledgerData); setFundingQueue(fundingData.items || []); setError(""); }
     }).catch((loadError: Error) => { if (active) setError(loadError.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -2184,7 +2209,7 @@ export default function EnterpriseApp() {
           : authMode === "forgot"
             ? "/api/v1/auth/forgot-password"
             : "/api/v1/auth/login";
-      const formData = new FormData(event.currentTarget);
+      const formData = new FormData(event.currentTarget as HTMLFormElement);
       const rawKycQuestionnaire = formData.get("kycQuestionnaire");
       let kycQuestionnaire: Record<string, string> | undefined;
       if (typeof rawKycQuestionnaire === "string" && rawKycQuestionnaire) {
