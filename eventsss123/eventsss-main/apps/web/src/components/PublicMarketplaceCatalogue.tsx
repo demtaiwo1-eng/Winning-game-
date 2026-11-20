@@ -96,6 +96,11 @@ export default function PublicMarketplaceCatalogue() {
 
   return (
     <main className="ess-content ess-public-marketplace"><section className="ess-shell">
+      <div className="ess-marketplace-topline">
+        <Link className="ess-marketplace-back" to="/" aria-label="Back to EPHINTA landing page">
+          <span aria-hidden="true">←</span> Back to landing page
+        </Link>
+      </div>
       <div className="ess-page-heading"><div><p className="ess-eyebrow">EPHINTA marketplace</p>
         <h1>Discover trusted event services</h1>
         <p className="ess-muted">Browse real verified providers, or explore a clearly labelled sample catalogue to practise planning.</p></div>
