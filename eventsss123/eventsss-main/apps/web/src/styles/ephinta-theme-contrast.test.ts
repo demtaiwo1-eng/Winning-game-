@@ -142,4 +142,17 @@ describe("EPHINTA global theme contrast", () => {
     expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] .ess-app .ess-topbar');
   });
 
+
+  it("routes public landing navigation, footer and auth dialogs through the global theme tokens", () => {
+    for (const selector of [".eph-nav", ".eph-nav .eph-links", ".eph-footer", ".eph-footer-copyright", ".eph-modal-backdrop", ".eph-modal"]) {
+      expect(runtimeCss).toContain(selector);
+    }
+    expect(runtimeCss).toContain("background: var(--epg-surface) !important");
+    expect(runtimeCss).toContain("color: var(--epg-ink) !important");
+    expect(runtimeCss).toContain("color: var(--epg-muted) !important");
+    expect(runtimeCss).toContain("var(--epg-border)");
+    expect(runtimeCss).toContain("var(--epg-focus)");
+    expect(globalCss).toContain('@import "./ephinta-runtime-contrast.css";');
+  });
+
 });
