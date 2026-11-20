@@ -15,6 +15,7 @@ export default function PublicRsvpPage() {
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [choice, setChoice] = useState<"ACCEPTED" | "DECLINED" | "MAYBE">("ACCEPTED");
   const [plusOnes, setPlusOnes] = useState(0);
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -66,19 +67,35 @@ export default function PublicRsvpPage() {
               <p className="ess-muted">Current response: {invitation.rsvp}{invitation.respondedAt ? ` · Updated ${new Date(invitation.respondedAt).toLocaleString()}` : ""}</p>
               {closed ? <p>This event is closed and is no longer accepting RSVP changes.</p> : (
                 <form onSubmit={submit} style={{ display: "grid", gap: 14, marginTop: 20 }}>
-                  <label>Will you attend?
-                    <select value={choice} onChange={(event) => setChoice(event.target.value as typeof choice)}>
-                      <option value="ACCEPTED">Yes, I'll attend</option>
-                      <option value="MAYBE">Maybe</option>
-                      <option value="DECLINED">Sorry, I can't attend</option>
-                    </select>
-                  </label>
-                  <label>Additional guests
-                    <input type="number" min={0} max={10} value={plusOnes} onChange={(event) => setPlusOnes(Math.max(0, Math.min(10, Number(event.target.value) || 0)))} />
-                  </label>
+                  <div className="ess-interview-progress-track" aria-hidden="true"><span style={{ width: `${(step + 1) * 50}%` }} /></div>
+                  <p className="ess-interview-step-label">Question {step + 1} of 2</p>
+                  {step === 0 ? (
+                    <>
+                      <h3>Will you be joining us?</h3>
+                      <label className="ess-interview-question"><span>Your response</span>
+                        <select value={choice} onChange={(event) => setChoice(event.target.value as typeof choice)}>
+                          <option value="ACCEPTED">Yes, I'll attend</option>
+                          <option value="MAYBE">Maybe</option>
+                          <option value="DECLINED">Sorry, I can't attend</option>
+                        </select>
+                      </label>
+                      <div className="ess-builder-actions ess-interview-actions"><span /><button type="button" className="ess-primary" onClick={() => setStep(1)}>Next question →</button></div>
+                    </>
+                  ) : (
+                    <>
+                      <h3>Will anyone be joining you?</h3>
+                      <p className="ess-muted">Let the host know how many additional guests you plan to bring.</p>
+                      <label className="ess-interview-question"><span>Additional guests</span>
+                        <input type="number" min={0} max={10} value={plusOnes} onChange={(event) => setPlusOnes(Math.max(0, Math.min(10, Number(event.target.value) || 0)))} />
+                      </label>
+                      <div className="ess-builder-actions ess-interview-actions">
+                        <button type="button" className="ess-outline-button" onClick={() => setStep(0)}>Previous question</button>
+                        <button className="ess-primary" type="submit" disabled={saving}>{saving ? "Saving…" : "Submit RSVP"}</button>
+                      </div>
+                    </>
+                  )}
                   {error && <p className="ess-form-error" role="alert">{error}</p>}
                   {notice && <p role="status" className="ess-panel">{notice}</p>}
-                  <button className="ess-primary" type="submit" disabled={saving}>{saving ? "Saving…" : "Submit RSVP"}</button>
                 </form>
               )}
             </>
