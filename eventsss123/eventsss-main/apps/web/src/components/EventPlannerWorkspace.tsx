@@ -260,12 +260,12 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
             <label>Due date<input type="datetime-local" value={taskDueAt} onChange={(e) => setTaskDueAt(e.target.value)} /></label>
             <button className="ess-primary" type="submit" disabled={busy || !taskTitle.trim()}>Add task</button>
           </form>
-          <div style={{ display: "grid", gap: 8, marginTop: 12 }}>{tasks.map((task) => <article className="ess-card" key={task.id}>
+          <details className="ess-dashboard-fold" open={tasks.length <= 4}><summary>Task list · {tasks.length}</summary><div style={{ display: "grid", gap: 8, margin: "0 12px 12px" }}>{tasks.map((task) => <article className="ess-card" key={task.id}>
             <strong>{task.title}</strong><div className="ess-filter-row"><button className="ess-outline-button" type="button" disabled={!task.dueAt} onClick={() => downloadCalendarReminder(task)}>Add 24h calendar reminder</button></div><div className="ess-form-grid">
               <label>Status<select value={task.status} disabled={busy} onChange={(e) => void updateTask(task,{ status:e.target.value as Task["status"] })}><option value="TODO">To do</option><option value="DOING">In progress</option><option value="DONE">Done</option></select></label>
               <label>Due date<input type="datetime-local" value={task.dueAt ? new Date(task.dueAt).toISOString().slice(0,16) : ""} disabled={busy} onChange={(e) => void updateTask(task,{ dueAt:e.target.value ? new Date(e.target.value).toISOString() : null })} /></label>
             </div>
-          </article>)}</div>
+          </article>)}</div></details>
           <p className="ess-muted">Due dates and overdue indicators are tracked here. Download a 24-hour calendar reminder for any dated task and import it into your calendar; automatic push/email delivery is not enabled.</p>
         </section>
         <section style={{ marginTop: 22 }}>
@@ -287,33 +287,33 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
             <label>Actual ({currency})<input type="number" min="0" step="0.01" value={actual} onChange={(e) => setActual(e.target.value)} required /></label>
             <button className="ess-primary" type="submit" disabled={busy}>Add budget line</button>
           </form>
-          <div style={{ overflowX: "auto", marginTop: 12 }}><table><thead><tr><th>Item</th><th>Planned</th><th>Actual</th><th>Variance</th></tr></thead><tbody>
+          <details className="ess-dashboard-fold" open={budgetItems.length <= 5}><summary>Budget lines · {budgetItems.length}</summary><div style={{ overflowX: "auto", margin: "0 12px 12px" }}><table><thead><tr><th>Item</th><th>Planned</th><th>Actual</th><th>Variance</th></tr></thead><tbody>
             {budgetItems.map((item) => <tr key={item.id}><td>{item.label}{item.category ? " · " + item.category : ""}</td><td>{money(item.plannedMinor,currency)}</td><td><input aria-label={`Actual spend for ${item.label}`} type="number" min="0" step="0.01" defaultValue={(Number(item.actualMinor)/100).toFixed(2)} disabled={busy} onBlur={(e) => { const v=e.currentTarget.value; if (v !== (Number(item.actualMinor)/100).toFixed(2)) void updateActual(item,v); }} /></td><td>{money(String(Number(item.plannedMinor)-Number(item.actualMinor)),currency)}</td></tr>)}
-          </tbody></table></div>
+          </tbody></table></div></details>
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Guest check-in history and privacy</h3>
-          <label style={{ display: "inline-flex", gap: 8, alignItems: "center" }}><input type="checkbox" checked={showContacts} onChange={(e) => setShowContacts(e.target.checked)} /> Show guest contact details</label>
-          <div style={{ overflowX: "auto", marginTop: 10 }}><table><thead><tr><th>Guest</th>{showContacts && <th>Contact</th>}<th>RSVP</th><th>Check-in time</th><th>Method</th></tr></thead><tbody>
+          <details className="ess-dashboard-fold"><summary>Check-in history · {checkIns.length} records</summary><label style={{ display: "inline-flex", gap: 8, alignItems: "center", margin: "10px 12px" }}><input type="checkbox" checked={showContacts} onChange={(e) => setShowContacts(e.target.checked)} /> Show guest contact details</label>
+          <div style={{ overflowX: "auto", margin: "0 12px 12px" }}><table><thead><tr><th>Guest</th>{showContacts && <th>Contact</th>}<th>RSVP</th><th>Check-in time</th><th>Method</th></tr></thead><tbody>
             {checkIns.map((entry) => <tr key={entry.id}><td>{entry.guest.name}</td>{showContacts && <td>{guests.find((g) => g.id === entry.guest.id)?.email || guests.find((g) => g.id === entry.guest.id)?.phone || "—"}</td>}<td>{guests.find((g) => g.id === entry.guest.id)?.rsvp || "—"}</td><td>{new Date(entry.checkedInAt).toLocaleString()}</td><td>{entry.method}</td></tr>)}
             {!checkedIn.length && <tr><td colSpan={showContacts ? 5 : 4}>No new check-in history recorded yet. Pre-migration check-ins are not reconstructed; existing guest check-in fields remain unchanged.</td></tr>}
-          </tbody></table></div>
+          </tbody></table></div></details>
           <p className="ess-muted">Each accepted check-in is appended with its method and server timestamp. Contact details remain hidden unless you opt to reveal them.</p>
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Event readiness checklist</h3>
-          {readiness ? <><p className="ess-muted">{readiness.readiness.status} · {readiness.readiness.greenCount}/{readiness.readiness.totalChecks} green · {readiness.readiness.amberCount} amber · {readiness.readiness.redCount} red · {readiness.readiness.pendingCount} pending</p><div style={{ display: "grid", gap: 6 }}>{readiness.checks.map((check) => <article className="ess-card" key={check.id}><strong>{check.label}</strong><p className="ess-muted">{check.status}{check.zone ? " · " + check.zone : ""}{check.checkedAt ? " · " + new Date(check.checkedAt).toLocaleString() : ""}</p></article>)}</div></> : <p className="ess-muted">Readiness data is not available yet. Seed or sync the readiness board after booking services.</p>}
+          {readiness ? <><p className="ess-muted">{readiness.readiness.status} · {readiness.readiness.greenCount}/{readiness.readiness.totalChecks} green · {readiness.readiness.amberCount} amber · {readiness.readiness.redCount} red · {readiness.readiness.pendingCount} pending</p><details className="ess-dashboard-fold"><summary>Readiness checks · {readiness.readiness.totalChecks}</summary><div style={{ display: "grid", gap: 6, margin: "0 12px 12px" }}>{readiness.checks.map((check) => <article className="ess-card" key={check.id}><strong>{check.label}</strong><p className="ess-muted">{check.status}{check.zone ? " · " + check.zone : ""}{check.checkedAt ? " · " + new Date(check.checkedAt).toLocaleString() : ""}</p></article>)}</div></details></> : <p className="ess-muted">Readiness data is not available yet. Seed or sync the readiness board after booking services.</p>}
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Vendor bookings linked to this event</h3>
-          {bookings.length ? <div style={{ display: "grid", gap: 8 }}>{bookings.map((booking) => <article className="ess-card" key={booking.id}>
+          {bookings.length ? <details className="ess-dashboard-fold"><summary>Booking records · {bookings.length}</summary><div style={{ display: "grid", gap: 8, margin: "0 12px 12px" }}>{bookings.map((booking) => <article className="ess-card" key={booking.id}>
             <strong>{booking.items?.map((i) => i.listing?.title).filter(Boolean).join(", ") || "Vendor booking"}</strong>
             <p className="ess-muted">{booking.vendor?.businessName || "Vendor"} · {booking.status} · Paid {money(booking.paidMinor || "0",booking.currency)} of {money(booking.totalMinor,booking.currency)}</p>
             {(paymentRequests[booking.id] || []).map((request) => <div key={request.id} className="ess-filter-row" style={{ alignItems: "center", marginTop: 8 }}>
               <span>{request.requestedBy.name}: {request.reason} · {money(request.amountMinor,booking.currency)} · {request.status}</span>
               {request.status === "PENDING" && <><button className="ess-primary" type="button" disabled={busy} onClick={() => void decidePaymentRequest(booking.id,request.id,true)}>Approve & pay</button><button className="ess-outline-button" type="button" disabled={busy} onClick={() => void decidePaymentRequest(booking.id,request.id,false)}>Decline</button></>}
             </div>)}
-          </article>)}</div> : <p className="ess-muted">No bookings are currently linked to this event. Create a booking from this event context to have it appear here.</p>}
+          </article>)}</div></details> : <p className="ess-muted">No bookings are currently linked to this event. Create a booking from this event context to have it appear here.</p>}
         </section>
       </>}
     </>}
