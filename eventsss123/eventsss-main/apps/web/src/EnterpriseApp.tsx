@@ -2112,7 +2112,6 @@ export default function EnterpriseApp() {
     setVendorPhone("");
     setVendorCity("");
     setVendorDescription("");
-    setVendorKycUrl("");
     setRegistrationCategory("");
     setReferralCode("");
     setPassword("");
@@ -2476,7 +2475,6 @@ export default function EnterpriseApp() {
             setVendorPhone={setVendorPhone}
             setVendorCity={setVendorCity}
             setVendorDescription={setVendorDescription}
-            setVendorKycUrl={setVendorKycUrl}
             setRegistrationCategory={setRegistrationCategory}
             setOrganizationMode={setOrganizationMode}
             setReferralCode={setReferralCode}
@@ -2784,7 +2782,6 @@ export default function EnterpriseApp() {
           setVendorPhone={setVendorPhone}
           setVendorCity={setVendorCity}
           setVendorDescription={setVendorDescription}
-          setVendorKycUrl={setVendorKycUrl}
           setRegistrationCategory={setRegistrationCategory}
           setOrganizationMode={setOrganizationMode}
           setReferralCode={setReferralCode}
