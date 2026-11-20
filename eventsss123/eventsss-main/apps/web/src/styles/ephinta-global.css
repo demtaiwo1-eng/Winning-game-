@@ -38,9 +38,9 @@
 
 
 /* Shared palette tokens, followed by the final runtime text-contrast layer. */
+@import "./ephinta-dashboard-system.css";
 @import "./ephinta-global-theme-contract.css";
 @import "./ephinta-runtime-contrast.css";
-@import "./ephinta-dashboard-system.css";
 
 /* EPHINTA mobile polish: compact marketplace carousel, registration surface,
    device PIN theme, and update notice all flow through this single CSS hub. */
