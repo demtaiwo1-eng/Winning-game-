@@ -131,7 +131,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       // music while a real, visible PIN/auth dialog is on screen.
       const deviceLocked = isVisible(".ess-device-lock");
       const authDialog = isVisible(".ess-auth-modal, .eph-modal, #eph-auth-dialog");
-      const interviewForm = isVisible(".ess-builder, .ess-role-questionnaire");
+      const interviewForm = isVisible(".ess-builder, .ess-role-questionnaire, .ess-interview-card");
       setAuthDialogOpen(deviceLocked || authDialog);
       setQuestionnaireActive(interviewForm);
       if (deviceLocked) {
