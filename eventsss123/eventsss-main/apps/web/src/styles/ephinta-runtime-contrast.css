@@ -660,3 +660,47 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
     max-height: 88dvh !important;
   }
 }
+
+
+/* Desktop dialogs deliberately keep the compact, phone-like footprint.
+   The overlay dims the desktop canvas; the dialog itself stays centered and
+   never expands into a wide desktop panel. */
+html[data-ephinta-theme] body #root :is(
+  .ess-auth-modal,
+  .eph-modal,
+  .ess-journey-card,
+  .ess-device-lock-card,
+  .eph-audio__prompt,
+  .ess-dialog-surface,
+  [role="dialog"][aria-modal="true"]:not(.ess-device-lock):not(.ess-journey-overlay),
+  dialog[open]
+) {
+  width: min(92vw, 420px) !important;
+  max-width: 420px !important;
+  max-height: min(88dvh, 760px) !important;
+  padding: 20px !important;
+  margin: auto !important;
+}
+html[data-ephinta-theme] body #root .ess-device-lock-card {
+  width: min(92vw, 420px) !important;
+  max-width: 420px !important;
+  max-height: min(88dvh, 760px) !important;
+  padding: 22px !important;
+  margin: auto !important;
+}
+@media (max-width: 480px) {
+  html[data-ephinta-theme] body #root :is(
+    .ess-auth-modal,
+    .eph-modal,
+    .ess-journey-card,
+    .ess-device-lock-card,
+    .eph-audio__prompt,
+    .ess-dialog-surface,
+    [role="dialog"][aria-modal="true"]:not(.ess-device-lock):not(.ess-journey-overlay),
+    dialog[open]
+  ) {
+    width: min(100%, 420px) !important;
+    max-width: 420px !important;
+    padding: 18px !important;
+  }
+}
