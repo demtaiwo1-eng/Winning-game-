@@ -127,6 +127,18 @@ function main() {
     }
   }
 
+  const runtimeContrastPath = path.join(SOURCE, "styles", "ephinta-runtime-contrast.css");
+  if (!fs.existsSync(runtimeContrastPath)) fail("Runtime contrast stylesheet is missing.");
+  else {
+    const runtimeContrast = fs.readFileSync(runtimeContrastPath, "utf8");
+    if (!runtimeContrast.includes("--eph-dialog-surface-gradient") ||
+        !runtimeContrast.includes('html[data-ephinta-theme="dark"]') ||
+        !runtimeContrast.includes(".pl-dl") ||
+        !runtimeContrast.includes('[role="dialog"]')) {
+      fail("The shared theme-aware gradient dialogue surface is incomplete.");
+    } else pass("All semantic and landing-page dialogs use the shared theme-aware Start Planner gradient.");
+  }
+
   const reportPath = path.join(APP_ROOT, "design-quality-report.json");
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n");
 
