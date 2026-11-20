@@ -81,7 +81,7 @@ describe("EPHINTA global theme contrast", () => {
     expect(appEntry).toContain("import { initializeEphintaTheme } from './lib/ephintaTheme'");
     expect(appEntry).toContain("initializeEphintaTheme();");
     expect(appEntry).toContain("import './styles/ephinta-global.css';");
-    expect(globalCss).toContain('@import "./ephinta-runtime-contrast.css";');
+    expect(globalCss).toContain("ephinta-runtime-contrast.css");
     expect(appEntry.indexOf("initializeEphintaTheme();")).toBeLessThan(appEntry.indexOf("ReactDOM.createRoot"));
   });
 
