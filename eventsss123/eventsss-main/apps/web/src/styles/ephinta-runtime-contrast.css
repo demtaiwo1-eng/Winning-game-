@@ -402,3 +402,25 @@ html[data-ephinta-theme] body #root .eph-landing .eph-modal :where(button,a,inpu
   outline: 3px solid var(--epg-focus) !important;
   outline-offset: 3px !important;
 }
+
+
+/* Keep the platform environment selector stacked directly beneath Appearance. */
+html[data-ephinta-theme] body #root .ephinta-experience-menu-control {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 8px 0 14px !important;
+}
+html[data-ephinta-theme] body #root .ephinta-experience-menu-control select {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 42px !important;
+}
+html[data-ephinta-theme] body #root .ephinta-experience-menu-control small {
+  color: var(--epg-muted) !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+}
