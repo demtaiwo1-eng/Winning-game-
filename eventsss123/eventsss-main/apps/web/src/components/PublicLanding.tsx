@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { apiUrl } from '../lib/api';
+import { api, apiUrl } from '../lib/api';
 import { checkPassword, PASSWORD_HELPER, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../lib/passwordRule';
 import { applyEphintaTheme } from '../lib/ephintaTheme';
 import { roleLabel, SELF_REGISTER_ROLES, type SelfRegisterRole } from '../lib/roleLabels';
@@ -34,6 +34,7 @@ interface LandingPageProps {
 type AuthMode = 'signin' | 'signup' | 'forgot';
 
 type ThemeMode = 'dark' | 'light' | 'colorful';
+type PlatformMode = 'demo' | 'test' | 'live';
 
 type AccountRole = SelfRegisterRole;
 
@@ -207,6 +208,48 @@ export default function PublicLanding({
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [menuOpen]);
+
+  const [platformMode, setPlatformMode] = useState<PlatformMode | ''>('');
+  const [platformModeLoading, setPlatformModeLoading] = useState(true);
+  const [platformModeMessage, setPlatformModeMessage] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    api<{ paymentMode: PlatformMode }>('/runtime/config')
+      .then((result) => {
+        if (!cancelled && ['demo', 'test', 'live'].includes(result.paymentMode)) {
+          setPlatformMode(result.paymentMode);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPlatformModeMessage('Sign in as an administrator to manage the platform mode.');
+      })
+      .finally(() => {
+        if (!cancelled) setPlatformModeLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  async function changePlatformMode(nextMode: PlatformMode) {
+    if (!platformMode || nextMode === platformMode) return;
+    if (nextMode === 'live') {
+      if (!window.confirm('Switch the entire EPHINTA platform to LIVE? Real payments and withdrawals may be initiated.')) return;
+      if (window.prompt('Type LIVE to confirm production mode.') !== 'LIVE') return;
+    }
+    setPlatformModeMessage('Applying platform mode…');
+    try {
+      const result = await api<{ paymentMode: PlatformMode }>('/admin/runtime/payment-mode', {
+        method: 'PATCH',
+        body: JSON.stringify({ paymentMode: nextMode }),
+      });
+      setPlatformMode(result.paymentMode);
+      setPlatformModeMessage(`Platform mode is now ${result.paymentMode.toUpperCase()}.`);
+    } catch (cause) {
+      setPlatformModeMessage(cause instanceof Error
+        ? cause.message
+        : 'Only an authorized administrator can change the platform mode.');
+    }
+  }
 
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
 
@@ -1103,7 +1146,24 @@ export default function PublicLanding({
             </select>
           </div>
 
-
+          <div className="ephinta-theme-menu-control ephinta-experience-menu-control">
+            <label htmlFor="ephinta-platform-mode">Payment mode</label>
+            <select
+              id="ephinta-platform-mode"
+              value={platformMode}
+              disabled={platformModeLoading || !platformMode}
+              onChange={(event) => void changePlatformMode(event.target.value as PlatformMode)}
+              aria-describedby="ephinta-platform-mode-status"
+            >
+              <option value="" disabled>{platformModeLoading ? 'Loading…' : 'Unavailable'}</option>
+              <option value="demo">DEMO</option>
+              <option value="test">TEST</option>
+              <option value="live">LIVE</option>
+            </select>
+            <small id="ephinta-platform-mode-status" role="status" aria-live="polite">
+              {platformModeMessage || (platformMode ? `Current: ${platformMode.toUpperCase()}` : 'Mode status unavailable')}
+            </small>
+          </div>
 
           <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
 
