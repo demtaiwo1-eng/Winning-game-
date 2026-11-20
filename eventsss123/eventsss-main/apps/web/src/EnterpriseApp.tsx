@@ -3465,7 +3465,7 @@ function AuthModal({
   const [touched, setTouched] = useState<Partial<Record<RegistrationField, boolean>>>({});
   const internal = role === "VERIFIER" || role === "ADMIN";
   const isVendorRegistration = mode === "signup" && (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER"));
-  const vendorKycComplete = Boolean(vendorKycAnswers.legalForm && vendorKycAnswers.registrationStatus && vendorKycAnswers.taxStatus && vendorKycAnswers.operatingAddress?.trim() && vendorKycAnswers.regulatedActivity);
+  const vendorKycComplete = Boolean(vendorKycAnswers.legalForm && vendorKycAnswers.registrationStatus && vendorKycAnswers.businessEvidence && vendorKycAnswers.taxStatus && vendorKycAnswers.operatingAddress?.trim() && vendorKycAnswers.regulatedActivity);
   useEffect(() => { setTouched({}); setRegistrationStep(0); }, [role, mode]);
   const touch = (field: RegistrationField) => setTouched((current) => ({ ...current, [field]: true }));
   const fieldError = (field: RegistrationField, value: string) =>
