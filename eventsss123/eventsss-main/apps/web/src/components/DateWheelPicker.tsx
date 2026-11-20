@@ -16,10 +16,12 @@ export default function DateWheelPicker({
   value,
   onChange,
   label = 'Date',
+  futureOnly = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   label?: string;
+  futureOnly?: boolean;
 }) {
   const [parts, setParts] = useState<DateParts>(() => partsFromDate(value));
 
@@ -36,6 +38,18 @@ export default function DateWheelPicker({
       onChange(`${normalized.year}-${normalized.month}-${normalized.day}`);
     }
   };
+
+  if (futureOnly) {
+    const now = new Date();
+    const minDate = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
+    return (
+      <label className="date-wheel-picker date-calendar-picker" style={{ display: 'grid', gap: 8 }}>
+        <span style={{ fontWeight: 600 }}>{label}</span>
+        <input aria-label={label} type="date" value={value} min={minDate} onChange={(event) => onChange(event.target.value)} style={{ width: '100%', minHeight: 48, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--ess-border, #d6dbe3)', background: 'var(--ess-surface, #fff)', color: 'var(--ess-ink, #172033)', font: 'inherit', fontSize: 16 }} />
+        <small style={{ color: 'var(--ess-muted, #64748b)' }}>Select today or a future date using the calendar.</small>
+      </label>
+    );
+  }
 
   const maxDay = daysInMonth(parts.year, parts.month);
   const selectStyle: React.CSSProperties = {
