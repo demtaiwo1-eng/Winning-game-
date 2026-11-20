@@ -301,3 +301,104 @@ html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown :where(*) {
   -webkit-text-fill-color: currentColor !important;
 }
 
+
+/* LANDING CHROME THEME CONTRACT
+   Public navigation, dropdown, footer and auth dialog must consume the same
+   semantic tokens as the rest of the application. These rules intentionally
+   live in the final global runtime layer, after legacy component styles. */
+html[data-ephinta-theme] body #root .eph-landing .eph-nav {
+  color: var(--epg-ink) !important;
+  background: var(--epg-surface) !important;
+  border-bottom: 1px solid var(--epg-border) !important;
+  box-shadow: var(--epg-shadow) !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-nav :where(.eph-brand,.eph-brand span,.eph-signin,.eph-menu) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-links {
+  color: var(--epg-ink) !important;
+  background: var(--epg-surface-raised) !important;
+  border: 1px solid var(--epg-border) !important;
+  box-shadow: var(--epg-shadow) !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-links :where(a,.eph-menu-brand,.eph-menu-label,.eph-menu-portals button) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-links a:hover,
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-links a:focus-visible,
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-menu-portals button:hover,
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-menu-portals button:focus-visible {
+  color: var(--epg-link) !important;
+  background: var(--epg-surface-soft) !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-footer {
+  color: var(--epg-ink) !important;
+  background: var(--epg-surface) !important;
+  border-top: 1px solid var(--epg-border) !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-footer :where(.eph-brand,.eph-brand span,small,a) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-footer .eph-footer-copyright {
+  color: var(--epg-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  line-height: 1.55 !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-footer a:hover,
+html[data-ephinta-theme] body #root .eph-landing .eph-footer a:focus-visible {
+  color: var(--epg-link) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-modal-backdrop {
+  background: rgb(4 7 18 / 72%) !important;
+  backdrop-filter: blur(8px);
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-modal {
+  color: var(--epg-ink) !important;
+  background: var(--epg-surface) !important;
+  border: 1px solid var(--epg-border) !important;
+  box-shadow: var(--epg-shadow) !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-modal :where(h1,h2,h3,h4,strong,b,label,dt,dd) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-modal :where(p,small,.eph-auth-switch,.eph-registration-note span,.eph-registration-review-note) {
+  color: var(--epg-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-modal :where(input,select,textarea) {
+  color: var(--epg-ink) !important;
+  background: var(--epg-surface-raised) !important;
+  border-color: var(--epg-border) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-modal :where(input,textarea)::placeholder {
+  color: var(--epg-subtle) !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-modal :where(.eph-close,.eph-text-btn,.eph-auth-switch button) {
+  color: var(--epg-link) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-modal .eph-auth-error {
+  color: var(--epg-danger) !important;
+  background: color-mix(in srgb, var(--epg-danger) 10%, var(--epg-surface)) !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-modal .eph-auth-notice {
+  color: var(--epg-success) !important;
+  background: color-mix(in srgb, var(--epg-success) 10%, var(--epg-surface)) !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-nav :where(button,a):focus-visible,
+html[data-ephinta-theme] body #root .eph-landing .eph-footer :where(button,a):focus-visible,
+html[data-ephinta-theme] body #root .eph-landing .eph-modal :where(button,a,input,select):focus-visible {
+  outline: 3px solid var(--epg-focus) !important;
+  outline-offset: 3px !important;
+}
