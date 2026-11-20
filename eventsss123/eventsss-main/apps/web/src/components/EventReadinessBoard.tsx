@@ -11,6 +11,7 @@ type Check = {
   notes?: string | null;
   checkedAt?: string | null;
   taskId?: string | null;
+  task?: { status: string; tier: string; dueAt?: string | null } | null;
   verifiedBy?: { id: string; name: string } | null;
 };
 
@@ -452,7 +453,7 @@ export default function EventReadinessBoard({
               <strong>{c.label}</strong>
               <div className="ess-muted" style={{ fontSize: 13 }}>
                 {c.zone || "GENERAL"} · {c.category || "Service"} · {c.status}
-                {c.taskId ? " · Planner checklist item" : ""}
+                {c.taskId ? " · Planner checklist: " + (c.task?.status || "added") + (c.task?.tier ? " · " + c.task.tier : "") : ""}
                 {c.notes ? ` · ${c.notes}` : ""}
                 {c.verifiedBy?.name ? " · Verified by " + c.verifiedBy.name : ""}
                 {c.checkedAt ? " · " + new Date(c.checkedAt).toLocaleString() : ""}
