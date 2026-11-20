@@ -2454,9 +2454,9 @@ export default function EnterpriseApp() {
           className="ess-brand"
           onClick={() => (session ? openDashboard(session.role) : navigate("/"))}
         >
-          <img className="ess-app-brand-logo" src="/brand/ephinta_logo2.png" alt="EPHINTA" /><span className="ess-brand-mark">EPHINTA</span>
-          <span>
-            EPHINTA
+          <img className="ess-app-brand-logo" src="/brand/ephinta_logo2.png" alt="EPHINTA" />
+          <span className="ess-brand-wordmark">
+            <strong>EPHINTA</strong>
             <small>International event infrastructure</small>
           </span>
         </button>
