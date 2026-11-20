@@ -130,14 +130,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const promptOpen = showPrompt && preferencesLoaded && consent === null && !authDialogOpen;
-    if (!promptOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = previousOverflow; };
-  }, [showPrompt, preferencesLoaded, consent, authDialogOpen]);
-
+  // The consent card is a compact, non-blocking control; never lock page scroll.
   useEffect(() => {
     if (!resumeAfterTrackChange.current) return;
     resumeAfterTrackChange.current = false;
@@ -217,6 +210,17 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
             </div>
           </section>
         </div>
+      )}
+
+      {consent === false && !authDialogOpen && (
+        <button
+          type="button"
+          className="eph-audio__restore"
+          onClick={() => setConsent(null)}
+          aria-label="Enable EPHINTA music"
+        >
+          ♫ Enable music
+        </button>
       )}
 
       {consent === true && !authDialogOpen && (!expanded ? (
