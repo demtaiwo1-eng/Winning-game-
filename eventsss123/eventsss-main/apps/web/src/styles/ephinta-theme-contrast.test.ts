@@ -169,6 +169,9 @@ describe("EPHINTA global theme contrast", () => {
       ".eph-modal",
       ".ess-device-lock",
       ".ess-device-lock-card",
+      ".ess-dialog-overlay",
+      ".ess-dialog-surface",
+      ".eph-audio__prompt",
       '[role="dialog"][aria-modal="true"]',
     ]) {
       expect(runtimeCss).toContain(selector);
