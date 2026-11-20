@@ -180,7 +180,7 @@ readinessRouter.post(
 
     // Mirror planner checklist tasks into ground-readiness checks; taskId makes sync idempotent.
     const plannerTasks = await prisma.eventTask.findMany({
-      where: { eventId },
+      where: { eventId, tier: "ESSENTIAL" },
       orderBy: { sortOrder: "asc" },
     });
     for (const task of plannerTasks) {
