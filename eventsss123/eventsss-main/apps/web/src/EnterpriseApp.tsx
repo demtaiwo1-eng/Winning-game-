@@ -41,6 +41,7 @@ const PublicMarketplaceCatalogue = lazy(() => import("./components/PublicMarketp
 const FeedbackPanel = lazy(() => import("./components/FeedbackPanel"));
 import { EmptyState } from "./components/EmptyState";
 const KycUpload = lazy(() => import("./components/KycUpload"));
+import VendorKycQuestionnaire, { type VendorKycAnswers } from "./components/VendorKycQuestionnaire";
 import {
   checkPassword,
   PASSWORD_HELPER,
@@ -2185,6 +2186,13 @@ export default function EnterpriseApp() {
           : authMode === "forgot"
             ? "/api/v1/auth/forgot-password"
             : "/api/v1/auth/login";
+      const formData = new FormData(event.currentTarget);
+      const rawKycQuestionnaire = formData.get("kycQuestionnaire");
+      let kycQuestionnaire: Record<string, string> | undefined;
+      if (typeof rawKycQuestionnaire === "string" && rawKycQuestionnaire) {
+        try { kycQuestionnaire = JSON.parse(rawKycQuestionnaire) as Record<string, string>; }
+        catch { setAuthError("Please review your business verification answers and try again."); return; }
+      }
       const body =
         authMode === "signup"
           ? {
@@ -2203,9 +2211,9 @@ export default function EnterpriseApp() {
               businessCity: selectedRole === "VENDOR" || (selectedRole === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER") ? vendorCity : undefined,
               businessDescription:
                 selectedRole === "VENDOR" || (selectedRole === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER") ? vendorDescription : undefined,
-              kycDocumentUrl:
-                (selectedRole === "VENDOR" || (selectedRole === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) && vendorKycUrl
-                  ? vendorKycUrl
+              kycQuestionnaire:
+                (selectedRole === "VENDOR" || (selectedRole === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER"))
+                  ? kycQuestionnaire
                   : undefined,
               country,
               currency,
@@ -3460,6 +3468,7 @@ function AuthModal({
 }) {
   const [passwordVisible, setPasswordVisible] = useState(true);
   const [registrationStep, setRegistrationStep] = useState(0);
+  const [vendorKycAnswers, setVendorKycAnswers] = useState<VendorKycAnswers>({});
   const [touched, setTouched] = useState<Partial<Record<RegistrationField, boolean>>>({});
   const internal = role === "VERIFIER" || role === "ADMIN";
   useEffect(() => { setTouched({}); setRegistrationStep(0); }, [role, mode]);
@@ -3656,23 +3665,6 @@ function AuthModal({
                 />
                 {fieldFeedback("vendorDescription", vendorDescription)}
               </label>
-              <label>
-                KYC document URL
-                <input
-                  type="url"
-                  value={vendorKycUrl}
-                  onChange={(event) => {
-                    setVendorKycUrl(event.target.value);
-                    touch("vendorKycUrl");
-                  }}
-                  onBlur={() => touch("vendorKycUrl")}
-                  placeholder="https://secure-document-link"
-                  maxLength={2048}
-                  aria-invalid={Boolean(fieldError("vendorKycUrl", vendorKycUrl))}
-                  aria-describedby={fieldError("vendorKycUrl", vendorKycUrl) ? "auth-vendorKycUrl-error" : undefined}
-                />
-                {fieldFeedback("vendorKycUrl", vendorKycUrl)}
-              </label>
             </>
           )}
           {mode === "signup" && registrationStep === 1 && role === "AFFILIATE" && (
@@ -3828,6 +3820,9 @@ function AuthModal({
                 </select>
               </label>
             </div>
+          )}
+          {mode === "signup" && registrationStep === 2 && (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) && (
+            <VendorKycQuestionnaire country={country} value={vendorKycAnswers} onChange={setVendorKycAnswers} />
           )}
           {mode === "signup" && registrationStep === 2 && (
             <div className="ess-auth-trust">
