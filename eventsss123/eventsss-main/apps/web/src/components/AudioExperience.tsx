@@ -49,6 +49,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [duration, setDuration] = useState(0);
   const [status, setStatus] = useState("");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [questionnaireActive, setQuestionnaireActive] = useState(false);
   const tracks = category === "featured" ? EPHINTA_MUSIC.featuredTracks : EPHINTA_MUSIC.categoryTracks[category];
   const currentTrack = tracks[trackIndex] || tracks[0];
   const source = audioUrl || currentTrack.src;
@@ -130,7 +131,9 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       // music while a real, visible PIN/auth dialog is on screen.
       const deviceLocked = isVisible(".ess-device-lock");
       const authDialog = isVisible(".ess-auth-modal, .eph-modal, #eph-auth-dialog");
+      const interviewForm = isVisible(".ess-builder, .ess-role-questionnaire");
       setAuthDialogOpen(deviceLocked || authDialog);
+      setQuestionnaireActive(interviewForm);
       if (deviceLocked) {
         audioRef.current?.pause();
         setPlaying(false);
@@ -209,7 +212,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       />
       <p className="eph-audio__status" role="status" aria-live="polite">{status}</p>
 
-      {showPrompt && preferencesLoaded && consent === null && !authDialogOpen && (
+      {showPrompt && preferencesLoaded && consent === null && !authDialogOpen && !questionnaireActive && (
         <div className="eph-audio__backdrop">
           <section className="eph-audio__prompt" role="dialog" aria-modal="false" aria-labelledby="eph-audio-title">
             <span className="eph-audio__prompt-icon" aria-hidden="true">♫</span>
@@ -225,7 +228,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       )}
 
 
-      {consent === false && !authDialogOpen && (
+      {consent === false && !authDialogOpen && !questionnaireActive && (
         <button
           type="button"
           className="eph-audio__restore eph-audio__enable"
@@ -236,7 +239,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         </button>
       )}
 
-      {consent === true && !authDialogOpen && (!expanded ? (
+      {consent === true && !authDialogOpen && !questionnaireActive && (!expanded ? (
         <button type="button" className="eph-audio__restore" onClick={() => setExpanded(true)} aria-label="Open music player">
           ♫ Music {playing ? "playing" : "paused"}
         </button>
