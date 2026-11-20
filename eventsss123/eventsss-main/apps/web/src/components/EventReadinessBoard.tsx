@@ -296,6 +296,23 @@ export default function EventReadinessBoard({
         </div>
       )}
 
+      <details className="ess-dashboard-fold" open={mode === "verifier"}>
+        <summary>Vendor payments and part-payment milestones · {bookingPayments.length}</summary>
+        <p className="ess-muted">Read-only financial confirmation from recorded EPHINTA payment transactions. A pending request is not treated as paid; only recorded paid amounts count.</p>
+        <div style={{ display: "grid", gap: 8, margin: "0 12px 12px" }}>
+          {bookingPayments.map((booking) => (
+            <article className="ess-card" key={booking.id}>
+              <strong>{booking.vendorName}</strong>
+              <p className="ess-muted">{booking.status} · Paid {formatMoney(booking.paidMinor, booking.currency)} of {formatMoney(booking.totalMinor, booking.currency)}</p>
+              {booking.paymentRequests.length ? booking.paymentRequests.map((request) => (
+                <p className="ess-muted" key={request.id}>Part payment: {formatMoney(request.amountMinor, booking.currency)} · {request.reason} · {request.status}{request.paidAt ? " · Paid " + new Date(request.paidAt).toLocaleString() : ""}</p>
+              )) : <p className="ess-muted">No part-payment requests recorded.</p>}
+            </article>
+          ))}
+          {!bookingPayments.length && <p className="ess-muted">No vendor bookings are linked to this event yet.</p>}
+        </div>
+      </details>
+
       {mode === "verifier" && canComplete && (
         <div className="ess-wallet-card" style={{ marginTop: 16 }}>
           <strong>{event?.status === "COMPLETED" ? "Verifier-authorized escrow release" : "Confirm event completion"}</strong>
@@ -435,11 +452,19 @@ export default function EventReadinessBoard({
               <strong>{c.label}</strong>
               <div className="ess-muted" style={{ fontSize: 13 }}>
                 {c.zone || "GENERAL"} · {c.category || "Service"} · {c.status}
+                {c.taskId ? " · Planner checklist item" : ""}
                 {c.notes ? ` · ${c.notes}` : ""}
+                {c.verifiedBy?.name ? " · Verified by " + c.verifiedBy.name : ""}
+                {c.checkedAt ? " · " + new Date(c.checkedAt).toLocaleString() : ""}
               </div>
             </div>
             {mode === "verifier" && (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <div style={{ display: "grid", gap: 8, width: "min(100%, 360px)" }}>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>
+                  On-the-ground confirmation
+                  <textarea rows={2} value={checkNotes[c.id] ?? ""} onChange={(event) => setCheckNotes((current) => ({ ...current, [c.id]: event.target.value }))} placeholder="What did you physically confirm? Note vendor arrival, setup, payment receipt or issue…" maxLength={500} />
+                </label>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {(["GREEN", "AMBER", "RED"] as const).map((s) => (
                   <button
                     key={s}
@@ -452,12 +477,13 @@ export default function EventReadinessBoard({
                           ? { color: statusColor.RED, borderColor: statusColor.RED }
                           : { color: statusColor.AMBER, borderColor: statusColor.AMBER }
                     }
-                    disabled={busy}
+                    disabled={busy || (s === "GREEN" && (checkNotes[c.id] || "").trim().length < 8)}
                     onClick={() => setCheck(c.id, s)}
                   >
                     {s}
                   </button>
                 ))}
+                </div>
               </div>
             )}
             {mode === "client" && (
