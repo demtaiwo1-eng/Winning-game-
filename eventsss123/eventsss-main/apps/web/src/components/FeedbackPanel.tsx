@@ -6,6 +6,7 @@ export default function FeedbackPanel({ locale = "en" }: { locale?: LocaleCode }
   const [bookings, setBookings] = useState<FeedbackBooking[]>([]);
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [comments, setComments] = useState<Record<string, string>>({});
+  const [feedbackSteps, setFeedbackSteps] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [busyBooking, setBusyBooking] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -76,45 +77,49 @@ export default function FeedbackPanel({ locale = "en" }: { locale?: LocaleCode }
                 {" · "}
                 Completed {new Date(booking.completedAt).toLocaleDateString()}
               </p>
-              <label>
-                Your rating
-                <select
-                  value={ratings[booking.id] ?? 5}
-                  onChange={(event) =>
-                    setRatings((current) => ({
-                      ...current,
-                      [booking.id]: Number(event.target.value),
-                    }))
-                  }
-                  required
-                >
-                  {[5, 4, 3, 2, 1].map((rating) => (
-                    <option key={rating} value={rating}>
-                      {rating} / 5
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Comment (optional)
-                <textarea
-                  value={comments[booking.id] ?? ""}
-                  maxLength={2000}
-                  onChange={(event) =>
-                    setComments((current) => ({
-                      ...current,
-                      [booking.id]: event.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <button
-                type="submit"
-                className="ess-primary"
-                disabled={busyBooking !== null}
-              >
-                {busyBooking === booking.id ? "Submitting…" : "Submit feedback"}
-              </button>
+              <div className="ess-interview-progress-track" aria-hidden="true">
+                <span style={{ width: `${((feedbackSteps[booking.id] ?? 0) + 1) * 50}%` }} />
+              </div>
+              <p className="ess-interview-step-label">Question {(feedbackSteps[booking.id] ?? 0) + 1} of 2</p>
+              {(feedbackSteps[booking.id] ?? 0) === 0 ? (
+                <>
+                  <h4>How was your experience with this provider?</h4>
+                  <label className="ess-interview-question">
+                    <span>Your rating</span>
+                    <select
+                      value={ratings[booking.id] ?? 5}
+                      onChange={(event) => setRatings((current) => ({ ...current, [booking.id]: Number(event.target.value) }))}
+                      required
+                    >
+                      {[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} / 5</option>)}
+                    </select>
+                  </label>
+                  <div className="ess-builder-actions ess-interview-actions">
+                    <span />
+                    <button type="button" className="ess-primary" onClick={() => setFeedbackSteps((current) => ({ ...current, [booking.id]: 1 }))}>Next question →</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h4>Would you like to share anything about the service?</h4>
+                  <p className="ess-muted">Your comment is optional and helps other planners understand what to expect.</p>
+                  <label className="ess-interview-question">
+                    <span>Comment (optional)</span>
+                    <textarea
+                      value={comments[booking.id] ?? ""}
+                      maxLength={2000}
+                      rows={4}
+                      onChange={(event) => setComments((current) => ({ ...current, [booking.id]: event.target.value }))}
+                    />
+                  </label>
+                  <div className="ess-builder-actions ess-interview-actions">
+                    <button type="button" className="ess-outline-button" onClick={() => setFeedbackSteps((current) => ({ ...current, [booking.id]: 0 }))}>Previous question</button>
+                    <button type="submit" className="ess-primary" disabled={busyBooking !== null}>
+                      {busyBooking === booking.id ? "Submitting…" : "Submit feedback"}
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
           ))}
         </div>
