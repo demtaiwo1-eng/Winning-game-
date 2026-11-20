@@ -71,7 +71,7 @@
   position: relative;
   border: 1px solid var(--eph-parent-border);
   border-radius: var(--eph-parent-radius);
-  background: linear-gradient(155deg, #fff 0%, #fbfaff 100%);
+  background: var(--epg-surface, #fff);
   color: var(--eph-parent-ink);
   box-shadow: var(--eph-parent-shadow);
   backdrop-filter: blur(14px);
