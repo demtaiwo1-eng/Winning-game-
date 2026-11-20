@@ -5,7 +5,7 @@
  * - Customer sees traffic-light board + countdown
  */
 import { Router } from "express";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
@@ -331,7 +331,7 @@ readinessRouter.get(
             { startsAt: { gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), lte: horizon } },
             { endsAt: { gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), lte: horizon } },
           ] },
-          { status: "COMPLETED" as const, bookings: { some: { status: { in: ["PAID", "CONFIRMED"] as never } } } },
+          { status: "COMPLETED", bookings: { some: { status: { in: ["PAID", "CONFIRMED"] } } } },
         ];
     const events = await prisma.event.findMany({
       where: {
