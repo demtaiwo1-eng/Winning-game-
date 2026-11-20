@@ -2430,6 +2430,7 @@ export default function EnterpriseApp() {
           if (pending) setResumeLabel(pending);
         } catch { /* */ }
       }}
+      onStartRoleQuestionnaire={(role) => navigate(`/join/${role.toLowerCase()}`)}
       onStartBuilder={startEventBuilder}
       onExploreMarketplace={() => navigate("/marketplace")}
     />
