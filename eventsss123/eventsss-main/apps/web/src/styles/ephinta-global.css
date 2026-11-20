@@ -577,3 +577,149 @@
   .ess-mode-choice small { font-size: 8px; }
   .ess-mode-choice { padding-inline: 3px; }
 }
+
+
+/* EPHINTA shared portal dashboard system — all portal roles inherit the same
+   theme tokens, with layout emphasis supplied by each portal's own markup. */
+:where(.ess-portal-stack,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,.ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal) {
+  color: var(--epg-ink, var(--ephinta-theme-ink, inherit));
+  min-width: 0;
+}
+:where(.ess-portal-stack,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,.ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal)
+:where(h1,h2,h3,h4,p,label,strong,small,span,li,th,td) {
+  color: inherit;
+}
+:where(.ess-portal-stack,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,.ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal)
+:where(.ess-panel,.ess-card,.ess-metric,.ess-marketplace-welcome,.ess-marketplace-welcome-grid article) {
+  border-color: var(--epg-border, var(--ephinta-theme-border));
+  background-color: var(--epg-surface, var(--ephinta-theme-surface));
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--epg-accent, #6852c7) 7%, transparent);
+}
+:where(.ess-portal-stack,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,.ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal)
+:where(.ess-muted,.ess-page-heading p,.ess-metric small,.ess-eyebrow) {
+  color: var(--epg-muted, var(--ephinta-theme-muted));
+}
+:where(.ess-portal-stack,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,.ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal)
+:where(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+  background: var(--epg-surface-raised, var(--ephinta-theme-surface));
+  border: 1px solid var(--epg-border, var(--ephinta-theme-border));
+  border-radius: 11px;
+}
+:where(.ess-portal-stack,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,.ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal)
+:where(button,.ess-primary,.ess-outline-button,.ess-quiet-button,.ess-chip) {
+  font: inherit;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+:where(.ess-portal-stack,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,.ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal)
+:where(.ess-primary,.ess-chip-active) {
+  background: linear-gradient(112deg, var(--epg-accent, #7654d8), color-mix(in srgb, var(--epg-link, #2d8eaa) 72%, var(--epg-accent, #7654d8)));
+  border-color: transparent;
+  color: var(--epg-accent-ink, #fff);
+}
+:where(.ess-portal-stack,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,.ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal)
+:where(.ess-outline-button,.ess-quiet-button,.ess-chip) {
+  border-color: var(--epg-border, var(--ephinta-theme-border));
+  background: var(--epg-surface-raised, var(--ephinta-theme-surface));
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+}
+.ess-dashboard-nav:has(.ess-dashboard-section-select) > .ess-chip { display: none !important; }
+.ess-dashboard-nav .ess-dashboard-section-select {
+  display: grid;
+  gap: 6px;
+  width: min(100%, 340px);
+  color: var(--epg-muted, var(--ephinta-theme-muted));
+  font-size: 12px;
+  font-weight: 750;
+}
+.ess-dashboard-nav .ess-dashboard-section-select select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 40px 10px 13px;
+  border: 1px solid var(--epg-border, var(--ephinta-theme-border));
+  border-radius: 12px;
+  background: var(--epg-surface-raised, var(--ephinta-theme-surface));
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+  font: inherit;
+}
+.ess-planning-question-card {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 12px;
+  padding: clamp(18px, 3vw, 26px);
+  border: 1px solid color-mix(in srgb, var(--epg-accent, #7654d8) 25%, var(--epg-border));
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--epg-accent, #7654d8) 10%, transparent), transparent 42%),
+    var(--epg-surface, #fff);
+  animation: ess-question-enter .32s ease both;
+}
+.ess-planning-question-number {
+  color: var(--epg-accent, #7654d8);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .16em;
+}
+.ess-planning-question-card h3 {
+  margin: 0;
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+  font-size: clamp(18px, 2.3vw, 23px);
+  line-height: 1.25;
+}
+.ess-planning-question-card p { margin: 0; line-height: 1.55; }
+.ess-planning-answer-label { font-size: 12px; font-weight: 800; }
+.ess-planning-question-card textarea { width: 100%; min-height: 118px; resize: vertical; }
+.ess-planning-question-nav {
+  display: grid;
+  grid-template-columns: minmax(78px, auto) 1fr minmax(125px, auto);
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+.ess-planning-question-nav > span { color: var(--epg-muted, var(--ephinta-theme-muted)); font-size: 12px; text-align: center; }
+.ess-question-progress { display: grid; gap: 8px; }
+.ess-question-progress-copy { display: flex; justify-content: space-between; gap: 10px; color: var(--epg-muted, var(--ephinta-theme-muted)); font-size: 12px; }
+.ess-question-progress progress { width: 100%; height: 7px; accent-color: var(--epg-accent, #7654d8); }
+.ess-dashboard-fold {
+  margin: 12px 0;
+  border: 1px solid var(--epg-border, var(--ephinta-theme-border));
+  border-radius: 14px;
+  background: var(--epg-surface-raised, var(--ephinta-theme-surface));
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+  overflow: clip;
+}
+.ess-dashboard-fold > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 15px;
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+.ess-dashboard-fold > summary::-webkit-details-marker { display: none; }
+.ess-dashboard-fold > summary::after { content: "＋"; color: var(--epg-accent, #7654d8); font-size: 18px; }
+.ess-dashboard-fold[open] > summary::after { content: "−"; }
+.ess-dashboard-fold > :not(summary) { margin-inline: 12px; }
+.ess-dashboard-fold > :last-child { margin-bottom: 12px; }
+.ess-portal-stack .ess-metrics { gap: 12px; }
+.ess-portal-stack .ess-metric { border-radius: 16px; padding: 17px; }
+.ess-portal-stack .ess-metric strong { color: var(--epg-ink, var(--ephinta-theme-ink)); font-variant-numeric: tabular-nums; }
+.ess-portal-stack .ess-page-heading { gap: 18px; }
+@keyframes ess-question-enter {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 680px) {
+  .ess-dashboard-nav .ess-dashboard-section-select { width: 100%; }
+  .ess-planning-question-nav { grid-template-columns: minmax(74px, auto) minmax(0, 1fr) minmax(112px, auto); gap: 7px; }
+  .ess-planning-question-nav button { min-height: 42px; padding-inline: 10px; font-size: 12px; }
+  .ess-planning-question-nav > span { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ess-planning-question-card { animation: none; }
+}
