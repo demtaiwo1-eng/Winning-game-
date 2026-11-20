@@ -260,3 +260,54 @@ html[data-theme="dark"] .ess-app .ess-portal-stack .ess-card {
 @media (prefers-reduced-motion: reduce) {
   .ess-app .ess-portal-stack * { transition-duration: .01ms !important; }
 }
+
+
+/* Secondary role workspaces (verifier, consultant, affiliate, organization,
+   admin and messaging panels) share the same surfaces and typography. */
+.ess-app :where(.ess-shell,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,
+  .ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal,
+  .ess-planner-workspace,.ess-checkin-workspace,.ess-messaging-workspace,
+  .ess-notifications-workspace,.ess-feedback-workspace,.ess-kyc-workspace) {
+  min-width: 0;
+  color: var(--epg-ink, #17152b);
+}
+.ess-app :where(.ess-shell,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,
+  .ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal,
+  .ess-planner-workspace,.ess-checkin-workspace,.ess-messaging-workspace,
+  .ess-notifications-workspace,.ess-feedback-workspace,.ess-kyc-workspace)
+:where(.ess-panel,.ess-card,.ess-metric,.ess-wallet-card,.ess-table-wrap) {
+  min-width: 0;
+  border-color: var(--epg-border, #d7dbea);
+  border-radius: 17px;
+  background-color: var(--epg-surface, #fff);
+  color: var(--epg-ink, #17152b);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--epg-ink, #17152b) 5%, transparent);
+}
+.ess-app :where(.ess-shell,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,
+  .ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal,
+  .ess-planner-workspace,.ess-checkin-workspace,.ess-messaging-workspace,
+  .ess-notifications-workspace,.ess-feedback-workspace,.ess-kyc-workspace)
+:where(h1,h2,h3,h4,strong,b,label,th,td) {
+  color: var(--epg-ink, #17152b);
+}
+.ess-app :where(.ess-shell,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,
+  .ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal,
+  .ess-planner-workspace,.ess-checkin-workspace,.ess-messaging-workspace,
+  .ess-notifications-workspace,.ess-feedback-workspace,.ess-kyc-workspace)
+:where(p,small,.ess-muted,.ess-subtitle) {
+  color: var(--epg-muted, #4b5268);
+}
+.ess-app :where(.ess-shell,.ess-vendor-portal,.ess-admin-portal,.ess-organization-portal,
+  .ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal,
+  .ess-planner-workspace,.ess-checkin-workspace,.ess-messaging-workspace,
+  .ess-notifications-workspace,.ess-feedback-workspace,.ess-kyc-workspace)
+:where(input,select,textarea) {
+  border-color: var(--epg-border, #d7dbea);
+  background: var(--epg-surface-raised, #fff);
+  color: var(--epg-ink, #17152b);
+}
+html[data-ephinta-theme="dark"] .ess-app :where(.ess-shell,.ess-vendor-portal,.ess-admin-portal,
+  .ess-organization-portal,.ess-consultant-portal,.ess-affiliate-portal,.ess-verifier-portal)
+:where(.ess-panel,.ess-card,.ess-metric,.ess-wallet-card) {
+  background: var(--epg-surface, #121d30);
+}
