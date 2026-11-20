@@ -837,7 +837,7 @@ test("authenticated planner can add a checklist task to an owned event", async (
   await expect(plannerSection).toHaveValue("payments");
   await plannerSection.selectOption("planner");
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
-  await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
+  await expect(page.locator('.ess-planner-workspace > label select option[value="event-e2e-001"]')).toHaveText(event.title);
   const taskInput = page.locator('section[aria-labelledby="event-workspace-title"] label').filter({ hasText: /^Task$/ }).locator("input");
   await expect(taskInput).toBeVisible();
   await taskInput.fill("Confirm event venue");
