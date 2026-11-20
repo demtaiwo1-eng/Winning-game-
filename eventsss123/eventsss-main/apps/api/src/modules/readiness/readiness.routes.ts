@@ -177,6 +177,24 @@ readinessRouter.post(
       }
     }
 
+    // Mirror planner checklist tasks into ground-readiness checks; taskId makes sync idempotent.
+    const plannerTasks = await prisma.eventTask.findMany({
+      where: { eventId },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    });
+    for (const task of plannerTasks) {
+      const existing = await prisma.eventServiceCheck.findUnique({ where: { taskId: task.id } });
+      if (!existing) {
+        await prisma.eventServiceCheck.create({
+          data: {
+            eventId, taskId: task.id, label: task.title, category: "PLANNER_TASK",
+            zone: "GENERAL", status: "PENDING",
+            notes: task.status === "DONE" ? "Planner marked complete; awaiting on-the-ground verifier confirmation." : null,
+          },
+        });
+      }
+    }
+
     // Optional manual checklist items from body
     const extras = Array.isArray(req.body?.extraLabels) ? req.body.extraLabels : [];
     for (const label of extras) {
@@ -250,6 +268,15 @@ readinessRouter.get(
     const checks = await prisma.eventServiceCheck.findMany({
       where: { eventId: event.id },
       orderBy: { createdAt: "asc" },
+      include: { verifiedBy: { select: { id: true, name: true } } },
+    });
+    const bookingPayments = await prisma.booking.findMany({
+      where: { eventId: event.id },
+      orderBy: { createdAt: "asc" },
+      include: {
+        vendor: { select: { businessName: true } },
+        paymentRequests: { orderBy: { createdAt: "asc" }, include: { requestedBy: { select: { name: true } } } },
+      },
     });
 
     res.json({
@@ -264,6 +291,16 @@ readinessRouter.get(
       },
       readiness: serializeReadiness(readiness),
       checks,
+      bookingPayments: bookingPayments.map((booking) => ({
+        id: booking.id, status: booking.status, currency: booking.currency,
+        totalMinor: booking.totalMinor.toString(), paidMinor: booking.paidMinor.toString(),
+        vendorName: booking.vendor.businessName,
+        paymentRequests: booking.paymentRequests.map((request) => ({
+          id: request.id, amountMinor: request.amountMinor.toString(), reason: request.reason,
+          status: request.status, paidAt: request.paidAt, createdAt: request.createdAt,
+          requestedBy: request.requestedBy.name,
+        })),
+      })),
       canFinalize:
         req.user!.role === "VERIFIER" &&
         readiness.assignedVerifierId === req.user!.id,
