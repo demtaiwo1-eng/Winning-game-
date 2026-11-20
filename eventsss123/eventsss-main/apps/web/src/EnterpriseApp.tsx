@@ -1426,6 +1426,8 @@ function VerifierPortal() {
       status?: string;
       city?: string | null;
       bookingCount?: number;
+      isLeadVerifier?: boolean;
+      verifierZones?: string[];
       bookings?: Array<{
         id: string; status: string; currency: string; totalMinor: string; paidMinor: string; vendorName: string;
         paymentRequests: Array<{ id: string; amountMinor: string; reason: string; status: string; paidAt?: string | null }>;
@@ -1500,7 +1502,7 @@ function VerifierPortal() {
                   <div className="ess-muted" style={{ fontSize: 13 }}>
                     {e.startsAt ? new Date(e.startsAt).toLocaleString() : "No start time"}
                     {e.endsAt ? ` – ${new Date(e.endsAt).toLocaleString()}` : ""}
-                    {" · "}{e.city || "—"} · {e.status || "PLANNING"}
+                    {" · "}{e.city || "—"} · {e.status || "PLANNING"} · {e.isLeadVerifier ? "Lead verifier" : "Supporting verifier"}
                     {e.status === "COMPLETED" && e.bookingCount
                       ? ` · ${e.bookingCount} escrow release${e.bookingCount === 1 ? "" : "s"} pending`
                       : ""}
