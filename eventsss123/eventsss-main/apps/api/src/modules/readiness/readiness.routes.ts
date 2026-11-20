@@ -969,18 +969,20 @@ readinessRouter.post(
         : [];
     if (!verifierIds.length) throw new HttpError(400, "VALIDATION_ERROR", "verifierIds required");
     const zone = String(req.body.zone || "GENERAL").toUpperCase();
+    // Reassignment is authoritative: the newly selected first verifier becomes lead.
+    await prisma.eventVerifierAssignment.updateMany({ where: { eventId, zone }, data: { isLead: false } });
     const assigned: Array<{ verifierId: string }> = [];
     for (const verifierId of verifierIds) {
       const user = await prisma.user.findFirst({
         where: { id: verifierId, role: "VERIFIER", status: "ACTIVE" },
       });
-      if (!user) continue;
+      if (!user) throw new HttpError(404, "VERIFIER_NOT_FOUND", "One or more selected verifier accounts are unavailable");
       const row = await prisma.eventVerifierAssignment.upsert({
         where: {
           eventId_verifierId_zone: { eventId, verifierId, zone },
         },
         create: { eventId, verifierId, zone, isLead: assigned.length === 0 },
-        update: {},
+        update: { isLead: assigned.length === 0 },
       });
       assigned.push(row);
       await createNotification({
