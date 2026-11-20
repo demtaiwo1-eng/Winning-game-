@@ -48,14 +48,16 @@ describe("EPHINTA global theme contrast", () => {
     expect(contrast(subtle, surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(link, surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(accentInk, accent)).toBeGreaterThanOrEqual(4.5);
-    if (mode === "light") {
-      expect(luminance(ink)).toBeLessThan(0.25);
-      expect(luminance(muted)).toBeLessThan(0.35);
-    } else {
+    if (mode === "dark") {
       expect(luminance(ink)).toBeGreaterThan(0.75);
       expect(luminance(muted)).toBeGreaterThan(0.65);
       expect(luminance(page)).toBeLessThan(0.08);
       expect(luminance(surface)).toBeLessThan(0.12);
+    } else {
+      expect(luminance(ink)).toBeLessThan(0.25);
+      expect(luminance(muted)).toBeLessThan(0.35);
+      expect(luminance(page)).toBeGreaterThan(0.85);
+      expect(luminance(surface)).toBeGreaterThan(0.9);
     }
   });
 
@@ -79,8 +81,9 @@ describe("EPHINTA global theme contrast", () => {
   it("lets component text retain semantic colours while shared controls use theme tokens", () => {
     expect(runtimeCss).toContain("Text inherits from its component");
     expect(runtimeCss).toContain("Final readable type system");
-    expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] body #root :where(h1,h2)');
-    expect(runtimeCss).toContain("background-clip: text");
+    expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] body #root :where(h1,h2,h3,h4,h5,h6)');
+    expect(runtimeCss).toContain("-webkit-text-fill-color: currentColor");
+    expect(runtimeCss).toContain("color: #24143a !important");
     expect(runtimeCss).toContain('html[data-ephinta-theme="light"] body #root');
     expect(runtimeCss).toContain("--ephinta-link-fg");
     expect(runtimeCss).toContain("--ephinta-field-bg");
@@ -90,7 +93,7 @@ describe("EPHINTA global theme contrast", () => {
   });
 
   it("keeps native controls aligned with the selected colorful palette", () => {
-    expect(themeRuntime).toContain('document.documentElement.style.colorScheme = theme === "light" ? "light" : "dark"');
+    expect(themeRuntime).toContain('document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light"');
   });
 
   it("does not reintroduce a second blanket contrast layer after the shared theme contract", () => {
