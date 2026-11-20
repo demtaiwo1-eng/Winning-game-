@@ -1351,3 +1351,86 @@ body:has(.ephinta-marketing-zone) {
   text-shadow: none !important;
 }
 
+
+
+/* EPHINTA GLOBAL THEME TEXT CONTRACT.
+   Keep the event planner's token-driven surfaces/fields intact; its own theme
+   contract already maps --epg-ink and --epg-surface correctly. */
+html[data-ephinta-theme="dark"] #root,
+html[data-ephinta-theme="colorful"] #root { color:#f8f7ff !important; }
+
+html[data-ephinta-theme="dark"] #root :is(p,li,label,small,span,strong,summary,dt,dd,th,td,legend,figcaption):not(.ess-builder-card *),
+html[data-ephinta-theme="colorful"] #root :is(p,li,label,small,span,strong,summary,dt,dd,th,td,legend,figcaption):not(.ess-builder-card *) {
+  color:#e9e5ff !important;
+  -webkit-text-fill-color:#e9e5ff !important;
+}
+html[data-ephinta-theme="dark"] #root :is(h1,h2,h3,h4,h5,h6):not(.ess-builder-card *),
+html[data-ephinta-theme="colorful"] #root :is(h1,h2,h3,h4,h5,h6):not(.ess-builder-card *) {
+  color:#fff !important;
+  background-image:linear-gradient(95deg,#72eaff 0%,#bca2ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+}
+html[data-ephinta-theme="dark"] #root a:not(.ess-builder-card *),
+html[data-ephinta-theme="colorful"] #root a:not(.ess-builder-card *) {
+  color:#75eaff !important;
+  -webkit-text-fill-color:#75eaff !important;
+}
+html[data-ephinta-theme="dark"] #root button:not(.ess-builder-card *),
+html[data-ephinta-theme="colorful"] #root button:not(.ess-builder-card *) {
+  color:#fff !important;
+  -webkit-text-fill-color:#fff !important;
+}
+html[data-ephinta-theme="dark"] #root :is(input,select,textarea):not(.ess-builder-card *),
+html[data-ephinta-theme="colorful"] #root :is(input,select,textarea):not(.ess-builder-card *) {
+  color:#fff !important;
+  -webkit-text-fill-color:#fff !important;
+  background-color:#24203f !important;
+  border-color:#8272b5 !important;
+}
+html[data-ephinta-theme="light"] #root { color:#17152a !important; }
+html[data-ephinta-theme="light"] #root :is(p,li,label,small,span,strong,summary,dt,dd,th,td,legend,figcaption,h1,h2,h3,h4,h5,h6):not(.ess-builder-card *) {
+  color:#29243d !important;
+  -webkit-text-fill-color:#29243d !important;
+  background-image:none !important;
+}
+html[data-ephinta-theme="light"] #root a:not(.ess-builder-card *) {
+  color:#4f2bbd !important;
+  -webkit-text-fill-color:#4f2bbd !important;
+}
+
+/* Keep the centralized marketing headline gradient above legacy marketing ink rules.
+   Match the landing component's own data-theme attribute as well as the root theme. */
+html[data-ephinta-theme="dark"] #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone > h2,
+html[data-ephinta-theme="colorful"] #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone > h2,
+html[data-ephinta-theme="dark"] #root .ephinta-marketing-zone h2,
+html[data-ephinta-theme="colorful"] #root .ephinta-marketing-zone h2 {
+  color:#fff !important;
+  background-image:linear-gradient(95deg,#72eaff 0%,#bca2ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:0 2px 18px rgba(112,231,255,.12) !important;
+}
+
+html[data-ephinta-theme="light"] #root :is(input,select,textarea):not(.ess-builder-card *) {
+  color:#17152a !important;
+  -webkit-text-fill-color:#17152a !important;
+  background-color:#fff !important;
+  border-color:#bcb2d9 !important;
+}
+
+/* Light-mode landing headline must stay solid dark ink, overriding all legacy
+   marketing headline treatments and the component's embedded theme rules. */
+html[data-ephinta-theme="light"] #root .eph-landing[data-theme="light"] .ephinta-marketing-zone h2,
+html[data-ephinta-theme="light"] #root .ephinta-marketing-zone h2 {
+  color:#17152a !important;
+  -webkit-text-fill-color:#17152a !important;
+  background:none !important;
+  background-image:none !important;
+  -webkit-background-clip:border-box !important;
+  background-clip:border-box !important;
+  text-shadow:none !important;
+}
+

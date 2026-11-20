@@ -38,6 +38,7 @@
 
 
 /* Shared palette tokens, followed by the final runtime text-contrast layer. */
+@import "./ephinta-dashboard-system.css";
 @import "./ephinta-global-theme-contract.css";
 @import "./ephinta-runtime-contrast.css";
 
