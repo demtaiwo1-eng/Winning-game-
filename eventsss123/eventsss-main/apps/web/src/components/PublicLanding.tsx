@@ -981,6 +981,89 @@ export default function PublicLanding({
           -webkit-text-fill-color: currentColor !important;
         }
 
+
+        /* Final landing navigation/footer contrast and restrained brand gradients. */
+        .eph-landing .eph-nav {
+          background: linear-gradient(112deg, #11152d 0%, #211b45 56%, #173746 100%) !important;
+          color: #fff !important;
+          border-bottom: 1px solid rgba(211, 197, 255, .22);
+          box-shadow: 0 8px 26px rgba(14, 12, 38, .18);
+        }
+        .eph-landing .eph-nav .eph-brand,
+        .eph-landing .eph-nav .eph-signin,
+        .eph-landing .eph-nav .eph-menu { color: #fff !important; }
+        .eph-landing .eph-nav .eph-links {
+          background: linear-gradient(145deg, #171a36 0%, #29214d 62%, #183746 100%) !important;
+          border: 1px solid rgba(219, 207, 255, .24);
+          box-shadow: 0 22px 44px rgba(8, 10, 28, .32);
+        }
+        .eph-landing .eph-nav .eph-links > a {
+          color: #f7f5ff !important;
+          opacity: 1 !important;
+          font-weight: 750;
+        }
+        .eph-landing .eph-nav .eph-links > a:hover,
+        .eph-landing .eph-nav .eph-links > a:focus-visible {
+          color: #ffe2a0 !important;
+          background: rgba(255,255,255,.075);
+          border-radius: 8px;
+        }
+        .eph-landing .eph-nav .eph-menu-label { color: #e1d4ff !important; }
+        .eph-landing .eph-nav .eph-menu-portals button {
+          color: #fff !important;
+          background: rgba(255,255,255,.09);
+          border-color: rgba(255,255,255,.2);
+        }
+        .eph-landing .eph-nav .eph-menu-portals button:hover,
+        .eph-landing .eph-nav .eph-menu-portals button:focus-visible {
+          background: rgba(255,255,255,.16);
+          border-color: rgba(255,211,112,.7);
+        }
+        .eph-landing .eph-nav .eph-btn-gold,
+        .eph-landing .eph-hero .eph-btn-gold {
+          color: #21162f !important;
+          background: linear-gradient(110deg, #ffdc83 0%, #ffb86b 100%) !important;
+          box-shadow: 0 8px 22px rgba(255,184,107,.2);
+        }
+        .eph-landing .eph-footer {
+          background: linear-gradient(112deg, #11152d 0%, #211b45 56%, #173746 100%) !important;
+          color: #f7f5ff !important;
+          border-top: 1px solid rgba(211,197,255,.22);
+        }
+        .eph-landing .eph-footer .eph-brand,
+        .eph-landing .eph-footer .eph-brand span,
+        .eph-landing .eph-footer small,
+        .eph-landing .eph-footer a {
+          color: #f7f5ff !important;
+          opacity: 1 !important;
+          -webkit-text-fill-color: currentColor !important;
+        }
+        .eph-landing .eph-footer .eph-footer-copy {
+          display: grid;
+          gap: 5px;
+          min-width: 0;
+        }
+        .eph-landing .eph-footer .eph-footer-copyright {
+          color: #e0d9f5 !important;
+          font-size: 11px;
+          line-height: 1.5;
+          font-weight: 650;
+        }
+        .eph-landing .eph-footer-links a {
+          text-decoration: none;
+          text-underline-offset: 4px;
+        }
+        .eph-landing .eph-footer-links a:hover,
+        .eph-landing .eph-footer-links a:focus-visible {
+          color: #ffdc83 !important;
+          text-decoration: underline;
+        }
+        @media (max-width: 760px) {
+          .eph-landing .eph-footer { align-items: flex-start; gap: 12px; }
+          .eph-landing .eph-footer .eph-footer-copy { width: 100%; }
+          .eph-landing .eph-footer .eph-footer-copyright { overflow-wrap: anywhere; }
+        }
+
       `}</style>
 
 
@@ -1281,7 +1364,7 @@ export default function PublicLanding({
 
         <a className="eph-brand" href="#home"><img src="/brand/ephinta_logo4.png?v=20261010-092247" alt="" /><span>EPHINTA</span></a>
 
-        <small>Plan thoughtfully. Celebrate fully.</small>
+        <div className="eph-footer-copy"><small>Plan thoughtfully. Celebrate fully.</small><small className="eph-footer-copyright">© Dublu Ve Entertainment, Todysec IS. 2026. Since 2022.</small></div>
 
         <div className="eph-footer-links"><a href="#how-it-works">How it works</a><a href="#vendors">Vendors</a><a href="#safety">Safety</a><a href="#faq">FAQ</a></div>
 
