@@ -1400,3 +1400,23 @@ html[data-ephinta-theme="light"] #root textarea {
 html[data-ephinta-theme="light"] #root :is(button,.eph-btn-purple,.eph-btn-gold) {
   -webkit-text-fill-color: currentColor !important;
 }
+
+
+/* Keep app cards/panels dark enough for the bright text contract. */
+html[data-ephinta-theme="dark"] #root :is([class*="card"],[class*="Card"],[class*="panel"],[class*="Panel"],[role="dialog"]),
+html[data-ephinta-theme="colorful"] #root :is([class*="card"],[class*="Card"],[class*="panel"],[class*="Panel"],[role="dialog"]) {
+  background-color: #211d3d !important;
+  border-color: rgba(190,174,255,.38) !important;
+}
+/* In light mode, retain dark text except on intentionally dark inverse surfaces. */
+html[data-ephinta-theme="light"] #root :is(.eph-nav,.eph-footer,.eph-promo-shell,.ephinta-marketing-zone,.eph-vendor-band) :is(p,li,label,small,span,strong,h1,h2,h3,h4,a) {
+  color: #f8f7ff !important;
+  -webkit-text-fill-color: #f8f7ff !important;
+}
+html[data-ephinta-theme="light"] #root :is(.eph-nav,.eph-footer,.eph-promo-shell,.ephinta-marketing-zone,.eph-vendor-band) a {
+  color: #75eaff !important;
+  -webkit-text-fill-color: #75eaff !important;
+}
+html[data-ephinta-theme="light"] #root :is(.eph-nav,.eph-footer,.eph-promo-shell,.ephinta-marketing-zone,.eph-vendor-band) :is(h1,h2,h3,h4) {
+  background-image: none !important;
+}
