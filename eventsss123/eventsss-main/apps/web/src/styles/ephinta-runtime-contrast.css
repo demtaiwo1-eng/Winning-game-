@@ -25,7 +25,7 @@ html[data-ephinta-theme="dark"] {
   --ephinta-field-placeholder: var(--epg-subtle, #b3bfd0);
 }
 html[data-ephinta-theme="colorful"] {
-  color-scheme: light;
+  color-scheme: dark;
   --ephinta-fg: var(--epg-ink, #241b35);
   --ephinta-fg-muted: var(--epg-muted, #554b67);
   --ephinta-fg-subtle: var(--epg-subtle, #655a76);
