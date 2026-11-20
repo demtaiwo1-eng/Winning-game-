@@ -33,3 +33,7 @@ export function canAssignReadinessVerifier(input: {
 export function hasGroundConfirmationNote(status: string, notes: string): boolean {
   return status !== "GREEN" || notes.trim().length >= 8;
 }
+
+export function isPaymentMilestonePaid(status: string, paidAt: Date | string | null | undefined): boolean {
+  return status.toUpperCase() === "PAID" && Boolean(paidAt);
+}
