@@ -477,7 +477,7 @@ export default function EventReadinessBoard({
                           ? { color: statusColor.RED, borderColor: statusColor.RED }
                           : { color: statusColor.AMBER, borderColor: statusColor.AMBER }
                     }
-                    disabled={busy || (s === "GREEN" && ((checkNotes[c.id] || "").trim().length < 8 || (c.paymentRequest && (c.paymentRequest.status !== "PAID" || !c.paymentRequest.paidAt))))}
+                    disabled={busy || (s === "GREEN" && ((checkNotes[c.id] || "").trim().length < 8 || (!!c.paymentRequest && (c.paymentRequest.status !== "PAID" || !c.paymentRequest.paidAt))))}
                     onClick={() => setCheck(c.id, s)}
                   >
                     {s}
