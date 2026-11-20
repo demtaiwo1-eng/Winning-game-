@@ -23,6 +23,8 @@ interface LandingPageProps {
 
   onOpenAuth?: (mode: AuthMode, role: AccountRole) => void;
 
+  onStartRoleQuestionnaire?: (role: AccountRole) => void;
+
   onStartBuilder?: () => void;
 
   onExploreMarketplace?: () => void;
@@ -152,6 +154,8 @@ export default function PublicLanding({
   onLoginSuccess,
 
   onOpenAuth,
+
+  onStartRoleQuestionnaire,
 
   onStartBuilder,
 
@@ -374,7 +378,14 @@ export default function PublicLanding({
 
   }
 
-
+  function startRoleQuestionnaire(requestedRole: AccountRole) {
+    setMenuOpen(false);
+    if (onStartRoleQuestionnaire) {
+      onStartRoleQuestionnaire(requestedRole);
+      return;
+    }
+    openAuth('signup', requestedRole);
+  }
 
   function updateDraft<K extends keyof EventDraft>(key: K, value: EventDraft[K]) {
 
@@ -824,6 +835,17 @@ export default function PublicLanding({
         .eph-landing .eph-promo-shell { background: linear-gradient(135deg,#0f172a,#1f2a46) !important; color: #fff !important; border: 1px solid rgba(255,255,255,.12) !important; box-shadow: 0 18px 30px rgba(15,23,42,.15) !important; }
         .eph-landing .eph-promo-shell h2 { color: #fff !important; }
         .eph-landing .eph-promo-shell p, .eph-landing .eph-promo-shell .eph-promo-placeholder { color: #dce5ff !important; }
+
+        /* Final contrast guard for the dark marketplace campaign surface. */
+        html body #root .eph-landing .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-heading h2 {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+        }
+        html body #root .eph-landing .eph-promotions .eph-promo-shell.eph-marketplace-advertising {
+          color: #ffffff !important;
+          background: radial-gradient(circle at 88% 12%,rgba(166,122,255,.25),transparent 34%),linear-gradient(125deg,#12152f 0%,#28204b 52%,#192e4a 100%) !important;
+        }
+
         .eph-landing .eph-promo-marketplace-cta { color: #fff !important; background: var(--purple) !important; }
         .eph-landing .eph-promo-kicker {
           color: var(--purple) !important; -webkit-text-fill-color: currentColor !important;
@@ -1197,17 +1219,17 @@ export default function PublicLanding({
 
             <button type="button" onClick={() => { setMenuOpen(false); openAuth('signin'); }}>Sign in to your account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'CLIENT'); }}>Create customer account</button>
+            <button type="button" onClick={() => { setMenuOpen(false); startPlanning(); }}>Create customer account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'VENDOR'); }}>Create vendor account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('VENDOR')}>Create vendor account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'ORGANIZATION'); }}>Create organizer account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('ORGANIZATION')}>Create organizer account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'AFFILIATE'); }}>Create affiliate account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('AFFILIATE')}>Create affiliate account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'VERIFIER'); }}>Create verifier account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('VERIFIER')}>Create verifier account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'CONSULTANT'); }}>Create consultant account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('CONSULTANT')}>Create consultant account</button>
 
           </div>
 
@@ -1384,8 +1406,8 @@ export default function PublicLanding({
             <h2 id="eph-vendor-invite-title">Make your talent part of the moment.</h2>
             <p>Are you an event professional or an organization? Create the appropriate account to get started with EPHINTA.</p>
             <div className="eph-vendor-invite__actions">
-              <button className="eph-btn eph-btn-gold" onClick={() => openAuth('signup', 'VENDOR')}>Join as a vendor <span aria-hidden="true">→</span></button>
-              <button className="eph-btn eph-vendor-invite__organization" onClick={() => openAuth('signup', 'ORGANIZATION')}>Create an organization account</button>
+              <button className="eph-btn eph-btn-gold" onClick={() => startRoleQuestionnaire('VENDOR')}>Join as a vendor <span aria-hidden="true">→</span></button>
+              <button className="eph-btn eph-vendor-invite__organization" onClick={() => startRoleQuestionnaire('ORGANIZATION')}>Create an organization account</button>
             </div>
           </div>
         </section>
