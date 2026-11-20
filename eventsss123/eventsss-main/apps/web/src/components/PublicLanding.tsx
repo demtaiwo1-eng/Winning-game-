@@ -1158,7 +1158,6 @@ export default function PublicLanding({
           -webkit-text-fill-color: #251a36 !important;
           background: none !important;
         }
-      `}
         /* FINAL THEME TEXT ENFORCEMENT — keep every landing section readable. */
         .eph-landing[data-theme="dark"],
         .eph-landing[data-theme="colorful"] {
@@ -1244,6 +1243,7 @@ export default function PublicLanding({
         .eph-landing[data-theme="light"] .eph-field label,
         .eph-landing[data-theme="light"] .eph-modal label { color:#29243d !important; }
 
+      `}
       </style>
 
 
