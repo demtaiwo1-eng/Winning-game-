@@ -336,18 +336,6 @@ readinessRouter.get(
       where: {
         ...(req.user!.role === "VERIFIER" ? { verifierAssignments: { some: { verifierId: req.user!.id } } } : {}),
         OR: eventScope,
-          {
-            status: { in: ["PLANNING", "LIVE", "DRAFT"] },
-            OR: [
-              { startsAt: { gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), lte: horizon } },
-              { endsAt: { gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), lte: horizon } },
-            ],
-          },
-          {
-            status: "COMPLETED",
-            bookings: { some: { status: { in: ["PAID", "CONFIRMED"] } } },
-          },
-        ],
       },
       orderBy: { startsAt: "asc" },
       take: 40,
