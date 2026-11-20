@@ -463,7 +463,7 @@ html[data-ephinta-theme] body #root :is(
   .eph-modal,
   .ess-journey-card,
   .ess-device-lock-card,
-  [role="dialog"][aria-modal="true"],
+  [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
   dialog[open]
 ) {
   box-sizing: border-box !important;
@@ -506,6 +506,11 @@ html[data-ephinta-theme] body #root .ess-device-lock {
   background: rgb(4 7 18 / 82%) !important;
   backdrop-filter: blur(12px) !important;
   color: var(--epg-ink) !important;
+  max-width: none !important;
+  max-height: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 html[data-ephinta-theme] body #root .ess-device-lock-card {
   width: min(100%, 440px) !important;
@@ -523,7 +528,7 @@ html[data-ephinta-theme] body #root :is(
   .eph-modal,
   .ess-journey-card,
   .ess-device-lock-card,
-  [role="dialog"][aria-modal="true"],
+  [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
   dialog[open]
 ) :where(h1,h2,h3,h4,h5,h6,strong,b,label,legend,dt,dd) {
   color: var(--epg-ink) !important;
@@ -534,7 +539,7 @@ html[data-ephinta-theme] body #root :is(
   .eph-modal,
   .ess-journey-card,
   .ess-device-lock-card,
-  [role="dialog"][aria-modal="true"],
+  [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
   dialog[open]
 ) :where(p,small,.ess-muted,.ess-eyebrow,.ess-device-lock-description,.ess-device-lock-note) {
   color: var(--epg-muted) !important;
@@ -545,7 +550,7 @@ html[data-ephinta-theme] body #root :is(
   .eph-modal,
   .ess-journey-card,
   .ess-device-lock-card,
-  [role="dialog"][aria-modal="true"],
+  [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
   dialog[open]
 ) :where(input,select,textarea) {
   box-sizing: border-box !important;
@@ -564,7 +569,7 @@ html[data-ephinta-theme] body #root :is(
   .eph-modal,
   .ess-journey-card,
   .ess-device-lock-card,
-  [role="dialog"][aria-modal="true"],
+  [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
   dialog[open]
 ) :where(input,textarea)::placeholder {
   color: var(--epg-subtle) !important;
@@ -576,7 +581,7 @@ html[data-ephinta-theme] body #root :is(
   .eph-modal,
   .ess-journey-card,
   .ess-device-lock-card,
-  [role="dialog"][aria-modal="true"],
+  [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
   dialog[open]
 ) :where(button,a,input,select,textarea):focus-visible {
   outline: 3px solid var(--epg-focus) !important;
@@ -612,7 +617,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
     .eph-modal,
     .ess-journey-card,
     .ess-device-lock-card,
-    [role="dialog"][aria-modal="true"],
+    [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
     dialog[open]
   ) {
     width: 100% !important;
@@ -628,7 +633,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
     .eph-modal,
     .ess-journey-card,
     .ess-device-lock-card,
-    [role="dialog"][aria-modal="true"],
+    [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
     dialog[open]
   ) {
     width: min(92vw, 600px) !important;
