@@ -44,7 +44,18 @@ describe("organization registration modes", () => {
       organizationMode: "SERVICE_PROVIDER",
     };
     expect(registerSchema.safeParse(registration).success).toBe(false);
-    expect(registerSchema.safeParse({ ...registration, businessName: "Northstar Events" }).success).toBe(true);
+    expect(registerSchema.safeParse({
+      ...registration,
+      businessName: "Northstar Events",
+      kycQuestionnaire: {
+        legalForm: "Limited liability company",
+        registrationStatus: "Yes, registered",
+        businessEvidence: "Certificate of incorporation",
+        taxStatus: "I have a tax identifier",
+        operatingAddress: "12 Example Road, Lagos",
+        regulatedActivity: "No",
+      },
+    }).success).toBe(true);
   });
 
   it("rejects organization mode on other account types", () => {
