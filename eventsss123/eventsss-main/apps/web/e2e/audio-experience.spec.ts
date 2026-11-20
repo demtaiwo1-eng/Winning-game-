@@ -141,7 +141,8 @@ test("music consent remains non-blocking while completing the planner's first st
   await page.goto("/plan");
   await expect(page.getByRole("dialog", { name: "Enjoy background music?" })).toBeVisible();
   await page.getByLabel("Event name").fill("Consent overlay interaction check");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Event format").selectOption("PERSONAL");
   await page.getByRole("button", { name: /Next question/ }).click();
-  await expect(page.getByRole("heading", { name: "What should it achieve?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should the event achieve?" })).toBeVisible();
 });
