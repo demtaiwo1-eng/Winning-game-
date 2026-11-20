@@ -2984,15 +2984,15 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
   const complete = answered === questions.length;
   if (loading) return <section className="ess-panel" aria-live="polite">Loading your planning questions…</section>;
   return (
-    <section className="ess-panel" aria-labelledby="planning-questions-title">
+    <section className="ess-panel ess-interview-card" aria-labelledby="planning-questions-title">
       <p className="ess-eyebrow">Continue your event brief</p>
       <h2 id="planning-questions-title">Plan the details for {eventTitle}</h2>
       <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits. Share only details that help us plan the event well.</p>
       <div className="ess-question-progress">
-        <div className="ess-question-progress-copy"><span>Step {activeQuestion + 1} of {questions.length}</span><strong>{answered} answered</strong></div>
-        <progress value={activeQuestion + 1} max={questions.length} aria-label="Planning questionnaire step" />
+        <div className="ess-question-progress-copy"><span>Question {activeQuestion + 1} of {questions.length}</span><strong>{answered} answered</strong></div>
+        <div className="ess-interview-progress-track" role="progressbar" aria-label="Planning questionnaire progress" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={activeQuestion + 1}><span style={{ width: `${((activeQuestion + 1) / questions.length) * 100}%` }} /></div>
       </div>
-      <article className="ess-planning-question-card" key={questions[activeQuestion][0]}>
+      <article className="ess-planning-question-card ess-interview-question" key={questions[activeQuestion][0]}>
         <span className="ess-planning-question-number">PROMPT {String(activeQuestion + 1).padStart(2, "0")}</span>
         <h3>{questions[activeQuestion][1]}</h3>
         <p className="ess-muted">{["Start with the feeling or result you want guests to remember.","Think about who is coming and what would help them feel welcome.","Tell us what will make the venue and experience accessible.","Include any food, cultural or personal requirements we should respect.","Outline the moments that will make the day feel special.","Share anything we should plan for to keep everyone safe and compliant.","Choose a practical way to know the event achieved its purpose."][activeQuestion]}</p>
