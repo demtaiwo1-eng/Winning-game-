@@ -217,7 +217,17 @@ test("event builder inherits the global parent theme and saves a brief", async (
 
   const builderCard = page.locator(".ess-builder-card");
   await expect(builderCard).toBeVisible();
-  await expect(builderCard).toHaveCSS("color", "rgb(33, 29, 55)");
+  const expectedThemeInk = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--epg-ink").trim());
+  const actualCardInk = await builderCard.evaluate((element) => getComputedStyle(element).color);
+  const expectedCardInk = await page.evaluate((value) => {
+    const probe = document.createElement("span");
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const color = getComputedStyle(probe).color;
+    probe.remove();
+    return color;
+  }, expectedThemeInk);
+  expect(actualCardInk).toBe(expectedCardInk);
   const cardBackground = await builderCard.evaluate((element) => getComputedStyle(element).backgroundImage);
   expect(cardBackground).toContain("linear-gradient");
 
@@ -467,7 +477,8 @@ test("registration supports back and next navigation across the shared role-spec
   await expect(dialog.getByRole("button", { name: "Create account" })).toBeVisible();
 
   await dialog.getByRole("button", { name: "Back" }).click();
-  await expect(dialog.getByRole("button", { name: "Event Planner" })).toHaveClass(/active/);
+  await expect(dialog.getByLabel("Registration account type")).toHaveValue("CLIENT");
+  await expect(dialog.locator(".ess-auth-roles")).toHaveCount(0);
   await dialog.getByRole("button", { name: "Back" }).click();
   await expect(dialog.getByLabel("Full name")).toHaveValue("Mobile Registration Test");
   await dialog.getByRole("button", { name: "Back" }).click();
