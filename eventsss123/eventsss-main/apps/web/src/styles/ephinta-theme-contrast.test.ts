@@ -48,6 +48,15 @@ describe("EPHINTA global theme contrast", () => {
     expect(contrast(subtle, surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(link, surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(accentInk, accent)).toBeGreaterThanOrEqual(4.5);
+    if (mode === "light") {
+      expect(luminance(ink)).toBeLessThan(0.25);
+      expect(luminance(muted)).toBeLessThan(0.35);
+    } else {
+      expect(luminance(ink)).toBeGreaterThan(0.75);
+      expect(luminance(muted)).toBeGreaterThan(0.65);
+      expect(luminance(page)).toBeLessThan(0.08);
+      expect(luminance(surface)).toBeLessThan(0.12);
+    }
   });
 
   it("maps legacy tokens without flattening intentionally colourful component surfaces", () => {
@@ -66,6 +75,10 @@ describe("EPHINTA global theme contrast", () => {
 
   it("lets component text retain semantic colours while shared controls use theme tokens", () => {
     expect(runtimeCss).toContain("Text inherits from its component");
+    expect(runtimeCss).toContain("Final readable type system");
+    expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] body #root :where(h1,h2)');
+    expect(runtimeCss).toContain("background-clip: text");
+    expect(runtimeCss).toContain('html[data-ephinta-theme="light"] body #root');
     expect(runtimeCss).toContain("--ephinta-link-fg");
     expect(runtimeCss).toContain("--ephinta-field-bg");
     expect(runtimeCss).not.toContain("html[data-ephinta-theme] body #root :is(h1,h2,h3,h4,h5,h6");
