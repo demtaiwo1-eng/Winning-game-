@@ -3122,7 +3122,7 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
     </main>
   );
   const current = questions[step];
-  return <main className="ess-builder"><button className="ess-quiet-button" onClick={onBack}>← Back to home</button><div className="ess-builder-progress" role="group" aria-label="Event planner progress"><span>Step {step + 1} of {questions.length}: {current.title}</span><b>{step + 1} / {questions.length}</b></div><div className="ess-builder-card"><p className="ess-eyebrow">Guided setup</p><h1>{current.title}</h1><p className="ess-builder-lead">{current.prompt}</p>{saveError ? <p className="ess-form-error" role="alert">{saveError}</p> : <p className="ess-muted" role="status">Your progress is saved on this device.</p>}<form onSubmit={(event) => { event.preventDefault(); step === questions.length - 1 ? setComplete(true) : setStep(step + 1); }}>{current.fields}<div className="ess-builder-actions">{step > 0 && <button type="button" className="ess-outline-button" onClick={() => setStep(step - 1)}>Back</button>}<button type="submit" className="ess-primary">{step === questions.length - 1 ? 'Build my event brief' : 'Next question →'}</button></div></form></div></main>;
+  return <main className="ess-builder"><button className="ess-quiet-button" onClick={onBack}>← Back to home</button><div className="ess-builder-progress" role="group" aria-label="Event planner progress"><span>Question {step + 1} of {questions.length}: {current.title}</span><b>{step + 1} / {questions.length}</b></div><div className="ess-interview-progress-track" aria-hidden="true"><span style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div><div className="ess-builder-card ess-interview-card"><p className="ess-eyebrow">Guided setup</p><h1>{current.title}</h1><p className="ess-builder-lead">{current.prompt}</p>{saveError ? <p className="ess-form-error" role="alert">{saveError}</p> : <p className="ess-muted" role="status">Your progress is saved on this device.</p>}<form onSubmit={(event) => { event.preventDefault(); step === questions.length - 1 ? setComplete(true) : setStep(step + 1); }}>{current.fields}<div className="ess-builder-actions">{step > 0 && <button type="button" className="ess-outline-button" onClick={() => setStep(step - 1)}>Back</button>}<button type="submit" className="ess-primary">{step === questions.length - 1 ? 'Build my event brief' : 'Next question →'}</button></div></form></div></main>;
 }
 
 type RoleQuestionnaireField = {
@@ -3235,6 +3235,12 @@ function RoleQuestionnaire({
   });
   const [saveError, setSaveError] = useState("");
   const current = questionnaire.fields[step];
+  const goToStep = (nextStep: number) => {
+    const safeStep = Math.max(0, Math.min(questionnaire.fields.length - 1, nextStep));
+    setStep(safeStep);
+    try { localStorage.setItem(`${storageKey}_step`, String(safeStep)); }
+    catch { setSaveError("Your current answer is safe on this screen, but the interview position could not be saved."); }
+  };
 
   const updateAnswer = (key: string, value: string) => {
     const next = { ...answers, [key]: value };
@@ -3251,17 +3257,13 @@ function RoleQuestionnaire({
     event.preventDefault();
     if (current.required && !answers[current.key]?.trim()) return;
     if (step < questionnaire.fields.length - 1) {
-      const nextStep = step + 1;
-      setStep(nextStep);
-      try { localStorage.setItem(`${storageKey}_step`, String(nextStep)); } catch {
-        setSaveError("Your answer is kept on this screen, but the next step could not be saved on this device.");
-      }
+      goToStep(step + 1);
       return;
     }
     const missing = questionnaire.fields.find((field) => field.required && !answers[field.key]?.trim());
     if (missing) {
       const missingStep = questionnaire.fields.findIndex((field) => field.key === missing.key);
-      setStep(missingStep);
+      goToStep(missingStep);
       setSaveError(`Please answer “${missing.label}” before continuing.`);
       return;
     }
@@ -3328,7 +3330,7 @@ function RoleQuestionnaire({
           {renderCurrentField()}
           {saveError && <p className="ess-form-error" role="alert">{saveError}</p>}
           <div className="ess-builder-actions ess-interview-actions">
-            <button type="button" className="ess-outline-button" onClick={() => step > 0 ? setStep((value) => value - 1) : onBack()}>
+            <button type="button" className="ess-outline-button" onClick={() => step > 0 ? goToStep(step - 1) : onBack()}>
               {step > 0 ? "Previous question" : "Not now"}
             </button>
             <button type="submit" className="ess-primary">
