@@ -1400,7 +1400,10 @@ html[data-ephinta-theme="light"] #root a:not(.ess-builder-card *) {
   -webkit-text-fill-color:#4f2bbd !important;
 }
 
-/* Keep the centralized marketing headline gradient above legacy marketing ink rules. */
+/* Keep the centralized marketing headline gradient above legacy marketing ink rules.
+   Match the landing component's own data-theme attribute as well as the root theme. */
+html[data-ephinta-theme="dark"] #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone > h2,
+html[data-ephinta-theme="colorful"] #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone > h2,
 html[data-ephinta-theme="dark"] #root .ephinta-marketing-zone h2,
 html[data-ephinta-theme="colorful"] #root .ephinta-marketing-zone h2 {
   color:#fff !important;
