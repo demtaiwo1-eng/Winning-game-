@@ -269,7 +269,7 @@ readinessRouter.get(
     const checks = await prisma.eventServiceCheck.findMany({
       where: { eventId: event.id },
       orderBy: { createdAt: "asc" },
-      include: { verifiedBy: { select: { id: true, name: true } } },
+      include: { verifiedBy: { select: { id: true, name: true } }, task: { select: { status: true, tier: true, dueAt: true } } },
     });
     const bookingPayments = await prisma.booking.findMany({
       where: { eventId: event.id },
