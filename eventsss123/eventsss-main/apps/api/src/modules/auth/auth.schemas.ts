@@ -29,6 +29,15 @@ export const registerSchema = z
     businessDescription: z.string().trim().max(2000).optional(),
     businessCity: z.string().trim().max(120).optional(),
     kycDocumentUrl: z.string().url().optional(),
+    kycQuestionnaire: z.object({
+      legalForm: z.string().trim().min(1).max(120).optional(),
+      registrationStatus: z.string().trim().min(1).max(120).optional(),
+      businessEvidence: z.string().trim().min(1).max(160).optional(),
+      taxStatus: z.string().trim().min(1).max(120).optional(),
+      operatingAddress: z.string().trim().min(1).max(300).optional(),
+      regulatedActivity: z.string().trim().min(1).max(120).optional(),
+      regulatoryLicence: z.string().trim().max(120).optional(),
+    }).strict().optional(),
   })
   .superRefine((v, ctx) => {
     if (v.role === "ORGANIZATION" && !v.organizationMode) {
@@ -51,6 +60,19 @@ export const registerSchema = z
         path: ["businessName"],
         message: "businessName is required for service providers",
       });
+    }
+    if (v.role === "VENDOR" || (v.role === "ORGANIZATION" && v.organizationMode === "SERVICE_PROVIDER")) {
+      const answers = v.kycQuestionnaire;
+      const requiredAnswers = ["legalForm", "registrationStatus", "businessEvidence", "taxStatus", "operatingAddress", "regulatedActivity"] as const;
+      for (const field of requiredAnswers) {
+        if (!answers?.[field]?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["kycQuestionnaire", field],
+            message: "Complete this business verification question before creating your vendor account.",
+          });
+        }
+      }
     }
   });
 

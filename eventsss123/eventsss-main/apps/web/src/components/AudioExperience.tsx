@@ -224,10 +224,11 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
         </div>
       )}
 
+
       {consent === false && !authDialogOpen && (
         <button
           type="button"
-          className="eph-audio__restore"
+          className="eph-audio__restore eph-audio__enable"
           onClick={() => setConsent(null)}
           aria-label="Enable EPHINTA music"
         >

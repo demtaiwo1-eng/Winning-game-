@@ -791,3 +791,49 @@
 }
 /* After a planner completes account creation, surface the saved follow-up
    questionnaire immediately on the overview instead of hiding it on another tab. */
+
+/* Subtle one-question-at-a-time interview treatment shared by onboarding and planner questionnaires. */
+.ess-interview-progress-track {
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  margin: 10px 0 18px;
+  background: rgba(139, 92, 246, .12);
+}
+.ess-interview-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #a78bfa, #ec8ab8 58%, #e8c47a);
+  transition: width .22s ease;
+}
+.ess-interview-card { position: relative; }
+.ess-interview-helper,
+.ess-interview-save-note {
+  color: var(--ess-muted, #64748b);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+.ess-interview-step-label {
+  margin: 22px 0 8px;
+  color: var(--ess-accent, #8b5cf6);
+  font-size: .76rem;
+  font-weight: 750;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.ess-interview-question {
+  display: grid;
+  gap: 10px;
+  padding: clamp(16px, 3vw, 24px);
+  border: 1px solid rgba(167, 139, 250, .22);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, .075), rgba(236, 138, 184, .06), rgba(232, 196, 122, .055));
+}
+.ess-interview-question > span { font-weight: 700; }
+.ess-interview-actions { justify-content: space-between; gap: 12px; }
+.ess-interview-save-note { margin: 14px 0 0; font-size: .78rem; }
+@media (prefers-reduced-motion: reduce) {
+  .ess-interview-progress-track > span { transition: none; }
+}

@@ -181,7 +181,8 @@ for (const portal of portals) {
       await page.getByRole("button", { name: "Save partner profile" }).click();
       await expect(page.getByText("Affiliate preferences saved.")).toBeVisible();
     } else if (portal.role === "VERIFIER") {
-      await expect(page.getByText(/No recent or upcoming events need verifier action/)).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Event verification queue" })).toBeVisible();
+      await expect(page.getByText(/No events are currently assigned to your verifier profile/)).toBeVisible();
     } else if (portal.role === "CONSULTANT") {
       await expect(page.getByText(/No updates yet/)).toBeVisible();
     } else if (portal.role === "ADMIN") {

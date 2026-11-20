@@ -432,12 +432,11 @@ html[data-ephinta-theme] body #root .ephinta-experience-menu-control small {
    mobile. Individual features own behaviour and content, never their palette
    or responsive dialog geometry.
    ------------------------------------------------------------------------- */
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .eph-modal-backdrop,
   .ess-modal-backdrop,
   .ess-auth-backdrop,
   .ess-journey-overlay,
-  .eph-audio__backdrop,
   .ess-dialog-overlay,
   [data-dialog-backdrop],
   .dialog-backdrop,
@@ -460,7 +459,7 @@ html[data-ephinta-theme] body #root :is(
   background: rgb(4 7 18 / 76%) !important;
   backdrop-filter: blur(10px) !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -527,7 +526,7 @@ html[data-ephinta-theme] body #root .ess-device-lock-card {
   color: var(--epg-ink) !important;
   box-shadow: var(--epg-shadow) !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -540,7 +539,7 @@ html[data-ephinta-theme] body #root :is(
   color: var(--epg-ink) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -553,7 +552,7 @@ html[data-ephinta-theme] body #root :is(
   color: var(--epg-muted) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -574,7 +573,7 @@ html[data-ephinta-theme] body #root :is(
   font: inherit !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -588,7 +587,7 @@ html[data-ephinta-theme] body #root :is(
   opacity: 1 !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -601,26 +600,25 @@ html[data-ephinta-theme] body #root :is(
   outline: 3px solid var(--epg-focus) !important;
   outline-offset: 2px !important;
 }
-html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(button,a) {
+html[data-ephinta-theme] :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(button,a) {
   max-width: 100%;
   overflow-wrap: anywhere;
 }
-html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-error,.eph-auth-error,.ess-device-lock-error,[role="alert"]) {
+html[data-ephinta-theme] :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-error,.eph-auth-error,.ess-device-lock-error,[role="alert"]) {
   color: var(--epg-danger) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-success,.eph-auth-notice,[role="status"]) {
+html[data-ephinta-theme] :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-success,.eph-auth-notice,[role="status"]) {
   color: var(--epg-success) !important;
   -webkit-text-fill-color: currentColor !important;
 }
 @media (max-width: 640px) {
-  html[data-ephinta-theme] body #root :is(
+  html[data-ephinta-theme] :is(
     .eph-modal-backdrop,
     .ess-modal-backdrop,
     .ess-auth-backdrop,
     .ess-journey-overlay,
-    .eph-audio__backdrop,
-    .ess-dialog-overlay,
+      .ess-dialog-overlay,
     [data-dialog-backdrop],
     .dialog-backdrop,
     .modal-backdrop
@@ -628,7 +626,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
     place-items: center !important;
     padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
   }
-  html[data-ephinta-theme] body #root :is(
+  html[data-ephinta-theme] :is(
     .ess-auth-modal,
     .eph-modal,
     .ess-journey-card,
@@ -646,7 +644,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
   }
 }
 @media (min-width: 641px) and (max-width: 1024px) {
-  html[data-ephinta-theme] body #root :is(
+  html[data-ephinta-theme] :is(
     .ess-auth-modal,
     .eph-modal,
     .ess-journey-card,
@@ -665,7 +663,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
 /* Desktop dialogs deliberately keep the compact, phone-like footprint.
    The overlay dims the desktop canvas; the dialog itself stays centered and
    never expands into a wide desktop panel. */
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] :is(
   .ess-auth-modal,
   .eph-modal,
   .ess-journey-card,
@@ -689,7 +687,7 @@ html[data-ephinta-theme] body #root .ess-device-lock-card {
   margin: auto !important;
 }
 @media (max-width: 480px) {
-  html[data-ephinta-theme] body #root :is(
+  html[data-ephinta-theme] :is(
     .ess-auth-modal,
     .eph-modal,
     .ess-journey-card,
@@ -703,4 +701,190 @@ html[data-ephinta-theme] body #root .ess-device-lock-card {
     max-width: 420px !important;
     padding: 18px !important;
   }
+}
+
+/* Unified EPHINTA dialogue finish: the Start Planner's soft lavender,
+   rose and warm-gold gradient is shared by every app dialog. */
+:root {
+  --eph-dialog-surface-gradient:
+    radial-gradient(ellipse at 86% 8%, rgba(247,216,234,.72) 0%, transparent 46%),
+    radial-gradient(ellipse at 12% 92%, rgba(255,237,201,.68) 0%, transparent 44%),
+    linear-gradient(120deg, #fffafd 0%, #f7f1ff 55%, #fffaf2 100%);
+  --eph-dialog-border: rgba(117,91,166,.24);
+  --eph-dialog-shadow: 0 28px 78px rgba(43,31,76,.20);
+}
+html[data-ephinta-theme="dark"] {
+  --eph-dialog-surface-gradient:
+    radial-gradient(ellipse at 86% 8%, rgba(111,68,151,.34) 0%, transparent 48%),
+    radial-gradient(ellipse at 12% 92%, rgba(151,111,62,.20) 0%, transparent 44%),
+    linear-gradient(120deg, #17172b 0%, #201b32 55%, #24202b 100%);
+  --eph-dialog-border: rgba(180,157,226,.30);
+  --eph-dialog-shadow: 0 28px 78px rgba(0,0,0,.42);
+}
+html[data-ephinta-theme] :is(
+  .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
+  .ess-dialog-surface, .dialog-panel, .modal-panel,
+  [role="dialog"], [aria-modal="true"], dialog[open]
+) {
+  background: var(--eph-dialog-surface-gradient) !important;
+  background-color: var(--ephinta-theme-surface) !important;
+  color: var(--ephinta-theme-ink) !important;
+  border: 1px solid var(--eph-dialog-border) !important;
+  border-radius: var(--eph-parent-radius, 22px) !important;
+  box-shadow: var(--eph-dialog-shadow) !important;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+html[data-ephinta-theme] :is(
+  .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
+  .ess-dialog-surface, .dialog-panel, .modal-panel,
+  [role="dialog"], [aria-modal="true"], dialog[open]
+) :is(h1,h2,h3,h4,strong,b,label) {
+  color: var(--ephinta-theme-ink) !important;
+}
+html[data-ephinta-theme] :is(
+  .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
+  .ess-dialog-surface, .dialog-panel, .modal-panel,
+  [role="dialog"], [aria-modal="true"], dialog[open]
+) :is(p,small,li,.muted,.text-muted,.helper-text) {
+  color: var(--ephinta-theme-muted) !important;
+}
+html[data-ephinta-theme] :is(
+  .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
+  .ess-dialog-surface, .dialog-panel, .modal-panel,
+  [role="dialog"], [aria-modal="true"], dialog[open]
+) :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  background: var(--ephinta-theme-surface-soft) !important;
+  color: var(--ephinta-theme-ink) !important;
+  border-color: var(--ephinta-theme-border) !important;
+}
+
+
+/* Audio consent is a compact, non-blocking prompt, not a full-screen modal. */
+html[data-ephinta-theme] .eph-audio__backdrop {
+  position: fixed !important;
+  inset: auto max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) auto !important;
+  width: min(340px, calc(100vw - 28px)) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  display: block !important;
+  padding: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  pointer-events: none !important;
+}
+html[data-ephinta-theme] .eph-audio__backdrop > .eph-audio__prompt {
+  pointer-events: auto !important;
+}
+@media (max-width: 600px) {
+  html[data-ephinta-theme] .eph-audio__backdrop {
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    width: min(320px, calc(100vw - 20px)) !important;
+  }
+}
+
+
+/* Final unconditional audio-consent geometry guard. Keep this prompt compact
+   even before theme initialization and in every public/authenticated route. */
+html body #root .eph-audio__backdrop {
+  position: fixed !important;
+  top: max(76px, env(safe-area-inset-top)) !important;
+  right: max(14px, env(safe-area-inset-right)) !important;
+  bottom: auto !important;
+  left: auto !important;
+  inset: max(76px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) auto auto !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  width: min(340px, calc(100vw - 28px)) !important;
+  max-width: calc(100vw - 28px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  pointer-events: none !important;
+  place-items: initial !important;
+}
+html body #root .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
+  position: static !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+}
+@media (max-width: 600px) {
+  html body #root .eph-audio__backdrop {
+    top: max(70px, env(safe-area-inset-top)) !important;
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: auto !important;
+    left: auto !important;
+    inset: max(70px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) auto auto !important;
+    width: min(280px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+}
+
+
+/* Never place music consent or floating player controls over active interviews. */
+body:has(.ess-builder, .ess-role-questionnaire, .ess-interview-card) #root .eph-audio__backdrop,
+body:has(.ess-builder, .ess-role-questionnaire, .ess-interview-card) #root .eph-audio__restore,
+body:has(.ess-builder, .ess-role-questionnaire, .ess-interview-card) #root .eph-audio__player {
+  display: none !important;
+}
+
+
+/* Consent card is visually available but does not intercept the page beneath it.
+   Only the two explicit consent actions receive pointer events. */
+html body #root .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
+  pointer-events: none !important;
+}
+html body #root .eph-audio__backdrop .eph-audio__choices button {
+  pointer-events: auto !important;
+}
+
+
+/* Keep the consent prompt opposite the persistent EPHINTA Guide launcher. */
+html body #root .eph-audio__backdrop {
+  left: auto !important;
+  right: max(14px, env(safe-area-inset-right)) !important;
+  inset: auto max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) auto !important;
+}
+@media (max-width: 600px) {
+  html body #root .eph-audio__backdrop {
+    left: auto !important;
+    right: max(10px, env(safe-area-inset-right)) !important;
+    inset: auto max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) auto !important;
+  }
+}
+
+/* The marketplace is a dense interactive catalogue; keep its controls clear. */
+body:has(.ess-public-marketplace) #root .eph-audio__backdrop,
+body:has(.ess-public-marketplace) #root .eph-audio__restore,
+body:has(.ess-public-marketplace) #root .eph-audio__player {
+  display: none !important;
+}
+
+/* Restore the marketplace's gradient heading after the colorful-theme reset. */
+html[data-ephinta-theme] body #root .ess-public-marketplace .ess-page-heading h1 {
+  background-image: linear-gradient(112deg, #5b45c8 0%, #3877cf 52%, #239b9a 100%) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* The bright slogan sits on a pale surface, so retain the readable dark ink. */
+html[data-ephinta-theme] body #root .eph-landing .eph-section .ephinta-bright-slogan {
+  color: #251a36 !important;
+  -webkit-text-fill-color: #251a36 !important;
+  background-image: none !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
 }

@@ -828,3 +828,14 @@
   border-radius: 10px;
 }
 @media (max-width: 640px) { .ess-verifier-first-assignment { padding: 13px; } }
+
+
+/* Final marketplace brand heading contract: keep the gradient visible above
+   older global text-contrast resets. */
+.ess-public-marketplace .ess-page-heading h1 {
+  background-image: linear-gradient(112deg, #5b45c8 0%, #3877cf 52%, #239b9a 100%) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}

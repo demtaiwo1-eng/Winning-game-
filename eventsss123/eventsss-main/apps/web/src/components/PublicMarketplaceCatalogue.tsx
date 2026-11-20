@@ -102,7 +102,7 @@ export default function PublicMarketplaceCatalogue() {
         </Link>
       </div>
       <div className="ess-page-heading"><div><p className="ess-eyebrow">EPHINTA marketplace</p>
-        <h1>Discover trusted event services</h1>
+        <h1 style={{ backgroundImage: "linear-gradient(112deg, #5b45c8 0%, #3877cf 52%, #239b9a 100%)", backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent", WebkitTextFillColor: "transparent" }}>Discover trusted event services</h1>
         <p className="ess-muted">Browse real verified providers, or explore a clearly labelled sample catalogue to practise planning.</p></div>
         <div className="ess-filter-row"><Link className="ess-outline-button" to="/auth/signin?role=CLIENT&returnTo=%2Fmarketplace">Sign in</Link>
           <Link className="ess-primary" to="/auth/signup?role=CLIENT">Create account</Link></div>

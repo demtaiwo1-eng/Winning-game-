@@ -23,6 +23,8 @@ interface LandingPageProps {
 
   onOpenAuth?: (mode: AuthMode, role: AccountRole) => void;
 
+  onStartRoleQuestionnaire?: (role: AccountRole) => void;
+
   onStartBuilder?: () => void;
 
   onExploreMarketplace?: () => void;
@@ -152,6 +154,8 @@ export default function PublicLanding({
   onLoginSuccess,
 
   onOpenAuth,
+
+  onStartRoleQuestionnaire,
 
   onStartBuilder,
 
@@ -374,7 +378,14 @@ export default function PublicLanding({
 
   }
 
-
+  function startRoleQuestionnaire(requestedRole: AccountRole) {
+    setMenuOpen(false);
+    if (onStartRoleQuestionnaire) {
+      onStartRoleQuestionnaire(requestedRole);
+      return;
+    }
+    openAuth('signup', requestedRole);
+  }
 
   function updateDraft<K extends keyof EventDraft>(key: K, value: EventDraft[K]) {
 
@@ -600,6 +611,18 @@ export default function PublicLanding({
 
         .eph-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.eph-card{border:1px solid var(--line);border-radius:20px;padding:25px;background:#fff;box-shadow:0 12px 35px #17172d06}.eph-card-icon{width:47px;height:47px;border-radius:15px;display:grid;place-items:center;background:#f0e9ff;color:var(--purple);font-size:22px}.eph-card h3{color:var(--navy);font-size:17px;margin:18px 0 9px;letter-spacing:-.025em}.eph-card p{color:var(--muted);font-size:13px;line-height:1.75;margin:0}
 
+        .eph-vendor-invite{padding-top:34px;padding-bottom:84px}
+        .eph-vendor-invite__content{width:min(100%,920px);margin:0 auto;padding:clamp(30px,5vw,58px) clamp(22px,5vw,64px);display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;border:1px solid rgba(151,117,205,.22);border-radius:28px;background:radial-gradient(ellipse at 12% 100%,rgba(255,224,170,.46),transparent 42%),radial-gradient(ellipse at 90% 0%,rgba(237,190,224,.42),transparent 44%),linear-gradient(120deg,#fffafd 0%,#f4efff 55%,#fff9ee 100%);box-shadow:0 22px 58px rgba(56,38,91,.09)}
+        .eph-vendor-invite__eyebrow{color:#7951b5;font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
+        .eph-vendor-invite h2{max-width:760px;margin:0;color:#211735}
+        .eph-vendor-invite__content>p{max-width:660px;margin:0;color:#625a70;font-size:15px;line-height:1.8}
+        .eph-vendor-invite__actions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:12px;margin-top:8px}
+        .eph-vendor-invite__organization{background:rgba(255,255,255,.72);color:#4e3b70;border:1px solid rgba(117,91,166,.28)}
+        .eph-landing[data-theme="dark"] .eph-vendor-invite__content{background:radial-gradient(ellipse at 12% 100%,rgba(151,111,62,.2),transparent 42%),radial-gradient(ellipse at 90% 0%,rgba(111,68,151,.34),transparent 44%),linear-gradient(120deg,#17172b 0%,#201b32 55%,#24202b 100%);border-color:rgba(180,157,226,.3)}
+        .eph-landing[data-theme="dark"] .eph-vendor-invite__eyebrow{color:#d8baff}
+        .eph-landing[data-theme="dark"] .eph-vendor-invite__content>p{color:#d5cfe4}
+        .eph-landing[data-theme="dark"] .eph-vendor-invite__organization{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(210,190,245,.35)}
+        @media(max-width:760px){.eph-vendor-invite{padding-top:18px;padding-bottom:58px}.eph-vendor-invite__content{border-radius:22px;padding:30px 20px}.eph-vendor-invite__actions{width:100%;flex-direction:column}.eph-vendor-invite__actions .eph-btn{width:100%;max-width:360px}}
         .eph-vendor-band{margin:0 clamp(20px,6vw,88px) 80px;border-radius:28px;padding:40px clamp(24px,5vw,62px);background:linear-gradient(120deg,var(--navy),#28234e);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:28px}.eph-vendor-band h2{font-size:clamp(25px,3vw,38px);letter-spacing:-.05em;margin:0 0 10px}.eph-vendor-band p{color:#d3d0e5;line-height:1.7;margin:0;max-width:650px;font-size:14px}
 
         .eph-faq{max-width:820px;margin:0 auto}.eph-faq details{border-bottom:1px solid var(--line);padding:19px 0}.eph-faq summary{font-weight:800;color:var(--navy);cursor:pointer}.eph-faq p{color:var(--muted);font-size:13px;line-height:1.8}
@@ -807,9 +830,22 @@ export default function PublicLanding({
         .eph-landing .eph-brand span { font-size: clamp(19px, 2vw, 24px); letter-spacing: .14em; }
         .eph-landing .eph-title { font-size: clamp(3rem, 6.2vw, 5.25rem); line-height: 1.02; }
         .eph-landing .eph-subtitle { font-size: clamp(17px, 1.45vw, 20px); line-height: 1.75; }
-        .eph-landing .eph-promo-shell { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--line) !important; box-shadow: none !important; }
-        .eph-landing .eph-promo-shell h2 { color: var(--ink) !important; }
-        .eph-landing .eph-promo-shell p, .eph-landing .eph-promo-shell .eph-promo-placeholder { color: var(--muted) !important; }
+        /* Promotional cards retain their dark campaign surface, so their
+           headings and supporting copy stay high-contrast at every breakpoint. */
+        .eph-landing .eph-promo-shell { background: linear-gradient(135deg,#0f172a,#1f2a46) !important; color: #fff !important; border: 1px solid rgba(255,255,255,.12) !important; box-shadow: 0 18px 30px rgba(15,23,42,.15) !important; }
+        .eph-landing .eph-promo-shell h2 { color: #fff !important; }
+        .eph-landing .eph-promo-shell p, .eph-landing .eph-promo-shell .eph-promo-placeholder { color: #dce5ff !important; }
+
+        /* Final contrast guard for the dark marketplace campaign surface. */
+        html body #root .eph-landing .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-heading h2 {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+        }
+        html body #root .eph-landing .eph-promotions .eph-promo-shell.eph-marketplace-advertising {
+          color: #ffffff !important;
+          background: radial-gradient(circle at 88% 12%,rgba(166,122,255,.25),transparent 34%),linear-gradient(125deg,#12152f 0%,#28204b 52%,#192e4a 100%) !important;
+        }
+
         .eph-landing .eph-promo-marketplace-cta { color: #fff !important; background: var(--purple) !important; }
         .eph-landing .eph-promo-kicker {
           color: var(--purple) !important; -webkit-text-fill-color: currentColor !important;
@@ -1107,6 +1143,21 @@ export default function PublicLanding({
           .eph-landing .eph-footer .eph-footer-copyright { overflow-wrap: anywhere; }
         }
 
+        /* The marketing spotlight uses a pale surface in light/colorful themes. */
+        .eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone h2 {
+          color: #251633 !important;
+          -webkit-text-fill-color: #251633 !important;
+        }
+        .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2 {
+          color: #f8fafc !important;
+          -webkit-text-fill-color: #f8fafc !important;
+        }
+        /* Final light-mode slogan fill: preserve readable ink on pale surfaces. */
+        .eph-landing:not([data-theme="dark"]):not([data-theme="colorful"]) .ephinta-bright-slogan {
+          color: #251a36 !important;
+          -webkit-text-fill-color: #251a36 !important;
+          background: none !important;
+        }
       `}</style>
 
 
@@ -1183,17 +1234,17 @@ export default function PublicLanding({
 
             <button type="button" onClick={() => { setMenuOpen(false); openAuth('signin'); }}>Sign in to your account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'CLIENT'); }}>Create customer account</button>
+            <button type="button" onClick={() => { setMenuOpen(false); startPlanning(); }}>Create customer account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'VENDOR'); }}>Create vendor account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('VENDOR')}>Create vendor account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'ORGANIZATION'); }}>Create organizer account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('ORGANIZATION')}>Create organizer account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'AFFILIATE'); }}>Create affiliate account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('AFFILIATE')}>Create affiliate account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'VERIFIER'); }}>Create verifier account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('VERIFIER')}>Create verifier account</button>
 
-            <button type="button" onClick={() => { setMenuOpen(false); openAuth('signup', 'CONSULTANT'); }}>Create consultant account</button>
+            <button type="button" onClick={() => startRoleQuestionnaire('CONSULTANT')}>Create consultant account</button>
 
           </div>
 
@@ -1364,18 +1415,16 @@ export default function PublicLanding({
 
 
 
-        <section className="eph-section" id="vendors" style={{ paddingTop: 0 }}>
-
-          <div><h2>Make your talent part of the moment.</h2><p>Are you an event professional or an organization? Create the appropriate account to get started with EPHINTA.</p></div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-
-            <button className="eph-btn eph-btn-gold" onClick={() => openAuth('signup', 'VENDOR')}>Join as a vendor →</button>
-
-            <button className="eph-btn" style={{ background: '#ffffff18', color: '#fff', border: '1px solid #ffffff3d' }} onClick={() => openAuth('signup', 'ORGANIZATION')}>Organization account</button>
-
+        <section className="eph-section eph-vendor-invite" id="vendors" aria-labelledby="eph-vendor-invite-title">
+          <div className="eph-vendor-invite__content">
+            <span className="eph-vendor-invite__eyebrow">FOR EVENT PROFESSIONALS & ORGANIZATIONS</span>
+            <h2 id="eph-vendor-invite-title">Make your talent part of the moment.</h2>
+            <p>Are you an event professional or an organization? Create the appropriate account to get started with EPHINTA.</p>
+            <div className="eph-vendor-invite__actions">
+              <button className="eph-btn eph-btn-gold" onClick={() => startRoleQuestionnaire('VENDOR')}>Join as a vendor <span aria-hidden="true">→</span></button>
+              <button className="eph-btn eph-vendor-invite__organization" onClick={() => startRoleQuestionnaire('ORGANIZATION')}>Create an organization account</button>
+            </div>
           </div>
-
         </section>
 
 

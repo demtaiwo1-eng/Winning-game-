@@ -537,30 +537,48 @@ test.describe("Worldwide event-planner personas (100 countries)", () => {
 
       // Fresh page context per test gives every persona independent local storage.
       await page.goto("/plan");
-      await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
       await expect(page.getByText("Your progress is saved on this device.")).toBeVisible();
 
       await page.getByLabel("Event name").fill(eventName);
+      await page.getByRole("button", { name: /Next question/ }).click();
+
+      await expect(page.getByRole("heading", { name: "What kind of event is it?" })).toBeVisible();
       await page.getByLabel("Event format").selectOption(format);
       await page.getByRole("button", { name: /Next question/ }).click();
 
-      await expect(page.getByRole("heading", { name: "What should it achieve?" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "What should the event achieve?" })).toBeVisible();
       await page.getByLabel("Primary goal").selectOption(goal);
-      await page.getByLabel("What matters most?").selectOption(priority);
       await page.getByRole("button", { name: /Next question/ }).click();
 
-      await expect(page.getByRole("heading", { name: "Where and when?" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "What matters most to you?" })).toBeVisible();
+      await page.getByLabel("Top priority").selectOption(priority);
+      await page.getByRole("button", { name: /Next question/ }).click();
+
+      await expect(page.getByRole("heading", { name: "When will it happen?" })).toBeVisible();
+      await page.getByRole("button", { name: /Next question/ }).click(); // Event date is optional.
+
+      await expect(page.getByRole("heading", { name: "Where will it take place?" })).toBeVisible();
       await page.getByLabel("City or venue area").fill(city);
+      await page.getByRole("button", { name: /Next question/ }).click();
+
+      await expect(page.getByRole("heading", { name: "What is your venue situation?" })).toBeVisible();
       await page.getByLabel("Venue status").selectOption(venue);
       await page.getByRole("button", { name: /Next question/ }).click();
 
-      await expect(page.getByRole("heading", { name: "Who is coming?" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "How many guests are you expecting?" })).toBeVisible();
       await page.getByLabel("Expected guests").fill(guests);
+      await page.getByRole("button", { name: /Next question/ }).click();
+
+      await expect(page.getByRole("heading", { name: "What food direction feels right?" })).toBeVisible();
       await page.getByLabel("Food direction").selectOption(food);
       await page.getByRole("button", { name: /Next question/ }).click();
 
-      await expect(page.getByRole("heading", { name: "What is the guardrail?" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "What budget should we plan around?" })).toBeVisible();
       await page.getByLabel("Planning budget").fill(budget);
+      await page.getByRole("button", { name: /Next question/ }).click();
+
+      await expect(page.getByRole("heading", { name: "What atmosphere do you have in mind?" })).toBeVisible();
       await page.getByLabel("Atmosphere").selectOption(atmosphere);
       await page.getByRole("button", { name: /Build my event brief/ }).click();
 
@@ -582,17 +600,27 @@ test("@mobile worldwide persona responsive smoke journey", async ({ page }) => {
   const persona = personas[0];
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/plan");
-  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
   await page.getByLabel("Event name").fill("Mobile QA — Nigerian family wedding");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Event format").selectOption("PERSONAL");
   await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Primary goal").selectOption("Celebrate");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Top priority").selectOption("Guest experience");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Next question/ }).click(); // Optional event date.
   await page.getByLabel("City or venue area").fill(`${persona.city}, ${persona.country}`);
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Venue status").selectOption("Still deciding");
   await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Expected guests").fill("180");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Food direction").selectOption("Mixed menu");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Planning budget").fill("850000");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Atmosphere").selectOption("Warm and social");
   await page.getByRole("button", { name: /Build my event brief/ }).click();
   await expect(page.getByRole("heading", { name: "Mobile QA — Nigerian family wedding" })).toBeVisible();
   const card = page.locator(".ess-builder-card");

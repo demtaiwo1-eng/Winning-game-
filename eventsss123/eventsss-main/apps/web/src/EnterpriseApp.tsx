@@ -41,6 +41,7 @@ const PublicMarketplaceCatalogue = lazy(() => import("./components/PublicMarketp
 const FeedbackPanel = lazy(() => import("./components/FeedbackPanel"));
 import { EmptyState } from "./components/EmptyState";
 const KycUpload = lazy(() => import("./components/KycUpload"));
+import VendorKycQuestionnaire, { type VendorKycAnswers } from "./components/VendorKycQuestionnaire";
 import {
   checkPassword,
   PASSWORD_HELPER,
@@ -1611,6 +1612,7 @@ type FinancePaymentFeed = {
   summary: Array<{ provider: string; currency: string; status: string; count: number; amountMinor: string }>;
   items: Array<{ id: string; provider: string; providerRef?: string | null; amountMinor: string; currency: string; status: string; createdAt: string; user: { name: string; email: string } }>;
 };
+type FundingQueueItem = { id: string; customer: { id: string; name: string; email: string }; amountMinor: string; currency: string; senderName: string; senderBank: string | null; transferReference: string; receiptUrl: string; createdAt: string };
 type FinanceLedgerFeed = {
   total: number;
   items: Array<{ id: string; type: string; amountMinor: string; balanceAfterMinor: string; provider: string; createdAt: string; wallet: { currency: string; user: { name: string; email: string } } }>;
@@ -1630,7 +1632,33 @@ function FinanceOperationsPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [fundingQueue, setFundingQueue] = useState<FundingQueueItem[]>([]);
+  const [fundingNotes, setFundingNotes] = useState<Record<string, string>>({});
+  const [fundingWorking, setFundingWorking] = useState("");
   const [exporting, setExporting] = useState<"payments" | "ledger" | null>(null);
+  const reviewFunding = async (submissionId: string, action: "APPROVE" | "REJECT") => {
+    const note = (fundingNotes[submissionId] || "").trim();
+    if (note.length < 10) {
+      setError("Add a bank verification note of at least 10 characters before reviewing this receipt.");
+      return;
+    }
+    setFundingWorking(submissionId);
+    setError("");
+    try {
+      await api(`/wallet/admin/funding-submissions/${encodeURIComponent(submissionId)}/review`, {
+        method: "POST",
+        body: JSON.stringify({ action, note }),
+      });
+      setFundingQueue((current) => current.filter((item) => item.id !== submissionId));
+      setFundingNotes((current) => { const next = { ...current }; delete next[submissionId]; return next; });
+      setError("");
+      setRefreshKey((key) => key + 1);
+    } catch (reviewError) {
+      setError(reviewError instanceof Error ? reviewError.message : "Unable to review this funding receipt.");
+    } finally {
+      setFundingWorking("");
+    }
+  };
   const exportCsv = async (kind: "payments" | "ledger") => {
     setExporting(kind);
     setError("");
@@ -1652,8 +1680,9 @@ function FinanceOperationsPanel() {
     Promise.all([
       api<FinancePaymentFeed>(`/admin/finance/payment-intents?${query}`),
       api<FinanceLedgerFeed>(`/admin/finance/ledger?${ledgerQuery}`),
-    ]).then(([paymentData, ledgerData]) => {
-      if (active) { setPayments(paymentData); setLedger(ledgerData); setError(""); }
+      api<{ items: FundingQueueItem[] }>("/wallet/admin/funding-submissions"),
+    ]).then(([paymentData, ledgerData, fundingData]) => {
+      if (active) { setPayments(paymentData); setLedger(ledgerData); setFundingQueue(fundingData.items || []); setError(""); }
     }).catch((loadError: Error) => { if (active) setError(loadError.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -1661,7 +1690,19 @@ function FinanceOperationsPanel() {
   return (
     <section className="ess-panel">
       <SectionTitle eyebrow="Finance · read only" title="Payment and wallet operations" />
-      <p className="ess-muted">This view reads payment intents and append-only ledger entries. It cannot move funds, settle payments, or issue refunds.</p>
+      <p className="ess-muted">Compare each receipt with the actual credit in the bank/provider portal before approving. Approval credits the customer’s NGN wallet and records an append-only ledger entry; rejection never moves funds.</p>
+      {fundingQueue.length === 0 ? <p className="ess-muted">No bank-transfer receipts are awaiting review.</p> : fundingQueue.map(item => <article className="ess-wallet-card" key={item.id} style={{ margin: "12px 0" }}>
+        <strong>{item.customer.name} · {item.customer.email}</strong>
+        <p>{financeAmount(item.amountMinor, item.currency)} · {item.senderName} · {item.senderBank || "Bank not supplied"}</p>
+        <p className="ess-muted">Transfer reference: {item.transferReference} · Submitted {new Date(item.createdAt).toLocaleString()}</p>
+        <a href={item.receiptUrl} target="_blank" rel="noreferrer">Open transfer receipt</a>
+        <label style={{ display: "block", marginTop: 10 }}>Bank verification note<textarea value={fundingNotes[item.id] || ""} onChange={event => setFundingNotes(notes => ({ ...notes, [item.id]: event.target.value }))} placeholder="Record the bank statement/provider transaction match and amount received." /></label>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+          <button className="ess-primary" type="button" disabled={fundingWorking === item.id} onClick={() => void reviewFunding(item.id, "APPROVE")}>Approve and credit wallet</button>
+          <button className="ess-outline-button" type="button" disabled={fundingWorking === item.id} onClick={() => void reviewFunding(item.id, "REJECT")}>Reject receipt</button>
+        </div>
+      </article>)}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}><button className="ess-outline-button" type="button" onClick={() => setRefreshKey(key => key + 1)}>Refresh receipt queue</button></div>
       <div className="ess-form-grid">
         <label>Provider<select value={provider} onChange={(event) => setProvider(event.target.value)}><option value="">All providers</option><option value="opay">OPay</option><option value="paystack">Paystack</option><option value="flutterwave">Flutterwave</option><option value="stripe">Stripe</option><option value="demo">Demo</option></select></label>
         <label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option><option value="PENDING">Pending</option><option value="SUCCEEDED">Succeeded</option><option value="FAILED">Failed</option><option value="REFUNDED">Refunded</option></select></label>
@@ -2040,7 +2081,6 @@ export default function EnterpriseApp() {
   const [vendorPhone, setVendorPhone] = useState("");
   const [vendorCity, setVendorCity] = useState("");
   const [vendorDescription, setVendorDescription] = useState("");
-  const [vendorKycUrl, setVendorKycUrl] = useState("");
   const [country, setCountry] = useState("NG");
   const [currency, setCurrency] = useState<CurrencyCode>("NGN");
   const [localePref, setLocalePref] = useState<LocaleCode>("en");
@@ -2097,7 +2137,6 @@ export default function EnterpriseApp() {
     setVendorPhone("");
     setVendorCity("");
     setVendorDescription("");
-    setVendorKycUrl("");
     setRegistrationCategory("");
     setReferralCode("");
     setPassword("");
@@ -2170,6 +2209,13 @@ export default function EnterpriseApp() {
           : authMode === "forgot"
             ? "/api/v1/auth/forgot-password"
             : "/api/v1/auth/login";
+      const formData = new FormData(event.currentTarget as HTMLFormElement);
+      const rawKycQuestionnaire = formData.get("kycQuestionnaire");
+      let kycQuestionnaire: Record<string, string> | undefined;
+      if (typeof rawKycQuestionnaire === "string" && rawKycQuestionnaire) {
+        try { kycQuestionnaire = JSON.parse(rawKycQuestionnaire) as Record<string, string>; }
+        catch { setAuthError("Please review your business verification answers and try again."); return; }
+      }
       const body =
         authMode === "signup"
           ? {
@@ -2188,9 +2234,9 @@ export default function EnterpriseApp() {
               businessCity: selectedRole === "VENDOR" || (selectedRole === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER") ? vendorCity : undefined,
               businessDescription:
                 selectedRole === "VENDOR" || (selectedRole === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER") ? vendorDescription : undefined,
-              kycDocumentUrl:
-                (selectedRole === "VENDOR" || (selectedRole === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) && vendorKycUrl
-                  ? vendorKycUrl
+              kycQuestionnaire:
+                (selectedRole === "VENDOR" || (selectedRole === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER"))
+                  ? kycQuestionnaire
                   : undefined,
               country,
               currency,
@@ -2384,6 +2430,7 @@ export default function EnterpriseApp() {
           if (pending) setResumeLabel(pending);
         } catch { /* */ }
       }}
+      onStartRoleQuestionnaire={(role) => navigate(`/join/${role.toLowerCase()}`)}
       onStartBuilder={startEventBuilder}
       onExploreMarketplace={() => navigate("/marketplace")}
     />
@@ -2440,7 +2487,6 @@ export default function EnterpriseApp() {
             vendorPhone={vendorPhone}
             vendorCity={vendorCity}
             vendorDescription={vendorDescription}
-            vendorKycUrl={vendorKycUrl}
             registrationCategory={registrationCategory}
             referralCode={referralCode}
             error={authError}
@@ -2455,7 +2501,6 @@ export default function EnterpriseApp() {
             setVendorPhone={setVendorPhone}
             setVendorCity={setVendorCity}
             setVendorDescription={setVendorDescription}
-            setVendorKycUrl={setVendorKycUrl}
             setRegistrationCategory={setRegistrationCategory}
             setOrganizationMode={setOrganizationMode}
             setReferralCode={setReferralCode}
@@ -2749,7 +2794,6 @@ export default function EnterpriseApp() {
           vendorPhone={vendorPhone}
           vendorCity={vendorCity}
           vendorDescription={vendorDescription}
-          vendorKycUrl={vendorKycUrl}
           registrationCategory={registrationCategory}
           referralCode={referralCode}
           error={authError}
@@ -2764,7 +2808,6 @@ export default function EnterpriseApp() {
           setVendorPhone={setVendorPhone}
           setVendorCity={setVendorCity}
           setVendorDescription={setVendorDescription}
-          setVendorKycUrl={setVendorKycUrl}
           setRegistrationCategory={setRegistrationCategory}
           setOrganizationMode={setOrganizationMode}
           setReferralCode={setReferralCode}
@@ -2942,15 +2985,15 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
   const complete = answered === questions.length;
   if (loading) return <section className="ess-panel" aria-live="polite">Loading your planning questions…</section>;
   return (
-    <section className="ess-panel" aria-labelledby="planning-questions-title">
+    <section className="ess-panel ess-interview-card" aria-labelledby="planning-questions-title">
       <p className="ess-eyebrow">Continue your event brief</p>
       <h2 id="planning-questions-title">Plan the details for {eventTitle}</h2>
       <p className="ess-muted">Your answers are saved to this event and can be completed over multiple visits. Share only details that help us plan the event well.</p>
       <div className="ess-question-progress">
-        <div className="ess-question-progress-copy"><span>Step {activeQuestion + 1} of {questions.length}</span><strong>{answered} answered</strong></div>
-        <progress value={activeQuestion + 1} max={questions.length} aria-label="Planning questionnaire step" />
+        <div className="ess-question-progress-copy"><span>Question {activeQuestion + 1} of {questions.length}</span><strong>{answered} answered</strong></div>
+        <div className="ess-interview-progress-track" role="progressbar" aria-label="Planning questionnaire progress" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={activeQuestion + 1}><span style={{ width: `${((activeQuestion + 1) / questions.length) * 100}%` }} /></div>
       </div>
-      <article className="ess-planning-question-card" key={questions[activeQuestion][0]}>
+      <article className="ess-planning-question-card ess-interview-question" key={questions[activeQuestion][0]}>
         <span className="ess-planning-question-number">PROMPT {String(activeQuestion + 1).padStart(2, "0")}</span>
         <h3>{questions[activeQuestion][1]}</h3>
         <p className="ess-muted">{["Start with the feeling or result you want guests to remember.","Think about who is coming and what would help them feel welcome.","Tell us what will make the venue and experience accessible.","Include any food, cultural or personal requirements we should respect.","Outline the moments that will make the day feel special.","Share anything we should plan for to keep everyone safe and compliant.","Choose a practical way to know the event achieved its purpose."][activeQuestion]}</p>
@@ -2980,7 +3023,7 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
   );
 }
 
-const EVENT_BUILDER_STEP_COUNT = 5;
+const EVENT_BUILDER_STEP_COUNT = 11;
 
 function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: () => void }) {
   const [step, setStep] = useState(() => {
@@ -3053,11 +3096,17 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
     }
   }, [answers, complete, step]);
   const questions = [
-    { title: 'What are you creating?', prompt: 'Give the event a working name and choose its format.', fields: <><label>Event name<input value={answers.title} maxLength={160} onChange={(event) => update('title', event.target.value)} placeholder="e.g. Wale Waves Life Experience" required /></label><label>Event format<select value={answers.type} onChange={(event) => update('type', event.target.value)}><option value="PERSONAL">Personal milestone</option><option value="CORPORATE">Corporate gathering</option><option value="SOCIAL">Social celebration</option><option value="CULTURAL">Burial or memorial</option><option value="ENTERTAINMENT">Entertainment experience</option><option value="EDUCATIONAL">Workshop or learning event</option></select></label></> },
-    { title: 'What should it achieve?', prompt: 'This shapes the checklist, vendor recommendations, and guest experience.', fields: <><label>Primary goal<select value={answers.goal} onChange={(event) => update('goal', event.target.value)}><option>Celebrate</option><option>Launch a product</option><option>Build community</option><option>Raise funds</option><option>Train or educate</option><option>Host an unforgettable guest experience</option></select></label><label>What matters most?<select value={answers.priorities} onChange={(event) => update('priorities', event.target.value)}><option>Guest experience</option><option>Brand impression</option><option>Budget control</option><option>Speed and simplicity</option><option>Accessibility and inclusion</option></select></label></> },
-    { title: 'Where and when?', prompt: 'Location and timing help us suggest vendors close to the venue.', fields: <><DateWheelPicker value={answers.date} onChange={(date) => update('date', date)} label="Event date" futureOnly /><label>City or venue area<input value={answers.city} maxLength={120} onChange={(event) => update('city', event.target.value)} placeholder="Lagos, Abuja, London..." required /></label><label>Venue status<select value={answers.venue} onChange={(event) => update('venue', event.target.value)}><option>Still deciding</option><option>Venue selected</option><option>Private residence</option><option>Outdoor or public space</option><option>Virtual</option><option>Hybrid</option></select></label></> },
-    { title: 'Who is coming?', prompt: 'Guest volume drives capacity, catering, staffing, and RSVP planning.', fields: <><label>Expected guests<input type="number" min="1" max="5000000" value={answers.guests} onChange={(event) => update('guests', event.target.value)} placeholder="150" required /></label><label>Food direction<select value={answers.food} onChange={(event) => update('food', event.target.value)}><option>Mixed menu</option><option>Local cuisine</option><option>International menu</option><option>Vegetarian or vegan focused</option><option>Not sure yet</option></select></label></> },
-    { title: 'What is the guardrail?', prompt: 'We use this to build a realistic budget plan and protect the essentials.', fields: <><label>Planning budget<input aria-label="Planning budget" inputMode="decimal" autoComplete="off" value={answers.budget} onChange={(event) => update("budget", formatMoneyInput(event.target.value))} onBlur={() => update("budget", formatMoneyInput(answers.budget, true))} placeholder="2,500,000.00" /></label><label>Atmosphere<select value={answers.atmosphere} onChange={(event) => update('atmosphere', event.target.value)}><option>Warm and social</option><option>Premium and editorial</option><option>High-energy and entertaining</option><option>Calm and intimate</option><option>Professional and focused</option></select></label></> },
+    { title: "What should we call your event?", prompt: "Start with a working name. You can change it later.", fields: <label>Event name<input value={answers.title} maxLength={160} onChange={(event) => update("title", event.target.value)} placeholder="e.g. Wale Waves Life Experience" required /></label> },
+    { title: "What kind of event is it?", prompt: "This helps EPHINTA shape the right planning checklist.", fields: <label>Event format<select value={answers.type} onChange={(event) => update("type", event.target.value)}><option value="PERSONAL">Personal milestone</option><option value="CORPORATE">Corporate gathering</option><option value="SOCIAL">Social celebration</option><option value="CULTURAL">Burial or memorial</option><option value="ENTERTAINMENT">Entertainment experience</option><option value="EDUCATIONAL">Workshop or learning event</option></select></label> },
+    { title: "What should the event achieve?", prompt: "Tell us the main purpose so we can tailor the plan.", fields: <label>Primary goal<select value={answers.goal} onChange={(event) => update("goal", event.target.value)}><option>Celebrate</option><option>Launch a product</option><option>Build community</option><option>Raise funds</option><option>Train or educate</option><option>Host an unforgettable guest experience</option></select></label> },
+    { title: "What matters most to you?", prompt: "Choose the priority you want the planning team to protect.", fields: <label>Top priority<select value={answers.priorities} onChange={(event) => update("priorities", event.target.value)}><option>Guest experience</option><option>Brand impression</option><option>Budget control</option><option>Speed and simplicity</option><option>Accessibility and inclusion</option></select></label> },
+    { title: "When will it happen?", prompt: "Choose the date you are planning around. You can refine it later.", fields: <DateWheelPicker value={answers.date} onChange={(date) => update("date", date)} label="Event date" futureOnly /> },
+    { title: "Where will it take place?", prompt: "A city or venue area helps us find relevant local services.", fields: <label>City or venue area<input value={answers.city} maxLength={120} onChange={(event) => update("city", event.target.value)} placeholder="Lagos, Abuja, London..." required /></label> },
+    { title: "What is your venue situation?", prompt: "We can help you source a venue if you have not chosen one yet.", fields: <label>Venue status<select value={answers.venue} onChange={(event) => update("venue", event.target.value)}><option>Still deciding</option><option>Venue selected</option><option>Private residence</option><option>Outdoor or public space</option><option>Virtual</option><option>Hybrid</option></select></label> },
+    { title: "How many guests are you expecting?", prompt: "An estimate helps us plan capacity, catering and staffing.", fields: <label>Expected guests<input type="number" min="1" max="5000000" value={answers.guests} onChange={(event) => update("guests", event.target.value)} placeholder="150" required /></label> },
+    { title: "What food direction feels right?", prompt: "This is only an early preference; you can decide the menu later.", fields: <label>Food direction<select value={answers.food} onChange={(event) => update("food", event.target.value)}><option>Mixed menu</option><option>Local cuisine</option><option>International menu</option><option>Vegetarian or vegan focused</option><option>Not sure yet</option></select></label> },
+    { title: "What budget should we plan around?", prompt: "A working estimate helps us protect essentials and avoid surprises.", fields: <label>Planning budget<input aria-label="Planning budget" inputMode="decimal" autoComplete="off" value={answers.budget} onChange={(event) => update("budget", formatMoneyInput(event.target.value))} onBlur={() => update("budget", formatMoneyInput(answers.budget, true))} placeholder="2,500,000.00" /></label> },
+    { title: "What atmosphere do you have in mind?", prompt: "Choose the feeling you want guests to remember.", fields: <label>Atmosphere<select value={answers.atmosphere} onChange={(event) => update("atmosphere", event.target.value)}><option>Warm and social</option><option>Premium and editorial</option><option>High-energy and entertaining</option><option>Calm and intimate</option><option>Professional and focused</option></select></label> },
   ];
   const checklist = ['Confirm date, venue, and event objective', 'Set an essential-service budget split', `Source location-matched vendors for ${answers.city || 'your venue area'}`, 'Build guest list and RSVP communications', 'Confirm logistics, staffing, and run of show'];
   if (complete) return (
@@ -3099,7 +3148,7 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
     </main>
   );
   const current = questions[step];
-  return <main className="ess-builder"><button className="ess-quiet-button" onClick={onBack}>← Back to home</button><div className="ess-builder-progress" role="group" aria-label="Event planner progress"><span>Step {step + 1} of {questions.length}: {current.title}</span><b>{step + 1} / {questions.length}</b></div><div className="ess-builder-card"><p className="ess-eyebrow">Guided setup</p><h1>{current.title}</h1><p className="ess-builder-lead">{current.prompt}</p>{saveError ? <p className="ess-form-error" role="alert">{saveError}</p> : <p className="ess-muted" role="status">Your progress is saved on this device.</p>}<form onSubmit={(event) => { event.preventDefault(); step === questions.length - 1 ? setComplete(true) : setStep(step + 1); }}>{current.fields}<div className="ess-builder-actions">{step > 0 && <button type="button" className="ess-outline-button" onClick={() => setStep(step - 1)}>Back</button>}<button type="submit" className="ess-primary">{step === questions.length - 1 ? 'Build my event brief' : 'Next question →'}</button></div></form></div></main>;
+  return <main className="ess-builder"><button className="ess-quiet-button" onClick={onBack}>← Back to home</button><div className="ess-builder-progress" role="group" aria-label="Event planner progress"><span>Question {step + 1} of {questions.length}: {current.title}</span><b>{step + 1} / {questions.length}</b></div><div className="ess-interview-progress-track" aria-hidden="true"><span style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div><div className="ess-builder-card ess-interview-card"><p className="ess-eyebrow">Guided setup</p><h1>{current.title}</h1><p className="ess-builder-lead">{current.prompt}</p>{saveError ? <p className="ess-form-error" role="alert">{saveError}</p> : <p className="ess-muted" role="status">Your progress is saved on this device.</p>}<form onSubmit={(event) => { event.preventDefault(); step === questions.length - 1 ? setComplete(true) : setStep(step + 1); }}>{current.fields}<div className="ess-builder-actions">{step > 0 && <button type="button" className="ess-outline-button" onClick={() => setStep(step - 1)}>Back</button>}<button type="submit" className="ess-primary">{step === questions.length - 1 ? 'Build my event brief' : 'Next question →'}</button></div></form></div></main>;
 }
 
 type RoleQuestionnaireField = {
@@ -3202,15 +3251,51 @@ function RoleQuestionnaire({
       return {};
     }
   });
+  const [step, setStep] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem(`${storageKey}_step`) || 0);
+      return Number.isInteger(saved) && saved >= 0 && saved < questionnaire.fields.length ? saved : 0;
+    } catch {
+      return 0;
+    }
+  });
   const [saveError, setSaveError] = useState("");
+  const current = questionnaire.fields[step];
+  const goToStep = (nextStep: number) => {
+    const safeStep = Math.max(0, Math.min(questionnaire.fields.length - 1, nextStep));
+    setStep(safeStep);
+    try { localStorage.setItem(`${storageKey}_step`, String(safeStep)); }
+    catch { setSaveError("Your current answer is safe on this screen, but the interview position could not be saved."); }
+  };
 
   const updateAnswer = (key: string, value: string) => {
-    setAnswers((current) => ({ ...current, [key]: value }));
+    const next = { ...answers, [key]: value };
+    setAnswers(next);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(next));
+      setSaveError("");
+    } catch {
+      setSaveError("Your progress could not be saved on this device. Keep this page open and try again.");
+    }
   };
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (current.required && !answers[current.key]?.trim()) return;
+    if (step < questionnaire.fields.length - 1) {
+      goToStep(step + 1);
+      return;
+    }
+    const missing = questionnaire.fields.find((field) => field.required && !answers[field.key]?.trim());
+    if (missing) {
+      const missingStep = questionnaire.fields.findIndex((field) => field.key === missing.key);
+      goToStep(missingStep);
+      setSaveError(`Please answer “${missing.label}” before continuing.`);
+      return;
+    }
     try {
       localStorage.setItem(storageKey, JSON.stringify(answers));
+      localStorage.removeItem(`${storageKey}_step`);
       setSaveError("");
       onContinue(role, answers);
     } catch {
@@ -3218,54 +3303,67 @@ function RoleQuestionnaire({
     }
   };
 
+  const renderCurrentField = () => (
+    <label key={current.key} className="ess-interview-question">
+      <span>{current.label}</span>
+      {current.type === "select" ? (
+        <select
+          value={answers[current.key] ?? ""}
+          required={current.required}
+          onChange={(event) => updateAnswer(current.key, event.target.value)}
+        >
+          <option value="">Choose one</option>
+          {current.options?.map((option) => <option key={option} value={option}>{option}</option>)}
+        </select>
+      ) : current.type === "textarea" ? (
+        <textarea
+          value={answers[current.key] ?? ""}
+          placeholder={current.placeholder}
+          maxLength={current.maxLength}
+          rows={3}
+          required={current.required}
+          onChange={(event) => updateAnswer(current.key, event.target.value)}
+        />
+      ) : (
+        <input
+          value={answers[current.key] ?? ""}
+          placeholder={current.placeholder}
+          maxLength={current.maxLength}
+          required={current.required}
+          onChange={(event) => updateAnswer(current.key, event.target.value)}
+        />
+      )}
+    </label>
+  );
+
   return (
     <main className="ess-builder ess-role-questionnaire">
       <button className="ess-quiet-button" type="button" onClick={onBack}>← Back to home</button>
-      <div className="ess-builder-progress" role="group" aria-label="Registration introduction">
+      <div className="ess-builder-progress" role="group" aria-label="Registration introduction progress">
         <span>{roleLabel(role)} · Quick introduction</span>
-        <b>Before signup</b>
+        <b>Question {step + 1} of {questionnaire.fields.length}</b>
       </div>
-      <section className="ess-builder-card" aria-labelledby="role-questionnaire-title">
-        <p className="ess-eyebrow">A few quick questions</p>
+      <div className="ess-interview-progress-track" aria-hidden="true">
+        <span style={{ width: `${((step + 1) / questionnaire.fields.length) * 100}%` }} />
+      </div>
+      <section className="ess-builder-card ess-interview-card" aria-labelledby="role-questionnaire-title">
+        <p className="ess-eyebrow">A few quick questions · one at a time</p>
         <h1 id="role-questionnaire-title">{questionnaire.title}</h1>
         <p className="ess-builder-lead">{questionnaire.intro}</p>
+        <p className="ess-interview-helper">Let’s take this one step at a time. You can go back and change an answer.</p>
         <form onSubmit={submit}>
-          {questionnaire.fields.map((field) => (
-            <label key={field.key}>
-              {field.label}
-              {field.type === "select" ? (
-                <select
-                  value={answers[field.key] ?? ""}
-                  required={field.required}
-                  onChange={(event) => updateAnswer(field.key, event.target.value)}
-                >
-                  <option value="">Choose one</option>
-                  {field.options?.map((option) => <option key={option} value={option}>{option}</option>)}
-                </select>
-              ) : field.type === "textarea" ? (
-                <textarea
-                  value={answers[field.key] ?? ""}
-                  placeholder={field.placeholder}
-                  maxLength={field.maxLength}
-                  rows={3}
-                  onChange={(event) => updateAnswer(field.key, event.target.value)}
-                />
-              ) : (
-                <input
-                  value={answers[field.key] ?? ""}
-                  placeholder={field.placeholder}
-                  maxLength={field.maxLength}
-                  required={field.required}
-                  onChange={(event) => updateAnswer(field.key, event.target.value)}
-                />
-              )}
-            </label>
-          ))}
+          <p className="ess-interview-step-label">Question {step + 1}</p>
+          {renderCurrentField()}
           {saveError && <p className="ess-form-error" role="alert">{saveError}</p>}
-          <div className="ess-builder-actions">
-            <button type="button" className="ess-outline-button" onClick={onBack}>Not now</button>
-            <button type="submit" className="ess-primary">Continue to signup →</button>
+          <div className="ess-builder-actions ess-interview-actions">
+            <button type="button" className="ess-outline-button" onClick={() => step > 0 ? goToStep(step - 1) : onBack()}>
+              {step > 0 ? "Previous question" : "Not now"}
+            </button>
+            <button type="submit" className="ess-primary">
+              {step === questionnaire.fields.length - 1 ? "Continue to signup →" : "Next question →"}
+            </button>
           </div>
+          <p className="ess-interview-save-note">Your answers are saved as you go. You can return to finish later.</p>
         </form>
       </section>
     </main>
@@ -3379,7 +3477,6 @@ function AuthModal({
   vendorPhone,
   vendorCity,
   vendorDescription,
-  vendorKycUrl,
   registrationCategory,
   referralCode,
   error,
@@ -3394,7 +3491,6 @@ function AuthModal({
   setVendorPhone,
   setVendorCity,
   setVendorDescription,
-  setVendorKycUrl,
   setRegistrationCategory,
   setOrganizationMode,
   setReferralCode,
@@ -3416,7 +3512,6 @@ function AuthModal({
   vendorPhone: string;
   vendorCity: string;
   vendorDescription: string;
-  vendorKycUrl: string;
   registrationCategory: string;
   referralCode: string;
   error: string;
@@ -3431,7 +3526,6 @@ function AuthModal({
   setVendorPhone: (value: string) => void;
   setVendorCity: (value: string) => void;
   setVendorDescription: (value: string) => void;
-  setVendorKycUrl: (value: string) => void;
   setRegistrationCategory: (value: string) => void;
   setOrganizationMode: (value: OrganizationMode | "") => void;
   setReferralCode: (value: string) => void;
@@ -3445,8 +3539,11 @@ function AuthModal({
 }) {
   const [passwordVisible, setPasswordVisible] = useState(true);
   const [registrationStep, setRegistrationStep] = useState(0);
+  const [vendorKycAnswers, setVendorKycAnswers] = useState<VendorKycAnswers>({});
   const [touched, setTouched] = useState<Partial<Record<RegistrationField, boolean>>>({});
   const internal = role === "VERIFIER" || role === "ADMIN";
+  const isVendorRegistration = mode === "signup" && (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER"));
+  const vendorKycComplete = Boolean(vendorKycAnswers.legalForm && vendorKycAnswers.registrationStatus && vendorKycAnswers.businessEvidence && vendorKycAnswers.taxStatus && vendorKycAnswers.operatingAddress?.trim() && vendorKycAnswers.regulatedActivity);
   useEffect(() => { setTouched({}); setRegistrationStep(0); }, [role, mode]);
   const touch = (field: RegistrationField) => setTouched((current) => ({ ...current, [field]: true }));
   const fieldError = (field: RegistrationField, value: string) =>
@@ -3481,7 +3578,7 @@ function AuthModal({
             ? [
                 `Create your ${roleLabel(role).toLowerCase()} account`,
                 `Set up your ${registrationProfileLabel[role as SelfRegisterRole]}`,
-                "Choose your preferences",
+                (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) ? "Country & business checks" : "Choose your preferences",
               ][registrationStep]
             : mode === "forgot"
               ? "Reset your password"
@@ -3511,7 +3608,7 @@ function AuthModal({
             <div className="ess-registration-progress" aria-label={`Registration step ${registrationStep + 1} of 3`}>
               <div className="ess-registration-progress-copy">
                 <strong>Step {registrationStep + 1} of 3</strong>
-                <span>{["Account details", registrationProfileLabel[role as SelfRegisterRole], "Preferences"][registrationStep]}</span>
+                <span>{["Account details", registrationProfileLabel[role as SelfRegisterRole], (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) ? "Country & business checks" : "Preferences"][registrationStep]}</span>
               </div>
               <div className="ess-registration-progress-track"><span style={{ width: `${((registrationStep + 1) / 3) * 100}%` }} /></div>
             </div>
@@ -3640,23 +3737,6 @@ function AuthModal({
                   aria-describedby={fieldError("vendorDescription", vendorDescription) ? "auth-vendorDescription-error" : undefined}
                 />
                 {fieldFeedback("vendorDescription", vendorDescription)}
-              </label>
-              <label>
-                KYC document URL
-                <input
-                  type="url"
-                  value={vendorKycUrl}
-                  onChange={(event) => {
-                    setVendorKycUrl(event.target.value);
-                    touch("vendorKycUrl");
-                  }}
-                  onBlur={() => touch("vendorKycUrl")}
-                  placeholder="https://secure-document-link"
-                  maxLength={2048}
-                  aria-invalid={Boolean(fieldError("vendorKycUrl", vendorKycUrl))}
-                  aria-describedby={fieldError("vendorKycUrl", vendorKycUrl) ? "auth-vendorKycUrl-error" : undefined}
-                />
-                {fieldFeedback("vendorKycUrl", vendorKycUrl)}
               </label>
             </>
           )}
@@ -3814,6 +3894,9 @@ function AuthModal({
               </label>
             </div>
           )}
+          {mode === "signup" && registrationStep === 2 && (role === "VENDOR" || (role === "ORGANIZATION" && organizationMode === "SERVICE_PROVIDER")) && (
+            <VendorKycQuestionnaire country={country} value={vendorKycAnswers} onChange={setVendorKycAnswers} />
+          )}
           {mode === "signup" && registrationStep === 2 && (
             <div className="ess-auth-trust">
               {registrationBenefits[role as SelfRegisterRole].map((benefit) => (
@@ -3843,7 +3926,7 @@ function AuthModal({
                   Next <span>→</span>
                 </button>
               ) : (
-                <button className="ess-primary ess-full-button" type="submit">
+                <button className="ess-primary ess-full-button" type="submit" disabled={isVendorRegistration && !vendorKycComplete} title={isVendorRegistration && !vendorKycComplete ? "Complete the required business verification questions first." : undefined}>
                   Create account <span>→</span>
                 </button>
               )}

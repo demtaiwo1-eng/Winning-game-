@@ -36,6 +36,13 @@ export default function WalletPanel({
   const [ledgerEntries, setLedgerEntries] = useState<ApiLedgerEntry[]>([]);
   const [ledgerCurrency, setLedgerCurrency] = useState<CurrencyCode>("NGN");
   const [ledgerLoaded, setLedgerLoaded] = useState(false);
+  const [fundingAccount, setFundingAccount] = useState<{ bankName: string | null; accountNumber: string | null; accountName: string | null; currency: string; status: string; provider: string } | null>(null);
+  const [fundingSubmissions, setFundingSubmissions] = useState<Array<{ id: string; amountMinor: string; currency: string; senderName: string; senderBank: string | null; transferReference: string; receiptUrl: string; status: string; reviewNote: string | null; createdAt: string }>>([]);
+  const [fundingAmount, setFundingAmount] = useState("");
+  const [senderName, setSenderName] = useState("");
+  const [senderBank, setSenderBank] = useState("");
+  const [transferReference, setTransferReference] = useState("");
+  const [receiptUrl, setReceiptUrl] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
 
   const load = useCallback(() => {
@@ -345,6 +352,41 @@ export default function WalletPanel({
           <button className="ess-primary" type="button" onClick={addFunds}>
             Deposit to wallet with {depositCurrency === "NGN" ? "OPay" : "GHS provider"}
           </button>
+        </div>
+      </div>
+
+      <div className="ess-wallet-card" style={{ marginTop: 16 }}>
+        <strong>Bank transfer funding · NGN</strong>
+        <p className="ess-muted" style={{ margin: "6px 0 12px" }}>Use your EPHINTA-assigned bank account when it has been issued by our licensed banking partner. After transferring, submit your receipt and reference below. An administrator checks the actual bank credit before your balance changes.</p>
+        {fundingAccount?.accountNumber ? (
+          <div className="ess-wallet-rows">
+            <div><span>Bank</span><strong>{fundingAccount.bankName || "Partner bank"}</strong></div>
+            <div><span>Account name</span><strong>{fundingAccount.accountName || "EPHINTA customer account"}</strong></div>
+            <div><span>Account number</span><strong>{fundingAccount.accountNumber}</strong></div>
+          </div>
+        ) : (
+          <p className="ess-form-error" role="status">Your personal virtual account has not yet been issued. EPHINTA is preparing the bank-partner connection; no placeholder account number is shown, so you do not accidentally transfer to an unverified account.</p>
+        )}
+        <div className="ess-form-grid" style={{ marginTop: 12 }}>
+          <label>Amount (NGN)<input value={fundingAmount} onChange={e => setFundingAmount(e.target.value)} inputMode="decimal" placeholder="e.g. 25000" /></label>
+          <label>Sender's full name<input value={senderName} onChange={e => setSenderName(e.target.value)} placeholder="Name on sending bank account" /></label>
+          <label>Sending bank<input value={senderBank} onChange={e => setSenderBank(e.target.value)} placeholder="Bank name" /></label>
+          <label>Bank transfer reference<input value={transferReference} onChange={e => setTransferReference(e.target.value)} placeholder="Reference from bank receipt" /></label>
+          <label style={{ gridColumn: "1 / -1" }}>Secure receipt link (HTTPS)<input value={receiptUrl} onChange={e => setReceiptUrl(e.target.value)} placeholder="Upload receipt to approved secure storage and paste its link" /></label>
+        </div>
+        <button className="ess-primary" type="button" style={{ marginTop: 12 }} disabled={!fundingAmount || !senderName.trim() || !transferReference.trim() || !/^https:\/\//i.test(receiptUrl)} onClick={async () => {
+          const major = Number(fundingAmount);
+          if (!Number.isFinite(major) || major <= 0 || !Number.isSafeInteger(Math.round(major * 100))) { setMsg("Enter a valid NGN amount."); return; }
+          try {
+            await walletApi.submitFundingReceipt({ amountMinor: String(Math.round(major * 100)), senderName: senderName.trim(), senderBank: senderBank.trim() || undefined, transferReference: transferReference.trim(), receiptUrl: receiptUrl.trim(), idempotencyKey: "bank_receipt_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10) });
+            const updated = await walletApi.fundingSubmissions();
+            setFundingSubmissions(updated.items); setFundingAmount(""); setSenderName(""); setSenderBank(""); setTransferReference(""); setReceiptUrl("");
+            setMsg("Receipt submitted for administrator verification. Your wallet has not been credited yet.");
+          } catch (error) { setMsg(error instanceof Error ? error.message : "Receipt submission failed."); }
+        }}>Submit transfer receipt for verification</button>
+        <div style={{ marginTop: 14 }}>
+          <strong>My transfer submissions</strong>
+          {fundingSubmissions.length === 0 ? <p className="ess-muted">No bank transfer receipts submitted yet.</p> : fundingSubmissions.map(item => <div key={item.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--ess-border, #ddd)" }}><span>{formatMoney(item.amountMinor, "NGN", locale)} · {item.status}</span><small className="ess-muted" style={{ display: "block" }}>Ref {item.transferReference} · {new Date(item.createdAt).toLocaleString()}</small>{item.reviewNote && <small className="ess-muted">{item.reviewNote}</small>}</div>)}
         </div>
       </div>
 

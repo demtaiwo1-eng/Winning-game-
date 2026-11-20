@@ -216,7 +216,6 @@ textarea::placeholder {
   color: #211d37 !important;
 }
 
-
 /* The music-consent prompt follows the selected parent theme while retaining
    the gradient surface required by the shared dialog design. */
 .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {

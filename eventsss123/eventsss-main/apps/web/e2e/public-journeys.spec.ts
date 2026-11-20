@@ -49,17 +49,13 @@ test("static-host deep links load the React app on a fresh navigation", async ({
   await expect(page.getByLabel("Event name")).toBeVisible();
 });
 
-test("landing page vendor join opens the shared vendor registration dialog", async ({ page }) => {
+test("landing page vendor invitation opens the subtle vendor interview", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /Join as a vendor/ }).click();
-  await expect(page).toHaveURL(/\/auth\/signup\?role=VENDOR$/);
-  const dialog = page.locator("#eph-auth-dialog");
-  await expect(dialog).toBeVisible();
-  await expect(dialog).toHaveAttribute("data-role", "vendor");
-  await expect(dialog.getByLabel("Registration account type")).toHaveValue("VENDOR");
-  await dialog.getByLabel("Full name").fill("Vendor Journey Test");
-  await dialog.getByRole("button", { name: /Next/ }).click();
-  await expect(dialog.getByLabel("Business name")).toBeVisible();
+  await expect(page).toHaveURL(/\/join\/vendor$/);
+  await expect(page.getByRole("heading", { name: "Tell us about your services" })).toBeVisible();
+  await expect(page.getByLabel("Business name")).toBeVisible();
+  await expect(page.getByLabel("Primary service")).toHaveCount(0);
 });
 
 test("legacy sign-in and registration URLs resolve to the active authentication flow", async ({ page }) => {
@@ -104,7 +100,7 @@ test("landing page actions navigate in-app without restarting or starting music"
 
   await page.locator(".ephinta-marketing-zone__cta").click();
   await expect(page).toHaveURL(/\/plan$/);
-  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
   await expect.poll(() => page.locator("audio").evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(true);
   await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
@@ -156,7 +152,7 @@ test("public marketplace back link returns visitors to the landing page", async 
   });
 
   await page.goto("/marketplace");
-  const backLink = page.getByRole("link", { name: "Back to landing page" });
+  const backLink = page.getByRole("link", { name: "Back to EPHINTA landing page" });
   await expect(backLink).toBeVisible();
   await expect(backLink).toHaveAttribute("href", "/");
   const titleGradient = await page.getByRole("heading", { name: "Discover trusted event services" })
@@ -242,7 +238,7 @@ test("event builder blocks progression when the required event name is empty", a
   const eventName = page.getByLabel("Event name");
   await eventName.fill("");
   await page.getByRole("button", { name: /Next question/ }).click();
-  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
   await expect(eventName).toHaveJSProperty("validity.valid", false);
   await expect(eventName).toBeFocused();
 });
@@ -264,7 +260,7 @@ test("event builder inherits the global parent theme and saves a brief", async (
   }, expectedThemeInk);
   expect(actualCardInk).toBe(expectedCardInk);
   const cardBackground = await builderCard.evaluate((element) => getComputedStyle(element).backgroundImage);
-  expect(cardBackground).toContain("linear-gradient");
+  expect(cardBackground).toBe("none");
 
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileCard = await builderCard.boundingBox();
@@ -281,18 +277,29 @@ test("event builder inherits the global parent theme and saves a brief", async (
   await expect(page.getByLabel("Event name")).toHaveValue("ESS E2E Test Event");
   await page.getByRole("button", { name: /Next question/ }).click();
 
+  await expect(page.getByLabel("Event format")).toBeVisible();
+  await expect(page.getByLabel("Primary goal")).toHaveCount(0);
+  await page.getByLabel("Event format").selectOption("SOCIAL");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Primary goal").selectOption("Celebrate");
   await page.getByRole("button", { name: /Next question/ }).click();
-
+  await page.getByLabel("Top priority").selectOption("Guest experience");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Next question/ }).click(); // Event date is optional.
   await page.getByLabel("City or venue area").fill("Ibadan");
   await page.getByRole("button", { name: /Next question/ }).click();
-
+  await page.getByLabel("Venue status").selectOption("Still deciding");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Expected guests").fill("120");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Food direction").selectOption("Mixed menu");
   await page.getByRole("button", { name: /Next question/ }).click();
 
   const planningBudget = page.getByLabel("Planning budget");
   await planningBudget.fill("NGN 2500000");
   await expect(planningBudget).toHaveValue("2,500,000");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Atmosphere").selectOption("Warm and social");
   await page.getByRole("button", { name: /Build my event brief/ }).click();
   await expect(page.getByText("2,500,000.00")).toBeVisible();
 
@@ -362,7 +369,7 @@ test("signed-in event planners can open the modern planner route", async ({ page
   await page.goto("/plan");
   await unlockDeviceGate(page);
   await expect(page).toHaveURL(/\/plan$/);
-  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
   await expect(page.locator(".eph-modal")).toHaveCount(0);
 });
 
@@ -373,16 +380,29 @@ test("the menu planner action opens the guided event planner", async ({ page }) 
     .getByRole("button", { name: /Start Planner/ }).click();
 
   await expect(page).toHaveURL(/\/plan$/);
-  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
   await expect(page.locator(".eph-modal")).toHaveCount(0);
 
   await page.getByLabel("Event name").fill("Header Planner Flow");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Event format").selectOption("PERSONAL");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Primary goal").selectOption("Celebrate");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Top priority").selectOption("Guest experience");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Next question/ }).click(); // Optional event date.
   await page.getByLabel("City or venue area").fill("Ibadan");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Venue status").selectOption("Still deciding");
   await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Expected guests").fill("80");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Food direction").selectOption("Mixed menu");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Planning budget").fill("2500000");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Atmosphere").selectOption("Warm and social");
   await page.getByRole("button", { name: /Build my event brief/ }).click();
   await page.getByRole("button", { name: /Save brief and create account/ }).click();
 
@@ -393,7 +413,7 @@ test("the menu planner action opens the guided event planner", async ({ page }) 
 
 test("public signup choices open role-specific introductions before account creation", async ({ page }) => {
   const choices = [
-    { button: "Create customer account", route: "/plan", heading: "What are you creating?" },
+    { button: "Create customer account", route: "/plan", heading: "What should we call your event?" },
     { button: "Create vendor account", route: "/join/vendor", heading: "Tell us about your services" },
     { button: "Create organizer account", route: "/join/organization", heading: "Tell us about your organization" },
     { button: "Create affiliate account", route: "/join/affiliate", heading: "Tell us about your community" },
@@ -417,9 +437,14 @@ test("vendor introduction carries profile answers into signup", async ({ page })
   await page.getByRole("navigation", { name: "Main navigation" })
     .getByRole("button", { name: "Create vendor account" }).click();
 
+  await expect(page.getByLabel("Business name")).toBeVisible();
+  await expect(page.getByLabel("Primary service")).toHaveCount(0);
   await page.getByLabel("Business name").fill("Bright Day Catering");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Primary service").selectOption("Catering");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Main service city").fill("Lagos");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("What do you provide?").fill("Seasonal event menus");
   await page.getByRole("button", { name: /Continue to signup/ }).click();
 
@@ -442,7 +467,12 @@ test("affiliate introduction preselects a matching referral channel during signu
     .getByRole("button", { name: "Create affiliate account" }).click();
 
   await page.getByLabel("What is your primary referral channel?").selectOption("Social media");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Who do you expect to refer?").selectOption("Event planners");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("How would you describe your reach?").selectOption("Growing audience");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Where do you connect with them?").fill("Local business community");
   await page.getByRole("button", { name: /Continue to signup/ }).click();
 
   const dialog = page.locator("#eph-auth-dialog");
@@ -706,7 +736,9 @@ test("music consent prompt is compact and non-blocking on mobile @mobile", async
   expect(bounds!.width).toBeLessThan(viewport!.width);
   expect(bounds!.height).toBeLessThan(viewport!.height);
   await expect(backdrop).toHaveCSS("pointer-events", "none");
-  await expect(prompt).toHaveCSS("pointer-events", "auto");
+  await expect(prompt).toHaveCSS("pointer-events", "none");
+  await expect(prompt.getByRole("button", { name: "Yes, play music" })).toHaveCSS("pointer-events", "auto");
+  await expect(prompt.getByRole("button", { name: "No, thanks" })).toHaveCSS("pointer-events", "auto");
   await expect(prompt.getByRole("button", { name: "Yes, play music" })).toBeVisible();
   await expect(prompt.getByRole("button", { name: "No, thanks" })).toBeVisible();
   await page.getByRole("button", { name: "Open menu" }).click();
@@ -792,22 +824,22 @@ test("authenticated planner can add a checklist task to an owned event", async (
   // Exercise the visible navigation instead of relying on a query-string tab state.
   const plannerNavigation = page.getByRole("navigation", { name: "Planner dashboard sections" });
   await expect(plannerNavigation).toBeVisible();
-  const eventWorkspaceTab = plannerNavigation.getByRole("button", { name: "Open Event workspace" });
-  await eventWorkspaceTab.dispatchEvent("click");
-  await expect(eventWorkspaceTab).toHaveAttribute("aria-current", "page");
+  const plannerSection = plannerNavigation.getByLabel("Planner dashboard section");
+  await expect(plannerSection).toBeVisible();
+  await plannerSection.selectOption("planner");
+  await expect(plannerSection).toHaveValue("planner");
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
 
-  const paymentsTab = plannerNavigation.getByRole("button", { name: "Open Payments & finances" });
-  await paymentsTab.click();
-  await expect(paymentsTab).toHaveAttribute("aria-current", "page");
+  await plannerSection.selectOption("payments");
+  await expect(plannerSection).toHaveValue("payments");
   await expect(page).toHaveURL(/tab=payments/);
   await page.goBack();
-  await expect(eventWorkspaceTab).toHaveAttribute("aria-current", "page");
+  await expect(plannerSection).toHaveValue("planner");
   await page.goForward();
-  await expect(paymentsTab).toHaveAttribute("aria-current", "page");
-  await eventWorkspaceTab.click();
+  await expect(plannerSection).toHaveValue("payments");
+  await plannerSection.selectOption("planner");
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
-  await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
+  await expect(page.locator('.ess-planner-workspace > label select option[value="event-e2e-001"]')).toHaveText(event.title);
   const taskInput = page.locator('section[aria-labelledby="event-workspace-title"] label').filter({ hasText: /^Task$/ }).locator("input");
   await expect(taskInput).toBeVisible();
   await taskInput.fill("Confirm event venue");
@@ -880,7 +912,7 @@ test("background music starts only after consent and advances automatically", as
   )).toBe(1);
   const audio = page.locator("audio");
   await audio.evaluate((element: HTMLAudioElement) => element.dispatchEvent(new Event("ended")));
-  await expect(audio).toHaveAttribute("src", /Here%20we%20are-2/);
+  await expect(audio).toHaveAttribute("src", /Welcome,%20Little%20One-1/);
   await expect.poll(() => page.evaluate(
     () => (window as Window & { __ephintaAudioPlayCalls?: number }).__ephintaAudioPlayCalls,
   )).toBe(2);
@@ -902,7 +934,9 @@ test("saved sound-off preference keeps a visible way to reopen music consent", a
   await enableMusic.click();
   await expect(page.getByRole("dialog", { name: "Enjoy background music?" })).toBeVisible();
   await page.getByRole("button", { name: "Yes, play music" }).click();
-  await expect(page.getByRole("button", { name: /Music (playing|paused)/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open music player" })).toBeVisible();
+  await page.getByRole("button", { name: "Open music player" }).click();
+  await expect(page.locator(".eph-audio__player")).toBeVisible();
 });
 
 test("music player respects a saved sound-off choice after reload", async ({ page }) => {
@@ -1039,11 +1073,24 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   await page.goto("/plan");
   await page.getByLabel("Event name").fill("Planner Follow-up Event");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Event format").selectOption("SOCIAL");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Primary goal").selectOption("Celebrate");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Top priority").selectOption("Guest experience");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Next question/ }).click(); // Optional event date.
   await page.getByLabel("City or venue area").fill("Ibadan");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Venue status").selectOption("Still deciding");
   await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Expected guests").fill("90");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Food direction").selectOption("Mixed menu");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Planning budget").fill("2500000");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Atmosphere").selectOption("Warm and social");
   await page.getByRole("button", { name: /Build my event brief/ }).click();
   await page.getByRole("button", { name: /Save brief and create account/ }).click();
 
@@ -1098,14 +1145,13 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   // every destination visible without forcing horizontal page scrolling.
   const plannerShell = page.locator(".ess-content > .ess-portal-stack");
   await expect(plannerShell).toHaveCSS("display", "grid");
-  const plannerTabs = plannerShell.locator(":scope > .ess-filter-row").first();
+  const plannerTabs = page.getByRole("navigation", { name: "Planner dashboard sections" });
   await expect(plannerTabs).toBeVisible();
-  await expect(plannerTabs).toHaveCSS("display", "grid");
-  await expect(plannerTabs).toHaveCSS("overflow-x", "visible");
-  await expect(plannerTabs.locator(".ess-chip-active")).toBeVisible();
-  await expect(plannerTabs.locator(".ess-chip-active")).toBeVisible();
+  const plannerSection = plannerTabs.getByLabel("Planner dashboard section");
+  await expect(plannerSection).toBeVisible();
+  await expect(plannerSection.locator("option")).toHaveCount(12);
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(plannerTabs).toBeVisible();
+  await expect(plannerSection).toBeVisible();
   const mobileLayoutFits = await page.evaluate(
     () => document.documentElement.scrollWidth <= window.innerWidth,
   );
@@ -1113,7 +1159,8 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   await page.setViewportSize({ width: 1280, height: 900 });
 
   // The saved follow-up questionnaire remains available in Overview.
-  await page.getByRole("button", { name: "Open Overview", exact: true }).click();
+  await plannerSection.selectOption("overview");
+  await expect(plannerSection).toHaveValue("overview");
   await expect(
     page.getByRole("heading", { name: "Plan the details for Planner Follow-up Event" }),
   ).toBeVisible();
@@ -1132,6 +1179,7 @@ test("Plan a Burial opens the burial planner and selects the burial soundtrack",
   await page.locator("#home").getByRole("button", { name: "Start Planner", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Burial celebration");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await expect(page.getByLabel("Event format")).toHaveValue("CULTURAL");
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:music-category"))).toBe("burial");
   await expect(page.locator("audio")).toHaveAttribute("src", /Burials/);
@@ -1149,6 +1197,7 @@ test("Plan a Naming Ceremony selects the naming soundtrack", async ({ page }) =>
   await page.locator("#home").getByRole("button", { name: "Start Planner", exact: true }).click();
   await expect(page).toHaveURL(/\/plan$/);
   await expect(page.getByLabel("Event name")).toHaveValue("Naming ceremony celebration");
+  await page.getByRole("button", { name: /Next question/ }).click();
   await expect(page.getByLabel("Event format")).toHaveValue("PERSONAL");
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:music-category"))).toBe("naming");
   await expect(page.locator("audio")).toHaveAttribute("src", /Naming/);

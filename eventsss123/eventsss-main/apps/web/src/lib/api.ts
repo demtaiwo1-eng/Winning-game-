@@ -129,6 +129,9 @@ export const walletApi = {
   list: () => api<{ items: ApiWallet[] }>("/wallet"),
   ledger: (walletId: string) =>
     api<{ items: ApiLedgerEntry[]; wallet: ApiWallet }>(`/wallet/${walletId}/ledger`),
+  fundingAccount: () => api<{ account: null | { bankName: string | null; accountNumber: string | null; accountName: string | null; currency: string; status: string; provider: string }; liveAccountAvailable: boolean }>("/wallet/funding-account"),
+  fundingSubmissions: () => api<{ items: Array<{ id: string; amountMinor: string; currency: string; senderName: string; senderBank: string | null; transferReference: string; receiptUrl: string; status: string; reviewNote: string | null; createdAt: string }> }>("/wallet/funding-submissions"),
+  submitFundingReceipt: (body: { amountMinor: string; senderName: string; senderBank?: string; transferReference: string; receiptUrl: string; idempotencyKey: string }) => api("/wallet/funding-submissions", { method: "POST", headers: { "Idempotency-Key": body.idempotencyKey }, body: JSON.stringify(body) }),
   deposit: (body: { currency: string; amountMinor: string; idempotencyKey?: string }) =>
     api("/wallet/deposit", { method: "POST", body: JSON.stringify(body) }),
   escrowHold: (body: {

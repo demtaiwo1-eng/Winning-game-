@@ -259,3 +259,13 @@
   .ess-public-marketplace .ess-marketplace-back { width: 100%; }
   .ess-public-marketplace .ess-page-heading { padding: 17px; }
 }
+
+
+/* Marketplace title uses the EPHINTA multicolor heading treatment. */
+.ess-public-marketplace .ess-page-heading h1 {
+  background-image: linear-gradient(105deg, #7252d6 0%, #d06ca8 52%, #d89b45 100%) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
