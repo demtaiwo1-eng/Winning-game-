@@ -789,11 +789,11 @@ html[data-ephinta-theme] .eph-audio__backdrop > .eph-audio__prompt {
    even before theme initialization and in every public/authenticated route. */
 html body #root .eph-audio__backdrop {
   position: fixed !important;
-  top: auto !important;
-  left: max(14px, env(safe-area-inset-left)) !important;
-  right: auto !important;
-  bottom: max(14px, env(safe-area-inset-bottom)) !important;
-  inset: auto auto max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)) !important;
+  top: max(76px, env(safe-area-inset-top)) !important;
+  right: max(14px, env(safe-area-inset-right)) !important;
+  bottom: auto !important;
+  left: auto !important;
+  inset: max(76px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) auto auto !important;
   display: block !important;
   box-sizing: border-box !important;
   width: min(340px, calc(100vw - 28px)) !important;
@@ -821,11 +821,12 @@ html body #root .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
 }
 @media (max-width: 600px) {
   html body #root .eph-audio__backdrop {
-    left: max(10px, env(safe-area-inset-left)) !important;
-    right: auto !important;
-    bottom: max(10px, env(safe-area-inset-bottom)) !important;
-    inset: auto auto max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)) !important;
-    width: min(320px, calc(100vw - 20px)) !important;
+    top: max(70px, env(safe-area-inset-top)) !important;
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: auto !important;
+    left: auto !important;
+    inset: max(70px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) auto auto !important;
+    width: min(280px, calc(100vw - 20px)) !important;
     max-width: calc(100vw - 20px) !important;
   }
 }
@@ -836,4 +837,14 @@ body:has(.ess-builder, .ess-role-questionnaire, .ess-interview-card) #root .eph-
 body:has(.ess-builder, .ess-role-questionnaire, .ess-interview-card) #root .eph-audio__restore,
 body:has(.ess-builder, .ess-role-questionnaire, .ess-interview-card) #root .eph-audio__player {
   display: none !important;
+}
+
+
+/* Consent card is visually available but does not intercept the page beneath it.
+   Only the two explicit consent actions receive pointer events. */
+html body #root .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
+  pointer-events: none !important;
+}
+html body #root .eph-audio__backdrop .eph-audio__choices button {
+  pointer-events: auto !important;
 }
