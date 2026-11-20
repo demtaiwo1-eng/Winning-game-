@@ -196,6 +196,38 @@ readinessRouter.post(
       }
     }
 
+    // Every vendor part-payment request becomes a separate, auditable readiness item.
+    const paymentRequests = await prisma.bookingPaymentRequest.findMany({
+      where: { booking: { eventId } },
+      orderBy: { createdAt: "asc" },
+      include: { booking: { select: { id: true } } },
+    });
+    for (const request of paymentRequests) {
+      const existing = await prisma.eventServiceCheck.findUnique({ where: { paymentRequestId: request.id } });
+      if (!existing) {
+        await prisma.eventServiceCheck.create({
+          data: {
+            eventId, bookingId: request.booking.id, paymentRequestId: request.id,
+            label: "Part payment: " + request.reason, category: "PAYMENT_MILESTONE",
+            zone: "FINANCE", status: request.status === "REJECTED" ? "RED" : "PENDING",
+            notes: request.status === "PAID"
+              ? "Payment recorded in EPHINTA; verifier ground confirmation is still required."
+              : request.status === "REJECTED" ? "Payment request was rejected; planner action is required." : "Awaiting recorded payment before this milestone can be verified.",
+          },
+        });
+      } else if (request.status === "PAID" && existing.status === "PENDING" && !existing.verifiedById) {
+        await prisma.eventServiceCheck.update({
+          where: { id: existing.id },
+          data: { notes: "Payment recorded in EPHINTA; verifier ground confirmation is still required." },
+        });
+      } else if (request.status === "REJECTED" && existing.status === "PENDING") {
+        await prisma.eventServiceCheck.update({
+          where: { id: existing.id },
+          data: { status: "RED", notes: "Payment request was rejected; planner action is required." },
+        });
+      }
+    }
+
     // Optional manual checklist items from body
     const extras = Array.isArray(req.body?.extraLabels) ? req.body.extraLabels : [];
     for (const label of extras) {
@@ -269,7 +301,7 @@ readinessRouter.get(
     const checks = await prisma.eventServiceCheck.findMany({
       where: { eventId: event.id },
       orderBy: { createdAt: "asc" },
-      include: { verifiedBy: { select: { id: true, name: true } }, task: { select: { status: true, tier: true, dueAt: true } } },
+      include: { verifiedBy: { select: { id: true, name: true } }, task: { select: { status: true, tier: true, dueAt: true } }, paymentRequest: { select: { id: true, amountMinor: true, status: true, paidAt: true, reason: true } } },
     });
     const bookingPayments = await prisma.booking.findMany({
       where: { eventId: event.id },
@@ -430,7 +462,7 @@ readinessRouter.patch(
     if (!["GREEN", "AMBER", "RED", "PENDING"].includes(status)) {
       throw new HttpError(400, "INVALID_STATUS", "status must be GREEN, AMBER, RED, or PENDING");
     }
-    const check = await prisma.eventServiceCheck.findUnique({ where: { id: checkId } });
+    const check = await prisma.eventServiceCheck.findUnique({ where: { id: checkId }, include: { paymentRequest: { select: { id: true, status: true, paidAt: true } } } });
     if (!check) throw new HttpError(404, "NOT_FOUND", "Check not found");
 
     const event = await prisma.event.findUnique({ where: { id: check.eventId } });
@@ -466,6 +498,11 @@ readinessRouter.patch(
     }
 
     const confirmationNotes = typeof req.body.notes === "string" ? req.body.notes.trim() : "";
+    if (status === "GREEN" && check.paymentRequestId && (
+      !check.paymentRequest || check.paymentRequest.status !== "PAID" || !check.paymentRequest.paidAt
+    )) {
+      throw new HttpError(409, "PAYMENT_NOT_CONFIRMED", "This part-payment milestone cannot be marked ready until EPHINTA records the payment as paid.");
+    }
     if (!hasGroundConfirmationNote(status, confirmationNotes)) {
       throw new HttpError(400, "CONFIRMATION_REQUIRED", "Add an on-the-ground confirmation note (at least 8 characters) before marking this item ready");
     }
