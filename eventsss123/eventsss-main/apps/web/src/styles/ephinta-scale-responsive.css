@@ -176,3 +176,10 @@ html body #root .eph-landing .eph-promotions .eph-promo-shell.eph-marketplace-ad
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
+
+
+/* Keep the pale marketing spotlight heading dark in light and colorful modes. */
+html body #root .eph-landing:not([data-theme="dark"]) .ephinta-marketing-zone h2 {
+  color: #251633 !important;
+  -webkit-text-fill-color: #251633 !important;
+}
