@@ -1351,3 +1351,52 @@ body:has(.ephinta-marketing-zone) {
   text-shadow: none !important;
 }
 
+
+
+/* EPHINTA GLOBAL THEME TEXT CONTRACT — loaded last to defeat stale dark-text overrides. */
+html[data-ephinta-theme="dark"] #root,
+html[data-ephinta-theme="colorful"] #root {
+  color: #f8f7ff !important;
+}
+html[data-ephinta-theme="dark"] #root :is(p,li,label,small,span,strong,summary,dt,dd,th,td,legend,figcaption),
+html[data-ephinta-theme="colorful"] #root :is(p,li,label,small,span,strong,summary,dt,dd,th,td,legend,figcaption) {
+  color: #e9e5ff !important;
+  -webkit-text-fill-color: #e9e5ff !important;
+}
+html[data-ephinta-theme="dark"] #root :is(h1,h2,h3,h4,h5,h6),
+html[data-ephinta-theme="colorful"] #root :is(h1,h2,h3,h4,h5,h6) {
+  color: #fff !important;
+  background-image: linear-gradient(95deg,#72eaff 0%,#bca2ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html[data-ephinta-theme="dark"] #root a,
+html[data-ephinta-theme="colorful"] #root a { color:#75eaff !important; -webkit-text-fill-color:#75eaff !important; }
+html[data-ephinta-theme="dark"] #root button,
+html[data-ephinta-theme="colorful"] #root button { color:#fff !important; -webkit-text-fill-color:#fff !important; }
+html[data-ephinta-theme="dark"] #root input,
+html[data-ephinta-theme="dark"] #root select,
+html[data-ephinta-theme="dark"] #root textarea,
+html[data-ephinta-theme="colorful"] #root input,
+html[data-ephinta-theme="colorful"] #root select,
+html[data-ephinta-theme="colorful"] #root textarea {
+  color:#fff !important; -webkit-text-fill-color:#fff !important;
+  background-color:#24203f !important; border-color:#8272b5 !important;
+}
+html[data-ephinta-theme="light"] #root { color:#17152a !important; }
+html[data-ephinta-theme="light"] #root :is(p,li,label,small,span,strong,summary,dt,dd,th,td,legend,figcaption,h1,h2,h3,h4,h5,h6) {
+  color:#29243d !important; -webkit-text-fill-color:#29243d !important;
+  background-image:none !important;
+}
+html[data-ephinta-theme="light"] #root a { color:#4f2bbd !important; -webkit-text-fill-color:#4f2bbd !important; }
+html[data-ephinta-theme="light"] #root input,
+html[data-ephinta-theme="light"] #root select,
+html[data-ephinta-theme="light"] #root textarea {
+  color:#17152a !important; -webkit-text-fill-color:#17152a !important;
+  background-color:#fff !important; border-color:#bcb2d9 !important;
+}
+/* Intentional inverse controls retain their own foreground for contrast. */
+html[data-ephinta-theme="light"] #root :is(button,.eph-btn-purple,.eph-btn-gold) {
+  -webkit-text-fill-color: currentColor !important;
+}
