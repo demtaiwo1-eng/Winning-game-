@@ -2039,10 +2039,6 @@ export default function EnterpriseApp() {
     setMenuOpen(false);
     navigate("/plan");
   };
-  const startRoleQuestionnaire = (role: SelfRegisterRole) => {
-    setMenuOpen(false);
-    navigate(role === "CLIENT" ? "/plan" : `/join/${role.toLowerCase()}`);
-  };
   const continueRoleQuestionnaire = (role: SelfRegisterRole, answers: Record<string, string>) => {
     setSelectedRole(role);
     setOrganizationMode("");
@@ -2304,8 +2300,8 @@ export default function EnterpriseApp() {
   const publicLandingContent = (
     <PublicLanding
       onOpenAuth={(mode, role) => {
-        if (mode === "signup") startRoleQuestionnaire(role);
-        else openAuth(role, mode);
+        setMenuOpen(false);
+        openAuth(role, mode);
       }}
       onLoginSuccess={(payload) => {
         const user = payload.user;
