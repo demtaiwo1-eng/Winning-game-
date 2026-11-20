@@ -839,7 +839,6 @@ readinessRouter.get(
       where: {
         isAvailable: true,
         user: { role: "VERIFIER", status: "ACTIVE" },
-        ...(country ? { country: country.toUpperCase() } : {}),
       },
       include: {
         user: { select: { id: true, name: true, email: true, country: true } },
@@ -849,6 +848,7 @@ readinessRouter.get(
 
     // Soft city boost when no coords
     const cityLower = city?.toLowerCase();
+    const countryLower = country?.toLowerCase();
 
     type Row = (typeof profiles)[number] & { distanceKm: number | null; tier: string };
     const ranked: Row[] = profiles.map((p) => {
@@ -867,11 +867,12 @@ readinessRouter.get(
       if (distanceKm != null && distanceKm <= 25) tier = "TOP_LOCAL";
       else if (distanceKm != null && distanceKm <= 80) tier = "NEARBY";
       else if (cityLower && p.city?.toLowerCase() === cityLower) tier = "SAME_CITY";
+      else if (countryLower && (p.country || p.user.country || "").toLowerCase() === countryLower) tier = "SAME_COUNTRY";
       return { ...p, distanceKm, tier };
     });
 
     ranked.sort((a, b) => {
-      const tierOrder = { TOP_LOCAL: 0, NEARBY: 1, SAME_CITY: 2, STANDARD: 3 } as Record<string, number>;
+      const tierOrder = { TOP_LOCAL: 0, NEARBY: 1, SAME_CITY: 2, SAME_COUNTRY: 3, STANDARD: 4 } as Record<string, number>;
       const td = (tierOrder[a.tier] ?? 9) - (tierOrder[b.tier] ?? 9);
       if (td !== 0) return td;
       if (a.distanceKm != null && b.distanceKm != null && a.distanceKm !== b.distanceKm) {
