@@ -6,33 +6,33 @@
  */
 html[data-ephinta-theme="light"] {
   color-scheme: light;
-  --ephinta-fg: #171b2b;
-  --ephinta-fg-muted: #354057;
-  --ephinta-fg-subtle: #4d5a72;
-  --ephinta-link-fg: #38258f;
-  --ephinta-field-bg: #ffffff;
-  --ephinta-field-border: #aeb9cc;
-  --ephinta-field-placeholder: #56627a;
+  --ephinta-fg: var(--epg-ink, #171b2b);
+  --ephinta-fg-muted: var(--epg-muted, #354057);
+  --ephinta-fg-subtle: var(--epg-subtle, #4d5a72);
+  --ephinta-link-fg: var(--epg-link, #38258f);
+  --ephinta-field-bg: var(--epg-surface-raised, #ffffff);
+  --ephinta-field-border: var(--epg-border, #aeb9cc);
+  --ephinta-field-placeholder: var(--epg-subtle, #56627a);
 }
 html[data-ephinta-theme="dark"] {
   color-scheme: dark;
-  --ephinta-fg: #f7f9ff;
-  --ephinta-fg-muted: #e0e7f3;
-  --ephinta-fg-subtle: #c5d0e2;
-  --ephinta-link-fg: #b9dcff;
-  --ephinta-field-bg: #172338;
-  --ephinta-field-border: #71819b;
-  --ephinta-field-placeholder: #b7c4d8;
+  --ephinta-fg: var(--epg-ink, #f7f9ff);
+  --ephinta-fg-muted: var(--epg-muted, #e0e7f3);
+  --ephinta-fg-subtle: var(--epg-subtle, #c5d0e2);
+  --ephinta-link-fg: var(--epg-link, #b9dcff);
+  --ephinta-field-bg: var(--epg-surface-raised, #172338);
+  --ephinta-field-border: var(--epg-border, #71819b);
+  --ephinta-field-placeholder: var(--epg-subtle, #b7c4d8);
 }
 html[data-ephinta-theme="colorful"] {
   color-scheme: light;
-  --ephinta-fg: #21172f;
-  --ephinta-fg-muted: #3e3450;
-  --ephinta-fg-subtle: #554967;
-  --ephinta-link-fg: #4b278f;
-  --ephinta-field-bg: #ffffff;
-  --ephinta-field-border: #ad9fbe;
-  --ephinta-field-placeholder: #5b506c;
+  --ephinta-fg: var(--epg-ink, #21172f);
+  --ephinta-fg-muted: var(--epg-muted, #3e3450);
+  --ephinta-fg-subtle: var(--epg-subtle, #554967);
+  --ephinta-link-fg: var(--epg-link, #4b278f);
+  --ephinta-field-bg: var(--epg-surface-raised, #ffffff);
+  --ephinta-field-border: var(--epg-border, #ad9fbe);
+  --ephinta-field-placeholder: var(--epg-subtle, #5b506c);
 }
 
 html[data-ephinta-theme] body {
@@ -183,6 +183,21 @@ html[data-ephinta-theme] body #root .ess-mode-menu__error {
   gap: 8px;
   color: #b42335;
   font-size: 12px;
+}
+
+
+/* Preserve intentional marketing surface contrast above the generic text layer. */
+html[data-ephinta-theme] body #root .eph-promo-heading h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+html[data-ephinta-theme] body #root .ephinta-marketing-zone h2 {
+  color: #251633 !important;
+  -webkit-text-fill-color: #251633 !important;
+}
+html[data-ephinta-theme] body #root .ephinta-bright-slogan {
+  color: #251a36 !important;
+  -webkit-text-fill-color: #251a36 !important;
 }
 
 /* Native autofill must not reintroduce browser-controlled low contrast. */
