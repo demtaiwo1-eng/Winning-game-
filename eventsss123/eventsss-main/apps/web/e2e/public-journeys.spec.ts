@@ -57,7 +57,9 @@ test("landing page vendor join opens the shared vendor registration dialog", asy
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute("data-role", "vendor");
   await expect(dialog.getByLabel("Registration account type")).toHaveValue("VENDOR");
-  await expect(dialog.getByLabel(/Business name/i)).toBeVisible();
+  await dialog.getByLabel("Full name").fill("Vendor Journey Test");
+  await dialog.getByRole("button", { name: /Next/ }).click();
+  await expect(dialog.getByLabel("Business name")).toBeVisible();
 });
 
 test("legacy sign-in and registration URLs resolve to the active authentication flow", async ({ page }) => {
