@@ -5,6 +5,7 @@
  * - Customer sees traffic-light board + countdown
  */
 import { Router } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
@@ -320,13 +321,13 @@ readinessRouter.get(
   asyncHandler(async (req, res) => {
     const now = new Date();
     const horizon = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-    const eventScope = req.user!.role === "VERIFIER"
+    const eventScope: Prisma.EventWhereInput[] = req.user!.role === "VERIFIER"
       ? [
-          { status: { in: ["PLANNING", "LIVE", "DRAFT"] as never } },
-          { status: "COMPLETED" as const, bookings: { some: { status: { in: ["PAID", "CONFIRMED"] as never } } } },
+          { status: { in: ["PLANNING", "LIVE", "DRAFT"] } },
+          { status: "COMPLETED", bookings: { some: { status: { in: ["PAID", "CONFIRMED"] } } } },
         ]
       : [
-          { status: { in: ["PLANNING", "LIVE", "DRAFT"] as never }, OR: [
+          { status: { in: ["PLANNING", "LIVE", "DRAFT"] }, OR: [
             { startsAt: { gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), lte: horizon } },
             { endsAt: { gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), lte: horizon } },
           ] },
