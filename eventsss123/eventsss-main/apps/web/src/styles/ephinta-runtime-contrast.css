@@ -848,3 +848,43 @@ html body #root .eph-audio__backdrop > .eph-audio__prompt[role="dialog"] {
 html body #root .eph-audio__backdrop .eph-audio__choices button {
   pointer-events: auto !important;
 }
+
+
+/* Keep the consent prompt opposite the persistent EPHINTA Guide launcher. */
+html body #root .eph-audio__backdrop {
+  left: auto !important;
+  right: max(14px, env(safe-area-inset-right)) !important;
+  inset: auto max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) auto !important;
+}
+@media (max-width: 600px) {
+  html body #root .eph-audio__backdrop {
+    left: auto !important;
+    right: max(10px, env(safe-area-inset-right)) !important;
+    inset: auto max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) auto !important;
+  }
+}
+
+/* The marketplace is a dense interactive catalogue; keep its controls clear. */
+body:has(.ess-public-marketplace) #root .eph-audio__backdrop,
+body:has(.ess-public-marketplace) #root .eph-audio__restore,
+body:has(.ess-public-marketplace) #root .eph-audio__player {
+  display: none !important;
+}
+
+/* Restore the marketplace's gradient heading after the colorful-theme reset. */
+html[data-ephinta-theme] body #root .ess-public-marketplace .ess-page-heading h1 {
+  background-image: linear-gradient(112deg, #5b45c8 0%, #3877cf 52%, #239b9a 100%) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* The bright slogan sits on a pale surface, so retain the readable dark ink. */
+html[data-ephinta-theme] body #root .eph-landing .eph-section .ephinta-bright-slogan {
+  color: #251a36 !important;
+  -webkit-text-fill-color: #251a36 !important;
+  background-image: none !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
+}
