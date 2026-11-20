@@ -4,7 +4,6 @@ import { kycCountriesApi } from "../lib/api";
 export type VendorKycAnswers = {
   legalForm?: string;
   registrationStatus?: string;
-  registrationEvidence?: string;
   businessEvidence?: string;
   taxStatus?: string;
   operatingAddress?: string;
@@ -25,6 +24,7 @@ const TAX_LABELS: Record<string, string> = {
 };
 
 const LEGAL_FORMS = ["Sole trader / individual", "Partnership", "Limited liability company", "Corporation / public company", "Non-profit / charity", "Other / not sure"];
+type KycQuestion = { title: string; help: string; key: keyof VendorKycAnswers; type: "select" | "text"; options?: string[] };
 
 export default function VendorKycQuestionnaire({
   country,
@@ -45,7 +45,7 @@ export default function VendorKycQuestionnaire({
     return () => { active = false; };
   }, [country]);
   const taxLabel = TAX_LABELS[country] || "Tax identification number (if issued in your country)";
-  const questions = useMemo(() => [
+  const questions = useMemo<KycQuestion[]>(() => [
     { title: "How is your business legally organised?", help: "This helps us identify the right business verification route.", key: "legalForm" as const, type: "select", options: LEGAL_FORMS },
     { title: "Is the business registered with the relevant authority?", help: "Choose the status that best describes the business today.", key: "registrationStatus" as const, type: "select", options: ["Yes, registered", "Registration in progress", "Not registered", "Not required for my business type"] },
     { title: "Which country-specific business evidence could you provide later?", help: "Choose the evidence type that best matches your business. You will not upload anything in this questionnaire.", key: "businessEvidence" as const, type: "select", options: [...(countryProfile?.businessDocs || []), "Not sure / need guidance", "Not applicable"] },
