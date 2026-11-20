@@ -104,7 +104,7 @@ test("landing page actions navigate in-app without restarting or starting music"
 
   await page.locator(".ephinta-marketing-zone__cta").click();
   await expect(page).toHaveURL(/\/plan$/);
-  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
   await expect.poll(() => page.locator("audio").evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(true);
   await expect.poll(() => page.evaluate(() => (window as Window & { __ephintaSpaProbe?: string }).__ephintaSpaProbe)).toBe("loaded");
 });
@@ -242,7 +242,7 @@ test("event builder blocks progression when the required event name is empty", a
   const eventName = page.getByLabel("Event name");
   await eventName.fill("");
   await page.getByRole("button", { name: /Next question/ }).click();
-  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
   await expect(eventName).toHaveJSProperty("validity.valid", false);
   await expect(eventName).toBeFocused();
 });
@@ -373,7 +373,7 @@ test("signed-in event planners can open the modern planner route", async ({ page
   await page.goto("/plan");
   await unlockDeviceGate(page);
   await expect(page).toHaveURL(/\/plan$/);
-  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
   await expect(page.locator(".eph-modal")).toHaveCount(0);
 });
 
@@ -384,16 +384,29 @@ test("the menu planner action opens the guided event planner", async ({ page }) 
     .getByRole("button", { name: /Start Planner/ }).click();
 
   await expect(page).toHaveURL(/\/plan$/);
-  await expect(page.getByRole("heading", { name: "What are you creating?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What should we call your event?" })).toBeVisible();
   await expect(page.locator(".eph-modal")).toHaveCount(0);
 
   await page.getByLabel("Event name").fill("Header Planner Flow");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Event format").selectOption("PERSONAL");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Primary goal").selectOption("Celebrate");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Top priority").selectOption("Guest experience");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByRole("button", { name: /Next question/ }).click(); // Optional event date.
   await page.getByLabel("City or venue area").fill("Ibadan");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Venue status").selectOption("Still deciding");
   await page.getByRole("button", { name: /Next question/ }).click();
   await page.getByLabel("Expected guests").fill("80");
   await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Food direction").selectOption("Mixed menu");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Planning budget").fill("2500000");
+  await page.getByRole("button", { name: /Next question/ }).click();
+  await page.getByLabel("Atmosphere").selectOption("Warm and social");
   await page.getByRole("button", { name: /Build my event brief/ }).click();
   await page.getByRole("button", { name: /Save brief and create account/ }).click();
 
@@ -404,7 +417,7 @@ test("the menu planner action opens the guided event planner", async ({ page }) 
 
 test("public signup choices open role-specific introductions before account creation", async ({ page }) => {
   const choices = [
-    { button: "Create customer account", route: "/plan", heading: "What are you creating?" },
+    { button: "Create customer account", route: "/plan", heading: "What should we call your event?" },
     { button: "Create vendor account", route: "/join/vendor", heading: "Tell us about your services" },
     { button: "Create organizer account", route: "/join/organization", heading: "Tell us about your organization" },
     { button: "Create affiliate account", route: "/join/affiliate", heading: "Tell us about your community" },
