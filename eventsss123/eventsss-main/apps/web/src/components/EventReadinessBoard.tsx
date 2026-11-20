@@ -464,6 +464,9 @@ export default function EventReadinessBoard({
                   On-the-ground confirmation
                   <textarea rows={2} value={checkNotes[c.id] ?? ""} onChange={(event) => setCheckNotes((current) => ({ ...current, [c.id]: event.target.value }))} placeholder="What did you physically confirm? Note vendor arrival, setup, payment receipt or issue…" maxLength={500} />
                 </label>
+                {c.paymentRequest && (c.paymentRequest.status !== "PAID" || !c.paymentRequest.paidAt)
+                  ? <p className="ess-muted">Green stays locked until EPHINTA records this part-payment as PAID.</p>
+                  : <p className="ess-muted">For GREEN, describe what you personally confirmed in at least 8 characters.</p>}
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {(["GREEN", "AMBER", "RED"] as const).map((s) => (
                   <button
