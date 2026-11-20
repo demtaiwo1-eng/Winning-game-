@@ -36,7 +36,8 @@ test("declining music dismisses the prompt, saves the choice and keeps audio sto
   await expect(prompt).toBeVisible();
   await prompt.getByRole("button", { name: "No, thanks" }).click();
   await expect(prompt).toHaveCount(0);
-  await expect(page.locator(".eph-audio__player, .eph-audio__restore, .eph-audio__backdrop")).toHaveCount(0);
+  await expect(page.locator(".eph-audio__player, .eph-audio__backdrop")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Enable EPHINTA music" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("off");
   await expect.poll(() => page.evaluate(() => (window as Window & { musicPlayCalls: number }).musicPlayCalls)).toBe(0);
 });
@@ -99,7 +100,8 @@ test("player controls switch tracks, categories, volume and stop playback", asyn
   await expect(page.locator(".eph-audio__player")).toBeVisible();
 
   await page.getByRole("button", { name: "Turn music off" }).click();
-  await expect(page.locator(".eph-audio__player, .eph-audio__restore")).toHaveCount(0);
+  await expect(page.locator(".eph-audio__player")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Enable EPHINTA music" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("off");
 });
 
