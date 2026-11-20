@@ -158,3 +158,107 @@ html[data-ephinta-theme] body #root .ess-mode-menu__error {
   color: var(--epg-danger, #b42335);
   font-size: 12px;
 }
+
+
+/* Final readable type system: light/dark is intentional, not inferred from
+   legacy component colours. Light mode uses dark copy; dark and colourful
+   modes use light copy on coordinated dark surfaces. */
+html[data-ephinta-theme="dark"] body,
+html[data-ephinta-theme="colorful"] body {
+  color: #f7f9ff;
+  background: var(--epg-page);
+}
+html[data-ephinta-theme="dark"] body #root :where(
+  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,li,dt,dd,
+  th,td,caption,figcaption,summary,blockquote,code,pre,a,output,
+  .muted,.ess-muted,.text-muted,.helper-text,.form-hint,.form-description,
+  .field-description,.section-description,.workspace-subtitle,.empty-state,
+  .eyebrow,.text-secondary
+) {
+  color: #f0f5ff !important;
+}
+html[data-ephinta-theme="colorful"] body #root :where(
+  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,li,dt,dd,
+  th,td,caption,figcaption,summary,blockquote,code,pre,a,output,
+  .muted,.ess-muted,.text-muted,.helper-text,.form-hint,.form-description,
+  .field-description,.section-description,.workspace-subtitle,.empty-state,
+  .eyebrow,.text-secondary
+) {
+  color: #f4edff !important;
+}
+html[data-ephinta-theme="colorful"] body #root :where(h1,h2) {
+  color: #e7d5ff !important;
+  background-image: linear-gradient(100deg,#b9f4ff 0%,#e6c8ff 48%,#ffd1e8 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+html[data-ephinta-theme="colorful"] body #root :where(h3,h4,h5,h6) {
+  color: #c8edff !important;
+}
+html[data-ephinta-theme="colorful"] body #root :where(a,.text-action,.back-button) {
+  color: #9cecff !important;
+}
+html[data-ephinta-theme="colorful"] body #root :where(label,legend,.eyebrow) {
+  color: #ffe2a8 !important;
+}
+html[data-ephinta-theme="dark"] body #root :where(a,.text-action,.back-button) {
+  color: #a9e7ff !important;
+}
+
+/* Keep every commonly used content surface dark in dark/colorful modes so
+   light text never lands on legacy white cards or pale panels. */
+html[data-ephinta-theme="dark"] body #root :where(
+  .card,.panel,.surface,.workspace-card,.dashboard-card,.stat-card,.metric-card,
+  .content-card,.form-card,.auth-card,.modal-content,.dialog-content,
+  .table-container,.data-table-wrap,.list-card,.settings-card,.profile-card,
+  .event-card,.vendor-card,.planner-card,.marketplace-card,.notification-card,
+  .ess-card,.ess-panel,.pl-card,.esg-card,.workspace-panel,.portal-panel
+),
+html[data-ephinta-theme="colorful"] body #root :where(
+  .card,.panel,.surface,.workspace-card,.dashboard-card,.stat-card,.metric-card,
+  .content-card,.form-card,.auth-card,.modal-content,.dialog-content,
+  .table-container,.data-table-wrap,.list-card,.settings-card,.profile-card,
+  .event-card,.vendor-card,.planner-card,.marketplace-card,.notification-card,
+  .ess-card,.ess-panel,.pl-card,.esg-card,.workspace-panel,.portal-panel
+) {
+  color: var(--epg-ink) !important;
+  background-color: var(--epg-surface) !important;
+  border-color: var(--epg-border);
+}
+html[data-ephinta-theme="dark"] body #root :where(input,select,textarea,option),
+html[data-ephinta-theme="colorful"] body #root :where(input,select,textarea,option) {
+  color: var(--epg-ink) !important;
+  background-color: var(--epg-surface-raised) !important;
+  border-color: var(--epg-border) !important;
+}
+html[data-ephinta-theme="dark"] body #root :where(input,textarea)::placeholder,
+html[data-ephinta-theme="colorful"] body #root :where(input,textarea)::placeholder {
+  color: var(--epg-subtle) !important;
+  opacity: 1;
+}
+html[data-ephinta-theme="dark"] body #root :where(button,.button,[role="button"]),
+html[data-ephinta-theme="colorful"] body #root :where(button,.button,[role="button"]) {
+  color: #fff !important;
+}
+html[data-ephinta-theme="dark"] body #root :where(.ess-mode-menu,.ess-mode-choice),
+html[data-ephinta-theme="colorful"] body #root :where(.ess-mode-menu,.ess-mode-choice) {
+  color: var(--epg-ink) !important;
+  background-color: var(--epg-surface) !important;
+}
+html[data-ephinta-theme="light"] body #root :where(
+  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,li,dt,dd,
+  th,td,caption,figcaption,summary,blockquote,code,pre,a,output
+) {
+  color: var(--epg-ink);
+}
+html[data-ephinta-theme="light"] body #root :where(
+  .card,.panel,.surface,.workspace-card,.dashboard-card,.stat-card,.metric-card,
+  .content-card,.form-card,.auth-card,.modal-content,.dialog-content,
+  .table-container,.data-table-wrap,.list-card,.settings-card,.profile-card,
+  .event-card,.vendor-card,.planner-card,.marketplace-card,.notification-card,
+  .ess-card,.ess-panel,.pl-card,.esg-card,.workspace-panel,.portal-panel
+) {
+  color: var(--epg-ink);
+  background-color: var(--epg-surface);
+}
