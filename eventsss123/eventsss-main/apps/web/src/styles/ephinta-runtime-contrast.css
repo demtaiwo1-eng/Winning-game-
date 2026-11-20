@@ -186,7 +186,7 @@ html[data-ephinta-theme="colorful"] body #root :where(
 ) {
   color: #f4edff !important;
 }
-html[data-ephinta-theme="colorful"] body #root :where(h1,h2) {
+html[data-ephinta-theme="colorful"] body #root :where(h1,h2,h1 *,h2 *) {
   color: #e7d5ff !important;
   background-image: linear-gradient(100deg,#b9f4ff 0%,#e6c8ff 48%,#ffd1e8 100%);
   background-clip: text;
@@ -262,3 +262,23 @@ html[data-ephinta-theme="light"] body #root :where(
   color: var(--epg-ink);
   background-color: var(--epg-surface);
 }
+
+/* Status copy stays meaningful but uses luminous tones on dark surfaces. */
+html[data-ephinta-theme="dark"] body #root :where(
+  .success,.text-success,.status-success,.is-success,.form-success
+) { color:#9cf2c4 !important; }
+html[data-ephinta-theme="dark"] body #root :where(
+  .warning,.text-warning,.status-warning,.is-warning,.form-warning
+) { color:#ffe09a !important; }
+html[data-ephinta-theme="dark"] body #root :where(
+  .danger,.error,.text-danger,.text-error,.status-danger,.status-error,.is-error,.form-error
+) { color:#ffb4c0 !important; }
+html[data-ephinta-theme="colorful"] body #root :where(
+  .success,.text-success,.status-success,.is-success,.form-success
+) { color:#a5f3ce !important; }
+html[data-ephinta-theme="colorful"] body #root :where(
+  .warning,.text-warning,.status-warning,.is-warning,.form-warning
+) { color:#ffe2a8 !important; }
+html[data-ephinta-theme="colorful"] body #root :where(
+  .danger,.error,.text-danger,.text-error,.status-danger,.status-error,.is-error,.form-error
+) { color:#ffb8d0 !important; }
