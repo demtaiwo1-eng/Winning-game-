@@ -2997,7 +2997,7 @@ function PlanningQuestionnaire({ eventId, eventTitle, onComplete }: { eventId: s
   );
 }
 
-const EVENT_BUILDER_STEP_COUNT = 5;
+const EVENT_BUILDER_STEP_COUNT = 11;
 
 function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: () => void }) {
   const [step, setStep] = useState(() => {
@@ -3070,11 +3070,17 @@ function EventBuilder({ onBack, onComplete }: { onBack: () => void; onComplete: 
     }
   }, [answers, complete, step]);
   const questions = [
-    { title: 'What are you creating?', prompt: 'Give the event a working name and choose its format.', fields: <><label>Event name<input value={answers.title} maxLength={160} onChange={(event) => update('title', event.target.value)} placeholder="e.g. Wale Waves Life Experience" required /></label><label>Event format<select value={answers.type} onChange={(event) => update('type', event.target.value)}><option value="PERSONAL">Personal milestone</option><option value="CORPORATE">Corporate gathering</option><option value="SOCIAL">Social celebration</option><option value="CULTURAL">Burial or memorial</option><option value="ENTERTAINMENT">Entertainment experience</option><option value="EDUCATIONAL">Workshop or learning event</option></select></label></> },
-    { title: 'What should it achieve?', prompt: 'This shapes the checklist, vendor recommendations, and guest experience.', fields: <><label>Primary goal<select value={answers.goal} onChange={(event) => update('goal', event.target.value)}><option>Celebrate</option><option>Launch a product</option><option>Build community</option><option>Raise funds</option><option>Train or educate</option><option>Host an unforgettable guest experience</option></select></label><label>What matters most?<select value={answers.priorities} onChange={(event) => update('priorities', event.target.value)}><option>Guest experience</option><option>Brand impression</option><option>Budget control</option><option>Speed and simplicity</option><option>Accessibility and inclusion</option></select></label></> },
-    { title: 'Where and when?', prompt: 'Location and timing help us suggest vendors close to the venue.', fields: <><DateWheelPicker value={answers.date} onChange={(date) => update('date', date)} label="Event date" futureOnly /><label>City or venue area<input value={answers.city} maxLength={120} onChange={(event) => update('city', event.target.value)} placeholder="Lagos, Abuja, London..." required /></label><label>Venue status<select value={answers.venue} onChange={(event) => update('venue', event.target.value)}><option>Still deciding</option><option>Venue selected</option><option>Private residence</option><option>Outdoor or public space</option><option>Virtual</option><option>Hybrid</option></select></label></> },
-    { title: 'Who is coming?', prompt: 'Guest volume drives capacity, catering, staffing, and RSVP planning.', fields: <><label>Expected guests<input type="number" min="1" max="5000000" value={answers.guests} onChange={(event) => update('guests', event.target.value)} placeholder="150" required /></label><label>Food direction<select value={answers.food} onChange={(event) => update('food', event.target.value)}><option>Mixed menu</option><option>Local cuisine</option><option>International menu</option><option>Vegetarian or vegan focused</option><option>Not sure yet</option></select></label></> },
-    { title: 'What is the guardrail?', prompt: 'We use this to build a realistic budget plan and protect the essentials.', fields: <><label>Planning budget<input aria-label="Planning budget" inputMode="decimal" autoComplete="off" value={answers.budget} onChange={(event) => update("budget", formatMoneyInput(event.target.value))} onBlur={() => update("budget", formatMoneyInput(answers.budget, true))} placeholder="2,500,000.00" /></label><label>Atmosphere<select value={answers.atmosphere} onChange={(event) => update('atmosphere', event.target.value)}><option>Warm and social</option><option>Premium and editorial</option><option>High-energy and entertaining</option><option>Calm and intimate</option><option>Professional and focused</option></select></label></> },
+    { title: "What should we call your event?", prompt: "Start with a working name. You can change it later.", fields: <label>Event name<input value={answers.title} maxLength={160} onChange={(event) => update("title", event.target.value)} placeholder="e.g. Wale Waves Life Experience" required /></label> },
+    { title: "What kind of event is it?", prompt: "This helps EPHINTA shape the right planning checklist.", fields: <label>Event format<select value={answers.type} onChange={(event) => update("type", event.target.value)}><option value="PERSONAL">Personal milestone</option><option value="CORPORATE">Corporate gathering</option><option value="SOCIAL">Social celebration</option><option value="CULTURAL">Burial or memorial</option><option value="ENTERTAINMENT">Entertainment experience</option><option value="EDUCATIONAL">Workshop or learning event</option></select></label> },
+    { title: "What should the event achieve?", prompt: "Tell us the main purpose so we can tailor the plan.", fields: <label>Primary goal<select value={answers.goal} onChange={(event) => update("goal", event.target.value)}><option>Celebrate</option><option>Launch a product</option><option>Build community</option><option>Raise funds</option><option>Train or educate</option><option>Host an unforgettable guest experience</option></select></label> },
+    { title: "What matters most to you?", prompt: "Choose the priority you want the planning team to protect.", fields: <label>Top priority<select value={answers.priorities} onChange={(event) => update("priorities", event.target.value)}><option>Guest experience</option><option>Brand impression</option><option>Budget control</option><option>Speed and simplicity</option><option>Accessibility and inclusion</option></select></label> },
+    { title: "When will it happen?", prompt: "Choose the date you are planning around. You can refine it later.", fields: <DateWheelPicker value={answers.date} onChange={(date) => update("date", date)} label="Event date" futureOnly /> },
+    { title: "Where will it take place?", prompt: "A city or venue area helps us find relevant local services.", fields: <label>City or venue area<input value={answers.city} maxLength={120} onChange={(event) => update("city", event.target.value)} placeholder="Lagos, Abuja, London..." required /></label> },
+    { title: "What is your venue situation?", prompt: "We can help you source a venue if you have not chosen one yet.", fields: <label>Venue status<select value={answers.venue} onChange={(event) => update("venue", event.target.value)}><option>Still deciding</option><option>Venue selected</option><option>Private residence</option><option>Outdoor or public space</option><option>Virtual</option><option>Hybrid</option></select></label> },
+    { title: "How many guests are you expecting?", prompt: "An estimate helps us plan capacity, catering and staffing.", fields: <label>Expected guests<input type="number" min="1" max="5000000" value={answers.guests} onChange={(event) => update("guests", event.target.value)} placeholder="150" required /></label> },
+    { title: "What food direction feels right?", prompt: "This is only an early preference; you can decide the menu later.", fields: <label>Food direction<select value={answers.food} onChange={(event) => update("food", event.target.value)}><option>Mixed menu</option><option>Local cuisine</option><option>International menu</option><option>Vegetarian or vegan focused</option><option>Not sure yet</option></select></label> },
+    { title: "What budget should we plan around?", prompt: "A working estimate helps us protect essentials and avoid surprises.", fields: <label>Planning budget<input aria-label="Planning budget" inputMode="decimal" autoComplete="off" value={answers.budget} onChange={(event) => update("budget", formatMoneyInput(event.target.value))} onBlur={() => update("budget", formatMoneyInput(answers.budget, true))} placeholder="2,500,000.00" /></label> },
+    { title: "What atmosphere do you have in mind?", prompt: "Choose the feeling you want guests to remember.", fields: <label>Atmosphere<select value={answers.atmosphere} onChange={(event) => update("atmosphere", event.target.value)}><option>Warm and social</option><option>Premium and editorial</option><option>High-energy and entertaining</option><option>Calm and intimate</option><option>Professional and focused</option></select></label> },
   ];
   const checklist = ['Confirm date, venue, and event objective', 'Set an essential-service budget split', `Source location-matched vendors for ${answers.city || 'your venue area'}`, 'Build guest list and RSVP communications', 'Confirm logistics, staffing, and run of show'];
   if (complete) return (
@@ -3219,15 +3225,49 @@ function RoleQuestionnaire({
       return {};
     }
   });
+  const [step, setStep] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem(`${storageKey}_step`) || 0);
+      return Number.isInteger(saved) && saved >= 0 && saved < questionnaire.fields.length ? saved : 0;
+    } catch {
+      return 0;
+    }
+  });
   const [saveError, setSaveError] = useState("");
+  const current = questionnaire.fields[step];
 
   const updateAnswer = (key: string, value: string) => {
-    setAnswers((current) => ({ ...current, [key]: value }));
+    const next = { ...answers, [key]: value };
+    setAnswers(next);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(next));
+      setSaveError("");
+    } catch {
+      setSaveError("Your progress could not be saved on this device. Keep this page open and try again.");
+    }
   };
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (current.required && !answers[current.key]?.trim()) return;
+    if (step < questionnaire.fields.length - 1) {
+      const nextStep = step + 1;
+      setStep(nextStep);
+      try { localStorage.setItem(`${storageKey}_step`, String(nextStep)); } catch {
+        setSaveError("Your answer is kept on this screen, but the next step could not be saved on this device.");
+      }
+      return;
+    }
+    const missing = questionnaire.fields.find((field) => field.required && !answers[field.key]?.trim());
+    if (missing) {
+      const missingStep = questionnaire.fields.findIndex((field) => field.key === missing.key);
+      setStep(missingStep);
+      setSaveError(`Please answer “${missing.label}” before continuing.`);
+      return;
+    }
     try {
       localStorage.setItem(storageKey, JSON.stringify(answers));
+      localStorage.removeItem(`${storageKey}_step`);
       setSaveError("");
       onContinue(role, answers);
     } catch {
@@ -3235,54 +3275,67 @@ function RoleQuestionnaire({
     }
   };
 
+  const renderCurrentField = () => (
+    <label key={current.key} className="ess-interview-question">
+      <span>{current.label}</span>
+      {current.type === "select" ? (
+        <select
+          value={answers[current.key] ?? ""}
+          required={current.required}
+          onChange={(event) => updateAnswer(current.key, event.target.value)}
+        >
+          <option value="">Choose one</option>
+          {current.options?.map((option) => <option key={option} value={option}>{option}</option>)}
+        </select>
+      ) : current.type === "textarea" ? (
+        <textarea
+          value={answers[current.key] ?? ""}
+          placeholder={current.placeholder}
+          maxLength={current.maxLength}
+          rows={3}
+          required={current.required}
+          onChange={(event) => updateAnswer(current.key, event.target.value)}
+        />
+      ) : (
+        <input
+          value={answers[current.key] ?? ""}
+          placeholder={current.placeholder}
+          maxLength={current.maxLength}
+          required={current.required}
+          onChange={(event) => updateAnswer(current.key, event.target.value)}
+        />
+      )}
+    </label>
+  );
+
   return (
     <main className="ess-builder ess-role-questionnaire">
       <button className="ess-quiet-button" type="button" onClick={onBack}>← Back to home</button>
-      <div className="ess-builder-progress" role="group" aria-label="Registration introduction">
+      <div className="ess-builder-progress" role="group" aria-label="Registration introduction progress">
         <span>{roleLabel(role)} · Quick introduction</span>
-        <b>Before signup</b>
+        <b>Question {step + 1} of {questionnaire.fields.length}</b>
       </div>
-      <section className="ess-builder-card" aria-labelledby="role-questionnaire-title">
-        <p className="ess-eyebrow">A few quick questions</p>
+      <div className="ess-interview-progress-track" aria-hidden="true">
+        <span style={{ width: `${((step + 1) / questionnaire.fields.length) * 100}%` }} />
+      </div>
+      <section className="ess-builder-card ess-interview-card" aria-labelledby="role-questionnaire-title">
+        <p className="ess-eyebrow">A few quick questions · one at a time</p>
         <h1 id="role-questionnaire-title">{questionnaire.title}</h1>
         <p className="ess-builder-lead">{questionnaire.intro}</p>
+        <p className="ess-interview-helper">Let’s take this one step at a time. You can go back and change an answer.</p>
         <form onSubmit={submit}>
-          {questionnaire.fields.map((field) => (
-            <label key={field.key}>
-              {field.label}
-              {field.type === "select" ? (
-                <select
-                  value={answers[field.key] ?? ""}
-                  required={field.required}
-                  onChange={(event) => updateAnswer(field.key, event.target.value)}
-                >
-                  <option value="">Choose one</option>
-                  {field.options?.map((option) => <option key={option} value={option}>{option}</option>)}
-                </select>
-              ) : field.type === "textarea" ? (
-                <textarea
-                  value={answers[field.key] ?? ""}
-                  placeholder={field.placeholder}
-                  maxLength={field.maxLength}
-                  rows={3}
-                  onChange={(event) => updateAnswer(field.key, event.target.value)}
-                />
-              ) : (
-                <input
-                  value={answers[field.key] ?? ""}
-                  placeholder={field.placeholder}
-                  maxLength={field.maxLength}
-                  required={field.required}
-                  onChange={(event) => updateAnswer(field.key, event.target.value)}
-                />
-              )}
-            </label>
-          ))}
+          <p className="ess-interview-step-label">Question {step + 1}</p>
+          {renderCurrentField()}
           {saveError && <p className="ess-form-error" role="alert">{saveError}</p>}
-          <div className="ess-builder-actions">
-            <button type="button" className="ess-outline-button" onClick={onBack}>Not now</button>
-            <button type="submit" className="ess-primary">Continue to signup →</button>
+          <div className="ess-builder-actions ess-interview-actions">
+            <button type="button" className="ess-outline-button" onClick={() => step > 0 ? setStep((value) => value - 1) : onBack()}>
+              {step > 0 ? "Previous question" : "Not now"}
+            </button>
+            <button type="submit" className="ess-primary">
+              {step === questionnaire.fields.length - 1 ? "Continue to signup →" : "Next question →"}
+            </button>
           </div>
+          <p className="ess-interview-save-note">Your answers are saved as you go. You can return to finish later.</p>
         </form>
       </section>
     </main>
