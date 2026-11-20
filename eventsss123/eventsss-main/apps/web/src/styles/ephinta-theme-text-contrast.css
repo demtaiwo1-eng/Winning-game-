@@ -195,25 +195,26 @@ textarea::placeholder {
   }
 }
 
-/* The guided event builder is an intentionally branded feature surface.
-   Preserve its violet-tinted gradient while giving its copy a crisp ink tone. */
+/* Planner interview cards inherit the active global theme surface.
+   The progress rail and individual prompt surface carry the subtle gradient. */
 .ess-builder-card {
-  color: #211d37 !important;
-  background-image: linear-gradient(145deg, #ffffff 0%, #f8f6ff 100%) !important;
-  border-color: #d9d2ee !important;
+  color: var(--epg-ink, #211d37) !important;
+  background-image: none !important;
+  background-color: var(--epg-surface, #ffffff) !important;
+  border-color: var(--epg-border, #d9d2ee) !important;
 }
 .ess-builder-card :where(h1, h2, h3, h4, strong, b, label) {
-  color: #211d37 !important;
+  color: var(--epg-ink, #211d37) !important;
 }
 .ess-builder-card :where(p, small, li, .muted, .text-muted, .helper-text) {
-  color: #514d65 !important;
+  color: var(--epg-muted, #514d65) !important;
 }
 
-/* Keep planner form values aligned with the parent design-system ink. */
+/* Keep planner form values aligned with the active design-system ink. */
 .ess-builder-card input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 .ess-builder-card select,
 .ess-builder-card textarea {
-  color: #211d37 !important;
+  color: var(--epg-ink, #211d37) !important;
 }
 
 
