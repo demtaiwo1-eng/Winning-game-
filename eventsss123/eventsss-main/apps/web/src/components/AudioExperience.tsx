@@ -115,9 +115,20 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   }, []);
 
   useEffect(() => {
+    const isVisible = (selector: string) =>
+      Array.from(document.querySelectorAll<HTMLElement>(selector)).some((element) => {
+        if (element.getAttribute("aria-hidden") === "true") return false;
+        const style = window.getComputedStyle(element);
+        return style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          Number.parseFloat(style.opacity || "1") > 0 &&
+          element.getClientRects().length > 0;
+      });
     const sync = () => {
-      const deviceLocked = Boolean(document.querySelector(".ess-device-lock"));
-      const authDialog = Boolean(document.querySelector(".ess-auth-modal, .eph-modal, #eph-auth-dialog"));
+      // Hidden auth shells can remain mounted after sign-in. Only suppress
+      // music while a real, visible PIN/auth dialog is on screen.
+      const deviceLocked = isVisible(".ess-device-lock");
+      const authDialog = isVisible(".ess-auth-modal, .eph-modal, #eph-auth-dialog");
       setAuthDialogOpen(deviceLocked || authDialog);
       if (deviceLocked) {
         audioRef.current?.pause();
