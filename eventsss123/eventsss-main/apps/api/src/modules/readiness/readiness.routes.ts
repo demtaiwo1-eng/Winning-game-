@@ -543,6 +543,11 @@ readinessRouter.patch(
           body: `Verifier marked this item ${status}. ${updated.notes || "Open the event readiness board for details."}`,
         });
       }
+      try {
+        await pushToUser(event.ownerId, "Event ground readiness updated", `${updated.label} · ${status}`, { eventId: event.id, checkId: updated.id, status });
+      } catch {
+        /* dashboard notification remains available when push is not configured */
+      }
       if (board.pastGreenDeadline && !board.allGreen) {
         await createNotification({
           userId: event.ownerId,
