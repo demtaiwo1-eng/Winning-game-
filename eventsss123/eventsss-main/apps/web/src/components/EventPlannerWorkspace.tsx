@@ -253,7 +253,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
         <section style={{ marginTop: 22 }}>
           <h3>Lead verifier and ground operations</h3>
           <p className="ess-muted">Keep your lead verifier attached to this event from the start. They will report ground conditions, checklist confirmation and part-payment milestones here.</p>
-          <VerifierPicker events={events} eventId={eventId} onEventChange={setEventId} city={event.city || undefined} country={event.country || undefined} />
+          <VerifierPicker events={events} eventId={eventId} onEventChange={setEventId} city={event?.city || undefined} country={event?.country || undefined} />
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Planning answers</h3>
