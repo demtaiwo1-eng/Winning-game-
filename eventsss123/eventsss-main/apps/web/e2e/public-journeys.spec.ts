@@ -736,7 +736,9 @@ test("music consent prompt is compact and non-blocking on mobile @mobile", async
   expect(bounds!.width).toBeLessThan(viewport!.width);
   expect(bounds!.height).toBeLessThan(viewport!.height);
   await expect(backdrop).toHaveCSS("pointer-events", "none");
-  await expect(prompt).toHaveCSS("pointer-events", "auto");
+  await expect(prompt).toHaveCSS("pointer-events", "none");
+  await expect(prompt.getByRole("button", { name: "Yes, play music" })).toHaveCSS("pointer-events", "auto");
+  await expect(prompt.getByRole("button", { name: "No, thanks" })).toHaveCSS("pointer-events", "auto");
   await expect(prompt.getByRole("button", { name: "Yes, play music" })).toBeVisible();
   await expect(prompt.getByRole("button", { name: "No, thanks" })).toBeVisible();
   await page.getByRole("button", { name: "Open menu" }).click();
