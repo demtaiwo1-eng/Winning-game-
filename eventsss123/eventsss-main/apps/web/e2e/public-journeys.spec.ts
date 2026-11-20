@@ -49,6 +49,17 @@ test("static-host deep links load the React app on a fresh navigation", async ({
   await expect(page.getByLabel("Event name")).toBeVisible();
 });
 
+test("landing page vendor join opens the shared vendor registration dialog", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /Join as a vendor/ }).click();
+  await expect(page).toHaveURL(/\\/auth\\/signup\\?role=VENDOR$/);
+  const dialog = page.locator("#eph-auth-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute("data-role", "vendor");
+  await expect(dialog.getByLabel("Registration account type")).toHaveValue("VENDOR");
+  await expect(dialog.getByLabel(/Business name/i)).toBeVisible();
+});
+
 test("legacy sign-in and registration URLs resolve to the active authentication flow", async ({ page }) => {
   await page.goto("/login?role=VENDOR");
   await expect(page).toHaveURL(/\/auth\/signin\?role=VENDOR$/);
