@@ -760,3 +760,38 @@
   background: var(--epg-surface-raised, var(--ephinta-theme-surface));
   color: var(--epg-ink, var(--ephinta-theme-ink));
 }
+
+
+/* Portal content primitives are styled directly so dashboards rendered as
+   fragments (vendor, affiliate and admin) receive the same global foundation. */
+.ess-page-heading {
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+}
+.ess-page-heading :where(h1,h2,h3,strong) { color: var(--epg-ink, var(--ephinta-theme-ink)); }
+.ess-page-heading :where(p,.ess-muted) { color: var(--epg-muted, var(--ephinta-theme-muted)); }
+.ess-panel,.ess-card,.ess-metric {
+  border-color: var(--epg-border, var(--ephinta-theme-border));
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+}
+.ess-panel {
+  background: var(--epg-surface, var(--ephinta-theme-surface));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--epg-accent, #7654d8) 6%, transparent);
+}
+.ess-card,.ess-metric {
+  background: var(--epg-surface-raised, var(--ephinta-theme-surface));
+}
+.ess-panel :where(h1,h2,h3,h4,strong,label,th,td),
+.ess-card :where(h1,h2,h3,h4,strong,label),
+.ess-metric :where(strong,span) { color: inherit; }
+.ess-panel :where(.ess-muted,p small),
+.ess-card :where(.ess-muted,p small),
+.ess-metric small { color: var(--epg-muted, var(--ephinta-theme-muted)); }
+.ess-panel :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea),
+.ess-card :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  border-color: var(--epg-border, var(--ephinta-theme-border));
+  background: var(--epg-surface-raised, var(--ephinta-theme-surface));
+  color: var(--epg-ink, var(--ephinta-theme-ink));
+}
+.ess-vendor-nav .ess-dashboard-section-select { max-width: 360px; }
+.ess-verifier-workspace .ess-card { border-inline-start: 3px solid var(--epg-accent, #7654d8); }
+.ess-shell .ess-topbar { border-color: var(--epg-border, var(--ephinta-theme-border)); }
