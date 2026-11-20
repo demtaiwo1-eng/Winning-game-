@@ -822,20 +822,20 @@ test("authenticated planner can add a checklist task to an owned event", async (
   // Exercise the visible navigation instead of relying on a query-string tab state.
   const plannerNavigation = page.getByRole("navigation", { name: "Planner dashboard sections" });
   await expect(plannerNavigation).toBeVisible();
-  const eventWorkspaceTab = plannerNavigation.getByRole("button", { name: "Open Event workspace" });
-  await plannerNavigation.getByLabel("Planner dashboard section").selectOption("planner");
-  await expect(eventWorkspaceTab).toHaveAttribute("aria-current", "page");
+  const plannerSection = plannerNavigation.getByLabel("Planner dashboard section");
+  await expect(plannerSection).toBeVisible();
+  await plannerSection.selectOption("planner");
+  await expect(plannerSection).toHaveValue("planner");
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
 
-  const paymentsTab = plannerNavigation.getByRole("button", { name: "Open Payments & finances" });
-  await paymentsTab.click();
-  await expect(paymentsTab).toHaveAttribute("aria-current", "page");
+  await plannerSection.selectOption("payments");
+  await expect(plannerSection).toHaveValue("payments");
   await expect(page).toHaveURL(/tab=payments/);
   await page.goBack();
-  await expect(eventWorkspaceTab).toHaveAttribute("aria-current", "page");
+  await expect(plannerSection).toHaveValue("planner");
   await page.goForward();
-  await expect(paymentsTab).toHaveAttribute("aria-current", "page");
-  await eventWorkspaceTab.click();
+  await expect(plannerSection).toHaveValue("payments");
+  await plannerSection.selectOption("planner");
   await expect(page.getByRole("heading", { name: "Complete event workspace" })).toBeVisible();
   await expect(page.locator('select option[value="event-e2e-001"]')).toHaveText(event.title);
   const taskInput = page.locator('section[aria-labelledby="event-workspace-title"] label').filter({ hasText: /^Task$/ }).locator("input");
@@ -932,7 +932,9 @@ test("saved sound-off preference keeps a visible way to reopen music consent", a
   await enableMusic.click();
   await expect(page.getByRole("dialog", { name: "Enjoy background music?" })).toBeVisible();
   await page.getByRole("button", { name: "Yes, play music" }).click();
-  await expect(page.getByRole("button", { name: /Music (playing|paused)/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open music player" })).toBeVisible();
+  await page.getByRole("button", { name: "Open music player" }).click();
+  await expect(page.locator(".eph-audio__player")).toBeVisible();
 });
 
 test("music player respects a saved sound-off choice after reload", async ({ page }) => {
@@ -1141,14 +1143,13 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   // every destination visible without forcing horizontal page scrolling.
   const plannerShell = page.locator(".ess-content > .ess-portal-stack");
   await expect(plannerShell).toHaveCSS("display", "grid");
-  const plannerTabs = plannerShell.locator(":scope > .ess-filter-row").first();
+  const plannerTabs = page.getByRole("navigation", { name: "Planner dashboard sections" });
   await expect(plannerTabs).toBeVisible();
-  await expect(plannerTabs).toHaveCSS("display", "grid");
-  await expect(plannerTabs).toHaveCSS("overflow-x", "visible");
-  await expect(plannerTabs.locator(".ess-chip-active")).toBeVisible();
-  await expect(plannerTabs.locator(".ess-chip-active")).toBeVisible();
+  const plannerSection = plannerTabs.getByLabel("Planner dashboard section");
+  await expect(plannerSection).toBeVisible();
+  await expect(plannerSection.locator("option")).toHaveCount(12);
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(plannerTabs).toBeVisible();
+  await expect(plannerSection).toBeVisible();
   const mobileLayoutFits = await page.evaluate(
     () => document.documentElement.scrollWidth <= window.innerWidth,
   );
@@ -1156,7 +1157,8 @@ test("planner registration keeps the logo visible and opens the saved follow-up 
   await page.setViewportSize({ width: 1280, height: 900 });
 
   // The saved follow-up questionnaire remains available in Overview.
-  await page.getByRole("button", { name: "Open Overview", exact: true }).click();
+  await plannerSection.selectOption("overview");
+  await expect(plannerSection).toHaveValue("overview");
   await expect(
     page.getByRole("heading", { name: "Plan the details for Planner Follow-up Event" }),
   ).toBeVisible();
