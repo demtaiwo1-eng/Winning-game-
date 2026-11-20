@@ -1232,6 +1232,17 @@ export default function PublicLanding({
         .eph-landing[data-theme="colorful"] :is(input,textarea)::placeholder { color:#c9c0e8 !important; }
         .eph-landing[data-theme="dark"] .eph-btn-outline,
         .eph-landing[data-theme="colorful"] .eph-btn-outline { color:#fff !important; background:#30264f !important; border-color:#a88ee8 !important; }
+        .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2,
+        .eph-landing[data-theme="colorful"] .ephinta-marketing-zone h2,
+        .eph-landing[data-theme="dark"] .eph-section .ephinta-bright-slogan,
+        .eph-landing[data-theme="colorful"] .eph-section .ephinta-bright-slogan {
+          color:#fff !important;
+          background-image:linear-gradient(95deg,#72eaff 0%,#c5a5ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
+          background-clip:text !important;
+          -webkit-background-clip:text !important;
+          -webkit-text-fill-color:transparent !important;
+          text-shadow:0 2px 18px rgba(112,231,255,.12) !important;
+        }
         .eph-landing[data-theme="light"] { color:#17152a !important; background:#f8fafc !important; }
         .eph-landing[data-theme="light"] main :is(p,li,label,small,span,strong,summary,dt,dd),
         .eph-landing[data-theme="light"] footer :is(p,li,label,small,span,strong,a) {
