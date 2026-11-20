@@ -6,6 +6,9 @@ const globalCss = readFileSync(new URL("./ephinta-global.css", import.meta.url),
 const themeRuntime = readFileSync(new URL("../lib/ephintaTheme.ts", import.meta.url), "utf8");
 const runtimeCss = readFileSync(new URL("./ephinta-runtime-contrast.css", import.meta.url), "utf8");
 const appEntry = readFileSync(new URL("../main.tsx", import.meta.url), "utf8");
+const enterpriseApp = readFileSync(new URL("../EnterpriseApp.tsx", import.meta.url), "utf8");
+const pwaManifest = JSON.parse(readFileSync(new URL("../../public/manifest.webmanifest", import.meta.url), "utf8")) as { name: string; short_name: string; icons: Array<{ src: string; type: string }> };
+const pwaIcon = readFileSync(new URL("../../public/icons/ess-icon.svg", import.meta.url), "utf8");
 
 function token(block: string, name: string): string {
   const value = block.match(new RegExp(`--epg-${name}:\\s*(#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)\\b`))?.[1];
@@ -110,4 +113,24 @@ describe("EPHINTA global theme contrast", () => {
     expect(globalCss).not.toContain("ephinta-accessible-contrast.css");
     expect(globalCss.trimEnd().endsWith("}")).toBe(true);
   });
+  it("uses EPHINTA branding for mobile installation and keeps its icon assets consistent", () => {
+    expect(pwaManifest.name).toBe("EPHINTA");
+    expect(pwaManifest.short_name).toBe("EPHINTA");
+    expect(pwaManifest.icons).toEqual([{ src: "/icons/ess-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any maskable" }]);
+    expect(pwaIcon).toContain("<title>EPHINTA</title>");
+    expect(pwaIcon).toContain(">EPHINTA</text>");
+    expect(pwaIcon).not.toContain(">ESS</text>");
+    expect(enterpriseApp).toContain('src="/brand/ephinta_logo2.png"');
+    expect(enterpriseApp).toContain('className="ess-brand-wordmark"');
+    expect(enterpriseApp).not.toContain('className="ess-brand-mark"');
+  });
+
+  it("uses light readable surfaces for the multicolour and light account menus", () => {
+    expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown');
+    expect(runtimeCss).toContain('html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown');
+    expect(runtimeCss).toContain('background: #ffffff !important');
+    expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] .ess-app .ess-topbar');
+    expect(runtimeCss).toContain('className="ess-brand-wordmark"');
+  });
+
 });
