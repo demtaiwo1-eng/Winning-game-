@@ -3,6 +3,7 @@ import {
   canAssignReadinessVerifier,
   canManageReadinessZones,
   canReadReadinessEvent,
+  hasGroundConfirmationNote,
 } from "../src/modules/readiness/accessPolicy";
 
 describe("readiness event access policy", () => {
@@ -50,5 +51,15 @@ describe("readiness event access policy", () => {
     expect(canAssignReadinessVerifier({
       ownerId: "owner", userId: "other", targetVerifierId: "other", role: "CLIENT",
     })).toBe(false);
+  });
+});
+
+
+describe("verifier ground confirmation", () => {
+  it("requires an observation note before a readiness item can turn green", () => {
+    expect(hasGroundConfirmationNote("GREEN", "")).toBe(false);
+    expect(hasGroundConfirmationNote("GREEN", "   setup confirmed   ")).toBe(true);
+    expect(hasGroundConfirmationNote("AMBER", "")).toBe(true);
+    expect(hasGroundConfirmationNote("RED", "")).toBe(true);
   });
 });
