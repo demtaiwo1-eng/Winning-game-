@@ -1420,3 +1420,17 @@ html[data-ephinta-theme="light"] #root :is(input,select,textarea):not(.ess-build
   background-color:#fff !important;
   border-color:#bcb2d9 !important;
 }
+
+/* Light-mode landing headline must stay solid dark ink, overriding all legacy
+   marketing headline treatments and the component's embedded theme rules. */
+html[data-ephinta-theme="light"] #root .eph-landing[data-theme="light"] .ephinta-marketing-zone h2,
+html[data-ephinta-theme="light"] #root .ephinta-marketing-zone h2 {
+  color:#17152a !important;
+  -webkit-text-fill-color:#17152a !important;
+  background:none !important;
+  background-image:none !important;
+  -webkit-background-clip:border-box !important;
+  background-clip:border-box !important;
+  text-shadow:none !important;
+}
+
