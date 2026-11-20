@@ -181,7 +181,7 @@ readinessRouter.post(
     // Mirror planner checklist tasks into ground-readiness checks; taskId makes sync idempotent.
     const plannerTasks = await prisma.eventTask.findMany({
       where: { eventId },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      orderBy: { sortOrder: "asc" },
     });
     for (const task of plannerTasks) {
       const existing = await prisma.eventServiceCheck.findUnique({ where: { taskId: task.id } });
@@ -952,11 +952,12 @@ readinessRouter.post(
     if (event.ownerId !== req.user!.id && req.user!.role !== "ADMIN") {
       throw new HttpError(403, "FORBIDDEN", "Only the event owner can select verifiers");
     }
-    const verifierIds: string[] = Array.isArray(req.body.verifierIds)
-      ? [...new Set(req.body.verifierIds.filter((id: unknown): id is string => typeof id === "string"))]
-      : req.body.verifierId
-        ? [String(req.body.verifierId)]
+    const requestedVerifierIds: unknown[] = Array.isArray(req.body.verifierIds)
+      ? req.body.verifierIds
+      : typeof req.body.verifierId === "string"
+        ? [req.body.verifierId]
         : [];
+    const verifierIds = Array.from(new Set(requestedVerifierIds.filter((id): id is string => typeof id === "string")));
     if (!verifierIds.length) throw new HttpError(400, "VALIDATION_ERROR", "verifierIds required");
     const zone = String(req.body.zone || "GENERAL").toUpperCase();
     const activeVerifiers = await prisma.user.findMany({
