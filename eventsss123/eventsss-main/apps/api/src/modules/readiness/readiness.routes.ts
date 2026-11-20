@@ -12,7 +12,7 @@ import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 import { createNotification, pushToUser } from "../notifications/notifications.service";
 import { assertEventFinalizationAllowed } from "../payments/escrowPolicy";
-import { canAssignReadinessVerifier, canManageReadinessZones, canReadReadinessEvent } from "./accessPolicy";
+import { canAssignReadinessVerifier, canManageReadinessZones, canReadReadinessEvent, hasGroundConfirmationNote } from "./accessPolicy";
 
 export const readinessRouter = Router();
 
@@ -460,7 +460,7 @@ readinessRouter.patch(
     }
 
     const confirmationNotes = typeof req.body.notes === "string" ? req.body.notes.trim() : "";
-    if (status === "GREEN" && confirmationNotes.length < 8) {
+    if (!hasGroundConfirmationNote(status, confirmationNotes)) {
       throw new HttpError(400, "CONFIRMATION_REQUIRED", "Add an on-the-ground confirmation note (at least 8 characters) before marking this item ready");
     }
     const updated = await prisma.eventServiceCheck.update({
