@@ -1399,6 +1399,18 @@ html[data-ephinta-theme="light"] #root a:not(.ess-builder-card *) {
   color:#4f2bbd !important;
   -webkit-text-fill-color:#4f2bbd !important;
 }
+
+/* Keep the centralized marketing headline gradient above legacy marketing ink rules. */
+html[data-ephinta-theme="dark"] #root .ephinta-marketing-zone h2,
+html[data-ephinta-theme="colorful"] #root .ephinta-marketing-zone h2 {
+  color:#fff !important;
+  background-image:linear-gradient(95deg,#72eaff 0%,#bca2ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:0 2px 18px rgba(112,231,255,.12) !important;
+}
+
 html[data-ephinta-theme="light"] #root :is(input,select,textarea):not(.ess-builder-card *) {
   color:#17152a !important;
   -webkit-text-fill-color:#17152a !important;
