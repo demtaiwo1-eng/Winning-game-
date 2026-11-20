@@ -58,7 +58,7 @@ export default function VendorKycQuestionnaire({
   const current = questions[step];
   const valueForStep = value[current.key] || "";
   const conditional = current.key === "regulatoryLicence" && value.regulatedActivity !== "Yes";
-  const required = ["legalForm", "registrationStatus", "taxStatus", "operatingAddress", "regulatedActivity"].includes(current.key);
+  const required = ["legalForm", "registrationStatus", "businessEvidence", "taxStatus", "operatingAddress", "regulatedActivity"].includes(current.key);
   const canContinue = conditional || !required || Boolean(valueForStep.trim());
   const setAnswer = (answer: string) => onChange({ ...value, [current.key]: answer });
   return (
