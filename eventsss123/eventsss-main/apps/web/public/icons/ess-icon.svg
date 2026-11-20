@@ -1,7 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#111827"/>
-  <circle cx="256" cy="256" r="150" fill="#f97316"/>
-  <text x="256" y="292" text-anchor="middle"
-        font-family="Arial,sans-serif" font-size="150"
-        font-weight="700" fill="white">ESS</text>
+  <title>EPHINTA</title>
+  <defs>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#5b35d5"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd166"/>
+      <stop offset="1" stop-color="#ff9b45"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#11152f"/>
+  <circle cx="256" cy="226" r="154" fill="url(#brand)"/>
+  <path d="M177 133h164v45H226v35h102v43H226v36h121v45H177z" fill="#fff"/>
+  <path d="M352 103l13 31 31 13-31 13-13 31-13-31-31-13 31-13z" fill="url(#spark)"/>
+  <circle cx="365" cy="333" r="18" fill="url(#spark)"/>
+  <text x="256" y="438" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="42" font-weight="800" letter-spacing="5">EPHINTA</text>
 </svg>
