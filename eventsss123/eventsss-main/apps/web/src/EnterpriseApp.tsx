@@ -2056,7 +2056,6 @@ export default function EnterpriseApp() {
   const [vendorPhone, setVendorPhone] = useState("");
   const [vendorCity, setVendorCity] = useState("");
   const [vendorDescription, setVendorDescription] = useState("");
-  const [vendorKycUrl, setVendorKycUrl] = useState("");
   const [country, setCountry] = useState("NG");
   const [currency, setCurrency] = useState<CurrencyCode>("NGN");
   const [localePref, setLocalePref] = useState<LocaleCode>("en");
@@ -2463,7 +2462,6 @@ export default function EnterpriseApp() {
             vendorPhone={vendorPhone}
             vendorCity={vendorCity}
             vendorDescription={vendorDescription}
-            vendorKycUrl={vendorKycUrl}
             registrationCategory={registrationCategory}
             referralCode={referralCode}
             error={authError}
@@ -2772,7 +2770,6 @@ export default function EnterpriseApp() {
           vendorPhone={vendorPhone}
           vendorCity={vendorCity}
           vendorDescription={vendorDescription}
-          vendorKycUrl={vendorKycUrl}
           registrationCategory={registrationCategory}
           referralCode={referralCode}
           error={authError}
@@ -3402,7 +3399,6 @@ function AuthModal({
   vendorPhone,
   vendorCity,
   vendorDescription,
-  vendorKycUrl,
   registrationCategory,
   referralCode,
   error,
@@ -3417,7 +3413,6 @@ function AuthModal({
   setVendorPhone,
   setVendorCity,
   setVendorDescription,
-  setVendorKycUrl,
   setRegistrationCategory,
   setOrganizationMode,
   setReferralCode,
@@ -3439,7 +3434,6 @@ function AuthModal({
   vendorPhone: string;
   vendorCity: string;
   vendorDescription: string;
-  vendorKycUrl: string;
   registrationCategory: string;
   referralCode: string;
   error: string;
@@ -3454,7 +3448,6 @@ function AuthModal({
   setVendorPhone: (value: string) => void;
   setVendorCity: (value: string) => void;
   setVendorDescription: (value: string) => void;
-  setVendorKycUrl: (value: string) => void;
   setRegistrationCategory: (value: string) => void;
   setOrganizationMode: (value: OrganizationMode | "") => void;
   setReferralCode: (value: string) => void;
