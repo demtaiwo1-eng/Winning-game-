@@ -15,10 +15,10 @@
 
 html[data-ephinta-theme="light"] {
   color-scheme: light;
-  --ephinta-fg: #172033;
-  --ephinta-fg-muted: #46536b;
-  --ephinta-fg-subtle: #5d6a80;
-  --ephinta-link-fg: #4338a8;
+  --ephinta-fg: #000000;
+  --ephinta-fg-muted: #202020;
+  --ephinta-fg-subtle: #333333;
+  --ephinta-link-fg: #24108f;
   --ephinta-field-bg: #ffffff;
   --ephinta-field-border: #cbd5e1;
   --ephinta-field-placeholder: #5d6a80;
@@ -59,7 +59,7 @@ html[data-ephinta-theme="light"] body #root :where(
   .muted,.ess-muted,.text-muted,.helper-text,.form-hint,.form-description,
   .field-description,.section-description,.workspace-subtitle,.empty-state,
   .eyebrow,.text-secondary
-) { color: var(--epg-ink, #172033); }
+) { color: #000000; }
 
 html[data-ephinta-theme="dark"] body #root :where(
   h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,li,dt,dd,
