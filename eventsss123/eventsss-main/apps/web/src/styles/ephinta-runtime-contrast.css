@@ -1,145 +1,108 @@
 /*
- * EPHINTA theme runtime contract.
- * This is the final CSS layer, but deliberately does NOT recolor layout
- * wrappers (div/section/etc.). Text inherits from the active theme unless a
- * component has an intentional semantic or branded color.
+ * Theme-safe text contract.
+ * Text inherits from its component so branded headings, status colours,
+ * gradients and intentional multicolour content remain intact. Only shared
+ * primitives (body, links, fields and the mode selector) consume global tokens.
  */
 html[data-ephinta-theme="light"] {
   color-scheme: light;
-  --ephinta-fg: var(--epg-ink, #171b2b);
-  --ephinta-fg-muted: var(--epg-muted, #354057);
-  --ephinta-fg-subtle: var(--epg-subtle, #4d5a72);
-  --ephinta-link-fg: var(--epg-link, #38258f);
-  --ephinta-field-bg: var(--epg-surface-raised, #ffffff);
-  --ephinta-field-border: var(--epg-border, #aeb9cc);
-  --ephinta-field-placeholder: var(--epg-subtle, #56627a);
+  --ephinta-fg: var(--epg-ink, #172033);
+  --ephinta-fg-muted: var(--epg-muted, #46536b);
+  --ephinta-fg-subtle: var(--epg-subtle, #5d6a80);
+  --ephinta-link-fg: var(--epg-link, #4338a8);
+  --ephinta-field-bg: var(--epg-surface-raised, #fff);
+  --ephinta-field-border: var(--epg-border, #d5dce8);
+  --ephinta-field-placeholder: var(--epg-subtle, #5d6a80);
 }
 html[data-ephinta-theme="dark"] {
   color-scheme: dark;
-  --ephinta-fg: var(--epg-ink, #f7f9ff);
-  --ephinta-fg-muted: var(--epg-muted, #e0e7f3);
-  --ephinta-fg-subtle: var(--epg-subtle, #c5d0e2);
-  --ephinta-link-fg: var(--epg-link, #b9dcff);
-  --ephinta-field-bg: var(--epg-surface-raised, #172338);
-  --ephinta-field-border: var(--epg-border, #71819b);
-  --ephinta-field-placeholder: var(--epg-subtle, #b7c4d8);
+  --ephinta-fg: var(--epg-ink, #f4f7fc);
+  --ephinta-fg-muted: var(--epg-muted, #c4cede);
+  --ephinta-fg-subtle: var(--epg-subtle, #b3bfd0);
+  --ephinta-link-fg: var(--epg-link, #a9d8ff);
+  --ephinta-field-bg: var(--epg-surface-raised, #202d43);
+  --ephinta-field-border: var(--epg-border, #43516a);
+  --ephinta-field-placeholder: var(--epg-subtle, #b3bfd0);
 }
 html[data-ephinta-theme="colorful"] {
   color-scheme: light;
-  --ephinta-fg: var(--epg-ink, #21172f);
-  --ephinta-fg-muted: var(--epg-muted, #3e3450);
-  --ephinta-fg-subtle: var(--epg-subtle, #554967);
-  --ephinta-link-fg: var(--epg-link, #4b278f);
-  --ephinta-field-bg: var(--epg-surface-raised, #ffffff);
-  --ephinta-field-border: var(--epg-border, #ad9fbe);
-  --ephinta-field-placeholder: var(--epg-subtle, #5b506c);
+  --ephinta-fg: var(--epg-ink, #241b35);
+  --ephinta-fg-muted: var(--epg-muted, #554b67);
+  --ephinta-fg-subtle: var(--epg-subtle, #655a76);
+  --ephinta-link-fg: var(--epg-link, #5635a8);
+  --ephinta-field-bg: var(--epg-surface-raised, #faf8ff);
+  --ephinta-field-border: var(--epg-border, #d9d0e5);
+  --ephinta-field-placeholder: var(--epg-subtle, #655a76);
 }
 
-html[data-ephinta-theme] body {
-  color: var(--ephinta-fg) !important;
-}
+html[data-ephinta-theme] body { color: var(--ephinta-fg); }
 
-/* Text-only enforcement. Do not target layout containers, buttons, icons,
-   status labels, badges, or components that intentionally signal a state. */
-html[data-ephinta-theme] body #root :is(
-  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,
-  li,dt,dd,th,td,caption,summary,figcaption,blockquote,
-  output,mark,time,address,cite,code
-):not([aria-hidden="true"]):not(:is(
-  .ess-status,.status-pill,.badge,.tag,.text-success,.text-danger,.text-warning,
-  .success,.danger,.warning,[class*="status-"],[class*="badge-"],[class*="tag-"],
-  .ess-muted,.muted,.text-muted,.helper-text,.form-hint,.form-description,
-  .field-description,.section-description,.workspace-subtitle,.empty-state,.eyebrow,.text-secondary,
-  .ess-muted *, .muted *, .text-muted *, .helper-text *, .form-hint *,
-  .form-description *, .field-description *, .section-description *, .workspace-subtitle *,
-  .empty-state *, .eyebrow *, .text-secondary *,
-  .status-pill *, .badge *, .tag *, .ess-status *,
-  button *, [role="button"] *, .button *, a *
-)) {
-  color: var(--ephinta-fg) !important;
-  -webkit-text-fill-color: currentColor;
-}
-
-/* Muted copy remains softer, but still has readable contrast in every mode. */
-html[data-ephinta-theme] body #root :is(
+/* Deliberately do not recolour every span, heading, label or card. Components
+   retain semantic colours; these rules cover only neutral helper text. */
+html[data-ephinta-theme] body #root :where(
   .ess-muted,.muted,.text-muted,.helper-text,.form-hint,.form-description,
   .field-description,.section-description,.workspace-subtitle,.empty-state,
   .eyebrow,.text-secondary
-) {
-  color: var(--ephinta-fg-muted) !important;
-  -webkit-text-fill-color: currentColor;
-}
+) { color: var(--ephinta-fg-muted); }
 
-/* Links, fields and placeholders use dedicated palette values. */
+/* Link and form controls use accessible theme tokens without changing button
+   labels, icon colours, status indicators or intentional accent treatments. */
 html[data-ephinta-theme] body #root a:not(.button):not([role="button"]) {
-  color: var(--ephinta-link-fg) !important;
-  -webkit-text-fill-color: currentColor;
+  color: var(--ephinta-link-fg);
 }
-html[data-ephinta-theme] body #root :is(input,select,textarea) {
-  color: var(--ephinta-fg) !important;
-  -webkit-text-fill-color: var(--ephinta-fg) !important;
+html[data-ephinta-theme] body #root :where(input,select,textarea) {
+  color: var(--ephinta-fg);
   background-color: var(--ephinta-field-bg);
   border-color: var(--ephinta-field-border);
 }
-html[data-ephinta-theme] body #root :is(input,textarea)::placeholder {
-  color: var(--ephinta-field-placeholder) !important;
-  -webkit-text-fill-color: var(--ephinta-field-placeholder) !important;
-  opacity: 1 !important;
+html[data-ephinta-theme] body #root :where(input,textarea)::placeholder {
+  color: var(--ephinta-field-placeholder);
+  opacity: 1;
 }
 html[data-ephinta-theme] body #root select option {
-  color: var(--ephinta-fg) !important;
-  background: var(--ephinta-field-bg) !important;
+  color: var(--ephinta-fg);
+  background: var(--ephinta-field-bg);
 }
-html[data-ephinta-theme] body #root :is(input,select,textarea):disabled {
-  color: var(--ephinta-fg-muted) !important;
-  -webkit-text-fill-color: var(--ephinta-fg-muted) !important;
-  opacity: 1 !important;
+html[data-ephinta-theme] body #root :where(input,select,textarea):disabled {
+  color: var(--ephinta-fg-muted);
+  opacity: 1;
 }
 
-/* Menu switch is legible and usable in all themes, including disabled
-   read-only presentation for non-admin accounts. */
+/* Demo / Test / Live selector is intentionally a neutral, readable surface. */
 html[data-ephinta-theme] body #root .ess-mode-menu {
-  color: var(--ephinta-fg) !important;
-  background: var(--epg-surface, var(--ephinta-field-bg)) !important;
-  border-color: var(--epg-border, var(--ephinta-field-border)) !important;
+  color: var(--ephinta-fg);
+  background: var(--epg-surface, var(--ephinta-field-bg));
+  border-color: var(--epg-border, var(--ephinta-field-border));
 }
-html[data-ephinta-theme] body #root .ess-mode-menu :is(.ess-menu-heading, .ess-mode-menu-control, .ess-mode-menu__active) {
-  color: var(--ephinta-fg) !important;
-}
+html[data-ephinta-theme] body #root .ess-mode-menu :where(
+  .ess-menu-heading,.ess-mode-menu-control,.ess-mode-menu__active
+) { color: var(--ephinta-fg); }
 html[data-ephinta-theme] body #root .ess-mode-choice {
-  color: var(--ephinta-fg) !important;
-  background: var(--epg-surface-raised, var(--ephinta-field-bg)) !important;
-  border-color: var(--epg-border, var(--ephinta-field-border)) !important;
+  color: var(--ephinta-fg);
+  background: var(--epg-surface-raised, var(--ephinta-field-bg));
+  border-color: var(--epg-border, var(--ephinta-field-border));
 }
-html[data-ephinta-theme] body #root .ess-mode-choice :is(strong,small) {
-  color: inherit !important;
-  -webkit-text-fill-color: currentColor;
-}
+html[data-ephinta-theme] body #root .ess-mode-choice :where(strong,small) { color: inherit; }
 html[data-ephinta-theme] body #root .ess-mode-choice.is-selected {
-  border: 2px solid var(--epg-accent, #6335ad) !important;
-  background: color-mix(in srgb, var(--epg-accent, #6335ad) 13%, var(--epg-surface, #fff)) !important;
+  border: 2px solid var(--epg-accent, #6335ad);
+  background: color-mix(in srgb, var(--epg-accent, #6335ad) 13%, var(--epg-surface, #fff));
 }
 
-/* Branded dark surfaces keep their white-on-dark identity in every theme. */
-html[data-ephinta-theme] body #root :is(
+/* Explicit dark brand panels keep their own white-on-dark contrast. */
+html[data-ephinta-theme] body #root :where(
   .workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
   .dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel,
   .eph-marketplace-advertising,.eph-promo-shell,.ess-marketplace-welcome,
   .ess-marketplace-feature-tile,.ess-marketplace-float
-) :is(h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,li,a) {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+) :where(h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,li,a) {
+  color: #fff;
 }
-html[data-ephinta-theme] body #root :is(
+html[data-ephinta-theme] body #root :where(
   .workspace-intro,.vendor-hero-card,.ess-sidebar,.app-sidebar,
   .dashboard-sidebar,.sidebar,.pl-footer,.esg-footer,.hero-dark,.dark-panel,
   .eph-marketplace-advertising,.eph-promo-shell,.ess-marketplace-welcome,
   .ess-marketplace-feature-tile,.ess-marketplace-float
-) :is(small,p,.muted,.text-muted,.helper-text) {
-  color: #e7edf7 !important;
-  -webkit-text-fill-color: #e7edf7 !important;
-}
-
+) :where(small,p,.muted,.text-muted,.helper-text) { color: #e7edf7; }
 
 html[data-ephinta-theme] body #root .ess-mode-menu__active {
   display: inline-flex;
@@ -148,7 +111,7 @@ html[data-ephinta-theme] body #root .ess-mode-menu__active {
   padding: 5px 9px;
   border: 1px solid var(--epg-border, var(--ephinta-field-border));
   border-radius: 999px;
-  color: var(--ephinta-fg) !important;
+  color: var(--ephinta-fg);
   background: var(--epg-surface-raised, var(--ephinta-field-bg));
   font-size: 11px;
   font-weight: 800;
@@ -166,7 +129,7 @@ html[data-ephinta-theme] body #root .ess-mode-menu__error button {
   padding: 7px 10px;
   border: 1px solid var(--epg-border, var(--ephinta-field-border));
   border-radius: 9px;
-  color: var(--ephinta-fg) !important;
+  color: var(--ephinta-fg);
   background: var(--epg-surface-raised, var(--ephinta-field-bg));
   font: inherit;
   font-size: 12px;
@@ -181,29 +144,6 @@ html[data-ephinta-theme] body #root .ess-mode-menu__error {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  color: #b42335;
+  color: var(--epg-danger, #b42335);
   font-size: 12px;
-}
-
-
-/* Preserve intentional marketing surface contrast above the generic text layer. */
-html[data-ephinta-theme] body #root .eph-promo-heading h2 {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-html[data-ephinta-theme] body #root .ephinta-marketing-zone h2 {
-  color: #251633 !important;
-  -webkit-text-fill-color: #251633 !important;
-}
-html[data-ephinta-theme] body #root .ephinta-bright-slogan {
-  color: #251a36 !important;
-  -webkit-text-fill-color: #251a36 !important;
-}
-
-/* Native autofill must not reintroduce browser-controlled low contrast. */
-html[data-ephinta-theme] body #root input:-webkit-autofill,
-html[data-ephinta-theme] body #root input:-webkit-autofill:hover,
-html[data-ephinta-theme] body #root input:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--ephinta-fg) !important;
-  caret-color: var(--ephinta-fg);
 }
