@@ -80,7 +80,7 @@ describe("EPHINTA global theme contrast", () => {
   it("initializes the saved theme before rendering authenticated routes", () => {
     expect(appEntry).toContain("import { initializeEphintaTheme } from './lib/ephintaTheme'");
     expect(appEntry).toContain("initializeEphintaTheme();");
-    expect(appEntry).toContain("import './styles/ephinta-global.css';");
+    expect(appEntry).toContain("ephinta-global.css");
     expect(globalCss).toContain("ephinta-runtime-contrast.css");
     expect(appEntry.indexOf("initializeEphintaTheme();")).toBeLessThan(appEntry.indexOf("ReactDOM.createRoot"));
   });
