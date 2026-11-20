@@ -22,7 +22,7 @@ function writePreference(key: string, value: string): void {
   try { localStorage.setItem(key, value); } catch { /* Storage is optional in private modes. */ }
 }
 function readCategory(): MusicCategory {
-  const value = readPreference("ephinta:music-category");
+  const value = readPreference("ephinta:music-category-v2");
   return value === "naming" || value === "burial" || value === "wedding" || value === "featured" ? value : "featured";
 }
 
@@ -86,7 +86,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
     writePreference("ephinta:sound-volume", String(volume));
   }, [volume]);
   useEffect(() => {
-    writePreference("ephinta:music-category", category);
+    writePreference("ephinta:music-category-v2", category);
     setTrackIndex(0);
   }, [category]);
   useEffect(() => { writePreference("ephinta:music-track", String(trackIndex)); }, [trackIndex]);
@@ -97,7 +97,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
       if (value === "wedding" || value === "naming" || value === "burial" || value === "featured") setCategory(value);
     };
     const onStorage = (event: StorageEvent) => {
-      if (event.key === "ephinta:music-category" &&
+      if (event.key === "ephinta:music-category-v2" &&
         (event.newValue === "wedding" || event.newValue === "naming" || event.newValue === "burial" || event.newValue === "featured")) {
         setCategory(event.newValue);
       }
