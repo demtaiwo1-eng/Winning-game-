@@ -81,7 +81,7 @@ test("player controls switch tracks, categories, volume and stop playback", asyn
   const audio = page.locator("audio");
   await expect(audio).toHaveAttribute("src", /Here%20we%20are-1/);
   await page.getByRole("button", { name: "Next track" }).click();
-  await expect(audio).toHaveAttribute("src", /Here%20we%20are-2/);
+  await expect(audio).toHaveAttribute("src", /Welcome,%20Little%20One-1/);
 
   await page.getByRole("combobox", { name: "Music category" }).selectOption("naming");
   await expect(audio).toHaveAttribute("src", /Welcome,%20Little%20One-1/);
@@ -101,6 +101,21 @@ test("player controls switch tracks, categories, volume and stop playback", asyn
   await page.getByRole("button", { name: "Turn music off" }).click();
   await expect(page.locator(".eph-audio__player, .eph-audio__restore")).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => localStorage.getItem("ephinta:sound"))).toBe("off");
+});
+
+test("the default opening playlist plays the three bundled Wale Waves tracks in order", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("dialog", { name: "Enjoy background music?" }).getByRole("button", { name: "Yes, play music" }).click();
+  await page.getByRole("button", { name: "Open music player" }).click();
+  const audio = page.locator("audio");
+  await expect(audio).toHaveAttribute("src", /Here%20we%20are-1/);
+  await expect(page.getByText(/Here We Are.*Wale Waves/)).toBeVisible();
+  await page.getByRole("button", { name: "Next track" }).click();
+  await expect(audio).toHaveAttribute("src", /Welcome,%20Little%20One-1/);
+  await expect(page.getByText(/Welcome, Little One.*Wale Waves/)).toBeVisible();
+  await page.getByRole("button", { name: "Next track" }).click();
+  await expect(audio).toHaveAttribute("src", /You%20Will%20Live%20in%20Our%20Hearts-1/);
+  await expect(page.getByText(/You Will Live in Our Hearts.*Wale Waves/)).toBeVisible();
 });
 
 test("all bundled EPHINTA music files are served as non-empty audio assets", async ({ page }) => {
