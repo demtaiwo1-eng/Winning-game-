@@ -827,15 +827,16 @@ readinessRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const eventId = typeof req.query.eventId === "string" ? req.query.eventId : undefined;
-    const city = typeof req.query.city === "string" ? req.query.city : undefined;
-    const country = typeof req.query.country === "string" ? req.query.country : undefined;
+    let city = typeof req.query.city === "string" ? req.query.city : undefined;
+    let country = typeof req.query.country === "string" ? req.query.country : undefined;
     let lat = req.query.lat != null ? Number(req.query.lat) : undefined;
     let lng = req.query.lng != null ? Number(req.query.lng) : undefined;
 
     if (eventId) {
-      const ev = await prisma.event.findUnique({ where: { id: eventId } });
+      const ev = await prisma.event.findUnique({ where: { id: eventId }, select: { city: true, country: true } });
       if (ev) {
-        // Event may not store lat/lng; city/country used for soft match
+        city = city || ev.city || undefined;
+        country = country || ev.country || undefined;
       }
     }
 
