@@ -612,6 +612,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
     .ess-modal-backdrop,
     .ess-auth-backdrop,
     .ess-journey-overlay,
+    .eph-audio__backdrop,
     [data-dialog-backdrop],
     .dialog-backdrop,
     .modal-backdrop
@@ -624,7 +625,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
     .eph-modal,
     .ess-journey-card,
     .ess-device-lock-card,
-    [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
+    [role="dialog"][aria-modal="true"]:not(.ess-device-lock):not(.ess-journey-overlay),
     dialog[open]
   ) {
     width: 100% !important;
@@ -640,7 +641,7 @@ html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-
     .eph-modal,
     .ess-journey-card,
     .ess-device-lock-card,
-    [role="dialog"][aria-modal="true"]:not(.ess-device-lock),
+    [role="dialog"][aria-modal="true"]:not(.ess-device-lock):not(.ess-journey-overlay),
     dialog[open]
   ) {
     width: min(92vw, 600px) !important;
