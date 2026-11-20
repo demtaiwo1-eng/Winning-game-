@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 export type VendorKycAnswers = {
   legalForm?: string;
   registrationStatus?: string;
+  registrationEvidence?: string;
   taxStatus?: string;
   operatingAddress?: string;
   regulatedActivity?: string;
@@ -46,9 +47,7 @@ export default function VendorKycQuestionnaire({
   ], [taxLabel]);
   const current = questions[step];
   const valueForStep = value[current.key] || "";
-  const conditional = (current.key === "registrationNumber" && value.registrationStatus !== "Yes, registered")
-    || (current.key === "taxIdentifier" && value.taxStatus !== "I have a tax identifier")
-    || (current.key === "regulatoryLicence" && value.regulatedActivity !== "Yes");
+  const conditional = current.key === "regulatoryLicence" && value.regulatedActivity !== "Yes";
   const required = ["legalForm", "registrationStatus", "taxStatus", "operatingAddress", "regulatedActivity"].includes(current.key);
   const canContinue = conditional || !required || Boolean(valueForStep.trim());
   const setAnswer = (answer: string) => onChange({ ...value, [current.key]: answer });
