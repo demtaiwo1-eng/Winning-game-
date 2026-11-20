@@ -7,9 +7,9 @@ type Props = {
   showPrompt?: boolean;
   autoPlay?: boolean;
 };
-type MusicCategory = keyof typeof EPHINTA_MUSIC.categoryTracks;
+type MusicCategory = "featured" | keyof typeof EPHINTA_MUSIC.categoryTracks;
 
-const CATEGORY_LABELS: Record<MusicCategory, string> = {
+const CATEGORY_LABELS: Record<MusicCategory, string> = {\n  featured: "Wale Waves favourites",
   wedding: "Wedding",
   naming: "Naming ceremony",
   burial: "Burial",
@@ -23,7 +23,7 @@ function writePreference(key: string, value: string): void {
 }
 function readCategory(): MusicCategory {
   const value = readPreference("ephinta:music-category");
-  return value === "naming" || value === "burial" || value === "wedding" ? value : "wedding";
+  return value === "naming" || value === "burial" || value === "wedding" || value === "featured" ? value : "featured";
 }
 
 export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay = false }: Props) {
@@ -48,7 +48,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   const [duration, setDuration] = useState(0);
   const [status, setStatus] = useState("");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const tracks = EPHINTA_MUSIC.categoryTracks[category];
+  const tracks = category === "featured" ? EPHINTA_MUSIC.featuredTracks : EPHINTA_MUSIC.categoryTracks[category];
   const currentTrack = tracks[trackIndex] || tracks[0];
   const source = audioUrl || currentTrack.src;
   const trackTitle = audioUrl ? (audioUrl.split("/").pop() || CATEGORY_LABELS[category]) : currentTrack.title;
@@ -94,11 +94,11 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
   useEffect(() => {
     const onCategoryChange = (event: Event) => {
       const value = (event as CustomEvent).detail;
-      if (value === "wedding" || value === "naming" || value === "burial") setCategory(value);
+      if (value === "wedding" || value === "naming" || value === "burial" || value === "featured") setCategory(value);
     };
     const onStorage = (event: StorageEvent) => {
       if (event.key === "ephinta:music-category" &&
-        (event.newValue === "wedding" || event.newValue === "naming" || event.newValue === "burial")) {
+        (event.newValue === "wedding" || event.newValue === "naming" || event.newValue === "burial" || event.newValue === "featured")) {
         setCategory(event.newValue);
       }
       if (event.key === "ephinta:sound" && event.newValue === "off") {
@@ -271,7 +271,7 @@ export default function AudioExperience({ audioUrl, showPrompt = true, autoPlay 
             <label>
               <span className="eph-audio__volume-label">Event music</span>
               <select aria-label="Music category" value={category} onChange={(event) => setCategory(event.target.value as MusicCategory)}>
-                <option value="wedding">Wedding</option>
+                <option value="featured">Wale Waves favourites</option>\n                <option value="wedding">Wedding</option>
                 <option value="naming">Naming ceremony</option>
                 <option value="burial">Burial</option>
               </select>
