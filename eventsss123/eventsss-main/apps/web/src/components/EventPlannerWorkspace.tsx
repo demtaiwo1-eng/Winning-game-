@@ -9,7 +9,7 @@ type BudgetItem = { id: string; label: string; category?: string | null; planned
 type PaymentRequest = { id: string; amountMinor: string; reason: string; status: string; requestedBy: { id: string; name: string } };
 type CheckIn = { id: string; method: string; checkedInAt: string; guest: { id: string; name: string } };
 type Booking = { id: string; status: string; currency: string; totalMinor: string; paidMinor?: string; createdAt: string; event?: { id: string; title: string } | null; vendor?: { businessName: string }; items?: Array<{ listing?: { title: string } }> };
-type ReadinessData = { readiness: { status: string; totalChecks: number; greenCount: number; amberCount: number; redCount: number; pendingCount: number }; checks: Array<{ id: string; label: string; status: string; zone?: string | null; checkedAt?: string | null }> };
+type ReadinessData = { readiness: { status: string; totalChecks: number; greenCount: number; amberCount: number; redCount: number; pendingCount: number }; checks: Array<{ id: string; label: string; status: string; zone?: string | null; checkedAt?: string | null; notes?: string | null; taskId?: string | null; verifiedBy?: { id: string; name: string } | null }> };
 const PLAN_FIELDS = [
   ["desiredOutcome", "Desired outcome"],
   ["audienceNeeds", "Audience needs"],
@@ -75,6 +75,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
     if (!eventId) return;
     setLoading(true); setError(""); setNotice("");
     try {
+      await api("/readiness/events/" + eventId + "/sync", { method: "POST", body: "{}" }).catch(() => undefined);
       const [detail, taskData, guestData, checkInData, budgetData, bookingData, planData, readinessData] = await Promise.all([
         api<{ event: EventOption }>(`/events/${eventId}`),
         api<{ tasks: Task[] }>(`/events/${eventId}/tasks`),
@@ -308,7 +309,7 @@ export default function EventPlannerWorkspace({ events, initialEventId }: { even
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Event readiness checklist</h3>
-          {readiness ? <><p className="ess-muted">{readiness.readiness.status} · {readiness.readiness.greenCount}/{readiness.readiness.totalChecks} green · {readiness.readiness.amberCount} amber · {readiness.readiness.redCount} red · {readiness.readiness.pendingCount} pending</p><details className="ess-dashboard-fold"><summary>Readiness checks · {readiness.readiness.totalChecks}</summary><div style={{ display: "grid", gap: 6, margin: "0 12px 12px" }}>{readiness.checks.map((check) => <article className="ess-card" key={check.id}><strong>{check.label}</strong><p className="ess-muted">{check.status}{check.zone ? " · " + check.zone : ""}{check.checkedAt ? " · " + new Date(check.checkedAt).toLocaleString() : ""}</p></article>)}</div></details></> : <p className="ess-muted">Readiness data is not available yet. Seed or sync the readiness board after booking services.</p>}
+          {readiness ? <><p className="ess-muted">{readiness.readiness.status} · {readiness.readiness.greenCount}/{readiness.readiness.totalChecks} green · {readiness.readiness.amberCount} amber · {readiness.readiness.redCount} red · {readiness.readiness.pendingCount} pending</p><details className="ess-dashboard-fold"><summary>Readiness checks · {readiness.readiness.totalChecks}</summary><div style={{ display: "grid", gap: 6, margin: "0 12px 12px" }}>{readiness.checks.map((check) => <article className="ess-card" key={check.id}><strong>{check.label}</strong><p className="ess-muted">{check.status}{check.taskId ? " · Planner checklist" : ""}{check.zone ? " · " + check.zone : ""}{check.verifiedBy?.name ? " · Verified by " + check.verifiedBy.name : ""}{check.checkedAt ? " · " + new Date(check.checkedAt).toLocaleString() : ""}</p>{check.notes ? <p className="ess-muted">Ground report: {check.notes}</p> : null}</article>)}</div></details></> : <p className="ess-muted">Readiness data is not available yet. Seed or sync the readiness board after booking services.</p>}
         </section>
         <section style={{ marginTop: 22 }}>
           <h3>Vendor bookings linked to this event</h3>
