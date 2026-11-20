@@ -155,4 +155,31 @@ describe("EPHINTA global theme contrast", () => {
     expect(globalCss).toContain('@import "./ephinta-runtime-contrast.css";');
   });
 
+  it("routes the landing vendor CTA to the shared vendor registration dialog", () => {
+    expect(enterpriseApp).toContain("onOpenAuth={(mode, role) => {");
+    expect(enterpriseApp).toContain("openAuth(role, mode);");
+    expect(enterpriseApp).not.toContain("startRoleQuestionnaire");
+  });
+
+  it("centralizes auth, PIN and semantic dialog presentation in the final runtime layer", () => {
+    for (const selector of [
+      ".eph-modal-backdrop",
+      ".ess-auth-backdrop",
+      ".ess-auth-modal",
+      ".eph-modal",
+      ".ess-device-lock",
+      ".ess-device-lock-card",
+      '[role="dialog"][aria-modal="true"]',
+    ]) {
+      expect(runtimeCss).toContain(selector);
+    }
+    expect(runtimeCss).toContain("EPHINTA CENTRAL DIALOG SYSTEM");
+    expect(runtimeCss).toContain("var(--epg-surface)");
+    expect(runtimeCss).toContain("var(--epg-ink)");
+    expect(runtimeCss).toContain("var(--epg-border)");
+    expect(runtimeCss).toContain("env(safe-area-inset-top)");
+    expect(runtimeCss).toContain("max-height: calc(100dvh");
+    expect(appEntry).toContain("import './styles/ephinta-runtime-contrast.css';");
+  });
+
 });
