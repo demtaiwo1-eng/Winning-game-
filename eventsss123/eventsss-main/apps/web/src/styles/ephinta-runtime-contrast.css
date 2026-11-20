@@ -704,3 +704,59 @@ html[data-ephinta-theme] body #root .ess-device-lock-card {
     padding: 18px !important;
   }
 }
+
+/* Unified EPHINTA dialogue finish: the Start Planner's soft lavender,
+   rose and warm-gold gradient is shared by every app dialog. */
+:root {
+  --eph-dialog-surface-gradient:
+    radial-gradient(ellipse at 86% 8%, rgba(247,216,234,.72) 0%, transparent 46%),
+    radial-gradient(ellipse at 12% 92%, rgba(255,237,201,.68) 0%, transparent 44%),
+    linear-gradient(120deg, #fffafd 0%, #f7f1ff 55%, #fffaf2 100%);
+  --eph-dialog-border: rgba(117,91,166,.24);
+  --eph-dialog-shadow: 0 28px 78px rgba(43,31,76,.20);
+}
+html[data-ephinta-theme="dark"] {
+  --eph-dialog-surface-gradient:
+    radial-gradient(ellipse at 86% 8%, rgba(111,68,151,.34) 0%, transparent 48%),
+    radial-gradient(ellipse at 12% 92%, rgba(151,111,62,.20) 0%, transparent 44%),
+    linear-gradient(120deg, #17172b 0%, #201b32 55%, #24202b 100%);
+  --eph-dialog-border: rgba(180,157,226,.30);
+  --eph-dialog-shadow: 0 28px 78px rgba(0,0,0,.42);
+}
+html[data-ephinta-theme] body #root :is(
+  .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
+  .ess-dialog-surface, .dialog-panel, .modal-panel,
+  [role="dialog"], [aria-modal="true"], dialog[open]
+) {
+  background: var(--eph-dialog-surface-gradient) !important;
+  background-color: var(--ephinta-theme-surface) !important;
+  color: var(--ephinta-theme-ink) !important;
+  border: 1px solid var(--eph-dialog-border) !important;
+  border-radius: var(--eph-parent-radius, 22px) !important;
+  box-shadow: var(--eph-dialog-shadow) !important;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+html[data-ephinta-theme] body #root :is(
+  .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
+  .ess-dialog-surface, .dialog-panel, .modal-panel,
+  [role="dialog"], [aria-modal="true"], dialog[open]
+) :is(h1,h2,h3,h4,strong,b,label) {
+  color: var(--ephinta-theme-ink) !important;
+}
+html[data-ephinta-theme] body #root :is(
+  .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
+  .ess-dialog-surface, .dialog-panel, .modal-panel,
+  [role="dialog"], [aria-modal="true"], dialog[open]
+) :is(p,small,li,.muted,.text-muted,.helper-text) {
+  color: var(--ephinta-theme-muted) !important;
+}
+html[data-ephinta-theme] body #root :is(
+  .ess-modal, .ess-auth-modal, .eph-modal, .pl-dl, .esg-dialog,
+  .ess-dialog-surface, .dialog-panel, .modal-panel,
+  [role="dialog"], [aria-modal="true"], dialog[open]
+) :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  background: var(--ephinta-theme-surface-soft) !important;
+  color: var(--ephinta-theme-ink) !important;
+  border-color: var(--ephinta-theme-border) !important;
+}
