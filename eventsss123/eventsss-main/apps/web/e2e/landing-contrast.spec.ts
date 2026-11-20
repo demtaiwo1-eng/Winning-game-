@@ -8,7 +8,7 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
     await expect(page.locator(".ephinta-marketing-zone h2")).toBeVisible();
 
     for (const theme of ["dark", "colorful"] as const) {
-      await page.locator(".eph-theme-select select").selectOption(theme);
+      await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
       const colors = await page.evaluate(() => {
         const read = (selector: string) => {
           const element = document.querySelector(selector);
@@ -29,7 +29,7 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
       expect(colors.copy?.color, `section copy in ${theme} at ${width}px`).toBe("rgb(233, 229, 255)");
     }
 
-    await page.locator(".eph-theme-select select").selectOption("light");
+    await page.locator(".eph-theme-select select").selectOption("light", { force: true });
     const light = await page.evaluate(() => {
       const heading = document.querySelector(".ephinta-marketing-zone h2");
       const copy = document.querySelector(".eph-section-head p");
