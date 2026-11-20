@@ -29,6 +29,7 @@ export const registerSchema = z
     businessDescription: z.string().trim().max(2000).optional(),
     businessCity: z.string().trim().max(120).optional(),
     kycDocumentUrl: z.string().url().optional(),
+    kycQuestionnaire: z.record(z.string().max(500)).optional(),
   })
   .superRefine((v, ctx) => {
     if (v.role === "ORGANIZATION" && !v.organizationMode) {
