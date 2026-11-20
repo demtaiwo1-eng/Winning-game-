@@ -601,15 +601,15 @@ html[data-ephinta-theme] body #root :is(
   outline: 3px solid var(--epg-focus) !important;
   outline-offset: 2px !important;
 }
-html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card) :where(button,a) {
+html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(button,a) {
   max-width: 100%;
   overflow-wrap: anywhere;
 }
-html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card) :where(.ess-form-error,.eph-auth-error,.ess-device-lock-error,[role="alert"]) {
+html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-error,.eph-auth-error,.ess-device-lock-error,[role="alert"]) {
   color: var(--epg-danger) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card) :where(.ess-form-success,.eph-auth-notice,[role="status"]) {
+html[data-ephinta-theme] body #root :is(.ess-auth-modal,.eph-modal,.ess-journey-card,.ess-device-lock-card,.ess-dialog-surface) :where(.ess-form-success,.eph-auth-notice,[role="status"]) {
   color: var(--epg-success) !important;
   -webkit-text-fill-color: currentColor !important;
 }
