@@ -53,7 +53,7 @@ for (const mode of ["light", "dark", "colorful"]) {
   const selectorCount = (themeCss.match(new RegExp('html\\[data-ephinta-theme="' + mode + '"\\]', "g")) ?? []).length;
   check(selectorCount === 1, "Theme contract defines the " + mode + " palette exactly once.");
 }
-for (const token of ["--epg-page", "--epg-surface", "--epg-ink", "--epg-muted", "--epg-border", "--epg-link", "--epg-focus", "--epg-accent", "--epg-accent-ink", "--epg-font-body", "--epg-font-display", "--epg-text-base", "--epg-heading-1", "--epg-heading-2", "--epg-heading-3", "--epg-heading-4", "--epg-leading-body", "--epg-weight-bold"]) {
+for (const token of ["--epg-page", "--epg-surface", "--epg-ink", "--epg-muted", "--epg-border", "--epg-link", "--epg-focus", "--epg-accent", "--epg-accent-ink", "--epg-font-body", "--epg-font-display", "--epg-text-base", "--epg-heading-1", "--epg-heading-2", "--epg-heading-3", "--epg-heading-4", "--epg-leading-body", "--epg-weight-bold", "--font-display", "--font-interface", "--eph-parent-font"]) {
   check(themeCss.includes(token), "Global theme token exists: " + token);
 }
 check(/background:\s*var\(--epg-page/.test(introCss) && /color:\s*var\(--epg-ink/.test(introCss),
