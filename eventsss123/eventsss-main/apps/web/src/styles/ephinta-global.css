@@ -960,3 +960,15 @@ html[data-ephinta-theme] body #root .ess-marketplace .ess-modal .ess-close {
     padding: 18px !important;
   }
 }
+
+/* Preserve the established bright copy value on the landing feature sections. */
+html[data-ephinta-theme="dark"] body #root .eph-landing .eph-section-head p,
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-section-head p {
+  color: #e9e5ff !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme="light"] body #root .eph-landing .ephinta-marketing-zone h2 {
+  background: none !important;
+  color: #17152a !important;
+  -webkit-text-fill-color: #17152a !important;
+}
