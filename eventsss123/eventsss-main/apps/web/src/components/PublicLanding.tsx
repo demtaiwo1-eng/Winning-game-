@@ -1258,6 +1258,16 @@ export default function PublicLanding({
         }
         .eph-landing[data-theme="light"] .eph-field label,
         .eph-landing[data-theme="light"] .eph-modal label { color:#29243d !important; }
+        /* Last-mile guard: keep the spotlight gradient after all legacy landing rules. */
+        #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2,
+        #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone h2 {
+          background-image: linear-gradient(95deg,#72eaff 0%,#c5a5ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
+          background-clip: text !important;
+          -webkit-background-clip: text !important;
+          color: transparent !important;
+          -webkit-text-fill-color: transparent !important;
+        }
+
 
       `}
       </style>

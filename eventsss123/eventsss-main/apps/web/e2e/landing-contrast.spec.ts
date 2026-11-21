@@ -42,3 +42,44 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
     expect(light.copy, `light-mode copy at ${width}px`).toBe("rgb(41, 36, 61)");
   }
 });
+
+
+test("marketplace deposit and enquiry dialogs keep readable themed copy and gradient controls", async ({ page }) => {
+  await page.goto("/");
+  for (const theme of ["light", "dark", "colorful"] as const) {
+    await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
+    const result = await page.evaluate(() => {
+      const root = document.createElement("section");
+      root.className = "ess-marketplace";
+      root.innerHTML = '<form class="ess-modal" role="dialog" aria-modal="true"><h2>Contact a vendor</h2><label>Your message<textarea placeholder="Write your message"></textarea></label><button class="ess-primary">Send enquiry</button></form>';
+      document.querySelector("#root")!.append(root);
+      const modal = root.querySelector(".ess-modal")!;
+      const field = root.querySelector("textarea")!;
+      const action = root.querySelector("button")!;
+      const styles = {
+        modalBackground: getComputedStyle(modal).backgroundImage,
+        modalColor: getComputedStyle(modal).color,
+        fieldColor: getComputedStyle(field).color,
+        fieldBackground: getComputedStyle(field).backgroundColor,
+        actionBackground: getComputedStyle(action).backgroundImage,
+        actionColor: getComputedStyle(action).color,
+      };
+      root.remove();
+      return styles;
+    });
+    expect(result.modalBackground, theme).toContain("linear-gradient");
+    expect(result.fieldBackground, theme).not.toBe("rgba(0, 0, 0, 0)");
+    expect(result.actionBackground, theme).toContain("linear-gradient");
+    expect(result.actionColor, theme).toBe("rgb(255, 255, 255)");
+    if (theme === "dark") {
+      expect(result.modalColor).toBe("rgb(247, 249, 255)");
+      expect(result.fieldColor).toBe("rgb(247, 249, 255)");
+    } else if (theme === "colorful") {
+      expect(result.modalColor).toBe("rgb(36, 20, 58)");
+      expect(result.fieldColor).toBe("rgb(36, 20, 58)");
+    } else {
+      expect(result.modalColor).toBe("rgb(0, 0, 0)");
+      expect(result.fieldColor).toBe("rgb(0, 0, 0)");
+    }
+  }
+});

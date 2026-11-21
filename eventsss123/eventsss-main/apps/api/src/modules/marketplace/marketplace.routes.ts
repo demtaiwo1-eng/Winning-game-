@@ -4,6 +4,8 @@ import { prisma } from "../../lib/prisma";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
+import { marketplaceSearchTerms, marketplaceTermFilter } from "./marketplace.search";
+
 
 export const marketplaceRouter = Router();
 
@@ -24,11 +26,7 @@ marketplaceRouter.get(
     const where = {
       status: ListingStatus.ACTIVE,
       vendor: { verification: "VERIFIED" as const, user: { status: "ACTIVE" as const } },
-      ...(q ? { OR: [
-        { title: { contains: q, mode: "insensitive" as const } },
-        { description: { contains: q, mode: "insensitive" as const } },
-        { city: { contains: q, mode: "insensitive" as const } },
-      ] } : {}),
+      ...marketplaceTermFilter(marketplaceSearchTerms(q)),
       ...(city ? { city: { contains: city, mode: "insensitive" as const } } : {}),
       ...(type ? { type } : {}),
     };
@@ -78,15 +76,7 @@ marketplaceRouter.get(
     const items = await prisma.listing.findMany({
       where: {
         status: ListingStatus.ACTIVE,
-        ...(q
-          ? {
-              OR: [
-                { title: { contains: q, mode: "insensitive" } },
-                { description: { contains: q, mode: "insensitive" } },
-                { city: { contains: q, mode: "insensitive" } },
-              ],
-            }
-          : {}),
+        ...marketplaceTermFilter(marketplaceSearchTerms(q)),
         ...(city ? { city: { contains: city, mode: "insensitive" } } : {}),
         ...(currency ? { currency } : {}),
         ...(type ? { type } : {}),

@@ -54,6 +54,7 @@ export default function MarketplaceBrowse({
   onOpenWallet?: () => void;
 }) {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [nearbyCity, setNearbyCity] = useState("");
   const [locationStatus, setLocationStatus] = useState("");
   const [category, setCategory] = useState("All");
@@ -72,6 +73,7 @@ export default function MarketplaceBrowse({
   const [enquiryListing, setEnquiryListing] = useState<MarketListing | null>(null);
   const [enquiryMessage, setEnquiryMessage] = useState("");
   const [enquiryNotice, setEnquiryNotice] = useState("");
+  const [enquiryBusy, setEnquiryBusy] = useState(false);
   const [depositListing, setDepositListing] = useState<MarketListing | null>(null);
   const [initialDepositAmount, setInitialDepositAmount] = useState("");
   const [depositBookingKey, setDepositBookingKey] = useState("");
@@ -102,11 +104,16 @@ export default function MarketplaceBrowse({
   }, [eventId]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError("");
     const params: Record<string, string> = {};
-    if (query.trim()) params.q = query.trim();
+    if (debouncedQuery) params.q = debouncedQuery;
     if (typeFilter !== "ALL") params.type = typeFilter;
 
     marketplaceApi
@@ -128,7 +135,7 @@ export default function MarketplaceBrowse({
     return () => {
       cancelled = true;
     };
-  }, [query, typeFilter]);
+  }, [debouncedQuery, typeFilter]);
 
   const requestNearbyLocation = () => {
     if (!navigator.geolocation) {
@@ -231,15 +238,26 @@ export default function MarketplaceBrowse({
   };
   const submitEnquiry = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!enquiryListing) return;
-    setEnquiryNotice("");
+    if (!enquiryListing || enquiryBusy) return;
+    const message = enquiryMessage.trim();
+    if (message.length < 10) {
+      setEnquiryNotice("Please add a little more detail (at least 10 characters) so the vendor can help.");
+      return;
+    }
+    setEnquiryBusy(true);
+    setEnquiryNotice("Sending your enquiry securely…");
     try {
-      await api(`/listings/${enquiryListing.id}/enquiries`, { method: "POST", body: JSON.stringify({ message: enquiryMessage }) });
-      setEnquiryNotice("Your enquiry has been sent to the vendor.");
+      await api(`/listings/${enquiryListing.id}/enquiries`, {
+        method: "POST",
+        body: JSON.stringify({ message }),
+      });
+      setEnquiryNotice("Your enquiry has been sent to the vendor. You can follow the reply in Messages.");
       setEnquiryMessage("");
       setEnquiryListing(null);
     } catch (error) {
-      setEnquiryNotice(error instanceof Error ? error.message : "Unable to send enquiry.");
+      setEnquiryNotice(error instanceof Error ? error.message : "Unable to send enquiry. Please try again.");
+    } finally {
+      setEnquiryBusy(false);
     }
   };
 
@@ -392,15 +410,22 @@ export default function MarketplaceBrowse({
         <span className="ess-tag">{source === "live" ? "Live API" : "No listings yet"}</span>
       </div>
 
-      <div className="ess-marketplace-controls">
-        <input
-          className="ess-search-input"
-          type="search"
-          placeholder={t(locale, "marketplace.search")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          aria-label="Search marketplace"
-        />
+      <div className="ess-marketplace-controls" role="search" aria-label="Search marketplace listings">
+        <label className="ess-marketplace-search-label">
+          <span>Describe what you need</span>
+          <input
+            className="ess-search-input"
+            type="search"
+            placeholder="e.g. affordable wedding photographer in Ibadan"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search by service, event, vendor or city"
+            aria-describedby="ess-marketplace-search-help"
+          />
+        </label>
+        <p id="ess-marketplace-search-help" className="ess-muted" style={{ margin: "6px 0 0", fontSize: 12 }}>
+          Use everyday wording. Search checks every meaningful word across service names, descriptions, vendor names, categories and cities.
+        </p>
         <div className="ess-filter-row">
           {CATEGORIES.map((c) => (
             <button
@@ -623,19 +648,25 @@ export default function MarketplaceBrowse({
           ))}
         </div>
       )}
-      {depositListing && <div className="ess-modal-backdrop"><form className="ess-modal" onSubmit={submitInitialBooking}>
-        <div className="ess-modal-header"><div><p className="ess-eyebrow">Protected booking</p><h2>{depositListing.title}</h2></div><button type="button" className="ess-close" onClick={() => setDepositListing(null)}>×</button></div>
+      {depositListing && <div className="ess-modal-backdrop" role="presentation"><form className="ess-modal" role="dialog" aria-modal="true" aria-labelledby="ess-marketplace-deposit-title" onSubmit={submitInitialBooking}>
+        <div className="ess-modal-header"><div><p className="ess-eyebrow">Protected booking</p><h2 id="ess-marketplace-deposit-title">{depositListing.title}</h2></div><button type="button" className="ess-close" aria-label="Close deposit dialog" onClick={() => setDepositListing(null)}>×</button></div>
         <p className="ess-muted">Full price: {formatMoney(depositListing.priceMinor,depositListing.currency,locale)}. Choose the initial amount to place in escrow. The vendor may request remaining milestone payments for your approval.</p>
         <label>Initial payment ({depositListing.currency})<input type="number" min="0.01" max={(Number(depositListing.priceMinor)/100).toFixed(2)} step="0.01" value={initialDepositAmount} onChange={(e) => setInitialDepositAmount(e.target.value)} required /></label>
         {bookingMsg && <p className="ess-form-error" role="alert">{bookingMsg}</p>}
         <button className="ess-primary" type="submit" disabled={checkoutBusy}>{checkoutBusy ? "Creating booking…" : "Confirm initial payment"}</button>
       </form></div>}
-      {enquiryListing && <div className="ess-modal-backdrop"><form className="ess-modal" onSubmit={submitEnquiry}>
-        <div className="ess-modal-header"><div><p className="ess-eyebrow">Contact vendor</p><h2>{enquiryListing.title}</h2></div><button type="button" className="ess-close" onClick={() => setEnquiryListing(null)}>×</button></div>
-        <label>Your message<textarea required minLength={10} maxLength={4000} rows={5} value={enquiryMessage} onChange={event => setEnquiryMessage(event.target.value)} placeholder="Ask about availability, custom packages, or service details…" /></label>
-        {enquiryNotice && <p className="ess-muted" role="status">{enquiryNotice}</p>}
-        <button className="ess-primary" type="submit" disabled={enquiryMessage.trim().length < 10}>Send enquiry</button>
-      </form></div>}
+      {enquiryListing && <div className="ess-modal-backdrop" role="presentation">
+        <form className="ess-modal" role="dialog" aria-modal="true" aria-labelledby="ess-marketplace-enquiry-title" aria-busy={enquiryBusy} onSubmit={submitEnquiry}>
+          <div className="ess-modal-header"><div><p className="ess-eyebrow">Contact vendor</p><h2 id="ess-marketplace-enquiry-title">{enquiryListing.title}</h2></div><button type="button" className="ess-close" aria-label="Close enquiry dialog" disabled={enquiryBusy} onClick={() => { setEnquiryListing(null); setEnquiryMessage(""); setEnquiryNotice(""); }}>×</button></div>
+          <p className="ess-muted">Tell the vendor what you need, your preferred date, guest count, location or budget. Your message is sent to the vendor’s EPHINTA inbox.</p>
+          <label>Your message<textarea required minLength={10} maxLength={4000} rows={5} value={enquiryMessage} onChange={event => { setEnquiryMessage(event.target.value); setEnquiryNotice(""); }} placeholder="Hello, I am planning a wedding in Ibadan for 150 guests on 12 December. Please share your availability, package details and total price…" /></label>
+          <p className="ess-muted" style={{ margin: "4px 0 0", fontSize: 12 }}>{enquiryMessage.trim().length}/4000 characters · minimum 10</p>
+          {enquiryNotice && <p className="ess-muted" role="status" aria-live="polite">{enquiryNotice}</p>}
+          <button className="ess-primary" type="submit" disabled={enquiryBusy || enquiryMessage.trim().length < 10}>
+            {enquiryBusy ? "Sending enquiry…" : "Send enquiry"}
+          </button>
+        </form>
+      </div>}
       {enquiryNotice && !enquiryListing && <p className="ess-muted" role="status">{enquiryNotice}</p>}
     </section>
   );

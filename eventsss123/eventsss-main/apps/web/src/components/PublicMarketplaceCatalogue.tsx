@@ -10,6 +10,24 @@ type PublicListing = {
 };
 type CatalogueResponse = { items: PublicListing[]; pagination: { page: number; take: number; total: number; totalPages: number } };
 type DemoListing = { id: string; title: string; description: string; type: PublicListing["type"]; priceMinor: string; currency: string; city: string; country: string; vendorName: string; category: string };
+
+const SEARCH_STOP_WORDS = new Set(["a", "an", "and", "are", "at", "for", "find", "in", "is", "looking", "me", "my", "near", "of", "on", "please", "the", "to", "want", "with", "need", "affordable", "cheap", "budget", "luxury", "premium", "best", "top", "wedding", "celebration"]);
+const searchTerms = (value: string) => [...new Set(
+  (value.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
+    .filter((term) => term.length > 1 && !SEARCH_STOP_WORDS.has(term)),
+)].slice(0, 8);
+
+const SEARCH_SYNONYMS: Record<string, string[]> = {
+  photographer: ["photography", "photo"], photography: ["photographer", "photo"],
+  videographer: ["videography", "video"], videography: ["videographer", "video"],
+  caterer: ["catering"], catering: ["caterer"],
+  decorator: ["décor", "decor", "decoration"], decoration: ["décor", "decor", "decorator"],
+  decor: ["décor", "decoration", "decorator"], venue: ["venues", "hall", "space"],
+  venues: ["venue", "hall", "space"], dj: ["music", "disc jockey"],
+  rental: ["rentals", "hire"], rentals: ["rental", "hire"],
+};
+const searchVariants = (term: string) => [term, ...(SEARCH_SYNONYMS[term] || [])];
+
 const PAGE_SIZE = 24;
 const money = (minor: string, currency: string) => {
   const amount = Number(minor) / 100;
@@ -52,17 +70,23 @@ export default function PublicMarketplaceCatalogue() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [city, setCity] = useState("");
   const [type, setType] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
     if (mode !== "verified") { setLoading(false); setError(""); return; }
     let active = true;
     setLoading(true); setError("");
     const params = new URLSearchParams({ page: String(page), take: String(PAGE_SIZE) });
-    if (query.trim()) params.set("q", query.trim());
+    if (debouncedQuery) params.set("q", debouncedQuery);
     if (city.trim()) params.set("city", city.trim());
     if (type) params.set("type", type);
     api<CatalogueResponse>(`/marketplace/public?${params.toString()}`)
@@ -75,16 +99,19 @@ export default function PublicMarketplaceCatalogue() {
       .catch((reason: Error) => { if (active) setError(reason.message || "Unable to load the marketplace."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [mode, page, query, city, type]);
+  }, [mode, page, debouncedQuery, city, type]);
 
   const demoResults = useMemo(() => {
-    const q = query.trim().toLocaleLowerCase();
+    const terms = searchTerms(query);
     const c = city.trim().toLocaleLowerCase();
-    return demoListings.filter((item) =>
-      (!q || [item.title, item.description, item.category, item.vendorName, item.city].some((value) => value.toLocaleLowerCase().includes(q))) &&
-      (!c || item.city.toLocaleLowerCase().includes(c)) &&
-      (!type || item.type === type),
-    );
+    return demoListings.filter((item) => {
+      const searchable = [item.title, item.description, item.category, item.vendorName, item.city]
+        .join(" ")
+        .toLocaleLowerCase();
+      return terms.every((term) => searchVariants(term).some((variant) => searchable.includes(variant))) &&
+        (!c || item.city.toLocaleLowerCase().includes(c)) &&
+        (!type || item.type === type);
+    });
   }, [query, city, type]);
   const visibleDemo = demoResults.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const demoPages = Math.max(1, Math.ceil(demoResults.length / PAGE_SIZE));
@@ -113,10 +140,11 @@ export default function PublicMarketplaceCatalogue() {
       </div>
       {mode === "demo" && <aside className="ess-marketplace-demo-notice" role="note"><strong>DEMO SHOWCASE — SIMULATED CONTENT</strong><span>These 2,000 sample cards are generated for practice. They are not real businesses, verified providers, available inventory or offers. Enquiries, bookings, reviews and payments are disabled in this mode.</span></aside>}
       <div className="ess-filter-row" role="search" aria-label="Filter marketplace">
-        <label>Search listings<input value={query} onChange={updateFilter(setQuery)} placeholder="Venue, catering, photography…" /></label>
+        <label>Describe what you need<input aria-label="Describe what you need" value={query} onChange={updateFilter(setQuery)} placeholder="e.g. affordable wedding photographer in Ibadan" /></label>
         <label>City<input value={city} onChange={updateFilter(setCity)} placeholder="e.g. Ibadan" /></label>
         <label>Type<select value={type} onChange={updateFilter(setType)}><option value="">All types</option><option value="VENUE">Venues</option><option value="SERVICE">Services</option><option value="GOOD">Goods</option></select></label>
       </div>
+      <p className="ess-muted" style={{ margin: "-10px 0 16px", fontSize: 12 }}>Use everyday wording. Every meaningful word is matched across listing titles, descriptions, categories, providers and cities.</p>
       {mode === "verified" ? <>
         <p className="ess-muted" aria-live="polite">{total.toLocaleString()} verified active listing{total === 1 ? "" : "s"}</p>
         {loading ? <p className="ess-muted">Loading marketplace…</p> : error ? <p className="ess-form-error" role="alert">{error}</p> : items.length === 0 ? (

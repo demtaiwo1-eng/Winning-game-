@@ -142,6 +142,22 @@ test("signed-out marketplace visitors can browse verified public listings before
   await expect(page.getByRole("link", { name: "Create account" })).toHaveAttribute("href", /auth\/signup\?role=CLIENT/);
 });
 
+test("public demo marketplace searches everyday multi-word requests", async ({ page }) => {
+  await page.route("**/api/v1/marketplace/public**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [], pagination: { page: 1, take: 24, total: 0, totalPages: 1 } }),
+    });
+  });
+  await page.goto("/marketplace");
+  await page.getByRole("button", { name: "Demo showcase · 2,000 examples" }).click();
+  const search = page.getByRole("textbox", { name: "Describe what you need" });
+  await search.fill("wedding photographer in Ibadan");
+  await expect(page.getByRole("heading", { name: "Event photography coverage" }).first()).toBeVisible();
+  await expect(page.getByText("DEMO SHOWCASE — SIMULATED CONTENT")).toBeVisible();
+});
+
 test("public marketplace back link returns visitors to the landing page", async ({ page }) => {
   await page.route("**/api/v1/marketplace/public**", async (route) => {
     await route.fulfill({
@@ -197,6 +213,72 @@ test("marketplace deep links open the marketplace tab in an authenticated custom
   await expect(page.getByRole("status").filter({ hasText: "Prioritising vendors in Ibadan" })).toBeVisible();
   await cityInput.fill("Lagos");
   await expect(page.getByRole("status").filter({ hasText: "Prioritising vendors in Lagos" })).toBeVisible();
+});
+
+test("marketplace understands natural-language searches and sends detailed vendor enquiries", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ess_user", JSON.stringify({
+      id: "marketplace-natural-search-e2e",
+      email: "marketplace-natural-search@example.test",
+      name: "Marketplace Search Test",
+      role: "CLIENT",
+    }));
+    localStorage.setItem("ess_access_token", "e2e-access-token");
+    localStorage.setItem("ess_refresh_token", "e2e-refresh-token");
+    localStorage.setItem("ess_onboard_v2_client_default", "1");
+  });
+
+  let submittedMessage = "";
+  let submittedSearch = "";
+  await page.route("**/api/v1/marketplace**", async (route) => {
+    const url = new URL(route.request().url());
+    submittedSearch = url.searchParams.get("q") || submittedSearch;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [{
+        id: "marketplace-test-listing",
+        title: "Ibadan Wedding Photography",
+        type: "SERVICE",
+        priceMinor: "15000000",
+        currency: "NGN",
+        city: "Ibadan",
+        country: "NG",
+        vendor: { businessName: "Bright Moments Studio", verification: "VERIFIED" },
+        category: { name: "Photography" },
+        ratingAvg: 4.8,
+        reviewCount: 12,
+      }] }),
+    });
+  });
+  await page.route("**/api/v1/listings/marketplace-test-listing/enquiries", async (route) => {
+    submittedMessage = JSON.parse(route.request().postData() || "{}").message || "";
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ enquiry: { id: "enquiry-test-1", status: "OPEN" } }),
+    });
+  });
+
+  await page.goto("/marketplace");
+  await unlockDeviceGate(page);
+  await expect(page.getByRole("heading", { name: "Welcome to your event marketplace." })).toBeVisible();
+  const search = page.getByRole("searchbox", { name: "Search by service, event, vendor or city" });
+  await expect(search).toBeVisible();
+  await expect(page.getByText(/Use everyday wording/)).toBeVisible();
+  await search.fill("affordable wedding photographer in Ibadan");
+  await expect.poll(() => submittedSearch).toBe("affordable wedding photographer in Ibadan");
+  await expect(page.getByRole("heading", { name: "Ibadan Wedding Photography" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Enquire" }).click();
+  const dialog = page.getByRole("dialog", { name: "Ibadan Wedding Photography" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("textbox", { name: "Your message" }).fill(
+    "Hello, I am planning a wedding in Ibadan for 150 guests. Please share your availability, package details and total price.",
+  );
+  await dialog.getByRole("button", { name: "Send enquiry" }).click();
+  await expect.poll(() => submittedMessage).toContain("150 guests");
+  await expect(page.getByRole("status").filter({ hasText: "Your enquiry has been sent to the vendor" })).toBeVisible();
 });
 
 test("guest RSVP deep links are public and show a safe unavailable state for an invalid token", async ({ page }) => {
