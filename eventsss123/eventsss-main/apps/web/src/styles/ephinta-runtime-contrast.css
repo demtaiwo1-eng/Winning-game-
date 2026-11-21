@@ -1,10 +1,9 @@
 /*
  * EPHINTA accessible runtime typography and contrast contract.
  * Text inherits from its component where semantic colour is meaningful.
- * Final readable type system keeps normal copy high-contrast in every mode.
- * Light and colourful modes use dark text on light surfaces. Dark mode uses
- * light text on dark surfaces. Colour is reserved for hierarchy and accents;
- * contrast, not hue, carries readability.
+ * Typography is consistent across routes while foreground colours are owned
+ * by their nearest semantic surface. Light/colorful use dark ink on light
+ * surfaces; dark mode uses light ink on dark surfaces.
  */
 :root {
   font-synthesis: none;
@@ -69,6 +68,11 @@ html[data-ephinta-theme] body #root {
   font-weight: var(--epg-weight-bold, 700);
   line-height: var(--epg-leading-tight, 1.2);
 }
+:where(html[data-ephinta-theme] body #root) h1 { font-size: var(--epg-heading-1, clamp(1.9rem, 3.8vw, 3rem)); }
+:where(html[data-ephinta-theme] body #root) h2 { font-size: var(--epg-heading-2, clamp(1.5rem, 2.6vw, 2.1rem)); }
+:where(html[data-ephinta-theme] body #root) h3 { font-size: var(--epg-heading-3, 1.25rem); }
+:where(html[data-ephinta-theme] body #root) h4 { font-size: var(--epg-heading-4, 1.125rem); }
+:where(html[data-ephinta-theme] body #root) :where(h5,h6) { font-size: var(--epg-text-lg, 1.125rem); }
 :where(html[data-ephinta-theme] body #root) :where(p,span,small,strong,b,em,i,label,legend,li,dt,dd,th,td,caption,figcaption,summary,blockquote,code,pre,output,button,input,select,textarea) {
   font-family: inherit;
 }
