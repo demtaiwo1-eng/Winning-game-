@@ -1,40 +1,55 @@
-# EPHINTA Android signing — GitHub-only setup
+# EPHINTA Android signing — safe recovery and release setup
 
-You do not need to install Java, Android Studio, or command-line tools on your own computer. The signing key is generated inside a private GitHub Codespace and the credentials are sent directly to GitHub Actions secrets.
+The repository's production APK workflow is prepared, but an update that installs over existing Build 869 installations must use the **same original Android signing key**.
 
-## Important repository security note
+## Critical: do not generate a replacement key
 
-The repository is currently public. **Never commit a keystore, password, base64 keystore value, or unencrypted signing backup.** The setup script writes no signing material into git. It uses the authenticated GitHub CLI to create repository Actions secrets.
+The production app package is `com.ephinta.app`. A new keystore has a different signing identity and cannot update an installation signed with the Build 869 key. The public APK contains the signing certificate, not the private keystore; the private key cannot be reconstructed from the APK.
 
-## One-time setup from a browser (phone or computer)
+Do not follow old instructions that say to generate a new RSA release key or use the `integration/android-production-signing` branch. The automatic key-initialization workflow is intentionally disabled to protect existing installations.
 
-1. Open [EPHINTA on GitHub](https://github.com/demtaiwo1-eng/Winning-game-).
-2. Open the branch selector and choose `integration/android-production-signing`.
-3. Select **Code → Codespaces → Create codespace on integration/android-production-signing**. This runs the terminal in GitHub's cloud, not on your device. If Codespaces is unavailable on your account, stop here; do not put the key in a public Actions artifact or commit it to the repository.
-4. In the Codespaces terminal, run:
+## What to recover
 
-   ```bash
-   bash scripts/setup-android-signing-github.sh
-   ```
+Locate the original private keystore used to sign Build 869, plus its alias, keystore password, and private-key password. Check owner-controlled password managers, secure backups, and the original release machine or CI environment. Never upload the keystore or passwords to this public repository, a chat, an issue, or a workflow input.
 
-5. Enter a strong keystore password and a separate private-key password when prompted. These are entered only into the Codespaces terminal; do not paste them into ChatGPT, an issue, a commit, or a workflow input. Save both in a password manager.
-6. The script generates one persistent RSA-4096 release key, then writes these values directly to GitHub Actions secrets:
-   - `ANDROID_KEYSTORE_BASE64`
-   - `ANDROID_KEYSTORE_PASSWORD`
-   - `ANDROID_KEY_PASSWORD`
-   - `ANDROID_KEY_ALIAS`
+If the original key is unavailable, stop and decide on a deliberate migration. Existing installations may need to uninstall and reinstall a differently signed APK, with possible loss of local app data. If Google Play App Signing was enabled, check Play Console's supported upload-key reset process; that does not automatically replace an app-signing key held outside Play.
 
-   It also writes the certificate fingerprint to the repository Actions variable `ANDROID_CERT_SHA256`.
+## Import the original key into GitHub Actions
 
-7. The script creates an encrypted recovery copy at `~/.ephinta-android-signing/ephinta-release.jks.enc`. Use the Codespaces file explorer to download that encrypted file and store it somewhere private. Its encryption password is the keystore password. Keep the recovery copy and both passwords safe; without the original key, future APK updates signed with the same application identity cannot be produced.
-8. Keep the Codespace until you have downloaded and safely stored the encrypted recovery copy. You may then stop the Codespace. Never delete or rotate the signing key merely to fix a build.
+Run the reviewed helper from the repository root in a private environment with GitHub CLI, Java, Android SDK build-tools, OpenSSL, and repository Actions-secret/variable write permission:
 
-## After setup
+```bash
+bash scripts/setup-android-signing-github.sh
+```
 
-Open [the production APK workflow](https://github.com/demtaiwo1-eng/Winning-game-/actions/workflows/ephinta-production-apk.yml) and choose **Run workflow** on the release-readiness branch. The workflow builds and signs on GitHub's hosted runner, verifies the APK certificate against `ANDROID_CERT_SHA256`, and uploads the signed APK artifact. A version-tag push is required for a public production GitHub Release and stable OTA publication.
+The script:
+1. Prompts for the original Build 869 keystore, alias, and passwords locally in the terminal.
+2. Verifies the key's SHA-256 certificate fingerprint against the published Build 869 APK and confirms package ID `com.ephinta.app`.
+3. Stops without changing GitHub configuration if the certificate does not match.
+4. Creates and verifies an encrypted recovery backup at `~/.ephinta-android-signing/ephinta-release.jks.enc` plus its checksum.
+5. Sends the verified key material directly to GitHub Actions secrets and sets the matching `ANDROID_CERT_SHA256` repository variable. Secret values are not printed.
 
-The repository's current CI run also produces a debug APK, but that is not the production signing key and should not be treated as the long-term release identity.
+Required GitHub Actions secrets:
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
 
-## If Codespaces or repository secret-write permission is unavailable
+Required repository Actions variable:
+- `ANDROID_CERT_SHA256`
 
-The setup script stops without exposing the key. An account with repository Actions-secret write permission must run the one-time setup. Do not work around this by uploading a keystore to this public repository or by printing credentials into Actions logs.
+Download and securely retain both encrypted backup files before closing the private environment. Keep the encryption password separately. Never commit or publish either backup file.
+
+## Build and publish
+
+After the original signing configuration and recovery backup are in place, follow [the production release guide](../eventsss123/eventsss-main/docs/ANDROID_SIGNED_RELEASE.md) and run:
+
+```bash
+bash scripts/complete-production-apk.sh
+```
+
+That handoff checks the configuration names without displaying secret values, validates the encrypted backup checksum, and requires explicit confirmation that the backup is stored safely and the latest test APK has been accepted on a physical Android device.
+
+The production workflow verifies API health/readiness, the signing certificate, APK/AAB integrity, and version code. A manual workflow run uploads signed artifacts; a reviewed `v*` tag triggers the GitHub production release and stable OTA publication.
+
+A passing CI build is not physical-device acceptance. Do not claim a production release until the signed APK has been reviewed and installed successfully on a real device.
