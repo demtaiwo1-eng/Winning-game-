@@ -27,6 +27,9 @@ const themeCss = read("src/styles/ephinta-global-theme-contract.css");
 const introCss = read("src/components/branding/ephinta-intro.css");
 const audioCss = read("src/styles/ephinta-audio.css");
 const runtimeCss = read("src/styles/ephinta-runtime-contrast.css");
+const brightThemeCss = read("src/ephinta-bright-theme-colors.css");
+const unifiedThemeCss = read("src/ephinta-unified-theme.css");
+const parentDesignCss = read("src/styles/ephinta-parent-design-system.css");
 
 check(entry.includes("import './styles/ephinta-global.css';"),
   "Application entry imports the centralized global stylesheet.");
@@ -67,6 +70,12 @@ check(runtimeCss.includes("Base type is inherited from the nearest component sur
   "Runtime typography is surface-aware and contains no blanket descendant colour selectors.");
 check(!read("src/index.css").includes("EPHINTA GLOBAL THEME TEXT CONTRACT"),
   "Legacy index stylesheet does not add a second global text-colour contract.");
+check(!/:root\[data-ephinta-theme=[^\]]+\]\s*(?:input|select|textarea|p|li|label|small)/.test(brightThemeCss) &&
+  !/html\[data-ephinta-theme\][^{}]*\b(?:input|select|textarea|p|li|label|small)\b/.test(unifiedThemeCss),
+  "Legacy accent sheets contain no global text or form-control colour overrides.");
+check(parentDesignCss.includes("background: var(--eph-parent-surface-muted)") &&
+  parentDesignCss.includes("color: var(--eph-parent-ink)"),
+  "Planner fields inherit the selected parent surface and ink tokens.");
 check(/@media\s*\(max-width:\s*390px\)/.test(globalCss),
   "Startup surface has a compact-phone responsive rule.");
 check(/prefers-reduced-motion/.test(introCss) && /prefers-reduced-motion/.test(themeCss),
