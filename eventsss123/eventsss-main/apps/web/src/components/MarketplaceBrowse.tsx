@@ -54,6 +54,7 @@ export default function MarketplaceBrowse({
   onOpenWallet?: () => void;
 }) {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [nearbyCity, setNearbyCity] = useState("");
   const [locationStatus, setLocationStatus] = useState("");
   const [category, setCategory] = useState("All");
@@ -103,11 +104,16 @@ export default function MarketplaceBrowse({
   }, [eventId]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError("");
     const params: Record<string, string> = {};
-    if (query.trim()) params.q = query.trim();
+    if (debouncedQuery) params.q = debouncedQuery;
     if (typeFilter !== "ALL") params.type = typeFilter;
 
     marketplaceApi
@@ -129,7 +135,7 @@ export default function MarketplaceBrowse({
     return () => {
       cancelled = true;
     };
-  }, [query, typeFilter]);
+  }, [debouncedQuery, typeFilter]);
 
   const requestNearbyLocation = () => {
     if (!navigator.geolocation) {
