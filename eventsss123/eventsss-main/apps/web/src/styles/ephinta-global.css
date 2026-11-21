@@ -972,3 +972,14 @@ html[data-ephinta-theme="light"] body #root .eph-landing .ephinta-marketing-zone
   color: #17152a !important;
   -webkit-text-fill-color: #17152a !important;
 }
+
+/* Preserve the feature-panel gradient treatment on the marketing-zone headline
+   while keeping its supporting copy bright and legible. */
+html[data-ephinta-theme="dark"] body #root .eph-landing main .ephinta-marketing-zone h2,
+html[data-ephinta-theme="colorful"] body #root .eph-landing main .ephinta-marketing-zone h2 {
+  background-image: linear-gradient(105deg,#fff 0%,#d9d2ff 48%,#ffd9a6 100%) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
