@@ -26,7 +26,7 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
           section: read(".eph-section h2"),
           copy: read(".eph-section-head p"),
           heroCopy: read(".eph-subtitle"),
-          marketingPanel: panelStyle ? panelStyle.backgroundColor : null,
+          marketingPanel: panelStyle ? panelStyle.backgroundImage : null,
           marketingCopy: copyStyle ? copyStyle.color : null,
         };
       });
@@ -36,7 +36,7 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
       expect(colors.copy?.color, `section copy in ${theme} at ${width}px`).toBe("rgb(233, 229, 255)");
       expect(colors.heroCopy?.color, `hero copy in ${theme} at ${width}px`).not.toBe("rgb(255, 255, 255)");
       expect(colors.marketingCopy, `marketing panel copy in ${theme} at ${width}px`).not.toBe("rgb(255, 255, 255)");
-      expect(colors.marketingPanel, `marketing panel surface in ${theme} at ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
+      expect(colors.marketingPanel, `marketing panel surface in ${theme} at ${width}px`).not.toBe("none");
     }
 
     await page.locator(".eph-theme-select select").selectOption("light", { force: true });
