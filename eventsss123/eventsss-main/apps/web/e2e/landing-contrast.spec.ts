@@ -105,7 +105,7 @@ test("shared portal typography inherits one semantic ink contract in every theme
       const read = (selector: string) => getComputedStyle(root.querySelector(selector)!).color;
       const tokenProbe = document.createElement("span");
       tokenProbe.style.color = "var(--epg-ink)";
-      document.body.append(tokenProbe);
+      root.append(tokenProbe);
       const values = {
         token: getComputedStyle(tokenProbe).color,
         heading: read("h2"),
@@ -118,7 +118,6 @@ test("shared portal typography inherits one semantic ink contract in every theme
         action: read("button"),
       };
       root.remove();
-      tokenProbe.remove();
       return values;
     });
     expect(result.heading, theme).toBe(result.token);
