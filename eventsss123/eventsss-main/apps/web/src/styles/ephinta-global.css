@@ -933,7 +933,7 @@ html body #root .eph-landing[data-theme="light"] main .ephinta-bright-slogan {
 /* Planner builder fields are part of the parent workspace surface:
    use its exact theme ink instead of the legacy pale-input text override. */
 html[data-ephinta-theme] body #root .ess-builder-card :where(input,select,textarea) {
-  color: var(--epg-ink) !important;
+  color: var(--ephinta-theme-ink, var(--epg-ink)) !important;
 }
 
 /* Primary actions share the EPHINTA violet-blue-teal gradient. */
