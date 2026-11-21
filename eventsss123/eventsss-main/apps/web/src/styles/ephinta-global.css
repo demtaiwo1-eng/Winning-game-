@@ -840,3 +840,123 @@
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
 }
+
+/* FINAL APPLICATION-WIDE VISIBILITY + MARKETPLACE DIALOG CONTRACT.
+   Kept at the physical end of the global entry stylesheet so legacy and
+   component rules cannot silently repaint text later. */
+html[data-ephinta-theme] body #root .eph-landing {
+  color: var(--ephinta-theme-ink) !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+html[data-ephinta-theme] body #root .eph-landing :where(p,li,label,legend,small,summary,figcaption,blockquote,.eph-subtitle,.eph-muted,.eph-section-head p) {
+  color: var(--ephinta-theme-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme] body #root .eph-landing :where(h1,h2,h3,h4,h5,h6,strong,b,.eph-title) {
+  color: var(--ephinta-theme-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+}
+/* Dark feature/hero panels always use bright copy, regardless of page theme. */
+html[data-ephinta-theme] body #root .eph-landing :is(
+  .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
+  .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
+  [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
+) { color: #fff !important; }
+html[data-ephinta-theme] body #root .eph-landing :is(
+  .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
+  .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
+  [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
+) :where(h1,h2,h3,h4,strong,b,p,span,small,label,a,li) {
+  color: #fff !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+}
+/* Subtle brand-gradient headings; light mode remains dark and readable. */
+html[data-ephinta-theme="dark"] body #root .eph-landing main :where(h1,h2,h3),
+html[data-ephinta-theme="colorful"] body #root .eph-landing main :where(h1,h2,h3) {
+  background-image: linear-gradient(105deg,#fff 0%,#d9d2ff 48%,#ffd9a6 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html[data-ephinta-theme="light"] body #root .eph-landing :where(h1,h2,h3,h4,h5,h6,strong,b) {
+  color: #172033 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .eph-landing :is(button[class*="primary"],a[class*="primary"],button[class*="cta"],a[class*="cta"],.eph-btn-primary,.eph-primary) {
+  border: 1px solid color-mix(in srgb,var(--ephinta-theme-link) 45%,transparent) !important;
+  background: linear-gradient(112deg,#6941c6 0%,#3c72c8 54%,#218f91 100%) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: 0 8px 22px color-mix(in srgb,var(--ephinta-theme-link) 18%,transparent);
+}
+/* Marketplace enquiry and deposit dialogs share one legible gradient system. */
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal {
+  box-sizing: border-box !important;
+  width: min(92vw,520px) !important;
+  max-width: 520px !important;
+  max-height: min(88dvh,760px) !important;
+  overflow: auto !important;
+  padding: clamp(18px,4vw,28px) !important;
+  color: var(--ephinta-theme-ink) !important;
+  background-image: var(--eph-dialog-surface-gradient) !important;
+  background-color: var(--ephinta-theme-surface) !important;
+  border: 1px solid var(--eph-dialog-border) !important;
+  border-radius: 22px !important;
+  box-shadow: var(--eph-dialog-shadow) !important;
+}
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(h1,h2,h3,h4,strong,b,label) {
+  color: var(--ephinta-theme-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(p,small,.ess-muted) {
+  color: var(--ephinta-theme-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(input,select,textarea) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-height: 46px !important;
+  margin-top: 7px;
+  padding: 11px 13px !important;
+  color: var(--ephinta-theme-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: var(--ephinta-theme-surface-soft) !important;
+  border: 1px solid var(--ephinta-theme-border) !important;
+  border-radius: 12px !important;
+  font: inherit !important;
+}
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(input,textarea)::placeholder {
+  color: var(--ephinta-theme-placeholder) !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal .ess-primary {
+  min-height: 46px;
+  border: 1px solid color-mix(in srgb,var(--ephinta-theme-link) 45%,transparent) !important;
+  background: linear-gradient(112deg,#6941c6 0%,#3c72c8 54%,#218f91 100%) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal .ess-close {
+  flex: 0 0 42px;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  color: var(--ephinta-theme-ink) !important;
+  background: var(--ephinta-theme-surface-soft) !important;
+  border: 1px solid var(--ephinta-theme-border) !important;
+  border-radius: 12px;
+}
+@media (max-width:640px) {
+  html[data-ephinta-theme] body #root .ess-marketplace .ess-modal {
+    width: calc(100vw - 20px) !important;
+    max-width: 520px !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px) !important;
+    padding: 18px !important;
+  }
+}
