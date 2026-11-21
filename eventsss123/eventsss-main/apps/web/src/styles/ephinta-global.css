@@ -866,9 +866,19 @@ html[data-ephinta-theme] body #root .eph-landing :is(
   .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
   .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
   [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
-) :where(h1,h2,h3,h4,strong,b,p,span,small,label,a,li) {
+) :where(p,span,small,label,a,li) {
   color: #fff !important;
   -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+}
+/* Headings and emphasis inherit the bright panel ink unless a dedicated
+   gradient-heading rule intentionally supplies transparent text fill. */
+html[data-ephinta-theme] body #root .eph-landing :is(
+  .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
+  .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
+  [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
+) :where(h1,h2,h3,h4,strong,b) {
+  color: inherit !important;
   opacity: 1 !important;
 }
 /* Subtle brand-gradient headings; light mode remains dark and readable. */
