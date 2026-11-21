@@ -79,7 +79,7 @@ html[data-ephinta-theme] body #root {
 :where(.ess-muted,.muted,.text-muted,.text-secondary,.helper-text,.form-hint,
   .form-description,.field-description,.section-description,.workspace-subtitle,
   .empty-state,.ess-eyebrow,.eyebrow) {
-  color: var(--epg-muted);
+  color: var(--ephinta-theme-muted, var(--epg-muted));
 }
 :where(a,[role="link"],.text-action,.back-button) {
   color: var(--epg-link);
@@ -725,7 +725,7 @@ html[data-ephinta-theme] :is(
   .ess-modal,.ess-auth-modal,.eph-modal,.pl-dl,.esg-dialog,
   .ess-dialog-surface,.dialog-panel,.modal-panel,
   [role="dialog"],[aria-modal="true"],dialog[open]
-) :where(p,small,li,.muted,.text-muted,.helper-text,.ess-muted) { color: var(--epg-muted); }
+) :where(p,small,li,.muted,.text-muted,.helper-text,.ess-muted) { color: var(--ephinta-theme-muted, var(--epg-muted)); }
 html[data-ephinta-theme] :is(
   .ess-modal,.ess-auth-modal,.eph-modal,.pl-dl,.esg-dialog,
   .ess-dialog-surface,.dialog-panel,.modal-panel,
