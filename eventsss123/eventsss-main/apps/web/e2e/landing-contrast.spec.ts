@@ -115,7 +115,7 @@ test("shared portal typography inherits one semantic ink contract in every theme
         muted: read(".ess-muted"),
         field: read("input"),
         link: read("a"),
-        action: read("button"),
+        action: read("button.ess-primary"),
       };
       root.remove();
       tokenProbe.remove();
