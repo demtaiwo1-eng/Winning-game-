@@ -12,10 +12,10 @@ const SEARCH_STOP_WORDS = new Set([
   "the", "to", "want", "with", "need", "book", "hire", "some", "any",
 ]);
 
-function marketplaceSearchTerms(query?: string): string[] {
+export function marketplaceSearchTerms(query?: string): string[] {
   if (!query) return [];
   return [...new Set(
-    (query.toLocaleLowerCase().match(/[\\p{L}\\p{N}]+/gu) || [])
+    (query.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
       .filter((term) => term.length > 1 && !SEARCH_STOP_WORDS.has(term)),
   )].slice(0, 8);
 }
