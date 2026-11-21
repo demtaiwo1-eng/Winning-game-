@@ -72,7 +72,7 @@ describe("EPHINTA global theme contrast", () => {
   });
 
   it("defines shared body and heading typography tokens", () => {
-    for (const name of ["--epg-font-body", "--epg-font-display", "--epg-text-base", "--epg-heading-1", "--epg-heading-2", "--epg-heading-3", "--epg-heading-4", "--epg-leading-body", "--epg-weight-bold"]) {
+    for (const name of ["--epg-font-body", "--epg-font-display", "--epg-text-base", "--epg-heading-1", "--epg-heading-2", "--epg-heading-3", "--epg-heading-4", "--epg-leading-body", "--epg-weight-bold", "--font-display:var(--epg-font-display)", "--font-interface:var(--epg-font-body)", "--eph-parent-font:var(--epg-font-body)"]) {
       expect(contract).toContain(name);
     }
     expect(runtimeCss).toContain("font-size: var(--epg-heading-1");
