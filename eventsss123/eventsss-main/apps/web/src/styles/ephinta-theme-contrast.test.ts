@@ -9,6 +9,7 @@ const appEntry = readFileSync(new URL("../main.tsx", import.meta.url), "utf8");
 const enterpriseApp = readFileSync(new URL("../EnterpriseApp.tsx", import.meta.url), "utf8");
 const pwaManifest = JSON.parse(readFileSync(new URL("../../public/manifest.webmanifest", import.meta.url), "utf8")) as { name: string; short_name: string; icons: Array<{ src: string; type: string }> };
 const pwaIcon = readFileSync(new URL("../../public/icons/ess-icon.svg", import.meta.url), "utf8");
+const indexLegacyThemeBlockRemoved = () => !readFileSync(new URL("../index.css", import.meta.url), "utf8").includes("EPHINTA GLOBAL THEME TEXT CONTRACT");
 
 function token(block: string, name: string): string {
   const value = block.match(new RegExp(`--epg-${name}:\\s*(#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)\\b`))?.[1];
@@ -85,18 +86,16 @@ describe("EPHINTA global theme contrast", () => {
     expect(appEntry.indexOf("initializeEphintaTheme();")).toBeLessThan(appEntry.indexOf("ReactDOM.createRoot"));
   });
 
-  it("lets component text retain semantic colours while shared controls use theme tokens", () => {
-    expect(runtimeCss).toContain("Text inherits from its component");
-    expect(runtimeCss).toContain("Final readable type system");
-    expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] body #root :where(h1,h2,h3,h4,h5,h6)');
-    expect(runtimeCss).toContain("-webkit-text-fill-color: currentColor");
-    expect(runtimeCss).toContain("color: #24143a !important");
-    expect(runtimeCss).toContain('html[data-ephinta-theme="light"] body #root');
-    expect(runtimeCss).toContain("--ephinta-link-fg");
-    expect(runtimeCss).toContain("--ephinta-field-bg");
-    expect(runtimeCss).not.toContain("html[data-ephinta-theme] body #root :is(h1,h2,h3,h4,h5,h6");
-    expect(runtimeCss).not.toContain("button *");
-    expect(runtimeCss).not.toContain(".status-pill *");
+  it("uses one surface-aware typography contract without flattening component text", () => {
+    expect(runtimeCss).toContain("Base type is inherited from the nearest component surface");
+    expect(runtimeCss).toContain("font-family: var(--epg-font-body");
+    expect(runtimeCss).toContain("color: var(--epg-muted)");
+    expect(runtimeCss).toContain("color: var(--epg-link)");
+    expect(runtimeCss).toContain("color: var(--epg-ink)");
+    expect(runtimeCss).not.toContain('[class*="landing"]');
+    expect(runtimeCss).not.toContain(":where(*)");
+    expect(runtimeCss).not.toContain("color: #24143a !important");
+    expect(indexLegacyThemeBlockRemoved()).toBe(true);
   });
 
   it("keeps native controls aligned with the selected colorful palette", () => {
@@ -124,14 +123,12 @@ describe("EPHINTA global theme contrast", () => {
     expect(enterpriseApp).not.toContain('className="ess-brand-mark"');
   });
 
-  it("enforces readable text and a visible EPHINTA wordmark throughout all themes", () => {
-    expect(runtimeCss).toContain("FINAL EPHINTA TEXT VISIBILITY CONTRACT");
-    expect(runtimeCss).toContain("--ephinta-readable-text: #17152b");
-    expect(runtimeCss).toContain("--ephinta-readable-text: #f7f9ff");
-    expect(runtimeCss).toContain('[class*="landing"]');
+  it("keeps the EPHINTA wordmark visible without forcing every menu descendant to one colour", () => {
     expect(runtimeCss).toContain(".ess-brand-wordmark strong");
     expect(runtimeCss).toContain("-webkit-text-fill-color: var(--epg-ink) !important");
     expect(runtimeCss).toContain('html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown');
+    expect(runtimeCss).toContain(":where(small,.ess-muted,.text-muted)");
+    expect(runtimeCss).not.toContain(".ess-menu-dropdown :where(*)");
   });
 
   it("uses light readable surfaces for the multicolour and light account menus", () => {
