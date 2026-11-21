@@ -520,7 +520,7 @@
 .ephinta-startup-screen__message {
   max-width: 420px;
   margin: 0;
-  color: var(--epg-muted);
+  color: var(--ephinta-theme-muted, var(--epg-muted)) !important;
   line-height: 1.6;
 }
 .ephinta-startup-screen__action {
@@ -566,7 +566,7 @@
   cursor: pointer;
 }
 .ess-mode-choice strong { color: inherit; font-size: 12px; }
-.ess-mode-choice small { color: var(--epg-muted); font-size: 9px; line-height: 1.2; }
+.ess-mode-choice small { color: var(--ephinta-theme-muted, var(--epg-muted)) !important; font-size: 9px; line-height: 1.2; }
 .ess-mode-choice.is-selected {
   border: 2px solid var(--epg-accent);
   background: color-mix(in srgb, var(--epg-accent) 12%, var(--epg-surface));
@@ -852,7 +852,7 @@ html[data-ephinta-theme] body #root :where(.ess-shell,.ess-app,.ess-portal-stack
   color: var(--epg-ink);
 }
 html[data-ephinta-theme] body #root :where(.ess-muted,.muted,.text-muted,.text-secondary,.helper-text,.form-hint,.form-description,.field-description,.section-description,.workspace-subtitle,.empty-state,.ess-eyebrow) {
-  color: var(--epg-muted);
+  color: var(--ephinta-theme-muted, var(--epg-muted)) !important;
 }
 html[data-ephinta-theme] body #root :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea,option) {
   color: var(--ephinta-theme-ink, var(--epg-ink)) !important;
@@ -965,7 +965,7 @@ html[data-ephinta-theme] body #root .ess-marketplace .ess-modal {
   box-shadow: var(--epg-shadow);
 }
 html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(h1,h2,h3,h4,strong,b,label) { color: var(--epg-ink); }
-html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(p,small,.ess-muted) { color: var(--epg-muted); }
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(p,small,.ess-muted) { color: var(--ephinta-theme-muted, var(--epg-muted)) !important; }
 html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(input,select,textarea) {
   box-sizing: border-box;
   width: 100%;
