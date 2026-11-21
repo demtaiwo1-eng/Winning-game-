@@ -41,13 +41,19 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
     const light = await page.evaluate(() => {
       const heading = document.querySelector(".ephinta-marketing-zone h2");
       const copy = document.querySelector(".eph-section-head p");
+      const promoHeading = document.querySelector(".eph-promo-heading h2");
+      const marketingCopy = document.querySelector(".ephinta-marketing-zone .ephinta-right-copy-visible");
       return {
         heading: heading ? getComputedStyle(heading).webkitTextFillColor : null,
         copy: copy ? getComputedStyle(copy).color : null,
+        promoHeading: promoHeading ? getComputedStyle(promoHeading).color : null,
+        marketingCopy: marketingCopy ? getComputedStyle(marketingCopy).color : null,
       };
     });
     expect(light.heading, `light-mode heading at ${width}px`).toBe("rgb(23, 21, 42)");
     expect(light.copy, `light-mode copy at ${width}px`).toBe("rgb(41, 36, 61)");
+    expect(light.promoHeading, `light-mode promo heading at ${width}px`).toBe("rgb(255, 255, 255)");
+    expect(light.marketingCopy, `light-mode marketing copy at ${width}px`).not.toBe("rgb(255, 255, 255)");
   }
 });
 
