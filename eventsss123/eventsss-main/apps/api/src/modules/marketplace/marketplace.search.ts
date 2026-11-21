@@ -4,7 +4,7 @@ const SEARCH_STOP_WORDS = new Set([
   "the", "to", "want", "with", "need", "book", "hire", "some", "any",
 ]);
 
-export export function marketplaceSearchTerms(query?: string): string[] {
+export function marketplaceSearchTerms(query?: string): string[] {
   if (!query) return [];
   return [...new Set(
     (query.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
