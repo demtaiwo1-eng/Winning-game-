@@ -1040,3 +1040,10 @@ html body #root .eph-landing[data-theme="colorful"] main .ephinta-marketing-zone
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
 }
+
+/* The landing page owns its selected theme independently of the app shell.
+   Explicitly restore the light-mode section-copy ink at every breakpoint. */
+html body #root .eph-landing[data-theme="light"] .eph-section-head p {
+  color: #29243d !important;
+  -webkit-text-fill-color: #29243d !important;
+}
