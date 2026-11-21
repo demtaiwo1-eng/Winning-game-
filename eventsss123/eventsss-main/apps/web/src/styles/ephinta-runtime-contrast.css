@@ -62,11 +62,16 @@ html[data-ephinta-theme] body #root {
   font-weight: var(--epg-weight-normal, 400);
   line-height: var(--epg-leading-body, 1.55);
 }
-:where(html[data-ephinta-theme] body #root) :where(h1,h2,h3,h4,h5,h6) {
+:where(html[data-ephinta-theme] body #root) :is(h1,h2,h3,h4,h5,h6) {
   color: inherit;
   font-family: var(--epg-font-display, var(--epg-font-body, Inter, sans-serif));
   font-weight: var(--epg-weight-bold, 700);
   line-height: var(--epg-leading-tight, 1.2);
+  letter-spacing: -.02em;
+}
+:where(html[data-ephinta-theme] body #root) small {
+  font-size: var(--epg-text-sm, .875rem);
+  line-height: 1.4;
 }
 :where(html[data-ephinta-theme] body #root) h1 { font-size: var(--epg-heading-1, clamp(1.9rem, 3.8vw, 3rem)); }
 :where(html[data-ephinta-theme] body #root) h2 { font-size: var(--epg-heading-2, clamp(1.5rem, 2.6vw, 2.1rem)); }
