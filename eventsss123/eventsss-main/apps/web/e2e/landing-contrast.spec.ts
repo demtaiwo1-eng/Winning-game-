@@ -74,6 +74,9 @@ test("marketplace deposit and enquiry dialogs keep readable themed copy and grad
     if (theme === "dark") {
       expect(result.modalColor).toBe("rgb(244, 247, 255)");
       expect(result.fieldColor).toBe("rgb(244, 247, 255)");
+    } else if (theme === "colorful") {
+      expect(result.modalColor).toBe("rgb(33, 21, 47)");
+      expect(result.fieldColor).toBe("rgb(33, 21, 47)");
     } else {
       expect(result.modalColor).toBe("rgb(23, 32, 51)");
       expect(result.fieldColor).toBe("rgb(23, 32, 51)");
