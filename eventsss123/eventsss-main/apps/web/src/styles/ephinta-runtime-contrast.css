@@ -1,10 +1,9 @@
 /*
  * EPHINTA accessible runtime typography and contrast contract.
  * Text inherits from its component where semantic colour is meaningful.
- * Final readable type system keeps normal copy high-contrast in every mode.
- * Light and colourful modes use dark text on light surfaces. Dark mode uses
- * light text on dark surfaces. Colour is reserved for hierarchy and accents;
- * contrast, not hue, carries readability.
+ * Typography is consistent across routes while foreground colours are owned
+ * by their nearest semantic surface. Light/colorful use dark ink on light
+ * surfaces; dark mode uses light ink on dark surfaces.
  */
 :root {
   font-synthesis: none;
@@ -15,74 +14,89 @@
 
 html[data-ephinta-theme="light"] {
   color-scheme: light;
-  --ephinta-fg: #000000;
-  --ephinta-fg-muted: #202020;
-  --ephinta-fg-subtle: #333333;
-  --ephinta-link-fg: #24108f;
-  --ephinta-field-bg: #ffffff;
-  --ephinta-field-border: #cbd5e1;
-  --ephinta-field-placeholder: #5d6a80;
+  --ephinta-fg: var(--epg-ink);
+  --ephinta-fg-muted: var(--epg-muted);
+  --ephinta-fg-subtle: var(--epg-subtle);
+  --ephinta-link-fg: var(--epg-link);
+  --ephinta-field-bg: var(--epg-surface-raised);
+  --ephinta-field-border: var(--epg-border);
+  --ephinta-field-placeholder: var(--epg-subtle);
 }
 html[data-ephinta-theme="dark"] {
   color-scheme: dark;
-  --ephinta-fg: #f7f9ff;
-  --ephinta-fg-muted: #e0e8f7;
-  --ephinta-fg-subtle: #cbd8ee;
-  --ephinta-link-fg: #a9e7ff;
-  --ephinta-field-bg: #1a2940;
-  --ephinta-field-border: #526581;
-  --ephinta-field-placeholder: #cbd8ee;
+  --ephinta-fg: var(--epg-ink);
+  --ephinta-fg-muted: var(--epg-muted);
+  --ephinta-fg-subtle: var(--epg-subtle);
+  --ephinta-link-fg: var(--epg-link);
+  --ephinta-field-bg: var(--epg-surface-raised);
+  --ephinta-field-border: var(--epg-border);
+  --ephinta-field-placeholder: var(--epg-subtle);
 }
 html[data-ephinta-theme="colorful"] {
   color-scheme: light;
-  --ephinta-fg: #24143a;
-  --ephinta-fg-muted: #49345f;
-  --ephinta-fg-subtle: #5b4770;
-  --ephinta-link-fg: #5630a8;
-  --ephinta-field-bg: #ffffff;
-  --ephinta-field-border: #ddc9ed;
-  --ephinta-field-placeholder: #5b4770;
+  --ephinta-fg: var(--epg-ink);
+  --ephinta-fg-muted: var(--epg-muted);
+  --ephinta-fg-subtle: var(--epg-subtle);
+  --ephinta-link-fg: var(--epg-link);
+  --ephinta-field-bg: var(--epg-surface-raised);
+  --ephinta-field-border: var(--epg-border);
+  --ephinta-field-placeholder: var(--epg-subtle);
 }
 
 html[data-ephinta-theme] body,
 html[data-ephinta-theme] body #root {
-  color: var(--ephinta-fg);
+  color: var(--epg-ink);
   background-color: var(--epg-page);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  line-height: 1.5;
+  font-family: var(--epg-font-body);
+  font-size: var(--epg-text-base);
+  font-weight: var(--epg-weight-normal);
+  line-height: var(--epg-leading-body);
 }
 
-/* Predictable readable defaults for ordinary application copy. */
-html[data-ephinta-theme="light"] body #root :where(
-  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,li,dt,dd,
-  th,td,caption,figcaption,summary,blockquote,code,pre,output,
-  .muted,.ess-muted,.text-muted,.helper-text,.form-hint,.form-description,
-  .field-description,.section-description,.workspace-subtitle,.empty-state,
-  .eyebrow,.text-secondary
-) { color: #000000; }
-
-html[data-ephinta-theme="dark"] body #root :where(
-  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,li,dt,dd,
-  th,td,caption,figcaption,summary,blockquote,code,pre,output,
-  .muted,.ess-muted,.text-muted,.helper-text,.form-hint,.form-description,
-  .field-description,.section-description,.workspace-subtitle,.empty-state,
-  .eyebrow,.text-secondary
-) { color: #f0f5ff !important; }
-
-html[data-ephinta-theme="colorful"] body #root :where(
-  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,li,dt,dd,
-  th,td,caption,figcaption,summary,blockquote,code,pre,output,
-  .muted,.ess-muted,.text-muted,.helper-text,.form-hint,.form-description,
-  .field-description,.section-description,.workspace-subtitle,.empty-state,
-  .eyebrow,.text-secondary
-) { color: #24143a !important; }html[data-ephinta-theme="colorful"] body #root :where(h1,h2,h3,h4,h5,h6) {
-  color: #32164f !important;
-  background-image: none !important;
-  background-clip: border-box;
-  -webkit-background-clip: border-box;
-  -webkit-text-fill-color: currentColor;
+/* Base type is inherited from the nearest component surface.
+   The global layer sets typography; individual surfaces own foreground contrast. */
+:where(html[data-ephinta-theme] body #root) {
+  color: var(--epg-ink);
+  font-family: var(--epg-font-body, Inter, ui-sans-serif, system-ui, sans-serif);
+  font-size: var(--epg-text-base, 1rem);
+  font-weight: var(--epg-weight-normal, 400);
+  line-height: var(--epg-leading-body, 1.55);
 }
-
+:where(html[data-ephinta-theme] body #root) :is(h1,h2,h3,h4,h5,h6) {
+  color: inherit;
+  font-family: var(--epg-font-display, var(--epg-font-body, Inter, sans-serif));
+  font-weight: var(--epg-weight-bold, 700);
+  line-height: var(--epg-leading-tight, 1.2);
+  letter-spacing: -.02em;
+}
+:where(html[data-ephinta-theme] body #root) small {
+  font-size: var(--epg-text-sm, .875rem);
+  line-height: 1.4;
+}
+:where(html[data-ephinta-theme] body #root) h1 { font-size: var(--epg-heading-1, clamp(1.9rem, 3.8vw, 3rem)); }
+:where(html[data-ephinta-theme] body #root) h2 { font-size: var(--epg-heading-2, clamp(1.5rem, 2.6vw, 2.1rem)); }
+:where(html[data-ephinta-theme] body #root) h3 { font-size: var(--epg-heading-3, 1.25rem); }
+:where(html[data-ephinta-theme] body #root) h4 { font-size: var(--epg-heading-4, 1.125rem); }
+:where(html[data-ephinta-theme] body #root) :where(h5,h6) { font-size: var(--epg-text-lg, 1.125rem); }
+:where(html[data-ephinta-theme] body #root) :where(p,span,small,strong,b,em,i,label,legend,li,dt,dd,th,td,caption,figcaption,summary,blockquote,code,pre,output,button,input,select,textarea) {
+  font-family: inherit;
+}
+:where(html[data-ephinta-theme] body #root) :where(small,.ess-muted,.muted,.text-muted,.text-secondary,.helper-text,.form-hint,.form-description,.field-description,.section-description,.workspace-subtitle,.empty-state) {
+  color: var(--epg-muted);
+}
+:where(html[data-ephinta-theme] body #root) :where(a,[role="link"]) {
+  color: var(--epg-link);
+}
+:where(html[data-ephinta-theme] body #root) :where(input,select,textarea,option) {
+  color: var(--epg-ink);
+  background-color: var(--epg-surface-raised);
+  border-color: var(--epg-border);
+  accent-color: var(--epg-accent);
+}
+:where(html[data-ephinta-theme] body #root) :where(input,textarea)::placeholder {
+  color: var(--epg-subtle);
+  opacity: 1;
+}
 
 /* Theme-aware app identity and account menu. Light and multicolour themes
    must never put dark lettering on the legacy midnight navigation surfaces. */
@@ -182,56 +196,9 @@ html[data-ephinta-theme="colorful"] .ess-app .ess-menu-option b {
   .ess-app .ess-brand-wordmark small { font-size: 9px; }
 }
 
-/* FINAL EPHINTA TEXT VISIBILITY CONTRACT
-   The selected theme controls foreground contrast everywhere, including the
-   public landing page, navigation, nested cards, forms and mobile layouts. */
-html[data-ephinta-theme="light"] body #root,
-html[data-ephinta-theme="colorful"] body #root {
-  --ephinta-readable-text: #17152b;
-  --ephinta-readable-muted: #41445a;
-}
-html[data-ephinta-theme="dark"] body #root {
-  --ephinta-readable-text: #f7f9ff;
-  --ephinta-readable-muted: #e0e8f7;
-}
-html[data-ephinta-theme] body #root :where(
-  h1,h2,h3,h4,h5,h6,p,span,small,strong,b,em,i,label,legend,li,dt,dd,
-  th,td,caption,figcaption,summary,blockquote,code,pre,output,
-  .ess-eyebrow,.ess-muted,.muted,.text-muted,.text-secondary,
-  .helper-text,.form-hint,.form-description,.field-description,
-  .section-description,.workspace-subtitle,.empty-state,
-  .landing-page,.landing-page *,[class*="landing"] p,
-  [class*="landing"] span,[class*="landing"] small,
-  [class*="landing"] h1,[class*="landing"] h2,
-  [class*="landing"] h3,[class*="landing"] h4,
-  [class*="landing"] li,[class*="landing"] label
-) {
-  color: var(--ephinta-readable-text) !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-html[data-ephinta-theme] body #root :where(
-  .ess-muted,.muted,.text-muted,.text-secondary,.helper-text,
-  .form-hint,.form-description,.field-description,.section-description,
-  .workspace-subtitle,.empty-state,.ess-eyebrow
-) {
-  color: var(--ephinta-readable-muted) !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-html[data-ephinta-theme] body #root a,
-html[data-ephinta-theme] body #root [role="link"] {
-  color: var(--epg-link) !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-html[data-ephinta-theme] body #root :where(input,select,textarea,option) {
-  color: var(--epg-ink) !important;
-  background-color: var(--epg-surface-raised) !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-html[data-ephinta-theme] body #root :where(input,textarea)::placeholder {
-  color: var(--epg-subtle) !important;
-  opacity: 1 !important;
-  -webkit-text-fill-color: currentColor !important;
-}
+/* Shared text visibility is surface-aware: no blanket descendant colour or
+   -webkit-text-fill override. Cards, dialogs, buttons and feature panels keep
+   their own semantic foregrounds while inheriting the app typography. */
 
 /* The EPHINTA wordmark is deliberately opaque and high-contrast so it cannot
    disappear into colorful gradients, inherited opacity or menu effects. */
@@ -287,18 +254,23 @@ html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown {
   background: #ffffff !important;
   color: #17152b !important;
 }
-html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown :where(*),
-html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown :where(*) {
-  color: #17152b !important;
-  -webkit-text-fill-color: currentColor !important;
+html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown :where(h1,h2,h3,h4,p,span,strong,b,label,li),
+html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown :where(h1,h2,h3,h4,p,span,strong,b,label,li) {
+  color: var(--epg-ink) !important;
+}
+html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown :where(small,.ess-muted,.text-muted),
+html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown :where(small,.ess-muted,.text-muted) {
+  color: var(--epg-muted) !important;
 }
 html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown {
   background: #121d30 !important;
   color: #f7f9ff !important;
 }
-html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown :where(*) {
-  color: #f7f9ff !important;
-  -webkit-text-fill-color: currentColor !important;
+html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown :where(h1,h2,h3,h4,p,span,strong,b,label,li) {
+  color: var(--epg-ink) !important;
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown :where(small,.ess-muted,.text-muted) {
+  color: var(--epg-muted) !important;
 }
 
 

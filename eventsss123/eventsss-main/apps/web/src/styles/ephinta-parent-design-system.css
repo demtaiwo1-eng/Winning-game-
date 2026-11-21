@@ -89,7 +89,7 @@
 .ess-builder-lead { color: var(--eph-parent-muted); }
 .ess-builder-card .ess-muted { color: var(--eph-parent-muted); }
 .ess-builder-card label {
-  color: #403956;
+  color: var(--eph-parent-ink);
   font: 700 13px/1.45 var(--eph-parent-font);
 }
 .ess-builder-card input,
@@ -98,25 +98,25 @@
   box-sizing: border-box;
   width: 100%;
   min-height: 50px;
-  border: 1px solid #ded8eb;
+  border: 1px solid var(--eph-parent-border);
   border-radius: 12px;
   padding: 13px 15px;
-  background: #f9f8fc;
+  background: var(--eph-parent-surface-muted);
   color: var(--eph-parent-ink);
   font: 500 14px/1.4 var(--eph-parent-font);
   box-shadow: none;
 }
 .ess-builder-card input::placeholder,
-.ess-builder-card textarea::placeholder { color: #9992aa; }
+.ess-builder-card textarea::placeholder { color: var(--eph-parent-muted); }
 .ess-builder-card input:hover,
 .ess-builder-card select:hover,
-.ess-builder-card textarea:hover { border-color: #c8b9ed; }
+.ess-builder-card textarea:hover { border-color: var(--eph-parent-secondary); }
 .ess-builder-card input:focus,
 .ess-builder-card select:focus,
 .ess-builder-card textarea:focus {
   border-color: var(--eph-parent-secondary);
   outline: 3px solid var(--eph-parent-focus);
-  background: #fff;
+  background: var(--eph-parent-surface);
 }
 .ess-builder-actions { gap: 12px; }
 .ess-builder .ess-primary,

@@ -26,6 +26,11 @@ const globalCss = read("src/styles/ephinta-global.css");
 const themeCss = read("src/styles/ephinta-global-theme-contract.css");
 const introCss = read("src/components/branding/ephinta-intro.css");
 const audioCss = read("src/styles/ephinta-audio.css");
+const runtimeCss = read("src/styles/ephinta-runtime-contrast.css");
+const brightThemeCss = read("src/ephinta-bright-theme-colors.css");
+const unifiedThemeCss = read("src/ephinta-unified-theme.css");
+const parentDesignCss = read("src/styles/ephinta-parent-design-system.css");
+const dashboardCss = read("src/styles/ephinta-dashboard-system.css");
 
 check(entry.includes("import './styles/ephinta-global.css';"),
   "Application entry imports the centralized global stylesheet.");
@@ -52,7 +57,7 @@ for (const mode of ["light", "dark", "colorful"]) {
   const selectorCount = (themeCss.match(new RegExp('html\\[data-ephinta-theme="' + mode + '"\\]', "g")) ?? []).length;
   check(selectorCount === 1, "Theme contract defines the " + mode + " palette exactly once.");
 }
-for (const token of ["--epg-page", "--epg-surface", "--epg-ink", "--epg-muted", "--epg-border", "--epg-link", "--epg-focus", "--epg-accent", "--epg-accent-ink"]) {
+for (const token of ["--epg-page", "--epg-surface", "--epg-ink", "--epg-muted", "--epg-border", "--epg-link", "--epg-focus", "--epg-accent", "--epg-accent-ink", "--epg-font-body", "--epg-font-display", "--epg-text-base", "--epg-heading-1", "--epg-heading-2", "--epg-heading-3", "--epg-heading-4", "--epg-leading-body", "--epg-weight-bold", "--font-display", "--font-interface", "--eph-parent-font"]) {
   check(themeCss.includes(token), "Global theme token exists: " + token);
 }
 check(/background:\s*var\(--epg-page/.test(introCss) && /color:\s*var\(--epg-ink/.test(introCss),
@@ -61,6 +66,20 @@ check(audioCss.includes("var(--epg-page") && audioCss.includes("var(--epg-surfac
   "Audio consent, player, restore button and focus states consume global theme tokens.");
 check(globalCss.includes(".ephinta-startup-screen") && globalCss.includes("var(--epg-accent)"),
   "Startup and fatal-error surfaces consume global theme tokens.");
+check(runtimeCss.includes("Base type is inherited from the nearest component surface") &&
+  !runtimeCss.includes('[class*="landing"]') && !runtimeCss.includes(":where(*)"),
+  "Runtime typography is surface-aware and contains no blanket descendant colour selectors.");
+check(!read("src/index.css").includes("EPHINTA GLOBAL THEME TEXT CONTRACT"),
+  "Legacy index stylesheet does not add a second global text-colour contract.");
+check(!/:root\[data-ephinta-theme=[^\]]+\]\s*(?:input|select|textarea|p|li|label|small)/.test(brightThemeCss) &&
+  !/html\[data-ephinta-theme\][^{}]*\b(?:input|select|textarea|p|li|label|small)\b/.test(unifiedThemeCss),
+  "Legacy accent sheets contain no global text or form-control colour overrides.");
+check(parentDesignCss.includes("background: var(--eph-parent-surface-muted)") &&
+  parentDesignCss.includes("color: var(--eph-parent-ink)") &&
+  (dashboardCss.includes("color: inherit !important") ||
+    dashboardCss.includes("color: var(--epg-ink, #17152b) !important")) &&
+  dashboardCss.includes("-webkit-text-fill-color: currentColor !important"),
+  "Planner and dashboard fields inherit their nearest surface foreground.");
 check(/@media\s*\(max-width:\s*390px\)/.test(globalCss),
   "Startup surface has a compact-phone responsive rule.");
 check(/prefers-reduced-motion/.test(introCss) && /prefers-reduced-motion/.test(themeCss),

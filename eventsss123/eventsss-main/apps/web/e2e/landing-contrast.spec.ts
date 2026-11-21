@@ -16,30 +16,46 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
           const style = getComputedStyle(element);
           return { color: style.color, fill: style.webkitTextFillColor, background: style.backgroundColor };
         };
+        const panel = document.querySelector(".ephinta-marketing-zone");
+        const copy = panel?.querySelector(".ephinta-right-copy-visible");
+        const panelStyle = panel ? getComputedStyle(panel) : null;
+        const copyStyle = copy ? getComputedStyle(copy) : null;
         return {
           promo: read(".eph-promo-heading h2"),
           marketing: read(".ephinta-marketing-zone h2"),
           section: read(".eph-section h2"),
           copy: read(".eph-section-head p"),
+          heroCopy: read(".eph-subtitle"),
+          marketingPanel: panelStyle ? panelStyle.backgroundColor : null,
+          marketingCopy: copyStyle ? copyStyle.color : null,
         };
       });
       expect(colors.promo?.color, `promo heading in ${theme} at ${width}px`).not.toBe("rgb(37, 22, 51)");
       expect(colors.marketing?.fill, `marketing heading gradient in ${theme} at ${width}px`).toBe("rgba(0, 0, 0, 0)");
       expect(colors.section?.fill, `section heading gradient in ${theme} at ${width}px`).toBe("rgba(0, 0, 0, 0)");
       expect(colors.copy?.color, `section copy in ${theme} at ${width}px`).toBe("rgb(233, 229, 255)");
+      expect(colors.heroCopy?.color, `hero copy in ${theme} at ${width}px`).not.toBe("rgb(255, 255, 255)");
+      expect(colors.marketingCopy, `marketing panel copy in ${theme} at ${width}px`).not.toBe("rgb(255, 255, 255)");
+      expect(colors.marketingPanel, `marketing panel surface in ${theme} at ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
     }
 
     await page.locator(".eph-theme-select select").selectOption("light", { force: true });
     const light = await page.evaluate(() => {
       const heading = document.querySelector(".ephinta-marketing-zone h2");
       const copy = document.querySelector(".eph-section-head p");
+      const promoHeading = document.querySelector(".eph-promo-heading h2");
+      const marketingCopy = document.querySelector(".ephinta-marketing-zone .ephinta-right-copy-visible");
       return {
         heading: heading ? getComputedStyle(heading).webkitTextFillColor : null,
         copy: copy ? getComputedStyle(copy).color : null,
+        promoHeading: promoHeading ? getComputedStyle(promoHeading).color : null,
+        marketingCopy: marketingCopy ? getComputedStyle(marketingCopy).color : null,
       };
     });
     expect(light.heading, `light-mode heading at ${width}px`).toBe("rgb(23, 21, 42)");
     expect(light.copy, `light-mode copy at ${width}px`).toBe("rgb(41, 36, 61)");
+    expect(light.promoHeading, `light-mode promo heading at ${width}px`).toBe("rgb(255, 255, 255)");
+    expect(light.marketingCopy, `light-mode marketing copy at ${width}px`).not.toBe("rgb(255, 255, 255)");
   }
 });
 

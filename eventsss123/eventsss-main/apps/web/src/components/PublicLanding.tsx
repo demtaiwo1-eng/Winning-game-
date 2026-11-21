@@ -1248,16 +1248,14 @@ export default function PublicLanding({
           -webkit-text-fill-color:transparent !important;
           text-shadow:0 2px 18px rgba(112,231,255,.12) !important;
         }
-        .eph-landing[data-theme="light"] { color:#17152a !important; background:#f8fafc !important; }
-        .eph-landing[data-theme="light"] main :is(p,li,label,small,span,strong,summary,dt,dd),
-        .eph-landing[data-theme="light"] footer :is(p,li,label,small,span,strong,a) {
-          color:#29243d !important; -webkit-text-fill-color:#29243d !important;
-        }
-        .eph-landing[data-theme="light"] main :is(h1,h2,h3,h4) {
-          color:#17152a !important; background:none !important; -webkit-text-fill-color:#17152a !important; text-shadow:none !important;
-        }
+        .eph-landing[data-theme="light"] { color:var(--epg-ink, #17152a) !important; background:var(--epg-page, #f8fafc) !important; }
+        /* Form labels are scoped to their own light form surfaces; page copy is
+           styled by the centralized surface-aware global typography contract. */
         .eph-landing[data-theme="light"] .eph-field label,
-        .eph-landing[data-theme="light"] .eph-modal label { color:#29243d !important; }
+        .eph-landing[data-theme="light"] .eph-modal label {
+          color:var(--epg-ink, #29243d) !important;
+          -webkit-text-fill-color:currentColor !important;
+        }
         /* Last-mile guard: keep the spotlight gradient after all legacy landing rules. */
         #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2,
         #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone h2 {
@@ -1266,6 +1264,21 @@ export default function PublicLanding({
           -webkit-background-clip: text !important;
           color: transparent !important;
           -webkit-text-fill-color: transparent !important;
+        }
+
+        /* Keep the marketing spotlight surface opaque on narrow mobile screens.
+           The former transparent legacy rule must never win over the theme token. */
+        #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone {
+          background-color: var(--eph-marketing-surface, #ffffff) !important;
+          background-image: none !important;
+        }
+        #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone {
+          background-color: var(--eph-marketing-surface, #202039) !important;
+          background-image: none !important;
+        }
+        #root .eph-landing[data-theme="light"] .ephinta-marketing-zone {
+          background-color: var(--eph-marketing-surface, #ffffff) !important;
+          background-image: none !important;
         }
 
 
