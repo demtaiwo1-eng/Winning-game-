@@ -16,17 +16,25 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
           const style = getComputedStyle(element);
           return { color: style.color, fill: style.webkitTextFillColor, background: style.backgroundColor };
         };
+        const panel = document.querySelector(".ephinta-marketing-zone");
+        const copy = panel?.querySelector(".ephinta-right-copy-visible");
+        const panelStyle = panel ? getComputedStyle(panel) : null;
+        const copyStyle = copy ? getComputedStyle(copy) : null;
         return {
           promo: read(".eph-promo-heading h2"),
           marketing: read(".ephinta-marketing-zone h2"),
           section: read(".eph-section h2"),
           copy: read(".eph-section-head p"),
+          marketingPanel: panelStyle ? panelStyle.backgroundColor : null,
+          marketingCopy: copyStyle ? copyStyle.color : null,
         };
       });
       expect(colors.promo?.color, `promo heading in ${theme} at ${width}px`).not.toBe("rgb(37, 22, 51)");
       expect(colors.marketing?.fill, `marketing heading gradient in ${theme} at ${width}px`).toBe("rgba(0, 0, 0, 0)");
       expect(colors.section?.fill, `section heading gradient in ${theme} at ${width}px`).toBe("rgba(0, 0, 0, 0)");
       expect(colors.copy?.color, `section copy in ${theme} at ${width}px`).toBe("rgb(233, 229, 255)");
+      expect(colors.marketingCopy, `marketing panel copy in ${theme} at ${width}px`).not.toBe("rgb(255, 255, 255)");
+      expect(colors.marketingPanel, `marketing panel surface in ${theme} at ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
     }
 
     await page.locator(".eph-theme-select select").selectOption("light", { force: true });
