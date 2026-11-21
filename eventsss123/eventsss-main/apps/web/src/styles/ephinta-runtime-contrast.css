@@ -85,7 +85,7 @@ html[data-ephinta-theme] body #root {
   color: var(--epg-link);
 }
 :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea,option) {
-  color: inherit;
+  color: var(--ephinta-theme-ink, var(--epg-ink));
   background-color: var(--epg-surface-raised);
   border-color: var(--epg-border);
   accent-color: var(--epg-accent);
