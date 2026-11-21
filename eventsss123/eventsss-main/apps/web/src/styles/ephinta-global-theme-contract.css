@@ -76,7 +76,7 @@ body { color-scheme:inherit; }
 /* Native form fields and primary actions use the selected palette. Cards and
    feature surfaces are intentionally excluded so multicolour designs survive. */
 :where(input,select,textarea,option) {
-  color:inherit;
+  color:var(--ephinta-theme-ink, var(--epg-ink));
   background-color:var(--epg-surface-raised);
   border-color:var(--epg-border);
   accent-color:var(--epg-accent);
