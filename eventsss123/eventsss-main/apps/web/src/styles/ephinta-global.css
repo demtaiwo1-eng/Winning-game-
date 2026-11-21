@@ -841,209 +841,127 @@
   -webkit-text-fill-color: transparent !important;
 }
 
-/* FINAL APPLICATION-WIDE VISIBILITY + MARKETPLACE DIALOG CONTRACT.
-   Kept at the physical end of the global entry stylesheet so legacy and
-   component rules cannot silently repaint text later. */
-html[data-ephinta-theme] body #root .eph-landing {
-  color: var(--ephinta-theme-ink) !important;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+/* FINAL APPLICATION TYPOGRAPHY CONTRACT
+   Theme variables own text colour. Components inherit from their surface;
+   only semantic roles (muted copy, links, alerts, actions) override it. */
+html[data-ephinta-theme] body #root {
+  color: var(--epg-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-html[data-ephinta-theme] body #root .eph-landing :where(p,li,label,legend,small,summary,figcaption,blockquote,.eph-subtitle,.eph-muted,.eph-section-head p) {
-  color: var(--ephinta-theme-muted) !important;
-  -webkit-text-fill-color: currentColor !important;
-  opacity: 1 !important;
+html[data-ephinta-theme] body #root :where(.ess-shell,.ess-app,.ess-portal-stack,.ess-panel,.ess-card,.ess-modal,.ess-auth-modal,.eph-modal,.ess-dialog-surface) {
+  color: var(--epg-ink);
 }
-/* Landing heading colors remain owned by the page's live data-theme contract;
-   the global body-copy guard below must not flatten gradient headings. */
-/* Dark feature/hero panels always use bright copy, regardless of page theme. */
-html[data-ephinta-theme] body #root .eph-landing :is(
-  .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
-  .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
-  [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
-) { color: #fff !important; }
-html[data-ephinta-theme] body #root .eph-landing :is(
-  .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
-  .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
-  [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
-) :where(p,span,small,label,a,li) {
-  color: #fff !important;
-  -webkit-text-fill-color: currentColor !important;
-  opacity: 1 !important;
+html[data-ephinta-theme] body #root :where(.ess-muted,.muted,.text-muted,.text-secondary,.helper-text,.form-hint,.form-description,.field-description,.section-description,.workspace-subtitle,.empty-state,.ess-eyebrow) {
+  color: var(--epg-muted);
 }
-/* Headings and emphasis inherit the bright panel ink unless a dedicated
-   gradient-heading rule intentionally supplies transparent text fill. */
-html[data-ephinta-theme] body #root .eph-landing :is(
-  .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
-  .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
-  [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
-) :where(h1,h2,h3,h4,strong,b) {
-  color: inherit !important;
-  opacity: 1 !important;
+html[data-ephinta-theme] body #root :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea,option) {
+  color: var(--epg-ink);
+  background-color: var(--epg-surface-raised);
+  border-color: var(--epg-border);
 }
-/* Subtle brand-gradient headings; light mode remains dark and readable. */
-html[data-ephinta-theme="dark"] body #root .eph-landing main :where(h1,h2,h3),
-html[data-ephinta-theme="colorful"] body #root .eph-landing main :where(h1,h2,h3) {
-  background-image: linear-gradient(105deg,#fff 0%,#d9d2ff 48%,#ffd9a6 100%);
+html[data-ephinta-theme] body #root :where(input,textarea)::placeholder {
+  color: var(--epg-subtle);
+  opacity: 1;
+}
+
+/* Landing page follows its own live theme selector, including when the app
+   shell has not yet synchronized its theme attribute. */
+#root .eph-landing[data-theme="light"] {
+  --landing-ink: #29243d;
+  --landing-muted: #49445a;
+}
+#root .eph-landing[data-theme="dark"],
+#root .eph-landing[data-theme="colorful"] {
+  --landing-ink: #f7f5ff;
+  --landing-muted: #e9e5ff;
+}
+#root .eph-landing :where(p,li,label,legend,small,summary,figcaption,blockquote,.eph-subtitle,.eph-muted,.eph-section-head p) {
+  color: var(--landing-muted, var(--epg-muted));
+  -webkit-text-fill-color: currentColor;
+  opacity: 1;
+}
+#root .eph-landing[data-theme="light"] :where(h1,h2,h3,h4,h5,h6,strong,b) {
+  color: #17152a;
+  -webkit-text-fill-color: currentColor;
+}
+#root .eph-landing[data-theme="dark"] main :where(h1,h2,h3),
+#root .eph-landing[data-theme="colorful"] main :where(h1,h2,h3) {
+  background-image: linear-gradient(105deg,#72eaff 0%,#c5a5ff 38%,#ff9bd8 72%,#ffdc85 100%);
   background-clip: text;
   -webkit-background-clip: text;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
-html[data-ephinta-theme="light"] body #root .eph-landing :where(h1,h2,h3,h4,h5,h6,strong,b) {
-  color: #172033 !important;
-  -webkit-text-fill-color: currentColor !important;
+/* Deep feature panels intentionally keep bright copy in every landing mode. */
+#root .eph-landing :is(.eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,.ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,[class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]) {
+  color: #fff;
 }
-html[data-ephinta-theme] body #root .eph-landing :is(button[class*="primary"],a[class*="primary"],button[class*="cta"],a[class*="cta"],.eph-btn-primary,.eph-primary) {
-  border: 1px solid color-mix(in srgb,var(--ephinta-theme-link) 45%,transparent) !important;
-  background: linear-gradient(112deg,#6941c6 0%,#3c72c8 54%,#218f91 100%) !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-  box-shadow: 0 8px 22px color-mix(in srgb,var(--ephinta-theme-link) 18%,transparent);
+#root .eph-landing :is(.eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,.ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,[class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]) :where(p,span,small,label,a,li) {
+  color: #fff;
+  -webkit-text-fill-color: currentColor;
+  opacity: 1;
 }
-/* Marketplace enquiry and deposit dialogs share one legible gradient system. */
+#root .eph-landing[data-theme="light"] .eph-section-head p {
+  color: #29243d;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* Primary actions share the EPHINTA violet-blue-teal gradient. */
+html[data-ephinta-theme] body #root :where(button.ess-primary,a.ess-primary,.eph-btn-primary,.eph-primary,button[class*="cta"],a[class*="cta"]) {
+  background: linear-gradient(112deg,#6941c6 0%,#3c72c8 54%,#218f91 100%);
+  color: #fff;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* Marketplace dialogs use the same semantic ink, field and surface tokens. */
 html[data-ephinta-theme] body #root .ess-marketplace .ess-modal {
-  box-sizing: border-box !important;
-  width: min(92vw,520px) !important;
-  max-width: 520px !important;
-  max-height: min(88dvh,760px) !important;
-  overflow: auto !important;
-  padding: clamp(18px,4vw,28px) !important;
-  color: var(--ephinta-theme-ink) !important;
-  background-image: var(--eph-dialog-surface-gradient) !important;
-  background-color: var(--ephinta-theme-surface) !important;
-  border: 1px solid var(--eph-dialog-border) !important;
-  border-radius: 22px !important;
-  box-shadow: var(--eph-dialog-shadow) !important;
+  box-sizing: border-box;
+  width: min(92vw,520px);
+  max-width: 520px;
+  max-height: min(88dvh,760px);
+  overflow: auto;
+  padding: clamp(18px,4vw,28px);
+  color: var(--epg-ink);
+  background: var(--epg-surface);
+  border: 1px solid var(--epg-border);
+  border-radius: 22px;
+  box-shadow: var(--epg-shadow);
 }
-html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(h1,h2,h3,h4,strong,b,label) {
-  color: var(--ephinta-theme-ink) !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(p,small,.ess-muted) {
-  color: var(--ephinta-theme-muted) !important;
-  -webkit-text-fill-color: currentColor !important;
-}
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(h1,h2,h3,h4,strong,b,label) { color: var(--epg-ink); }
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(p,small,.ess-muted) { color: var(--epg-muted); }
 html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(input,select,textarea) {
-  box-sizing: border-box !important;
-  width: 100% !important;
-  min-height: 46px !important;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
   margin-top: 7px;
-  padding: 11px 13px !important;
-  color: var(--ephinta-theme-ink) !important;
-  -webkit-text-fill-color: currentColor !important;
-  background: var(--ephinta-theme-surface-soft) !important;
-  border: 1px solid var(--ephinta-theme-border) !important;
-  border-radius: 12px !important;
-  font: inherit !important;
+  padding: 11px 13px;
+  color: var(--epg-ink);
+  background: var(--epg-surface-raised);
+  border: 1px solid var(--epg-border);
+  border-radius: 12px;
+  font: inherit;
 }
-html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(input,textarea)::placeholder {
-  color: var(--ephinta-theme-placeholder) !important;
-  -webkit-text-fill-color: currentColor !important;
-  opacity: 1 !important;
-}
+html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(input,textarea)::placeholder { color: var(--epg-subtle); opacity: 1; }
 html[data-ephinta-theme] body #root .ess-marketplace .ess-modal .ess-primary {
   min-height: 46px;
-  border: 1px solid color-mix(in srgb,var(--ephinta-theme-link) 45%,transparent) !important;
-  background: linear-gradient(112deg,#6941c6 0%,#3c72c8 54%,#218f91 100%) !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
+  background: linear-gradient(112deg,#6941c6 0%,#3c72c8 54%,#218f91 100%);
+  color: #fff;
 }
 html[data-ephinta-theme] body #root .ess-marketplace .ess-modal .ess-close {
   flex: 0 0 42px;
   width: 42px;
   min-width: 42px;
   min-height: 42px;
-  color: var(--ephinta-theme-ink) !important;
-  background: var(--ephinta-theme-surface-soft) !important;
-  border: 1px solid var(--ephinta-theme-border) !important;
+  color: var(--epg-ink);
+  background: var(--epg-surface-raised);
+  border: 1px solid var(--epg-border);
   border-radius: 12px;
 }
 @media (max-width:640px) {
   html[data-ephinta-theme] body #root .ess-marketplace .ess-modal {
-    width: calc(100vw - 20px) !important;
-    max-width: 520px !important;
-    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px) !important;
-    padding: 18px !important;
+    width: calc(100vw - 20px);
+    max-width: 520px;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px);
+    padding: 18px;
   }
-}
-
-/* Preserve the established bright copy value on the landing feature sections. */
-html[data-ephinta-theme="dark"] body #root .eph-landing .eph-section-head p,
-html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-section-head p {
-  color: #e9e5ff !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-html[data-ephinta-theme="light"] body #root .eph-landing .ephinta-marketing-zone h2 {
-  background: none !important;
-  color: #17152a !important;
-  -webkit-text-fill-color: #17152a !important;
-}
-
-/* Preserve the feature-panel gradient treatment on the marketing-zone headline
-   while keeping its supporting copy bright and legible. */
-html body #root .eph-landing[data-theme="dark"] main .ephinta-marketing-zone h2,
-html body #root .eph-landing[data-theme="colorful"] main .ephinta-marketing-zone h2 {
-  background-image: linear-gradient(105deg,#fff 0%,#d9d2ff 48%,#ffd9a6 100%) !important;
-  background-clip: text !important;
-  -webkit-background-clip: text !important;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-}
-
-/* The landing component switches its own data-theme attribute at runtime.
-   Give its spotlight heading the same high-specificity gradient contract so
-   the global ink guard cannot flatten it back to solid white. */
-#root .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2,
-#root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone h2 {
-  background-image: linear-gradient(95deg,#72eaff 0%,#c5a5ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
-  background-clip: text !important;
-  -webkit-background-clip: text !important;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-}
-
-
-/* Runtime theme selection on the landing component is independent of the
-   app-shell theme attribute. Keep this selector stronger than the broad
-   dark-panel copy guard above so gradient headlines remain gradients. */
-html body #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2,
-html body #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone h2,
-html body #root .eph-landing[data-theme="dark"] main .eph-section h2,
-html body #root .eph-landing[data-theme="colorful"] main .eph-section h2,
-html body #root .eph-landing[data-theme="dark"] main .ephinta-bright-slogan,
-html body #root .eph-landing[data-theme="colorful"] main .ephinta-bright-slogan {
-  background-image: linear-gradient(105deg,#72eaff 0%,#c5a5ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
-  background-clip: text !important;
-  -webkit-background-clip: text !important;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 0 2px 18px rgba(112,231,255,.12) !important;
-}
-html body #root .eph-landing[data-theme="light"] .ephinta-marketing-zone h2,
-html body #root .eph-landing[data-theme="light"] main .eph-section h2,
-html body #root .eph-landing[data-theme="light"] main .ephinta-bright-slogan {
-  background: none !important;
-  color: #17152a !important;
-  -webkit-text-fill-color: #17152a !important;
-  text-shadow: none !important;
-}
-
-
-/* Final specificity guard for marketing headings inside dark feature panels.
-   Panel copy stays bright; only gradient headings use transparent text fill. */
-html body #root .eph-landing[data-theme="dark"] main .ephinta-marketing-zone h2,
-html body #root .eph-landing[data-theme="colorful"] main .ephinta-marketing-zone h2 {
-  background-image: linear-gradient(105deg,#fff 0%,#d9d2ff 48%,#ffd9a6 100%) !important;
-  background-clip: text !important;
-  -webkit-background-clip: text !important;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-}
-
-/* The landing page owns its selected theme independently of the app shell.
-   Explicitly restore the light-mode section-copy ink at every breakpoint. */
-html body #root .eph-landing[data-theme="light"] .eph-section-head p {
-  color: #29243d !important;
-  -webkit-text-fill-color: #29243d !important;
 }
