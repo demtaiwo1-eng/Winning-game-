@@ -142,6 +142,22 @@ test("signed-out marketplace visitors can browse verified public listings before
   await expect(page.getByRole("link", { name: "Create account" })).toHaveAttribute("href", /auth\/signup\?role=CLIENT/);
 });
 
+test("public demo marketplace searches everyday multi-word requests", async ({ page }) => {
+  await page.route("**/api/v1/marketplace/public**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [], pagination: { page: 1, take: 24, total: 0, totalPages: 1 } }),
+    });
+  });
+  await page.goto("/marketplace");
+  await page.getByRole("button", { name: "Demo showcase · 2,000 examples" }).click();
+  const search = page.getByRole("textbox", { name: "Describe what you need" });
+  await search.fill("wedding photographer in Ibadan");
+  await expect(page.getByRole("heading", { name: "Event photography coverage" }).first()).toBeVisible();
+  await expect(page.getByText("DEMO SHOWCASE — SIMULATED CONTENT")).toBeVisible();
+});
+
 test("public marketplace back link returns visitors to the landing page", async ({ page }) => {
   await page.route("**/api/v1/marketplace/public**", async (route) => {
     await route.fulfill({
