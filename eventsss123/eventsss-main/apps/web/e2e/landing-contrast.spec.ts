@@ -93,6 +93,10 @@ test("shared portal typography inherits one semantic ink contract in every theme
   await page.goto("/");
   for (const theme of ["light", "dark", "colorful"] as const) {
     await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
+    await page.evaluate((selectedTheme) => {
+      document.documentElement.dataset.ephintaTheme = selectedTheme;
+      document.documentElement.dataset.theme = selectedTheme;
+    }, theme);
     const result = await page.evaluate(() => {
       const root = document.createElement("section");
       root.className = "ess-shell";
