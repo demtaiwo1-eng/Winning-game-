@@ -95,9 +95,11 @@ test("shared portal typography inherits one semantic ink contract in every theme
       root.innerHTML = '<div class="ess-app"><header class="ess-topbar"><div class="ess-menu-dropdown"><button class="ess-menu-option">Menu item</button></div></header></div><article class="ess-panel"><h2>Workspace heading</h2><p>Ordinary workspace copy</p><p class="ess-muted">Supporting information</p><label>Business name<input value="EPHINTA" /></label><a href="#">View details</a><button class="ess-primary">Continue</button></article>';
       document.querySelector("#root")!.append(root);
       const read = (selector: string) => getComputedStyle(root.querySelector(selector)!).color;
+      const tokenProbe = document.createElement("span");
+      tokenProbe.style.color = "var(--epg-ink)";
+      root.append(tokenProbe);
       const values = {
-        token: getComputedStyle(document.documentElement).getPropertyValue("--epg-ink").trim(),
-        surface: getComputedStyle(document.documentElement).getPropertyValue("--epg-surface").trim(),
+        token: getComputedStyle(tokenProbe).color,
         heading: read("h2"),
         menuText: read(".ess-menu-dropdown"),
         menuBackground: getComputedStyle(root.querySelector(".ess-menu-dropdown")!).backgroundColor,
