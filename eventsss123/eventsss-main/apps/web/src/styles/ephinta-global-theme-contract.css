@@ -25,7 +25,7 @@
 html[data-ephinta-theme="light"],html[data-theme="light"],html.theme-light,.theme-light {
   color-scheme:light;
   --epg-page:#f5f7fb; --epg-surface:#ffffff; --epg-surface-raised:#f8f9fc; --epg-surface-soft:#edf1f7;
-  --epg-ink:#000000; --epg-muted:#202020; --epg-subtle:#333333; --epg-border:#d5dce8;
+  --epg-ink:#29243d; --epg-muted:#49445a; --epg-subtle:#5b536a; --epg-border:#d5dce8;
   --epg-link:#24108f; --epg-focus:#155eef; --epg-accent:#5145c6; --epg-accent-ink:#ffffff;
   --epg-success:#176b48; --epg-warning:#805000; --epg-danger:#a51f35;
   --epg-shadow:0 8px 24px rgb(23 32 51 / 8%);
