@@ -13,6 +13,7 @@ const publicLanding = readFileSync(new URL("../components/PublicLanding.tsx", im
 const brightThemeCss = readFileSync(new URL("../ephinta-bright-theme-colors.css", import.meta.url), "utf8");
 const unifiedThemeCss = readFileSync(new URL("../ephinta-unified-theme.css", import.meta.url), "utf8");
 const parentDesignCss = readFileSync(new URL("./ephinta-parent-design-system.css", import.meta.url), "utf8");
+const dashboardCss = readFileSync(new URL("./ephinta-dashboard-system.css", import.meta.url), "utf8");
 const indexLegacyThemeBlockRemoved = () => !readFileSync(new URL("../index.css", import.meta.url), "utf8").includes("EPHINTA GLOBAL THEME TEXT CONTRACT");
 
 function token(block: string, name: string): string {
@@ -116,6 +117,8 @@ describe("EPHINTA global theme contrast", () => {
     expect(unifiedThemeCss).not.toContain('html[data-ephinta-theme="colorful"] input');
     expect(parentDesignCss).toContain("background: var(--eph-parent-surface-muted)");
     expect(parentDesignCss).toContain("color: var(--eph-parent-ink)");
+    expect(dashboardCss).toContain("color: inherit !important");
+    expect(dashboardCss).toContain("-webkit-text-fill-color: currentColor !important");
   });
 
   it("keeps native controls aligned with the selected colorful palette", () => {
