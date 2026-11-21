@@ -27,6 +27,10 @@
   --epg-text-sm: .875rem;
   --epg-text-base: 1rem;
   --epg-text-lg: 1.125rem;
+  --epg-heading-1: clamp(1.9rem, 3.8vw, 3rem);
+  --epg-heading-2: clamp(1.5rem, 2.6vw, 2.1rem);
+  --epg-heading-3: 1.25rem;
+  --epg-heading-4: 1.125rem;
   --epg-leading-tight: 1.2;
   --epg-leading-body: 1.55;
   --epg-weight-normal: 400;
