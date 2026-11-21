@@ -9,6 +9,7 @@ const appEntry = readFileSync(new URL("../main.tsx", import.meta.url), "utf8");
 const enterpriseApp = readFileSync(new URL("../EnterpriseApp.tsx", import.meta.url), "utf8");
 const pwaManifest = JSON.parse(readFileSync(new URL("../../public/manifest.webmanifest", import.meta.url), "utf8")) as { name: string; short_name: string; icons: Array<{ src: string; type: string }> };
 const pwaIcon = readFileSync(new URL("../../public/icons/ess-icon.svg", import.meta.url), "utf8");
+const publicLanding = readFileSync(new URL("../components/PublicLanding.tsx", import.meta.url), "utf8");
 const indexLegacyThemeBlockRemoved = () => !readFileSync(new URL("../index.css", import.meta.url), "utf8").includes("EPHINTA GLOBAL THEME TEXT CONTRACT");
 
 function token(block: string, name: string): string {
@@ -96,6 +97,8 @@ describe("EPHINTA global theme contrast", () => {
     expect(runtimeCss).not.toContain(":where(*)");
     expect(runtimeCss).not.toContain("color: #24143a !important");
     expect(indexLegacyThemeBlockRemoved()).toBe(true);
+    expect(publicLanding).not.toContain('.eph-landing[data-theme="light"] main :is(p,li,label,small,span,strong,summary,dt,dd)');
+    expect(publicLanding).not.toContain('.eph-landing[data-theme="light"] main :is(h1,h2,h3,h4)');
   });
 
   it("keeps native controls aligned with the selected colorful palette", () => {
