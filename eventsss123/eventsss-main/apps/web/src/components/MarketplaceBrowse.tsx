@@ -623,15 +623,15 @@ export default function MarketplaceBrowse({
           ))}
         </div>
       )}
-      {depositListing && <div className="ess-modal-backdrop"><form className="ess-modal" onSubmit={submitInitialBooking}>
-        <div className="ess-modal-header"><div><p className="ess-eyebrow">Protected booking</p><h2>{depositListing.title}</h2></div><button type="button" className="ess-close" onClick={() => setDepositListing(null)}>×</button></div>
+      {depositListing && <div className="ess-modal-backdrop" role="presentation"><form className="ess-modal" role="dialog" aria-modal="true" aria-labelledby="ess-marketplace-deposit-title" onSubmit={submitInitialBooking}>
+        <div className="ess-modal-header"><div><p className="ess-eyebrow">Protected booking</p><h2 id="ess-marketplace-deposit-title">{depositListing.title}</h2></div><button type="button" className="ess-close" aria-label="Close deposit dialog" onClick={() => setDepositListing(null)}>×</button></div>
         <p className="ess-muted">Full price: {formatMoney(depositListing.priceMinor,depositListing.currency,locale)}. Choose the initial amount to place in escrow. The vendor may request remaining milestone payments for your approval.</p>
         <label>Initial payment ({depositListing.currency})<input type="number" min="0.01" max={(Number(depositListing.priceMinor)/100).toFixed(2)} step="0.01" value={initialDepositAmount} onChange={(e) => setInitialDepositAmount(e.target.value)} required /></label>
         {bookingMsg && <p className="ess-form-error" role="alert">{bookingMsg}</p>}
         <button className="ess-primary" type="submit" disabled={checkoutBusy}>{checkoutBusy ? "Creating booking…" : "Confirm initial payment"}</button>
       </form></div>}
-      {enquiryListing && <div className="ess-modal-backdrop"><form className="ess-modal" onSubmit={submitEnquiry}>
-        <div className="ess-modal-header"><div><p className="ess-eyebrow">Contact vendor</p><h2>{enquiryListing.title}</h2></div><button type="button" className="ess-close" onClick={() => setEnquiryListing(null)}>×</button></div>
+      {enquiryListing && <div className="ess-modal-backdrop" role="presentation"><form className="ess-modal" role="dialog" aria-modal="true" aria-labelledby="ess-marketplace-enquiry-title" onSubmit={submitEnquiry}>
+        <div className="ess-modal-header"><div><p className="ess-eyebrow">Contact vendor</p><h2 id="ess-marketplace-enquiry-title">{enquiryListing.title}</h2></div><button type="button" className="ess-close" aria-label="Close enquiry dialog" onClick={() => setEnquiryListing(null)}>×</button></div>
         <label>Your message<textarea required minLength={10} maxLength={4000} rows={5} value={enquiryMessage} onChange={event => setEnquiryMessage(event.target.value)} placeholder="Ask about availability, custom packages, or service details…" /></label>
         {enquiryNotice && <p className="ess-muted" role="status">{enquiryNotice}</p>}
         <button className="ess-primary" type="submit" disabled={enquiryMessage.trim().length < 10}>Send enquiry</button>
