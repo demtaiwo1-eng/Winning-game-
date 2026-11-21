@@ -1,6 +1,6 @@
 /*
  * EPHINTA GLOBAL THEME CONTRACT
- * Shared semantic palette only. Feature components own their surfaces,
+ * Shared semantic palette and typography tokens. Feature components own their surfaces,
  * gradients and brand accents; the global layer must not flatten them.
  */
 :root {
@@ -38,6 +38,9 @@
   --epg-weight-semibold: 600;
   --epg-weight-bold: 700;
   --epg-weight-heavy: 800;
+  --font-display: var(--epg-font-display);
+  --font-interface: var(--epg-font-body);
+  --eph-parent-font: var(--epg-font-body);
 }
 html[data-ephinta-theme="light"],html[data-theme="light"],html.theme-light,.theme-light {
   color-scheme:light;
@@ -81,6 +84,8 @@ html[data-ephinta-theme],html[data-theme],html.theme-light,html.theme-dark,html.
   --eph-parent-ink:var(--epg-ink); --eph-parent-muted:var(--epg-muted);
   --eph-parent-border:var(--epg-border); --eph-parent-primary:var(--epg-accent);
   --eph-parent-primary-hover:var(--epg-link); --eph-parent-secondary:var(--epg-link);
+  --font-display:var(--epg-font-display); --font-interface:var(--epg-font-body);
+  --eph-parent-font:var(--epg-font-body);
   --app-bg:var(--epg-page); --surface:var(--epg-surface); --text:var(--epg-ink);
   --muted:var(--epg-muted); --border:var(--epg-border);
 }
