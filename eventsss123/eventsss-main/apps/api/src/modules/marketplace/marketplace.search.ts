@@ -2,7 +2,7 @@ const SEARCH_STOP_WORDS = new Set([
   "a", "an", "and", "are", "around", "at", "can", "for", "find", "get",
   "i", "in", "is", "looking", "me", "my", "near", "of", "on", "please",
   "the", "to", "want", "with", "need", "book", "hire", "some", "any",
-  "affordable", "cheap", "budget", "luxury", "premium", "best", "top",
+  "affordable", "cheap", "budget", "luxury", "premium", "best", "top", "wedding", "celebration",
 ]);
 
 export function marketplaceSearchTerms(query?: string): string[] {
