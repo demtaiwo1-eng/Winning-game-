@@ -92,12 +92,15 @@ test("shared portal typography inherits one semantic ink contract in every theme
     const result = await page.evaluate(() => {
       const root = document.createElement("section");
       root.className = "ess-shell";
-      root.innerHTML = '<article class="ess-panel"><h2>Workspace heading</h2><p>Ordinary workspace copy</p><p class="ess-muted">Supporting information</p><label>Business name<input value="EPHINTA" /></label><a href="#">View details</a><button class="ess-primary">Continue</button></article>';
+      root.innerHTML = '<div class="ess-app"><header class="ess-topbar"><div class="ess-menu-dropdown"><button class="ess-menu-option">Menu item</button></div></header></div><article class="ess-panel"><h2>Workspace heading</h2><p>Ordinary workspace copy</p><p class="ess-muted">Supporting information</p><label>Business name<input value="EPHINTA" /></label><a href="#">View details</a><button class="ess-primary">Continue</button></article>';
       document.querySelector("#root")!.append(root);
       const read = (selector: string) => getComputedStyle(root.querySelector(selector)!).color;
       const values = {
         token: getComputedStyle(document.documentElement).getPropertyValue("--epg-ink").trim(),
+        surface: getComputedStyle(document.documentElement).getPropertyValue("--epg-surface").trim(),
         heading: read("h2"),
+        menuText: read(".ess-menu-dropdown"),
+        menuBackground: getComputedStyle(root.querySelector(".ess-menu-dropdown")!).backgroundColor,
         copy: read("article p:not(.ess-muted)"),
         muted: read(".ess-muted"),
         field: read("input"),
@@ -108,6 +111,8 @@ test("shared portal typography inherits one semantic ink contract in every theme
       return values;
     });
     expect(result.heading, theme).toBe(result.token);
+    expect(result.menuText, theme).toBe(result.token);
+    expect(result.menuBackground, theme).not.toBe("rgba(0, 0, 0, 0)");
     expect(result.copy, theme).toBe(result.token);
     expect(result.field, theme).toBe(result.token);
     expect(result.muted, theme).not.toBe(result.token);
