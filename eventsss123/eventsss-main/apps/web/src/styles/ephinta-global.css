@@ -930,6 +930,12 @@ html body #root .eph-landing[data-theme="light"] main .ephinta-bright-slogan {
   -webkit-text-fill-color: currentColor;
 }
 
+/* Planner builder fields are part of the parent workspace surface:
+   use its exact theme ink instead of the legacy pale-input text override. */
+html[data-ephinta-theme] body #root .ess-builder-card :where(input,select,textarea) {
+  color: var(--epg-ink) !important;
+}
+
 /* Primary actions share the EPHINTA violet-blue-teal gradient. */
 html[data-ephinta-theme] body #root :where(button.ess-primary,a.ess-primary,.eph-btn-primary,.eph-primary,button[class*="cta"],a[class*="cta"]) {
   background: linear-gradient(112deg,#6941c6 0%,#3c72c8 54%,#218f91 100%);
