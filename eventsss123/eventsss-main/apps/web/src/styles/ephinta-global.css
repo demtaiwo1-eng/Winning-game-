@@ -855,7 +855,7 @@ html[data-ephinta-theme] body #root :where(.ess-muted,.muted,.text-muted,.text-s
   color: var(--epg-muted);
 }
 html[data-ephinta-theme] body #root :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea,option) {
-  color: inherit !important;
+  color: var(--ephinta-theme-ink, var(--epg-ink)) !important;
   background-color: var(--epg-surface-raised);
   border-color: var(--epg-border);
 }
@@ -966,7 +966,7 @@ html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(input,sel
   min-height: 46px;
   margin-top: 7px;
   padding: 11px 13px;
-  color: inherit !important;
+  color: var(--ephinta-theme-ink, var(--epg-ink)) !important;
   background: var(--epg-surface-raised);
   border: 1px solid var(--epg-border);
   border-radius: 12px;
