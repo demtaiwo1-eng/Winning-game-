@@ -10,6 +10,9 @@ const enterpriseApp = readFileSync(new URL("../EnterpriseApp.tsx", import.meta.u
 const pwaManifest = JSON.parse(readFileSync(new URL("../../public/manifest.webmanifest", import.meta.url), "utf8")) as { name: string; short_name: string; icons: Array<{ src: string; type: string }> };
 const pwaIcon = readFileSync(new URL("../../public/icons/ess-icon.svg", import.meta.url), "utf8");
 const publicLanding = readFileSync(new URL("../components/PublicLanding.tsx", import.meta.url), "utf8");
+const brightThemeCss = readFileSync(new URL("../ephinta-bright-theme-colors.css", import.meta.url), "utf8");
+const unifiedThemeCss = readFileSync(new URL("../ephinta-unified-theme.css", import.meta.url), "utf8");
+const parentDesignCss = readFileSync(new URL("./ephinta-parent-design-system.css", import.meta.url), "utf8");
 const indexLegacyThemeBlockRemoved = () => !readFileSync(new URL("../index.css", import.meta.url), "utf8").includes("EPHINTA GLOBAL THEME TEXT CONTRACT");
 
 function token(block: string, name: string): string {
@@ -107,6 +110,12 @@ describe("EPHINTA global theme contrast", () => {
     expect(indexLegacyThemeBlockRemoved()).toBe(true);
     expect(publicLanding).not.toContain('.eph-landing[data-theme="light"] main :is(p,li,label,small,span,strong,summary,dt,dd)');
     expect(publicLanding).not.toContain('.eph-landing[data-theme="light"] main :is(h1,h2,h3,h4)');
+    expect(brightThemeCss).not.toContain(':root[data-ephinta-theme="colorful"] input');
+    expect(brightThemeCss).not.toContain(':root[data-ephinta-theme="dark"] p');
+    expect(unifiedThemeCss).not.toContain('html[data-ephinta-theme] p');
+    expect(unifiedThemeCss).not.toContain('html[data-ephinta-theme="colorful"] input');
+    expect(parentDesignCss).toContain("background: var(--eph-parent-surface-muted)");
+    expect(parentDesignCss).toContain("color: var(--eph-parent-ink)");
   });
 
   it("keeps native controls aligned with the selected colorful palette", () => {
