@@ -73,12 +73,17 @@ html[data-ephinta-theme] body #root {
 
 /* Theme-aware app identity and account menu. Light and multicolour themes
    must never put dark lettering on the legacy midnight navigation surfaces. */
-html[data-ephinta-theme="light"] .ess-app .ess-topbar,
-html[data-ephinta-theme="colorful"] .ess-app .ess-topbar {
+html[data-ephinta-theme="light"] .ess-app .ess-topbar {
   color: var(--epg-ink) !important;
-  background: rgba(255, 255, 255, .97) !important;
+  background: var(--epg-surface) !important;
   border-bottom: 1px solid var(--epg-border) !important;
   box-shadow: 0 8px 24px rgb(35 24 55 / 8%);
+}
+html[data-ephinta-theme="colorful"] .ess-app .ess-topbar {
+  color: var(--epg-ink) !important;
+  background: var(--epg-surface) !important;
+  border-bottom: 1px solid var(--epg-border) !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
 }
 html[data-ephinta-theme="light"] .ess-app .ess-topbar .ess-brand,
 html[data-ephinta-theme="colorful"] .ess-app .ess-topbar .ess-brand {
@@ -121,12 +126,17 @@ html[data-ephinta-theme="colorful"] .ess-app .ess-menu-trigger {
   border: 1px solid var(--epg-border) !important;
   background: var(--epg-surface-soft) !important;
 }
-html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown,
-html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown {
+html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown {
   color: var(--epg-ink) !important;
-  background: #ffffff !important;
+  background: var(--epg-surface) !important;
   border: 1px solid var(--epg-border) !important;
   box-shadow: 0 20px 48px rgb(28 20 48 / 18%) !important;
+}
+html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown {
+  color: var(--epg-ink) !important;
+  background: var(--epg-surface) !important;
+  border: 1px solid var(--epg-border) !important;
+  box-shadow: 0 20px 48px rgb(0 0 0 / 30%) !important;
 }
 html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown :where(h1,h2,h3,h4,p,span,strong,b,small,label),
 html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown :where(h1,h2,h3,h4,p,span,strong,b,small,label) {
@@ -136,10 +146,14 @@ html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown :where(small,.ess-m
 html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown :where(small,.ess-muted) {
   color: var(--epg-muted) !important;
 }
-html[data-ephinta-theme="light"] .ess-app .ess-menu-option,
+html[data-ephinta-theme="light"] .ess-app .ess-menu-option {
+  color: var(--epg-ink) !important;
+  background: var(--epg-surface) !important;
+  border: 1px solid transparent;
+}
 html[data-ephinta-theme="colorful"] .ess-app .ess-menu-option {
   color: var(--epg-ink) !important;
-  background: #ffffff !important;
+  background: var(--epg-surface-raised) !important;
   border: 1px solid transparent;
 }
 html[data-ephinta-theme="light"] .ess-app .ess-menu-option:hover,
@@ -218,31 +232,39 @@ html[data-ephinta-theme] .ess-app .ess-topbar .ess-app-brand-logo {
   filter: none !important;
   mix-blend-mode: normal !important;
 }
-html[data-ephinta-theme="colorful"] .ess-app .ess-topbar,
 html[data-ephinta-theme="light"] .ess-app .ess-topbar {
-  background: #ffffff !important;
+  background: var(--epg-surface) !important;
+}
+html[data-ephinta-theme="colorful"] .ess-app .ess-topbar {
+  background: var(--epg-surface) !important;
 }
 html[data-ephinta-theme] .ess-app .ess-menu-dropdown,
 html[data-ephinta-theme] .ess-app .ess-menu-dropdown * {
   opacity: 1;
   visibility: visible;
 }
-html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown,
 html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown {
-  background: #ffffff !important;
-  color: #17152b !important;
+  background: var(--epg-surface) !important;
+  color: var(--epg-ink) !important;
 }
-html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown :where(*),
 html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown :where(*) {
-  color: #17152b !important;
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown {
+  background: var(--epg-surface) !important;
+  color: var(--epg-ink) !important;
+}
+html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown :where(*) {
+  color: var(--epg-ink) !important;
   -webkit-text-fill-color: currentColor !important;
 }
 html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown {
-  background: #121d30 !important;
-  color: #f7f9ff !important;
+  background: var(--epg-surface) !important;
+  color: var(--epg-ink) !important;
 }
 html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown :where(*) {
-  color: #f7f9ff !important;
+  color: var(--epg-ink) !important;
   -webkit-text-fill-color: currentColor !important;
 }
 
