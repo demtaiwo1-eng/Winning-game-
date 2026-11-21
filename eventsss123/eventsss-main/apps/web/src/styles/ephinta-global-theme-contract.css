@@ -86,6 +86,11 @@ html[data-ephinta-theme],html[data-theme],html.theme-light,html.theme-dark,html.
   --eph-parent-primary-hover:var(--epg-link); --eph-parent-secondary:var(--epg-link);
   --font-display:var(--epg-font-display); --font-interface:var(--epg-font-body);
   --eph-parent-font:var(--epg-font-body);
+  --text-primary:var(--epg-ink); --text-secondary:var(--epg-muted); --text-muted:var(--epg-subtle);
+  --color-text:var(--epg-ink); --color-text-secondary:var(--epg-muted); --link-color:var(--epg-link);
+  --primary-color:var(--epg-accent); --accent-color:var(--epg-accent); --border-color:var(--epg-border);
+  --ep-text:var(--epg-ink); --ep-muted:var(--epg-muted); --ep-link:var(--epg-link);
+  --ep-surface:var(--epg-surface); --ep-border:var(--epg-border);
   --app-bg:var(--epg-page); --surface:var(--epg-surface); --text:var(--epg-ink);
   --muted:var(--epg-muted); --border:var(--epg-border);
 }
