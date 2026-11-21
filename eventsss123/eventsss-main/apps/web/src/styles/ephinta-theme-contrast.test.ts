@@ -117,7 +117,7 @@ describe("EPHINTA global theme contrast", () => {
     expect(unifiedThemeCss).not.toContain('html[data-ephinta-theme="colorful"] input');
     expect(parentDesignCss).toContain("background: var(--eph-parent-surface-muted)");
     expect(parentDesignCss).toContain("color: var(--eph-parent-ink)");
-    expect(dashboardCss).toContain("color: inherit !important");
+    expect(dashboardCss).toContain("color: var(--epg-ink, #17152b) !important");
     expect(dashboardCss).toContain("-webkit-text-fill-color: currentColor !important");
   });
 
