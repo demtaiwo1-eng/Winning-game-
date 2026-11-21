@@ -52,7 +52,7 @@ test("marketplace deposit and enquiry dialogs keep readable themed copy and grad
       const root = document.createElement("section");
       root.className = "ess-marketplace";
       root.innerHTML = '<form class="ess-modal" role="dialog" aria-modal="true"><h2>Contact a vendor</h2><label>Your message<textarea placeholder="Write your message"></textarea></label><button class="ess-primary">Send enquiry</button></form>';
-      document.body.append(root);
+      document.querySelector("#root")!.append(root);
       const modal = root.querySelector(".ess-modal")!;
       const field = root.querySelector("textarea")!;
       const action = root.querySelector("button")!;
