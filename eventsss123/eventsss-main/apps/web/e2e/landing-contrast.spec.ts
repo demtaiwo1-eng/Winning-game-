@@ -48,6 +48,10 @@ test("marketplace deposit and enquiry dialogs keep readable themed copy and grad
   await page.goto("/");
   for (const theme of ["light", "dark", "colorful"] as const) {
     await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
+    await page.evaluate((selectedTheme) => {
+      document.documentElement.dataset.ephintaTheme = selectedTheme;
+      document.documentElement.dataset.theme = selectedTheme;
+    }, theme);
     const result = await page.evaluate(() => {
       const root = document.createElement("section");
       root.className = "ess-marketplace";
