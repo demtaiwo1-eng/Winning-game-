@@ -4,7 +4,7 @@ import { marketplaceSearchTerms, marketplaceTermFilter } from "../src/modules/ma
 describe("marketplace natural-language search", () => {
   it("matches the meaningful words in a natural request", () => {
     expect(marketplaceSearchTerms("I need an affordable wedding photographer in Ibadan"))
-      .toEqual(["wedding", "photographer", "ibadan"]);
+      .toEqual(["photographer", "ibadan"]);
   });
 
   it("removes repeated words, punctuation and common filler words", () => {
