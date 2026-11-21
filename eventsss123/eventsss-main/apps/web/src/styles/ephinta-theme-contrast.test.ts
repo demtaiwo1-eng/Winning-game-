@@ -61,6 +61,11 @@ describe("EPHINTA global theme contrast", () => {
       expect(luminance(muted)).toBeGreaterThan(0.65);
       expect(luminance(page)).toBeLessThan(0.08);
       expect(luminance(surface)).toBeLessThan(0.12);
+    } else if (mode === "colorful") {
+      expect(luminance(ink)).toBeGreaterThan(0.75);
+      expect(luminance(muted)).toBeGreaterThan(0.65);
+      expect(luminance(page)).toBeLessThan(0.08);
+      expect(luminance(surface)).toBeLessThan(0.12);
     } else {
       expect(luminance(ink)).toBeLessThan(0.25);
       expect(luminance(muted)).toBeLessThan(0.35);
@@ -87,20 +92,21 @@ describe("EPHINTA global theme contrast", () => {
 
   it("lets component text retain semantic colours while shared controls use theme tokens", () => {
     expect(runtimeCss).toContain("Text inherits from its component");
-    expect(runtimeCss).toContain("Final readable type system");
-    expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] body #root :where(h1,h2,h3,h4,h5,h6)');
+    expect(runtimeCss).toContain("One typography contract");
+    expect(runtimeCss).toContain(":where(h1,h2,h3,h4,h5,h6)");
+    expect(runtimeCss).toContain(":where(.ess-muted,.muted,.text-muted");
+    expect(runtimeCss).toContain("color: var(--epg-ink)");
     expect(runtimeCss).toContain("-webkit-text-fill-color: currentColor");
-    expect(runtimeCss).toContain("color: #24143a !important");
-    expect(runtimeCss).toContain('html[data-ephinta-theme="light"] body #root');
+    expect(runtimeCss).toContain('html[data-ephinta-theme="light"]');
     expect(runtimeCss).toContain("--ephinta-link-fg");
-    expect(runtimeCss).toContain("--ephinta-field-bg");
+    expect(runtimeCss).toContain("background-color: var(--epg-surface-raised)");
     expect(runtimeCss).not.toContain("html[data-ephinta-theme] body #root :is(h1,h2,h3,h4,h5,h6");
     expect(runtimeCss).not.toContain("button *");
     expect(runtimeCss).not.toContain(".status-pill *");
   });
 
   it("keeps native controls aligned with the selected colorful palette", () => {
-    expect(themeRuntime).toContain('document.documentElement.style.colorScheme = theme === "dark" ? "dark" : "light"');
+    expect(themeRuntime).toContain('document.documentElement.style.colorScheme = theme === "light" ? "light" : "dark"');
   });
 
   it("does not reintroduce a second blanket contrast layer after the shared theme contract", () => {
@@ -124,21 +130,21 @@ describe("EPHINTA global theme contrast", () => {
     expect(enterpriseApp).not.toContain('className="ess-brand-mark"');
   });
 
-  it("enforces readable text and a visible EPHINTA wordmark throughout all themes", () => {
-    expect(runtimeCss).toContain("FINAL EPHINTA TEXT VISIBILITY CONTRACT");
-    expect(runtimeCss).toContain("--ephinta-readable-text: #17152b");
-    expect(runtimeCss).toContain("--ephinta-readable-text: #f7f9ff");
-    expect(runtimeCss).toContain('[class*="landing"]');
+  it("uses semantic theme ink and keeps the EPHINTA wordmark visible", () => {
+    expect(runtimeCss).not.toContain("FINAL EPHINTA TEXT VISIBILITY CONTRACT");
+    expect(runtimeCss).toContain("--epg-font-sans");
     expect(runtimeCss).toContain(".ess-brand-wordmark strong");
     expect(runtimeCss).toContain("-webkit-text-fill-color: var(--epg-ink) !important");
     expect(runtimeCss).toContain('html[data-ephinta-theme="dark"] .ess-app .ess-menu-dropdown');
+    expect(globalCss).toContain('#root .eph-landing[data-theme="dark"]');
   });
 
-  it("uses light readable surfaces for the multicolour and light account menus", () => {
+  it("uses theme-token surfaces and bright text for colorful navigation menus", () => {
     expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] .ess-app .ess-menu-dropdown');
     expect(runtimeCss).toContain('html[data-ephinta-theme="light"] .ess-app .ess-menu-dropdown');
-    expect(runtimeCss).toContain('background: #ffffff !important');
+    expect(runtimeCss).toContain('background: var(--epg-surface) !important');
     expect(runtimeCss).toContain('html[data-ephinta-theme="colorful"] .ess-app .ess-topbar');
+    expect(runtimeCss).not.toContain('background: #ffffff !important');
   });
 
 
