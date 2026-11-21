@@ -13,7 +13,7 @@ type DemoListing = { id: string; title: string; description: string; type: Publi
 
 const SEARCH_STOP_WORDS = new Set(["a", "an", "and", "are", "at", "for", "find", "in", "is", "looking", "me", "my", "near", "of", "on", "please", "the", "to", "want", "with", "need"]);
 const searchTerms = (value: string) => [...new Set(
-  (value.toLocaleLowerCase().match(/[\\p{L}\\p{N}]+/gu) || [])
+  (value.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
     .filter((term) => term.length > 1 && !SEARCH_STOP_WORDS.has(term)),
 )].slice(0, 8);
 
