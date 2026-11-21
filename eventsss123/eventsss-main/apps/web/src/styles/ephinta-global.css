@@ -972,8 +972,8 @@ html[data-ephinta-theme="light"] body #root .eph-landing .ephinta-marketing-zone
 
 /* Preserve the feature-panel gradient treatment on the marketing-zone headline
    while keeping its supporting copy bright and legible. */
-html[data-ephinta-theme="dark"] body #root .eph-landing main .ephinta-marketing-zone h2,
-html[data-ephinta-theme="colorful"] body #root .eph-landing main .ephinta-marketing-zone h2 {
+html body #root .eph-landing[data-theme="dark"] main .ephinta-marketing-zone h2,
+html body #root .eph-landing[data-theme="colorful"] main .ephinta-marketing-zone h2 {
   background-image: linear-gradient(105deg,#fff 0%,#d9d2ff 48%,#ffd9a6 100%) !important;
   background-clip: text !important;
   -webkit-background-clip: text !important;
@@ -1022,8 +1022,8 @@ html body #root .eph-landing[data-theme="light"] main .ephinta-bright-slogan {
 
 /* Final specificity guard for marketing headings inside dark feature panels.
    Panel copy stays bright; only gradient headings use transparent text fill. */
-html[data-ephinta-theme="dark"] body #root .eph-landing main .ephinta-marketing-zone h2,
-html[data-ephinta-theme="colorful"] body #root .eph-landing main .ephinta-marketing-zone h2 {
+html body #root .eph-landing[data-theme="dark"] main .ephinta-marketing-zone h2,
+html body #root .eph-landing[data-theme="colorful"] main .ephinta-marketing-zone h2 {
   background-image: linear-gradient(105deg,#fff 0%,#d9d2ff 48%,#ffd9a6 100%) !important;
   background-clip: text !important;
   -webkit-background-clip: text !important;
