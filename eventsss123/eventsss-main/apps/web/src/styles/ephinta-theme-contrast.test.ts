@@ -52,9 +52,9 @@ describe("EPHINTA global theme contrast", () => {
     expect(contrast(link, surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(accentInk, accent)).toBeGreaterThanOrEqual(4.5);
     if (mode === "light") {
-      expect(ink).toBe("#000000");
-      expect(muted).toBe("#202020");
-      expect(subtle).toBe("#333333");
+      expect(ink).toBe("#29243d");
+      expect(muted).toBe("#49445a");
+      expect(subtle).toBe("#5b536a");
     }
     if (mode === "dark") {
       expect(luminance(ink)).toBeGreaterThan(0.75);
