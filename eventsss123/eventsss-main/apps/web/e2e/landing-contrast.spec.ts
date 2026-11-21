@@ -82,8 +82,8 @@ test("marketplace deposit and enquiry dialogs keep readable themed copy and grad
       expect(result.modalColor).toBe("rgb(255, 248, 255)");
       expect(result.fieldColor).toBe("rgb(255, 248, 255)");
     } else {
-      expect(result.modalColor).toBe("rgb(0, 0, 0)");
-      expect(result.fieldColor).toBe("rgb(0, 0, 0)");
+      expect(result.modalColor).toBe("rgb(41, 36, 61)");
+      expect(result.fieldColor).toBe("rgb(41, 36, 61)");
     }
   }
 });
