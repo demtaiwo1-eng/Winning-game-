@@ -4,7 +4,7 @@ import { marketplaceSearchTerms, marketplaceTermFilter } from "../src/modules/ma
 describe("marketplace natural-language search", () => {
   it("matches the meaningful words in a natural request", () => {
     expect(marketplaceSearchTerms("I need an affordable wedding photographer in Ibadan"))
-      .toEqual(["affordable", "wedding", "photographer", "ibadan"]);
+      .toEqual(["wedding", "photographer", "ibadan"]);
   });
 
   it("removes repeated words, punctuation and common filler words", () => {
@@ -30,9 +30,10 @@ describe("marketplace natural-language search", () => {
       AND: Array<{ OR: Array<Record<string, unknown>> }>;
     };
     expect(filter.AND).toHaveLength(2);
-    expect(filter.AND[0].OR).toHaveLength(5);
+    expect(filter.AND[0].OR.length).toBeGreaterThanOrEqual(5);
     expect(filter.AND[0].OR).toEqual(expect.arrayContaining([
-      expect.objectContaining({ title: expect.any(Object) }),
+      expect.objectContaining({ title: { contains: "photographer", mode: "insensitive" } }),
+      expect.objectContaining({ title: { contains: "photography", mode: "insensitive" } }),
       expect.objectContaining({ description: expect.any(Object) }),
       expect.objectContaining({ city: expect.any(Object) }),
       expect.objectContaining({ category: expect.any(Object) }),
