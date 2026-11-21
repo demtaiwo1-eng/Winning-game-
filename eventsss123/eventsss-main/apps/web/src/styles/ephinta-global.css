@@ -955,6 +955,13 @@ html[data-ephinta-theme] body #root :is(button.ess-primary,a.ess-primary,.eph-bt
   -webkit-text-fill-color: #fff !important;
 }
 
+/* Workspace primary actions always use white foreground on the shared gradient. */
+html[data-ephinta-theme] body #root .ess-shell .ess-panel button.ess-primary,
+html[data-ephinta-theme] body #root .ess-shell .ess-panel a.ess-primary {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
 /* Marketplace dialogs use the same semantic ink, field and surface tokens. */
 html[data-ephinta-theme] body #root .ess-marketplace .ess-modal {
   box-sizing: border-box;
