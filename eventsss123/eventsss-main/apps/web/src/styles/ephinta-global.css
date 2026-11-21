@@ -960,7 +960,7 @@ html[data-ephinta-theme] body #root .ess-marketplace .ess-modal :where(input,sel
   min-height: 46px;
   margin-top: 7px;
   padding: 11px 13px;
-  color: var(--epg-ink);
+  color: inherit !important;
   background: var(--epg-surface-raised);
   border: 1px solid var(--epg-border);
   border-radius: 12px;
