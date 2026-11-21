@@ -949,10 +949,10 @@ html[data-ephinta-theme] body #root .ess-builder-card :where(input,select,textar
 }
 
 /* Primary actions share the EPHINTA violet-blue-teal gradient. */
-html[data-ephinta-theme] body #root :where(button.ess-primary,a.ess-primary,.eph-btn-primary,.eph-primary,button[class*="cta"],a[class*="cta"]) {
-  background: linear-gradient(112deg,#6941c6 0%,#3c72c8 54%,#218f91 100%);
-  color: #fff;
-  -webkit-text-fill-color: currentColor;
+html[data-ephinta-theme] body #root :is(button.ess-primary,a.ess-primary,.eph-btn-primary,.eph-primary,button[class*="cta"],a[class*="cta"]) {
+  background: linear-gradient(112deg,#6941c6 0%,#3c72c8 54%,#218f91 100%) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
 }
 
 /* Marketplace dialogs use the same semantic ink, field and surface tokens. */
