@@ -936,6 +936,12 @@ html[data-ephinta-theme] body #root .ess-shell .ess-panel :where(input,select,te
   -webkit-text-fill-color: var(--ephinta-theme-ink, var(--epg-ink)) !important;
 }
 
+/* Muted copy stays a separate semantic role inside workspace cards. */
+html[data-ephinta-theme] body #root .ess-shell .ess-panel :where(.ess-muted,.muted,.text-muted,.text-secondary,.helper-text,.form-hint) {
+  color: var(--ephinta-theme-muted, var(--epg-muted)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
 /* Planner builder fields are part of the parent workspace surface:
    use its exact theme ink instead of the legacy pale-input text override. */
 html[data-ephinta-theme] body #root .ess-builder-card :where(input,select,textarea) {
