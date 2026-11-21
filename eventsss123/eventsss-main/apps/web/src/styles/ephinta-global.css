@@ -854,11 +854,8 @@ html[data-ephinta-theme] body #root .eph-landing :where(p,li,label,legend,small,
   -webkit-text-fill-color: currentColor !important;
   opacity: 1 !important;
 }
-html[data-ephinta-theme] body #root .eph-landing :where(h1,h2,h3,h4,h5,h6,strong,b,.eph-title) {
-  color: var(--ephinta-theme-ink) !important;
-  -webkit-text-fill-color: currentColor !important;
-  opacity: 1 !important;
-}
+/* Landing heading colors remain owned by the page's live data-theme contract;
+   the global body-copy guard below must not flatten gradient headings. */
 /* Dark feature/hero panels always use bright copy, regardless of page theme. */
 html[data-ephinta-theme] body #root .eph-landing :is(
   .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
