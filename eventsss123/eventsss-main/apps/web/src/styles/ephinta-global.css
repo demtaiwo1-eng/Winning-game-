@@ -946,7 +946,8 @@ html[data-ephinta-theme] body #root .ess-marketplace .ess-modal {
   overflow: auto;
   padding: clamp(18px,4vw,28px);
   color: var(--epg-ink);
-  background: var(--epg-surface);
+  background: var(--eph-dialog-surface-gradient);
+  background-color: var(--epg-surface);
   border: 1px solid var(--epg-border);
   border-radius: 22px;
   box-shadow: var(--epg-shadow);
