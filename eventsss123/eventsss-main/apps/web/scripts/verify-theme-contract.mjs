@@ -26,6 +26,7 @@ const globalCss = read("src/styles/ephinta-global.css");
 const themeCss = read("src/styles/ephinta-global-theme-contract.css");
 const introCss = read("src/components/branding/ephinta-intro.css");
 const audioCss = read("src/styles/ephinta-audio.css");
+const runtimeCss = read("src/styles/ephinta-runtime-contrast.css");
 
 check(entry.includes("import './styles/ephinta-global.css';"),
   "Application entry imports the centralized global stylesheet.");
