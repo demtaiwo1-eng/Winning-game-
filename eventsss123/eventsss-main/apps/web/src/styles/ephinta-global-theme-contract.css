@@ -39,12 +39,12 @@ html[data-ephinta-theme="dark"],html[data-theme="dark"],html.theme-dark,.theme-d
   --epg-shadow:0 12px 30px rgb(0 0 0 / 32%);
 }
 html[data-ephinta-theme="colorful"],html[data-theme="colorful"],html.theme-colorful,.theme-colorful {
-  color-scheme: light;
-  --epg-page:#fff5fb; --epg-surface:#ffffff; --epg-surface-raised:#fffafd; --epg-surface-soft:#f3eaff;
-  --epg-ink:#24143a; --epg-muted:#49345f; --epg-subtle:#5b4770; --epg-border:#ddc9ed;
-  --epg-link:#5630a8; --epg-focus:#6d28d9; --epg-accent:#8b45c7; --epg-accent-ink:#ffffff;
-  --epg-success:#176b48; --epg-warning:#805000; --epg-danger:#a51f35;
-  --epg-shadow:0 12px 30px rgb(70 35 95 / 12%);
+  color-scheme: dark;
+  --epg-page:#21162f; --epg-surface:#302044; --epg-surface-raised:#3b2a52; --epg-surface-soft:#49315f;
+  --epg-ink:#fff8ff; --epg-muted:#eadcf5; --epg-subtle:#d8c5e9; --epg-border:#725b88;
+  --epg-link:#8ceaff; --epg-focus:#ffe18a; --epg-accent:#d69aff; --epg-accent-ink:#241332;
+  --epg-success:#9cf2c4; --epg-warning:#ffe09a; --epg-danger:#ffb4c0;
+  --epg-shadow:0 12px 30px rgb(0 0 0 / 28%);
 }
 
 /* Compatibility tokens point to the selected palette, not to a second theme. */
