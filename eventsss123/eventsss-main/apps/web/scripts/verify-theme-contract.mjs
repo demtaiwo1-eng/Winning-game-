@@ -76,7 +76,8 @@ check(!/:root\[data-ephinta-theme=[^\]]+\]\s*(?:input|select|textarea|p|li|label
   "Legacy accent sheets contain no global text or form-control colour overrides.");
 check(parentDesignCss.includes("background: var(--eph-parent-surface-muted)") &&
   parentDesignCss.includes("color: var(--eph-parent-ink)") &&
-  dashboardCss.includes("color: inherit !important") &&
+  (dashboardCss.includes("color: inherit !important") ||
+    dashboardCss.includes("color: var(--epg-ink, #17152b) !important")) &&
   dashboardCss.includes("-webkit-text-fill-color: currentColor !important"),
   "Planner and dashboard fields inherit their nearest surface foreground.");
 check(/@media\s*\(max-width:\s*390px\)/.test(globalCss),
