@@ -881,6 +881,20 @@ html[data-ephinta-theme] body #root .eph-landing :is(
   color: inherit !important;
   opacity: 1 !important;
 }
+/* The marketing spotlight is a light surface nested inside the dark hero.
+   Restore its own semantic copy/accent tokens after the hero's bright-copy rule. */
+html[data-ephinta-theme] body #root .eph-landing .eph-hero .ephinta-marketing-zone
+:where(p,li,small,span,label,figcaption,.ephinta-human-proof,.ephinta-right-copy-visible) {
+  color: var(--eph-marketing-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+html[data-ephinta-theme] body #root .eph-landing .eph-hero .ephinta-marketing-zone
+:where(a,.ephinta-marketing-zone__eyebrow) {
+  color: var(--eph-marketing-accent) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
 /* Subtle brand-gradient headings; light mode remains dark and readable. */
 html[data-ephinta-theme="dark"] body #root .eph-landing main :where(h1,h2,h3),
 html[data-ephinta-theme="colorful"] body #root .eph-landing main :where(h1,h2,h3) {
