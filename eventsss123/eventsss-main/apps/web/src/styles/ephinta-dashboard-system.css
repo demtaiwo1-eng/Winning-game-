@@ -192,7 +192,7 @@
   border-color: var(--epg-border, #d7dbea);
   border-radius: 11px;
   background: var(--epg-surface-raised, #fff);
-  color: inherit !important;
+  color: var(--epg-ink, #17152b) !important;
   -webkit-text-fill-color: currentColor !important;
 }
 .ess-app .ess-portal-stack :where(input,select,textarea)::placeholder {
