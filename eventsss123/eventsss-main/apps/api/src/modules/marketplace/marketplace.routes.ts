@@ -4,35 +4,8 @@ import { prisma } from "../../lib/prisma";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
+import { marketplaceSearchTerms, marketplaceTermFilter } from "./marketplace.search";
 
-
-const SEARCH_STOP_WORDS = new Set([
-  "a", "an", "and", "are", "around", "at", "can", "for", "find", "get",
-  "i", "in", "is", "looking", "me", "my", "near", "of", "on", "please",
-  "the", "to", "want", "with", "need", "book", "hire", "some", "any",
-]);
-
-export function marketplaceSearchTerms(query?: string): string[] {
-  if (!query) return [];
-  return [...new Set(
-    (query.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
-      .filter((term) => term.length > 1 && !SEARCH_STOP_WORDS.has(term)),
-  )].slice(0, 8);
-}
-
-function marketplaceTermFilter(terms: string[]) {
-  return terms.length ? {
-    AND: terms.map((term) => ({
-      OR: [
-        { title: { contains: term, mode: "insensitive" as const } },
-        { description: { contains: term, mode: "insensitive" as const } },
-        { city: { contains: term, mode: "insensitive" as const } },
-        { category: { name: { contains: term, mode: "insensitive" as const } } },
-        { vendor: { businessName: { contains: term, mode: "insensitive" as const } } },
-      ],
-    })),
-  } : {};
-}
 
 export const marketplaceRouter = Router();
 
