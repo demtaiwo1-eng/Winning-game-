@@ -858,12 +858,12 @@ html[data-ephinta-theme] body #root .eph-landing :where(p,li,label,legend,small,
    the global body-copy guard below must not flatten gradient headings. */
 /* Dark feature/hero panels always use bright copy, regardless of page theme. */
 html[data-ephinta-theme] body #root .eph-landing :is(
-  .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
+.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
   .eph-promo-shell.eph-marketplace-advertising,
   [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
 ) { color: #fff !important; }
 html[data-ephinta-theme] body #root .eph-landing :is(
-  .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
+.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
   .eph-promo-shell.eph-marketplace-advertising,
   [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
 ) :where(p,span,small,label,a,li) {
@@ -874,12 +874,24 @@ html[data-ephinta-theme] body #root .eph-landing :is(
 /* Headings and emphasis inherit the bright panel ink unless a dedicated
    gradient-heading rule intentionally supplies transparent text fill. */
 html[data-ephinta-theme] body #root .eph-landing :is(
-  .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
+.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
   .eph-promo-shell.eph-marketplace-advertising,
   [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
 ) :where(h1,h2,h3,h4,strong,b) {
   color: inherit !important;
   opacity: 1 !important;
+}
+/* The hero switches from a pale surface to a dark surface only in dark mode.
+   Its foreground follows that component theme instead of a global white-text rule. */
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-hero {
+  color: var(--ink, #f6f4ff) !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-hero :where(h1,h2,h3,h4,strong,b) {
+  color: var(--ink, #f6f4ff) !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-hero :where(p,span,small,label,a,li) {
+  color: var(--muted, #c2bfd6) !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 /* The marketing spotlight is a light surface nested inside the dark hero.
    Restore its own semantic copy/accent tokens after the hero's bright-copy rule. */
