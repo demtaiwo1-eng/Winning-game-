@@ -930,6 +930,12 @@ html body #root .eph-landing[data-theme="light"] main .ephinta-bright-slogan {
   -webkit-text-fill-color: currentColor;
 }
 
+/* Signed-in workspace panels share the selected ink for editable values. */
+html[data-ephinta-theme] body #root .ess-shell .ess-panel :where(input,select,textarea) {
+  color: var(--ephinta-theme-ink, var(--epg-ink)) !important;
+  -webkit-text-fill-color: var(--ephinta-theme-ink, var(--epg-ink)) !important;
+}
+
 /* Planner builder fields are part of the parent workspace surface:
    use its exact theme ink instead of the legacy pale-input text override. */
 html[data-ephinta-theme] body #root .ess-builder-card :where(input,select,textarea) {
