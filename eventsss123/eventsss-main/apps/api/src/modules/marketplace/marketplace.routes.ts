@@ -5,6 +5,35 @@ import { requireAuth, requireRole } from "../../middleware/auth";
 import { asyncHandler } from "../../lib/async";
 import { HttpError } from "../../lib/errors";
 
+
+const SEARCH_STOP_WORDS = new Set([
+  "a", "an", "and", "are", "around", "at", "can", "for", "find", "get",
+  "i", "in", "is", "looking", "me", "my", "near", "of", "on", "please",
+  "the", "to", "want", "with", "need", "book", "hire", "some", "any",
+]);
+
+function marketplaceSearchTerms(query?: string): string[] {
+  if (!query) return [];
+  return [...new Set(
+    (query.toLocaleLowerCase().match(/[\\p{L}\\p{N}]+/gu) || [])
+      .filter((term) => term.length > 1 && !SEARCH_STOP_WORDS.has(term)),
+  )].slice(0, 8);
+}
+
+function marketplaceTermFilter(terms: string[]) {
+  return terms.length ? {
+    AND: terms.map((term) => ({
+      OR: [
+        { title: { contains: term, mode: "insensitive" as const } },
+        { description: { contains: term, mode: "insensitive" as const } },
+        { city: { contains: term, mode: "insensitive" as const } },
+        { category: { name: { contains: term, mode: "insensitive" as const } } },
+        { vendor: { businessName: { contains: term, mode: "insensitive" as const } } },
+      ],
+    })),
+  } : {};
+}
+
 export const marketplaceRouter = Router();
 
 /** Public-friendly catalog (auth optional for future personalization). */
@@ -24,11 +53,7 @@ marketplaceRouter.get(
     const where = {
       status: ListingStatus.ACTIVE,
       vendor: { verification: "VERIFIED" as const, user: { status: "ACTIVE" as const } },
-      ...(q ? { OR: [
-        { title: { contains: q, mode: "insensitive" as const } },
-        { description: { contains: q, mode: "insensitive" as const } },
-        { city: { contains: q, mode: "insensitive" as const } },
-      ] } : {}),
+      ...marketplaceTermFilter(marketplaceSearchTerms(q)),
       ...(city ? { city: { contains: city, mode: "insensitive" as const } } : {}),
       ...(type ? { type } : {}),
     };
@@ -78,15 +103,7 @@ marketplaceRouter.get(
     const items = await prisma.listing.findMany({
       where: {
         status: ListingStatus.ACTIVE,
-        ...(q
-          ? {
-              OR: [
-                { title: { contains: q, mode: "insensitive" } },
-                { description: { contains: q, mode: "insensitive" } },
-                { city: { contains: q, mode: "insensitive" } },
-              ],
-            }
-          : {}),
+        ...marketplaceTermFilter(marketplaceSearchTerms(q)),
         ...(city ? { city: { contains: city, mode: "insensitive" } } : {}),
         ...(currency ? { currency } : {}),
         ...(type ? { type } : {}),
