@@ -75,11 +75,43 @@ test("marketplace deposit and enquiry dialogs keep readable themed copy and grad
       expect(result.modalColor).toBe("rgb(247, 249, 255)");
       expect(result.fieldColor).toBe("rgb(247, 249, 255)");
     } else if (theme === "colorful") {
-      expect(result.modalColor).toBe("rgb(36, 20, 58)");
-      expect(result.fieldColor).toBe("rgb(36, 20, 58)");
+      expect(result.modalColor).toBe("rgb(255, 248, 255)");
+      expect(result.fieldColor).toBe("rgb(255, 248, 255)");
     } else {
       expect(result.modalColor).toBe("rgb(0, 0, 0)");
       expect(result.fieldColor).toBe("rgb(0, 0, 0)");
     }
+  }
+});
+
+
+test("shared portal typography inherits one semantic ink contract in every theme", async ({ page }) => {
+  await page.goto("/");
+  for (const theme of ["light", "dark", "colorful"] as const) {
+    await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
+    const result = await page.evaluate(() => {
+      const root = document.createElement("section");
+      root.className = "ess-shell";
+      root.innerHTML = '<article class="ess-panel"><h2>Workspace heading</h2><p>Ordinary workspace copy</p><p class="ess-muted">Supporting information</p><label>Business name<input value="EPHINTA" /></label><a href="#">View details</a><button class="ess-primary">Continue</button></article>';
+      document.querySelector("#root")!.append(root);
+      const read = (selector: string) => getComputedStyle(root.querySelector(selector)!).color;
+      const values = {
+        token: getComputedStyle(document.documentElement).getPropertyValue("--epg-ink").trim(),
+        heading: read("h2"),
+        copy: read("article p:not(.ess-muted)"),
+        muted: read(".ess-muted"),
+        field: read("input"),
+        link: read("a"),
+        action: read("button"),
+      };
+      root.remove();
+      return values;
+    });
+    expect(result.heading, theme).toBe(result.token);
+    expect(result.copy, theme).toBe(result.token);
+    expect(result.field, theme).toBe(result.token);
+    expect(result.muted, theme).not.toBe(result.token);
+    expect(result.link, theme).not.toBe(result.token);
+    expect(result.action, theme).toBe("rgb(255, 255, 255)");
   }
 });
