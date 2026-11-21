@@ -72,14 +72,14 @@ test("marketplace deposit and enquiry dialogs keep readable themed copy and grad
     expect(result.actionBackground, theme).toContain("linear-gradient");
     expect(result.actionColor, theme).toBe("rgb(255, 255, 255)");
     if (theme === "dark") {
-      expect(result.modalColor).toBe("rgb(244, 247, 255)");
-      expect(result.fieldColor).toBe("rgb(244, 247, 255)");
+      expect(result.modalColor).toBe("rgb(247, 249, 255)");
+      expect(result.fieldColor).toBe("rgb(247, 249, 255)");
     } else if (theme === "colorful") {
-      expect(result.modalColor).toBe("rgb(33, 21, 47)");
-      expect(result.fieldColor).toBe("rgb(33, 21, 47)");
+      expect(result.modalColor).toBe("rgb(36, 20, 58)");
+      expect(result.fieldColor).toBe("rgb(36, 20, 58)");
     } else {
-      expect(result.modalColor).toBe("rgb(23, 32, 51)");
-      expect(result.fieldColor).toBe("rgb(23, 32, 51)");
+      expect(result.modalColor).toBe("rgb(0, 0, 0)");
+      expect(result.fieldColor).toBe("rgb(0, 0, 0)");
     }
   }
 });
