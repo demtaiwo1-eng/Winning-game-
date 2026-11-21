@@ -1266,6 +1266,21 @@ export default function PublicLanding({
           -webkit-text-fill-color: transparent !important;
         }
 
+        /* Keep the marketing spotlight surface opaque on narrow mobile screens.
+           The former transparent legacy rule must never win over the theme token. */
+        #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone {
+          background-color: var(--eph-marketing-surface, #ffffff) !important;
+          background-image: none !important;
+        }
+        #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone {
+          background-color: var(--eph-marketing-surface, #202039) !important;
+          background-image: none !important;
+        }
+        #root .eph-landing[data-theme="light"] .ephinta-marketing-zone {
+          background-color: var(--eph-marketing-surface, #ffffff) !important;
+          background-image: none !important;
+        }
+
 
       `}
       </style>
