@@ -70,17 +70,23 @@ export default function PublicMarketplaceCatalogue() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [city, setCity] = useState("");
   const [type, setType] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
     if (mode !== "verified") { setLoading(false); setError(""); return; }
     let active = true;
     setLoading(true); setError("");
     const params = new URLSearchParams({ page: String(page), take: String(PAGE_SIZE) });
-    if (query.trim()) params.set("q", query.trim());
+    if (debouncedQuery) params.set("q", debouncedQuery);
     if (city.trim()) params.set("city", city.trim());
     if (type) params.set("type", type);
     api<CatalogueResponse>(`/marketplace/public?${params.toString()}`)
@@ -93,7 +99,7 @@ export default function PublicMarketplaceCatalogue() {
       .catch((reason: Error) => { if (active) setError(reason.message || "Unable to load the marketplace."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [mode, page, query, city, type]);
+  }, [mode, page, debouncedQuery, city, type]);
 
   const demoResults = useMemo(() => {
     const terms = searchTerms(query);
