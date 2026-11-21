@@ -859,12 +859,12 @@ html[data-ephinta-theme] body #root .eph-landing :where(p,li,label,legend,small,
 /* Dark feature/hero panels always use bright copy, regardless of page theme. */
 html[data-ephinta-theme] body #root .eph-landing :is(
   .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
-  .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
+  .eph-promo-shell.eph-marketplace-advertising,
   [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
 ) { color: #fff !important; }
 html[data-ephinta-theme] body #root .eph-landing :is(
   .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
-  .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
+  .eph-promo-shell.eph-marketplace-advertising,
   [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
 ) :where(p,span,small,label,a,li) {
   color: #fff !important;
@@ -875,7 +875,7 @@ html[data-ephinta-theme] body #root .eph-landing :is(
    gradient-heading rule intentionally supplies transparent text fill. */
 html[data-ephinta-theme] body #root .eph-landing :is(
   .eph-hero,.ephinta-feature-panel-contrast,.ephinta-right-panel-contrast-target,
-  .ephinta-marketing-zone,.eph-promo-shell.eph-marketplace-advertising,
+  .eph-promo-shell.eph-marketplace-advertising,
   [class*="feature-panel"],[class*="hero-card"],[class*="dark-panel"]
 ) :where(h1,h2,h3,h4,strong,b) {
   color: inherit !important;
