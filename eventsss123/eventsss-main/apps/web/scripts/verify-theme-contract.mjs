@@ -52,7 +52,7 @@ for (const mode of ["light", "dark", "colorful"]) {
   const selectorCount = (themeCss.match(new RegExp('html\\[data-ephinta-theme="' + mode + '"\\]', "g")) ?? []).length;
   check(selectorCount === 1, "Theme contract defines the " + mode + " palette exactly once.");
 }
-for (const token of ["--epg-page", "--epg-surface", "--epg-ink", "--epg-muted", "--epg-border", "--epg-link", "--epg-focus", "--epg-accent", "--epg-accent-ink"]) {
+for (const token of ["--epg-page", "--epg-surface", "--epg-ink", "--epg-muted", "--epg-border", "--epg-link", "--epg-focus", "--epg-accent", "--epg-accent-ink", "--epg-font-body", "--epg-font-display", "--epg-text-base", "--epg-leading-body", "--epg-weight-bold"]) {
   check(themeCss.includes(token), "Global theme token exists: " + token);
 }
 check(/background:\s*var\(--epg-page/.test(introCss) && /color:\s*var\(--epg-ink/.test(introCss),
@@ -61,6 +61,11 @@ check(audioCss.includes("var(--epg-page") && audioCss.includes("var(--epg-surfac
   "Audio consent, player, restore button and focus states consume global theme tokens.");
 check(globalCss.includes(".ephinta-startup-screen") && globalCss.includes("var(--epg-accent)"),
   "Startup and fatal-error surfaces consume global theme tokens.");
+check(runtimeCss.includes("Base type is inherited from the nearest component surface") &&
+  !runtimeCss.includes('[class*="landing"]') && !runtimeCss.includes(":where(*)"),
+  "Runtime typography is surface-aware and contains no blanket descendant colour selectors.");
+check(!read("src/index.css").includes("EPHINTA GLOBAL THEME TEXT CONTRACT"),
+  "Legacy index stylesheet does not add a second global text-colour contract.");
 check(/@media\s*\(max-width:\s*390px\)/.test(globalCss),
   "Startup surface has a compact-phone responsive rule.");
 check(/prefers-reduced-motion/.test(introCss) && /prefers-reduced-motion/.test(themeCss),
