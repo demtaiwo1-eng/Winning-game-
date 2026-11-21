@@ -11,11 +11,22 @@ type PublicListing = {
 type CatalogueResponse = { items: PublicListing[]; pagination: { page: number; take: number; total: number; totalPages: number } };
 type DemoListing = { id: string; title: string; description: string; type: PublicListing["type"]; priceMinor: string; currency: string; city: string; country: string; vendorName: string; category: string };
 
-const SEARCH_STOP_WORDS = new Set(["a", "an", "and", "are", "at", "for", "find", "in", "is", "looking", "me", "my", "near", "of", "on", "please", "the", "to", "want", "with", "need"]);
+const SEARCH_STOP_WORDS = new Set(["a", "an", "and", "are", "at", "for", "find", "in", "is", "looking", "me", "my", "near", "of", "on", "please", "the", "to", "want", "with", "need", "affordable", "cheap", "budget", "luxury", "premium", "best", "top"]);
 const searchTerms = (value: string) => [...new Set(
   (value.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
     .filter((term) => term.length > 1 && !SEARCH_STOP_WORDS.has(term)),
 )].slice(0, 8);
+
+const SEARCH_SYNONYMS: Record<string, string[]> = {
+  photographer: ["photography", "photo"], photography: ["photographer", "photo"],
+  videographer: ["videography", "video"], videography: ["videographer", "video"],
+  caterer: ["catering"], catering: ["caterer"],
+  decorator: ["décor", "decor", "decoration"], decoration: ["décor", "decor", "decorator"],
+  decor: ["décor", "decoration", "decorator"], venue: ["venues", "hall", "space"],
+  venues: ["venue", "hall", "space"], dj: ["music", "disc jockey"],
+  rental: ["rentals", "hire"], rentals: ["rental", "hire"],
+};
+const searchVariants = (term: string) => [term, ...(SEARCH_SYNONYMS[term] || [])];
 
 const PAGE_SIZE = 24;
 const money = (minor: string, currency: string) => {
@@ -91,7 +102,7 @@ export default function PublicMarketplaceCatalogue() {
       const searchable = [item.title, item.description, item.category, item.vendorName, item.city]
         .join(" ")
         .toLocaleLowerCase();
-      return terms.every((term) => searchable.includes(term)) &&
+      return terms.every((term) => searchVariants(term).some((variant) => searchable.includes(variant))) &&
         (!c || item.city.toLocaleLowerCase().includes(c)) &&
         (!type || item.type === type);
     });
