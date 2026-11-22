@@ -1257,7 +1257,7 @@ export default function PublicLanding({
           -webkit-text-fill-color:currentColor !important;
         }
         /* Last-mile guard: keep the spotlight gradient after all legacy landing rules. */
-        #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2,
+        .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2,
         #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone h2 {
           background-image: linear-gradient(95deg,#72eaff 0%,#c5a5ff 38%,#ff9bd8 72%,#ffdc85 100%) !important;
           background-clip: text !important;
@@ -1272,7 +1272,7 @@ export default function PublicLanding({
           background-color: var(--eph-marketing-surface, #ffffff) !important;
           background-image: none !important;
         }
-        #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone {
+        .eph-landing[data-theme="dark"] .ephinta-marketing-zone {
           background-color: var(--eph-marketing-surface, #202039) !important;
           background-image: none !important;
         }
@@ -1284,26 +1284,26 @@ export default function PublicLanding({
         /* Final owner-level contract for the first landing-page marketing block.
            This component has its own theme state and legacy inline rules, so
            authenticated-workspace CSS cannot fix this surface. */
-        #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone {
+        .eph-landing[data-theme="dark"] .ephinta-marketing-zone {
           color: #f4eafa !important;
           background: linear-gradient(135deg, #21113f 0%, #30204f 56%, #173d4a 100%) !important;
           border-color: rgba(242, 182, 111, .38) !important;
         }
-        #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2 {
+        .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2 {
           background-image: linear-gradient(100deg, #ffad5c 0%, #e9a0b8 52%, #b99cff 100%) !important;
           background-clip: text !important;
           -webkit-background-clip: text !important;
           color: transparent !important;
           -webkit-text-fill-color: transparent !important;
         }
-        #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone
+        .eph-landing[data-theme="dark"] .ephinta-marketing-zone
         :is(.ephinta-right-copy-visible, .ephinta-human-proof, p:not(.ephinta-marketing-zone__eyebrow)) {
           color: #c5b4dc !important;
           -webkit-text-fill-color: #c5b4dc !important;
           opacity: 1 !important;
           text-shadow: none !important;
         }
-        #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone .ephinta-marketing-zone__eyebrow {
+        .eph-landing[data-theme="dark"] .ephinta-marketing-zone .ephinta-marketing-zone__eyebrow {
           color: #f2b66f !important;
           -webkit-text-fill-color: #f2b66f !important;
         }
