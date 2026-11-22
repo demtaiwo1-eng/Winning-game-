@@ -10,8 +10,8 @@ const SEARCH_STOP_WORDS = new Set([
 export function marketplaceSearchTerms(query?: string): string[] {
   if (!query) return [];
   return [...new Set(
-    (query.toLocaleLowerCase().match(/[\\p{L}\\p{N}]+/gu) || [])
-      .filter((term) => term.length > 1 && !/^\\d+$/.test(term) && !SEARCH_STOP_WORDS.has(term)),
+    (query.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
+      .filter((term) => term.length > 1 && !/^\d+$/.test(term) && !SEARCH_STOP_WORDS.has(term)),
   )].slice(0, 8);
 }
 
