@@ -511,3 +511,90 @@
 @media (max-width: 360px) {
   .ess-marketplace-welcome-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Marketplace inner marketing copy: explicit, theme-aware contrast.
+   The welcome component renders an h1 (not the h2 targeted by the older rule). */
+.ess-app .ess-marketplace .ess-marketplace-welcome {
+  color: var(--epg-ink, #17152b);
+  background: radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--epg-accent, #5b35d5) 15%, transparent), transparent 34%), linear-gradient(145deg, var(--epg-surface, #fff), var(--epg-surface-raised, #f8f9fc));
+}
+.ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3) {
+  margin: 4px 0 10px; color: var(--epg-ink, #17152b); -webkit-text-fill-color: currentColor;
+  font-size: clamp(1.55rem, 3vw, 2.25rem); font-weight: 850; line-height: 1.14; letter-spacing: -.04em;
+}
+.ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow) {
+  max-width: 680px; margin: 0; color: var(--epg-muted, #4b5268); -webkit-text-fill-color: currentColor;
+  font-size: clamp(.94rem, 1.3vw, 1.05rem); line-height: 1.7;
+}
+.ess-app .ess-marketplace .ess-marketplace-welcome-copy .ess-eyebrow,
+.ess-app .ess-marketplace .ess-marketplace-catalog-heading .ess-eyebrow,
+.ess-app .ess-marketplace .ess-marketplace-head .ess-eyebrow {
+  color: var(--epg-link, #4b35b5); -webkit-text-fill-color: currentColor; font-weight: 850; letter-spacing: .13em;
+}
+.ess-app .ess-marketplace .ess-marketplace-capability h3,
+.ess-app .ess-marketplace .ess-marketplace-catalog-heading h2,
+.ess-app .ess-marketplace .ess-marketplace-head h2 { color: var(--epg-ink, #17152b); -webkit-text-fill-color: currentColor; }
+.ess-app .ess-marketplace .ess-marketplace-capability p,
+.ess-app .ess-marketplace .ess-marketplace-catalog-heading p:not(.ess-eyebrow),
+.ess-app .ess-marketplace .ess-marketplace-head p:not(.ess-eyebrow) {
+  color: var(--epg-muted, #4b5268); -webkit-text-fill-color: currentColor; line-height: 1.6;
+}
+.ess-app .ess-marketplace .ess-marketplace-journey { color: var(--epg-ink, #17152b); }
+.ess-app .ess-marketplace .ess-marketplace-journey b { color: var(--epg-accent, #5b35d5); }
+
+html[data-ephinta-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome,
+html[data-ephinta-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-welcome,
+html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome,
+html[data-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-welcome {
+  color: #f8faff;
+  background: radial-gradient(circle at 92% 0%, rgba(255,190,92,.2), transparent 34%), linear-gradient(135deg, #21113f 0%, #14264a 56%, #123e4b 100%);
+  border-color: rgba(185,169,255,.38);
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html[data-ephinta-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html[data-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3) {
+  background: linear-gradient(100deg, #fff 0%, #a8eaff 48%, #ffd18a 100%);
+  background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-ephinta-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow) {
+  color: #e7edff; -webkit-text-fill-color: #e7edff;
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy .ess-eyebrow,
+html[data-ephinta-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy .ess-eyebrow,
+html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy .ess-eyebrow,
+html[data-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy .ess-eyebrow {
+  color: #ffd58b; -webkit-text-fill-color: #ffd58b;
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-capability h3,
+html[data-ephinta-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-capability h3,
+html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-capability h3,
+html[data-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-capability h3 {
+  color: #f8faff; -webkit-text-fill-color: #f8faff;
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-capability p,
+html[data-ephinta-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-capability p,
+html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-capability p,
+html[data-theme="colorful"] .ess-app .ess-marketplace .ess-marketplace-capability p {
+  color: #dce7fa; -webkit-text-fill-color: #dce7fa;
+}
+html[data-ephinta-theme="light"] .ess-app .ess-marketplace .ess-marketplace-welcome,
+html[data-theme="light"] .ess-app .ess-marketplace .ess-marketplace-welcome,
+html.theme-light .ess-app .ess-marketplace .ess-marketplace-welcome {
+  background: radial-gradient(circle at 92% 0%, rgba(111,78,210,.1), transparent 36%), linear-gradient(135deg, #fff 0%, #f3f0ff 58%, #eaf7fb 100%);
+  border-color: #d9d2ed; color: #21163c;
+}
+html[data-ephinta-theme="light"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html[data-theme="light"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html.theme-light .ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3) {
+  background: none; color: #21163c; -webkit-text-fill-color: #21163c;
+}
+html[data-ephinta-theme="light"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-theme="light"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html.theme-light .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow) {
+  color: #39304d; -webkit-text-fill-color: #39304d;
+}
