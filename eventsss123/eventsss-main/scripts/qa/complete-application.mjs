@@ -42,7 +42,10 @@ function run(name, command, args, { optional = false, env = process.env, retries
     const combined = [r.stdout, r.stderr, r.error?.message].filter(Boolean).join("\\n");
     const transient = /429|Too Many Requests|502 Bad Gateway|503 Service Unavailable|ECONNRESET|ETIMEDOUT/i.test(combined);
     if (r.status === 0 || !transient || attempt > retries) break;
-    console.log(`[RETRY] ${name}: transient dependency/network failure (${attempt}/${retries})`);
+    const delayMs = Math.min(60_000, 10_000 * (2 ** (attempt - 1)));
+    console.log(`[RETRY] ${name}: transient dependency/network failure (${attempt}/${retries}); waiting ${delayMs / 1000}s before retry`);
+    // Give Maven Central time to clear HTTP 429 throttling before Gradle retries.
+    spawnSync(process.execPath, ["-e", `setTimeout(() => process.exit(0), ${delayMs})`], { stdio: "ignore" });
   } while (attempt <= retries);
   const output = redact([r.stdout, r.stderr, r.error?.message].filter(Boolean).join("\\n")).slice(-18000);
   const passed = r.status === 0;
@@ -93,7 +96,16 @@ if (installOk) {
 const java = spawnSync("java", ["-version"], { encoding: "utf8" });
 const sdk = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
 if (java.status === 0 && sdk) {
-  run("Android sync, lint, unit tests and debug APK verification", "npm", ["run", "mobile:verify"], { retries: 2 });
+  // The Android Gradle project contains generated Capacitor/Cordova files.
+  // Re-sync after npm ci and the web build so cordova.variables.gradle exists
+  // before Gradle evaluates capacitor.build.gradle.
+  const androidSyncOk = run("Generate and sync Capacitor Android project", "npm", ["run", "sync", "-w", "apps/mobile"]);
+  if (androidSyncOk) {
+    // Retry only the Android Gradle gate so a Maven Central 429 does not repeat the entire suite.
+    run("Android lint, unit tests and debug APK verification", "npm", ["run", "verify:android", "-w", "apps/mobile"], { retries: 4 });
+  } else {
+    results.push({ name: "Android lint, unit tests and debug APK verification", status: "BLOCKED", output: "Skipped because Capacitor Android sync failed." });
+  }
 } else {
   results.push({
     name: "Android verification",

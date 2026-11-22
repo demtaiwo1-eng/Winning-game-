@@ -141,3 +141,53 @@ test("marketplace inner marketing copy follows the global theme at desktop and m
     }
   }
 });
+
+
+test("workspace overview welcome copy receives theme colors without a Marketplace parent wrapper", async ({ page }) => {
+  await page.goto("/");
+  for (const width of [360, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ["dark", "colorful", "light"] as const) {
+      await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
+      const result = await page.evaluate(() => {
+        const root = document.createElement("div");
+        root.className = "ess-app";
+        // Mirrors EnterpriseApp.tsx: the welcome panel is a direct workspace
+        // overview child, not nested inside .ess-marketplace.
+        root.innerHTML = '<section class="ess-marketplace-welcome"><div class="ess-marketplace-welcome-copy"><p class="ess-eyebrow">Your event journey starts here</p><h2>Welcome to your event marketplace.</h2><p>Plan your event, find trusted professionals, manage bookings and keep every important detail in one place.</p></div><div class="ess-marketplace-welcome-grid"><article><h3>Plan with confidence</h3><p>Turn your ideas into a clear event brief, timeline and checklist.</p></article></div></section>';
+        document.querySelector("#root")!.append(root);
+        const read = (selector: string) => {
+          const element = root.querySelector(selector)!;
+          const style = getComputedStyle(element);
+          return { color: style.color, fill: style.webkitTextFillColor };
+        };
+        const result = {
+          heading: read(".ess-marketplace-welcome-copy h2"),
+          copy: read(".ess-marketplace-welcome-copy > p:not(.ess-eyebrow)"),
+          eyebrow: read(".ess-marketplace-welcome-copy .ess-eyebrow"),
+          featureHeading: read(".ess-marketplace-welcome-grid article h3"),
+          featureCopy: read(".ess-marketplace-welcome-grid article p")
+        };
+        root.remove();
+        return result;
+      });
+      if (theme === "dark") {
+        expect(result.heading.fill, "dark workspace heading at " + width).toBe("rgba(0, 0, 0, 0)");
+        expect(result.copy.color, "dark workspace copy at " + width).toBe("rgb(197, 180, 220)");
+        expect(result.eyebrow.color, "dark workspace eyebrow at " + width).toBe("rgb(242, 182, 111)");
+        expect(result.featureHeading.color, "dark feature heading at " + width).toBe("rgb(248, 250, 255)");
+        expect(result.featureCopy.color, "dark feature copy at " + width).toBe("rgb(197, 180, 220)");
+      } else if (theme === "colorful") {
+        expect(result.heading.fill, "colorful workspace heading at " + width).toBe("rgba(0, 0, 0, 0)");
+        expect(result.copy.color, "colorful workspace copy at " + width).toBe("rgb(231, 237, 255)");
+        expect(result.featureHeading.color, "colorful feature heading at " + width).toBe("rgb(248, 250, 255)");
+        expect(result.featureCopy.color, "colorful feature copy at " + width).toBe("rgb(231, 237, 255)");
+      } else {
+        expect(result.heading.fill, "light workspace heading at " + width).toBe("rgb(33, 22, 60)");
+        expect(result.copy.color, "light workspace copy at " + width).toBe("rgb(57, 48, 77)");
+        expect(result.featureHeading.color, "light feature heading at " + width).toBe("rgb(33, 22, 60)");
+        expect(result.featureCopy.color, "light feature copy at " + width).toBe("rgb(57, 48, 77)");
+      }
+    }
+  }
+});
