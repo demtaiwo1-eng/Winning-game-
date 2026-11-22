@@ -99,3 +99,40 @@ test("marketplace deposit and enquiry dialogs keep readable themed copy and grad
     }
   }
 });
+
+
+test("marketplace inner marketing copy follows the global theme at desktop and mobile widths", async ({ page }) => {
+  await page.goto("/");
+  for (const width of [360, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ["dark", "colorful", "light"] as const) {
+      await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
+      const result = await page.evaluate(() => {
+        const root = document.createElement("div");
+        root.className = "ess-app";
+        root.innerHTML = '<main class="ess-portal-stack"><section class="ess-panel ess-marketplace"><section class="ess-marketplace-welcome"><div class="ess-marketplace-welcome-copy"><p class="ess-eyebrow">Your event</p><h1>Welcome to your event marketplace.</h1><p>Discover trusted event professionals and keep bookings connected.</p></div></section><section class="ess-marketplace-capabilities"><article class="ess-marketplace-capability"><h3>Plan with confidence</h3><p>Build your event brief and organise tasks.</p></article></section></section></main>';
+        document.querySelector("#root")!.append(root);
+        const read = (selector: string) => {
+          const el = root.querySelector(selector)!;
+          const style = getComputedStyle(el);
+          return { color: style.color, fill: style.webkitTextFillColor };
+        };
+        const styles = {
+          heading: read(".ess-marketplace-welcome-copy h1"),
+          copy: read(".ess-marketplace-welcome-copy > p:not(.ess-eyebrow)"),
+          capability: read(".ess-marketplace-capability p")
+        };
+        root.remove();
+        return styles;
+      });
+      if (theme === "light") {
+        expect(result.heading.fill, "light heading " + width).toBe("rgb(33, 22, 60)");
+        expect(result.copy.color, "light body copy " + width).toBe("rgb(57, 48, 77)");
+      } else {
+        expect(result.heading.fill, theme + " heading " + width).toBe("rgba(0, 0, 0, 0)");
+        expect(result.copy.color, theme + " body copy " + width).toBe("rgb(231, 237, 255)");
+        expect(result.capability.color, theme + " capability copy " + width).toBe("rgb(220, 231, 250)");
+      }
+    }
+  }
+});
