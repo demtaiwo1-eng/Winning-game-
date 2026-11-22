@@ -619,3 +619,132 @@ html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy 
   color: #f2b66f;
   -webkit-text-fill-color: #f2b66f;
 }
+
+
+/* Shared welcome-panel contract.
+   This panel is rendered both inside MarketplaceBrowse (.ess-marketplace) and
+   directly in EnterpriseApp's workspace overview. Never require the former
+   parent here: doing so silently leaves the workspace copy unthemed. */
+.ess-app .ess-marketplace-welcome {
+  color: #21163c;
+}
+.ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy :where(h1,h2,h3) {
+  color: #21163c;
+  -webkit-text-fill-color: #21163c;
+}
+.ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy > p:not(.ess-eyebrow) {
+  color: #39304d;
+  -webkit-text-fill-color: #39304d;
+}
+.ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy .ess-eyebrow {
+  color: #4b35b5;
+  -webkit-text-fill-color: #4b35b5;
+}
+.ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article h3 {
+  color: #21163c;
+  -webkit-text-fill-color: #21163c;
+}
+.ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article p {
+  color: #39304d;
+  -webkit-text-fill-color: #39304d;
+}
+
+html[data-ephinta-theme="dark"] body #root .ess-app .ess-marketplace-welcome,
+html[data-theme="dark"] body #root .ess-app .ess-marketplace-welcome {
+  color: #f8faff;
+  background: radial-gradient(circle at 92% 0%, rgba(255,190,92,.2), transparent 34%), linear-gradient(135deg, #21113f 0%, #14264a 56%, #123e4b 100%);
+  border-color: rgba(185,169,255,.38);
+}
+html[data-ephinta-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html[data-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy :where(h1,h2,h3) {
+  background: linear-gradient(100deg, #ffad5c 0%, #e9a0b8 52%, #b99cff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+html[data-ephinta-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-ephinta-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article p,
+html[data-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article p {
+  color: #c5b4dc;
+  -webkit-text-fill-color: #c5b4dc;
+}
+html[data-ephinta-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy .ess-eyebrow,
+html[data-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy .ess-eyebrow {
+  color: #f2b66f;
+  -webkit-text-fill-color: #f2b66f;
+}
+html[data-ephinta-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article h3,
+html[data-theme="dark"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article h3 {
+  color: #f8faff;
+  -webkit-text-fill-color: #f8faff;
+}
+
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome,
+html[data-theme="colorful"] body #root .ess-app .ess-marketplace-welcome {
+  color: #f8faff;
+  background: radial-gradient(circle at 92% 0%, rgba(255,190,92,.2), transparent 34%), linear-gradient(135deg, #21113f 0%, #14264a 56%, #123e4b 100%);
+  border-color: rgba(185,169,255,.38);
+}
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html[data-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy :where(h1,h2,h3) {
+  background: linear-gradient(100deg, #fff 0%, #a8eaff 48%, #ffd18a 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article p,
+html[data-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article p {
+  color: #e7edff;
+  -webkit-text-fill-color: #e7edff;
+}
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy .ess-eyebrow,
+html[data-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy .ess-eyebrow {
+  color: #ffd58b;
+  -webkit-text-fill-color: #ffd58b;
+}
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article h3,
+html[data-theme="colorful"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article h3 {
+  color: #f8faff;
+  -webkit-text-fill-color: #f8faff;
+}
+
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome,
+html[data-theme="light"] body #root .ess-app .ess-marketplace-welcome,
+html.theme-light body #root .ess-app .ess-marketplace-welcome {
+  color: #21163c;
+  background: radial-gradient(circle at 92% 0%, rgba(111,78,210,.1), transparent 36%), linear-gradient(135deg, #fff 0%, #f3f0ff 58%, #eaf7fb 100%);
+  border-color: #d9d2ed;
+}
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html[data-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html.theme-light body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy :where(h1,h2,h3) {
+  background: none;
+  color: #21163c;
+  -webkit-text-fill-color: #21163c;
+}
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html.theme-light body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article p,
+html[data-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article p,
+html.theme-light body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article p {
+  color: #39304d;
+  -webkit-text-fill-color: #39304d;
+}
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy .ess-eyebrow,
+html[data-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy .ess-eyebrow,
+html.theme-light body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-copy .ess-eyebrow {
+  color: #4b35b5;
+  -webkit-text-fill-color: #4b35b5;
+}
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article h3,
+html[data-theme="light"] body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article h3,
+html.theme-light body #root .ess-app .ess-marketplace-welcome .ess-marketplace-welcome-grid article h3 {
+  color: #21163c;
+  -webkit-text-fill-color: #21163c;
+}
