@@ -198,3 +198,36 @@ test("workspace overview welcome copy receives theme colors without a Marketplac
     }
   }
 });
+
+
+test("public Marketplace campaign and category cards are readable in dark mode", async ({ page }) => {
+  for (const width of [360, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    await page.locator(".eph-theme-select select").selectOption("dark", { force: true });
+    const result = await page.evaluate(() => {
+      const read = (element: Element | null) => {
+        if (!element) return null;
+        const style = getComputedStyle(element);
+        return { color: style.color, fill: style.webkitTextFillColor, background: style.backgroundColor, image: style.backgroundImage };
+      };
+      const card = document.querySelector(".eph-promotions .eph-ad-card-marketplace");
+      return {
+        heading: read(document.querySelector(".eph-promotions .eph-promo-heading h2")),
+        copy: read(document.querySelector(".eph-promotions .eph-promo-heading p")),
+        eyebrow: read(document.querySelector(".eph-promotions .eph-promo-kicker")),
+        card: read(card),
+        cardTitle: read(card?.querySelector("strong") ?? null),
+        cardLabel: read(card?.querySelector("small") ?? null),
+        cardCopy: read(card?.querySelector("p") ?? null),
+      };
+    });
+    expect(result.heading?.fill, "Marketplace headline gradient at " + width).toBe("rgba(0, 0, 0, 0)");
+    expect(result.copy?.color, "Marketplace supporting copy at " + width).toBe("rgb(197, 180, 220)");
+    expect(result.eyebrow?.color, "Marketplace eyebrow at " + width).toBe("rgb(242, 182, 111)");
+    expect(result.card?.image, "category card dark surface at " + width).toContain("linear-gradient");
+    expect(result.cardTitle?.color, "category title at " + width).toBe("rgb(255, 255, 255)");
+    expect(result.cardLabel?.color, "category label at " + width).toBe("rgb(242, 182, 111)");
+    expect(result.cardCopy?.color, "category description at " + width).toBe("rgb(197, 180, 220)");
+  }
+});
