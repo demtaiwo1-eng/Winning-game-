@@ -28,6 +28,9 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
           heroCopy: read(".eph-subtitle"),
           marketingPanel: panelStyle ? panelStyle.backgroundColor : null,
           marketingCopy: copyStyle ? copyStyle.color : null,
+          marketingEyebrow: panel?.querySelector(".ephinta-marketing-zone__eyebrow")
+            ? getComputedStyle(panel.querySelector(".ephinta-marketing-zone__eyebrow")!).color
+            : null,
         };
       });
       expect(colors.promo?.color, `promo heading in ${theme} at ${width}px`).not.toBe("rgb(37, 22, 51)");
@@ -36,6 +39,10 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
       expect(colors.copy?.color, `section copy in ${theme} at ${width}px`).toBe("rgb(233, 229, 255)");
       expect(colors.heroCopy?.color, `hero copy in ${theme} at ${width}px`).not.toBe("rgb(255, 255, 255)");
       expect(colors.marketingCopy, `marketing panel copy in ${theme} at ${width}px`).not.toBe("rgb(255, 255, 255)");
+      if (theme === "dark") {
+        expect(colors.marketingCopy, `dark marketing copy in ${width}px`).toBe("rgb(197, 180, 220)");
+        expect(colors.marketingEyebrow, `dark marketing eyebrow in ${width}px`).toBe("rgb(242, 182, 111)");
+      }
       expect(colors.marketingPanel, `marketing panel surface in ${theme} at ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
     }
 
