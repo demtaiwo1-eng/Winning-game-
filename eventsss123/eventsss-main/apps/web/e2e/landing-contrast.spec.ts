@@ -133,8 +133,9 @@ test("marketplace inner marketing copy follows the global theme at desktop and m
         if (theme === "dark") {
           expect(result.copy.color, "dark mode must not use white marketing copy").not.toBe("rgb(255, 255, 255)");
           expect(result.copy.color, "dark mode supporting copy uses muted lavender").toBe("rgb(197, 180, 220)");
+        } else {
+          expect(result.copy.color, "colorful mode body copy " + width).toBe("rgb(231, 237, 255)");
         }
-        expect(result.copy.color, theme + " body copy " + width).toBe("rgb(197, 180, 220)");
         expect(result.capability.color, theme + " capability copy " + width).toBe("rgb(220, 231, 250)");
       }
     }
