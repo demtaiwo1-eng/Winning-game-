@@ -837,7 +837,7 @@ export default function PublicLanding({
         .eph-landing .eph-promo-shell p, .eph-landing .eph-promo-shell .eph-promo-placeholder { color: #dce5ff !important; }
 
         /* Final contrast guard for the dark marketplace campaign surface. */
-        html body #root .eph-landing .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-heading h2 {
+        .eph-landing[data-theme="colorful"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-heading h2 {
           color: #ffffff !important;
           -webkit-text-fill-color: #ffffff !important;
         }
