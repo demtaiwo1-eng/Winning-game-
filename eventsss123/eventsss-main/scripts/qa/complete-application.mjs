@@ -96,8 +96,16 @@ if (installOk) {
 const java = spawnSync("java", ["-version"], { encoding: "utf8" });
 const sdk = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
 if (java.status === 0 && sdk) {
-  // Earlier stages already ran API/web checks and production builds. Retry only the Android Gradle gate so a Maven Central 429 does not repeat the entire suite.
-  run("Android lint, unit tests and debug APK verification", "npm", ["run", "verify:android", "-w", "apps/mobile"], { retries: 4 });
+  // The Android Gradle project contains generated Capacitor/Cordova files.
+  // Re-sync after npm ci and the web build so cordova.variables.gradle exists
+  // before Gradle evaluates capacitor.build.gradle.
+  const androidSyncOk = run("Generate and sync Capacitor Android project", "npm", ["run", "sync", "-w", "apps/mobile"]);
+  if (androidSyncOk) {
+    // Retry only the Android Gradle gate so a Maven Central 429 does not repeat the entire suite.
+    run("Android lint, unit tests and debug APK verification", "npm", ["run", "verify:android", "-w", "apps/mobile"], { retries: 4 });
+  } else {
+    results.push({ name: "Android lint, unit tests and debug APK verification", status: "BLOCKED", output: "Skipped because Capacitor Android sync failed." });
+  }
 } else {
   results.push({
     name: "Android verification",
