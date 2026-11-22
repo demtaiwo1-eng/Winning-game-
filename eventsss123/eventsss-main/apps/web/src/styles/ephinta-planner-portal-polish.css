@@ -598,3 +598,24 @@ html[data-theme="light"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy
 html.theme-light .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow) {
   color: #39304d; -webkit-text-fill-color: #39304d;
 }
+
+
+/* Dark Marketplace welcome block: saturated brand colors, never white marketing copy. */
+html[data-ephinta-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3),
+html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy :where(h1,h2,h3) {
+  background: linear-gradient(100deg, #ffad5c 0%, #e9a0b8 52%, #b99cff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy > p:not(.ess-eyebrow) {
+  color: #c5b4dc;
+  -webkit-text-fill-color: #c5b4dc;
+}
+html[data-ephinta-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy .ess-eyebrow,
+html[data-theme="dark"] .ess-app .ess-marketplace .ess-marketplace-welcome-copy .ess-eyebrow {
+  color: #f2b66f;
+  -webkit-text-fill-color: #f2b66f;
+}
