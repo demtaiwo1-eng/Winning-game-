@@ -1308,6 +1308,48 @@ export default function PublicLanding({
           -webkit-text-fill-color: #f2b66f !important;
         }
 
+
+        /* Actual visible Marketplace campaign: separate from the lower marketing zone. */
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising {
+          background: radial-gradient(circle at 88% 12%,rgba(166,122,255,.25),transparent 34%),linear-gradient(125deg,#12152f 0%,#28204b 52%,#192e4a 100%) !important;
+          color: #f8f5ff !important;
+        }
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-heading h2 {
+          background-image: linear-gradient(100deg,#ffad5c 0%,#e9a0b8 52%,#b99cff 100%) !important;
+          background-clip: text !important; -webkit-background-clip: text !important;
+          color: transparent !important; -webkit-text-fill-color: transparent !important;
+        }
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-heading p {
+          color: #c5b4dc !important; -webkit-text-fill-color: #c5b4dc !important; opacity: 1 !important;
+        }
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-kicker {
+          color: #f2b66f !important; -webkit-text-fill-color: #f2b66f !important;
+        }
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-ad-card-marketplace,
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-ad-card-sponsored {
+          background: linear-gradient(155deg,#292344 0%,#202a45 100%) !important;
+          border: 1px solid rgba(197,180,220,.28) !important;
+          color: #f8f5ff !important; box-shadow: 0 12px 28px rgba(5,8,24,.28) !important;
+        }
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-ad-card strong {
+          color: #fff !important; -webkit-text-fill-color: #fff !important;
+        }
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-ad-card small {
+          color: #f2b66f !important; -webkit-text-fill-color: #f2b66f !important;
+        }
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-ad-card p,
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-ad-card .eph-ad-meta span {
+          color: #c5b4dc !important; -webkit-text-fill-color: #c5b4dc !important;
+        }
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-ad-card button {
+          color: #fff !important; -webkit-text-fill-color: #fff !important;
+          background: linear-gradient(110deg,#9467ff,#b04ee0) !important;
+        }
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-footer,
+        .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-footer span {
+          color: #c5b4dc !important; -webkit-text-fill-color: #c5b4dc !important;
+        }
+
       `}
       </style>
 
