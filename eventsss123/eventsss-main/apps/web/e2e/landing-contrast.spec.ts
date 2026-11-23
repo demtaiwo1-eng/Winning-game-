@@ -28,6 +28,9 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
           heroCopy: read(".eph-subtitle"),
           marketingPanel: panelStyle ? panelStyle.backgroundColor : null,
           marketingCopy: copyStyle ? copyStyle.color : null,
+          marketingEyebrow: panel?.querySelector(".ephinta-marketing-zone__eyebrow")
+            ? getComputedStyle(panel.querySelector(".ephinta-marketing-zone__eyebrow")!).color
+            : null,
         };
       });
       expect(colors.promo?.color, `promo heading in ${theme} at ${width}px`).not.toBe("rgb(37, 22, 51)");
@@ -36,6 +39,10 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
       expect(colors.copy?.color, `section copy in ${theme} at ${width}px`).toBe("rgb(233, 229, 255)");
       expect(colors.heroCopy?.color, `hero copy in ${theme} at ${width}px`).not.toBe("rgb(255, 255, 255)");
       expect(colors.marketingCopy, `marketing panel copy in ${theme} at ${width}px`).not.toBe("rgb(255, 255, 255)");
+      if (theme === "dark") {
+        expect(colors.marketingCopy, `dark marketing copy in ${width}px`).toBe("rgb(197, 180, 220)");
+        expect(colors.marketingEyebrow, `dark marketing eyebrow in ${width}px`).toBe("rgb(242, 182, 111)");
+      }
       expect(colors.marketingPanel, `marketing panel surface in ${theme} at ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
     }
 
@@ -189,5 +196,38 @@ test("workspace overview welcome copy receives theme colors without a Marketplac
         expect(result.featureCopy.color, "light feature copy at " + width).toBe("rgb(57, 48, 77)");
       }
     }
+  }
+});
+
+
+test("public Marketplace campaign and category cards are readable in dark mode", async ({ page }) => {
+  for (const width of [360, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    await page.locator(".eph-theme-select select").selectOption("dark", { force: true });
+    const result = await page.evaluate(() => {
+      const read = (element: Element | null) => {
+        if (!element) return null;
+        const style = getComputedStyle(element);
+        return { color: style.color, fill: style.webkitTextFillColor, background: style.backgroundColor, image: style.backgroundImage };
+      };
+      const card = document.querySelector(".eph-promotions .eph-ad-card-marketplace");
+      return {
+        heading: read(document.querySelector(".eph-promotions .eph-promo-heading h2")),
+        copy: read(document.querySelector(".eph-promotions .eph-promo-heading p")),
+        eyebrow: read(document.querySelector(".eph-promotions .eph-promo-kicker")),
+        card: read(card),
+        cardTitle: read(card?.querySelector("strong") ?? null),
+        cardLabel: read(card?.querySelector("small") ?? null),
+        cardCopy: read(card?.querySelector("p") ?? null),
+      };
+    });
+    expect(result.heading?.fill, "Marketplace headline gradient at " + width).toBe("rgba(0, 0, 0, 0)");
+    expect(result.copy?.color, "Marketplace supporting copy at " + width).toBe("rgb(197, 180, 220)");
+    expect(result.eyebrow?.color, "Marketplace eyebrow at " + width).toBe("rgb(242, 182, 111)");
+    expect(result.card?.image, "category card dark surface at " + width).toContain("linear-gradient");
+    expect(result.cardTitle?.color, "category title at " + width).toBe("rgb(255, 255, 255)");
+    expect(result.cardLabel?.color, "category label at " + width).toBe("rgb(242, 182, 111)");
+    expect(result.cardCopy?.color, "category description at " + width).toBe("rgb(197, 180, 220)");
   }
 });
