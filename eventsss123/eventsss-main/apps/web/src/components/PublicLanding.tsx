@@ -1392,8 +1392,6 @@ export default function PublicLanding({
           opacity: 1 !important;
         }
 
-      `}
-
         /* Last-resort landing-owned overrides for legacy global heading/paragraph
            rules. :is() supports both the normal app root and isolated mounts. */
         :is(#root .eph-landing[data-theme="dark"], .eph-landing[data-theme="dark"]) .eph-promotions .eph-promo-heading h2 {
@@ -1421,6 +1419,9 @@ export default function PublicLanding({
           -webkit-text-fill-color: #f2b66f !important;
           opacity: 1 !important;
         }
+
+
+      `}
 
       </style>
 
