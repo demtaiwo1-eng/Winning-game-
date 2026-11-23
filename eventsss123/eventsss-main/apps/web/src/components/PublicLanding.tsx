@@ -1349,6 +1349,47 @@ export default function PublicLanding({
         .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-footer span {
           color: #c5b4dc !important; -webkit-text-fill-color: #c5b4dc !important;
         }
+        
+        /* Highest-priority dark-theme overrides: legacy campaign rules use
+           html/body/#root selectors and otherwise force white or pale-blue copy. */
+        html body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-heading h2 {
+          background-image: linear-gradient(100deg,#ffad5c 0%,#e9a0b8 52%,#b99cff 100%) !important;
+          background-clip: text !important;
+          -webkit-background-clip: text !important;
+          color: transparent !important;
+          -webkit-text-fill-color: transparent !important;
+        }
+        html body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-heading p {
+          color: #c5b4dc !important;
+          -webkit-text-fill-color: #c5b4dc !important;
+        }
+        html body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-kicker {
+          color: #f2b66f !important;
+          -webkit-text-fill-color: #f2b66f !important;
+        }
+        html body #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone {
+          color: #f4eafa !important;
+          background: linear-gradient(135deg,#21113f 0%,#30204f 56%,#173d4a 100%) !important;
+          border-color: rgba(242,182,111,.38) !important;
+        }
+        html body #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone h2 {
+          background-image: linear-gradient(100deg,#ffad5c 0%,#e9a0b8 52%,#b99cff 100%) !important;
+          background-clip: text !important;
+          -webkit-background-clip: text !important;
+          color: transparent !important;
+          -webkit-text-fill-color: transparent !important;
+        }
+        html body #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone .ephinta-right-copy-visible,
+        html body #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone .ephinta-human-proof {
+          color: #c5b4dc !important;
+          -webkit-text-fill-color: #c5b4dc !important;
+          opacity: 1 !important;
+        }
+        html body #root .eph-landing[data-theme="dark"] .ephinta-marketing-zone .ephinta-marketing-zone__eyebrow {
+          color: #f2b66f !important;
+          -webkit-text-fill-color: #f2b66f !important;
+          opacity: 1 !important;
+        }
 
       `}
       </style>
