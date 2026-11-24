@@ -1071,3 +1071,61 @@ html body #root .eph-landing[data-theme="light"] .eph-section-head p {
   color: #29243d !important;
   -webkit-text-fill-color: #29243d !important;
 }
+
+
+/* FINAL PUBLIC LANDING THEME CASCADE — this file is imported after legacy
+   index.css and component styles. Keep the first Marketplace campaign and
+   the lower marketing copy on the explicit dark-theme contrast contract. */
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] {
+  --eph-marketing-muted: #c5b4dc !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising {
+  color: #f8f5ff !important;
+  background: radial-gradient(circle at 88% 12%,rgba(166,122,255,.25),transparent 34%),linear-gradient(125deg,#12152f 0%,#28204b 52%,#192e4a 100%) !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-heading h2 {
+  background: linear-gradient(100deg,#ffad5c 0%,#e9a0b8 52%,#b99cff 100%) !important;
+  background-image: linear-gradient(100deg,#ffad5c 0%,#e9a0b8 52%,#b99cff 100%) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-heading p,
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card p,
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-meta span,
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-footer {
+  color: #c5b4dc !important;
+  -webkit-text-fill-color: #c5b4dc !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-kicker,
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card small {
+  color: #f2b66f !important;
+  -webkit-text-fill-color: #f2b66f !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card {
+  background: linear-gradient(155deg,#292344 0%,#202a45 100%) !important;
+  border-color: rgba(197,180,220,.28) !important;
+  color: #f8f5ff !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card strong {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card button {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: linear-gradient(110deg,#9467ff,#b04ee0) !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-hero .ephinta-marketing-zone
+:where(p,li,small,span,label,figcaption,.ephinta-human-proof,.ephinta-right-copy-visible) {
+  color: #c5b4dc !important;
+  -webkit-text-fill-color: #c5b4dc !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-hero .ephinta-marketing-zone
+.ephinta-marketing-zone__eyebrow {
+  color: #f2b66f !important;
+  -webkit-text-fill-color: #f2b66f !important;
+}
