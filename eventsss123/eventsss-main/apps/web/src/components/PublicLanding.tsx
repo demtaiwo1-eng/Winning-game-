@@ -1438,8 +1438,6 @@ export default function PublicLanding({
         }
 
 
-      `}
-
 
         /* Final theme contract: place after every legacy marketing rule so no
            later component selector can restore the old slate-grey copy. */
@@ -1457,6 +1455,8 @@ export default function PublicLanding({
           opacity: 1 !important;
           text-shadow: none !important;
         }
+      `}
+
       </style>
 
 
