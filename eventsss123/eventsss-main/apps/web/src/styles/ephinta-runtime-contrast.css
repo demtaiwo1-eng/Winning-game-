@@ -860,3 +860,184 @@ html[data-ephinta-theme] body #root .eph-landing .eph-section .ephinta-bright-sl
   background-clip: border-box !important;
   -webkit-background-clip: border-box !important;
 }
+
+
+/* Final marketplace contrast guard.
+   The campaign block and workspace welcome headings have legacy gradient
+   text-fill declarations with higher cascade precedence. Reassert the selected
+   semantic foreground at the final global layer for light and colorful modes. */
+html[data-ephinta-theme="light"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading h2,
+html[data-ephinta-theme="light"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading p,
+html[data-ephinta-theme="light"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-ad-card-marketplace p {
+  color: #202020 !important;
+  -webkit-text-fill-color: #202020 !important;
+}
+html[data-ephinta-theme="light"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-kicker {
+  color: #4b35b5 !important;
+  -webkit-text-fill-color: #4b35b5 !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome-copy :is(h1,h2,h3,h4),
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome-grid article :is(h1,h2,h3,h4) {
+  color: #21163c !important;
+  -webkit-text-fill-color: #21163c !important;
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome-grid article p {
+  color: #39304d !important;
+  -webkit-text-fill-color: #39304d !important;
+}
+
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading h2,
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading p,
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-ad-card-marketplace p {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+}
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading h2 {
+  background: none !important;
+  background-image: none !important;
+}
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-kicker {
+  color: #5630a8 !important;
+  -webkit-text-fill-color: #5630a8 !important;
+}
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-copy :is(h1,h2,h3,h4),
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-grid article :is(h1,h2,h3,h4) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: var(--epg-ink) !important;
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+}
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-grid article p {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+}
+
+/* Preserve the intentionally bright dark campaign and dashboard treatment. */
+
+
+/* EPHINTA brand-gradient system.
+   Shared text links and the header wordmarks use the same brand gradient.
+   Controls with filled backgrounds retain their own high-contrast label colors. */
+:root {
+  --ephinta-brand-gradient: linear-gradient(105deg, #7046d8 0%, #347bd5 48%, #16a6a0 100%);
+  --ephinta-brand-gradient-dark: linear-gradient(105deg, #c5a8ff 0%, #82b8ff 48%, #76e3d5 100%);
+}
+html[data-ephinta-theme="dark"] {
+  --ephinta-brand-gradient: var(--ephinta-brand-gradient-dark);
+}
+html body #root :is(.ess-app, .eph-landing) a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]) {
+  background-image: var(--ephinta-brand-gradient);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-decoration-color: color-mix(in srgb, #7046d8 62%, transparent);
+  text-underline-offset: 3px;
+}
+html body #root :is(.ess-app, .eph-landing) a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]):hover {
+  filter: saturate(1.2) brightness(1.08);
+  text-decoration: underline;
+}
+html body #root :is(.ess-app, .eph-landing) a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]):focus-visible {
+  outline: 2px solid var(--epg-focus, #8b5cf6) !important;
+  outline-offset: 3px !important;
+  border-radius: 3px;
+}
+html body #root .ess-topbar .ess-brand-wordmark strong,
+html body #root .eph-nav .eph-brand > span,
+html body #root .eph-nav .eph-menu-brand {
+  display: inline-block;
+  background-image: var(--ephinta-brand-gradient) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  font-weight: 900;
+}
+html body #root .ess-topbar .ess-brand-wordmark strong {
+  letter-spacing: .035em;
+}
+html body #root .eph-nav .eph-brand > span,
+html body #root .eph-nav .eph-menu-brand {
+  letter-spacing: .08em;
+}
+html body #root .ess-topbar .ess-brand-wordmark small {
+  color: var(--epg-muted, var(--ephinta-theme-muted)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+
+/* Final brand and colorful marketing overrides: win against legacy theme rules. */
+html[data-ephinta-theme="colorful"] body #root .eph-landing .ephinta-marketing-zone {
+  background-color: var(--epg-surface-soft) !important;
+  background-image: linear-gradient(135deg, #f4eaff 0%, #e6f1ff 52%, #e4fbf3 100%) !important;
+}
+html[data-ephinta-theme] body #root .ess-app .ess-topbar .ess-brand-wordmark strong,
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-brand > span,
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-menu-brand {
+  display: inline-block !important;
+  background: var(--ephinta-brand-gradient) !important;
+  background-image: var(--ephinta-brand-gradient) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html[data-ephinta-theme] body #root .ess-app a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]),
+html[data-ephinta-theme] body #root .eph-landing a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]) {
+  background-image: var(--ephinta-brand-gradient) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Keep the lower landing marketing copy on the same readable ink contract
+   as its heading and promo cards; this wins over legacy component text colors. */
+html[data-ephinta-theme="light"] body #root .eph-landing .ephinta-marketing-zone .ephinta-right-copy-visible,
+html[data-ephinta-theme="light"] body #root .eph-landing .ephinta-marketing-zone :where(p,li,small,span,figcaption) {
+  color: #202020 !important;
+  -webkit-text-fill-color: #202020 !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme="colorful"] body #root .eph-landing .ephinta-marketing-zone .ephinta-right-copy-visible,
+html[data-ephinta-theme="colorful"] body #root .eph-landing .ephinta-marketing-zone :where(p,li,small,span,figcaption) {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+  opacity: 1 !important;
+}
+
+
+/* Last-mile landing-copy guard: PublicLanding also carries legacy force-visible
+   classes with their own !important white declarations. Scope directly to its
+   local theme and those exact copy classes so the selected light/colorful ink
+   wins even when the component's legacy class rules are present. */
+#root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-right-copy-visible,
+#root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-human-proof,
+#root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-copy-description-force,
+#root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-copy-tagline-force {
+  color: #202020 !important;
+  -webkit-text-fill-color: #202020 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+#root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-right-copy-visible,
+#root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-human-proof,
+#root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-copy-description-force,
+#root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-copy-tagline-force {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}

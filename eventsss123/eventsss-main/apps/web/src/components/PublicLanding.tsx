@@ -865,6 +865,23 @@ export default function PublicLanding({
           color: #55586d !important; -webkit-text-fill-color: #55586d !important;
           opacity: 1 !important; text-shadow: none !important;
         }
+
+        /* Theme-specific copy overrides must live beside the component's legacy
+           !important rules so the landing's own style block cannot wash them out. */
+        .eph-landing[data-theme="light"] .ephinta-marketing-zone .ephinta-right-copy-visible,
+        .eph-landing[data-theme="light"] .ephinta-marketing-zone .ephinta-human-proof {
+          color: #202020 !important;
+          -webkit-text-fill-color: #202020 !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
+        .eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-right-copy-visible,
+        .eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-human-proof {
+          color: #49345f !important;
+          -webkit-text-fill-color: #49345f !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
         .eph-landing .ephinta-marketing-zone .ephinta-marketing-zone__eyebrow {
           color: #5b36b8 !important; -webkit-text-fill-color: #5b36b8 !important;
           opacity: 1 !important; text-shadow: none !important;
@@ -1421,6 +1438,40 @@ export default function PublicLanding({
         }
 
 
+
+        /* Final theme contract: place after every legacy marketing rule so no
+           later component selector can restore the old slate-grey copy. */
+        #root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-right-copy-visible,
+        #root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-human-proof {
+          color: #202020 !important;
+          -webkit-text-fill-color: #202020 !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
+        #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-right-copy-visible,
+        #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-human-proof {
+          color: #49345f !important;
+          -webkit-text-fill-color: #49345f !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
+
+        /* Highest-specificity component contract for the two live marketing paragraphs.
+           Their legacy utility classes previously restored slate text in light mode. */
+        #root .eph-landing[data-theme="light"] section.ephinta-marketing-zone > p.ephinta-right-copy-visible.ephinta-force-visible-description.ephinta-copy-description-force,
+        #root .eph-landing[data-theme="light"] section.ephinta-marketing-zone > p.ephinta-human-proof.ephinta-right-copy-visible.ephinta-force-visible-tagline.ephinta-copy-tagline-force {
+          color: #202020 !important;
+          -webkit-text-fill-color: #202020 !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
+        #root .eph-landing[data-theme="colorful"] section.ephinta-marketing-zone > p.ephinta-right-copy-visible.ephinta-force-visible-description.ephinta-copy-description-force,
+        #root .eph-landing[data-theme="colorful"] section.ephinta-marketing-zone > p.ephinta-human-proof.ephinta-right-copy-visible.ephinta-force-visible-tagline.ephinta-copy-tagline-force {
+          color: #49345f !important;
+          -webkit-text-fill-color: #49345f !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
       `}
 
       </style>
