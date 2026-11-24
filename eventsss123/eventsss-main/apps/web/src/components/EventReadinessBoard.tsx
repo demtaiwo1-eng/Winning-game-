@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../lib/api";
 import { AllGreenFinale } from "./JourneyMoments";
 
@@ -92,7 +92,12 @@ export default function EventReadinessBoard({
   const [tick, setTick] = useState(0);
   const [busy, setBusy] = useState(false);
   const [showFinale, setShowFinale] = useState(false);
-  const [seenGreen, setSeenGreen] = useState(false);
+  const seenGreenRef = useRef(false);
+
+  useEffect(() => {
+    seenGreenRef.current = false;
+    setShowFinale(false);
+  }, [eventId]);
 
   const load = useCallback(async () => {
     try {
@@ -112,8 +117,8 @@ export default function EventReadinessBoard({
       setBookingPayments(data.bookingPayments || []);
       setCheckNotes((current) => Object.fromEntries((data.checks || []).map((check) => [check.id, current[check.id] ?? check.notes ?? ""])));
       setCanFinalize(data.canFinalize);
-      if (data.readiness?.allGreen && !seenGreen) {
-        setSeenGreen(true);
+      if (data.readiness?.allGreen && !seenGreenRef.current) {
+        seenGreenRef.current = true;
         setShowFinale(true);
       }
 
