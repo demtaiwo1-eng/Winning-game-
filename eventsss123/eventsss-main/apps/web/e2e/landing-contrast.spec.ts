@@ -62,7 +62,7 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
     });
     expect(light.heading, `light-mode heading at ${width}px`).toBe("rgb(23, 21, 42)");
     expect(light.copy, `light-mode copy at ${width}px`).toBe("rgb(41, 36, 61)");
-    expect(light.promoHeading, `light-mode promo heading at ${width}px`).toBe("rgb(255, 255, 255)");
+    expect(light.promoHeading, `light-mode promo heading at ${width}px`).toBe("rgb(32, 32, 32)");
     expect(light.marketingCopy, `light-mode marketing copy at ${width}px`).not.toBe("rgb(255, 255, 255)");
   }
 });
@@ -272,7 +272,7 @@ test("public Marketplace first block and landing marketing surfaces follow all t
         expect(result.campaignCopy?.color).toBe("rgb(32, 32, 32)");
         expect(result.campaignKicker?.color).toBe("rgb(75, 53, 181)");
         expect(result.campaignCardCopy?.color).toBe("rgb(32, 32, 32)");
-        expect(result.marketingHeading?.fill).toBe("rgb(32, 32, 32)");
+        expect(result.marketingHeading?.fill).toBe("rgb(23, 21, 42)");
         expect(result.marketingCopy?.color).toBe("rgb(32, 32, 32)");
       } else {
         expect(result.campaignHeading?.fill).toBe("rgb(36, 20, 58)");
