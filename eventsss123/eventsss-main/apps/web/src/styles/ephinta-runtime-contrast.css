@@ -860,3 +860,64 @@ html[data-ephinta-theme] body #root .eph-landing .eph-section .ephinta-bright-sl
   background-clip: border-box !important;
   -webkit-background-clip: border-box !important;
 }
+
+
+/* Final marketplace contrast guard.
+   The campaign block and workspace welcome headings have legacy gradient
+   text-fill declarations with higher cascade precedence. Reassert the selected
+   semantic foreground at the final global layer for light and colorful modes. */
+html[data-ephinta-theme="light"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading h2,
+html[data-ephinta-theme="light"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading p,
+html[data-ephinta-theme="light"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-ad-card-marketplace p {
+  color: #202020 !important;
+  -webkit-text-fill-color: #202020 !important;
+}
+html[data-ephinta-theme="light"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-kicker {
+  color: #4b35b5 !important;
+  -webkit-text-fill-color: #4b35b5 !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome-copy :is(h1,h2,h3,h4),
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome-grid article :is(h1,h2,h3,h4) {
+  color: #21163c !important;
+  -webkit-text-fill-color: #21163c !important;
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-ephinta-theme="light"] body #root .ess-app .ess-marketplace-welcome-grid article p {
+  color: #39304d !important;
+  -webkit-text-fill-color: #39304d !important;
+}
+
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading h2,
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading p,
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-ad-card-marketplace p {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+}
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-heading h2 {
+  background: none !important;
+  background-image: none !important;
+}
+html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph-marketplace-advertising .eph-promo-kicker {
+  color: #5630a8 !important;
+  -webkit-text-fill-color: #5630a8 !important;
+}
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-copy :is(h1,h2,h3,h4),
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-grid article :is(h1,h2,h3,h4) {
+  color: #24143a !important;
+  -webkit-text-fill-color: #24143a !important;
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+}
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-copy > p:not(.ess-eyebrow),
+html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-grid article p {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+}
+
+/* Preserve the intentionally bright dark campaign and dashboard treatment. */
