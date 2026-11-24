@@ -2,14 +2,16 @@ const SEARCH_STOP_WORDS = new Set([
   "a", "an", "and", "are", "around", "at", "can", "for", "find", "get",
   "i", "in", "is", "looking", "me", "my", "near", "of", "on", "please",
   "the", "to", "want", "with", "need", "book", "hire", "some", "any",
-  "affordable", "cheap", "budget", "luxury", "premium", "best", "top", "wedding", "celebration",
+  "affordable", "cheap", "budget", "luxury", "premium", "best", "top",
+  "wedding", "celebration", "event", "events", "occasion",
+  "guest", "guests", "people", "person", "persons", "attendee", "attendees", "pax",
 ]);
 
 export function marketplaceSearchTerms(query?: string): string[] {
   if (!query) return [];
   return [...new Set(
     (query.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
-      .filter((term) => term.length > 1 && !SEARCH_STOP_WORDS.has(term)),
+      .filter((term) => term.length > 1 && !/^\d+$/.test(term) && !SEARCH_STOP_WORDS.has(term)),
   )].slice(0, 8);
 }
 
@@ -26,7 +28,7 @@ const SEARCH_SYNONYMS: Record<string, string[]> = {
   venue: ["venues", "hall", "space"],
   venues: ["venue", "hall", "space"],
   dj: ["music", "disc jockey"],
-  "disc": ["dj", "music"],
+  disc: ["dj", "music"],
   rental: ["rentals", "hire"],
   rentals: ["rental", "hire"],
 };

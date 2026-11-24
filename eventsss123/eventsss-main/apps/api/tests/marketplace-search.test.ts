@@ -7,6 +7,13 @@ describe("marketplace natural-language search", () => {
       .toEqual(["photographer", "ibadan"]);
   });
 
+  it("ignores event context, guest counts and numeric details", () => {
+    expect(marketplaceSearchTerms("I need a wedding photographer in Ibadan for 150 guests"))
+      .toEqual(["photographer", "ibadan"]);
+    expect(marketplaceSearchTerms("Find catering for 200 people at my event"))
+      .toEqual(["catering"]);
+  });
+
   it("removes repeated words, punctuation and common filler words", () => {
     expect(marketplaceSearchTerms("Please find a DJ, DJ and MC for me!"))
       .toEqual(["dj", "mc"]);
