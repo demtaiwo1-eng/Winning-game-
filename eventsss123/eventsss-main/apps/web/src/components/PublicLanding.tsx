@@ -1440,6 +1440,23 @@ export default function PublicLanding({
 
       `}
 
+
+        /* Final theme contract: place after every legacy marketing rule so no
+           later component selector can restore the old slate-grey copy. */
+        #root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-right-copy-visible,
+        #root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-human-proof {
+          color: #202020 !important;
+          -webkit-text-fill-color: #202020 !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
+        #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-right-copy-visible,
+        #root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-human-proof {
+          color: #49345f !important;
+          -webkit-text-fill-color: #49345f !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
       </style>
 
 
