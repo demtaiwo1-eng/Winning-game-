@@ -258,9 +258,9 @@ test("public Marketplace first block and landing marketing surfaces follow all t
           marketingCopy: read(".ephinta-marketing-zone .ephinta-right-copy-visible"),
         };
       });
-      expect(result.campaign?.background, `campaign surface ${theme} ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
-      expect(result.campaignCard?.background, `campaign card surface ${theme} ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
-      expect(result.marketingPanel?.background, `marketing panel surface ${theme} ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
+      expect(result.campaign?.image, `campaign surface ${theme} ${width}px`).not.toBe("none");
+      expect(result.campaignCard?.image, `campaign card surface ${theme} ${width}px`).not.toBe("none");
+      expect(result.marketingPanel?.image, `marketing panel surface ${theme} ${width}px`).not.toBe("none");
       if (theme === "dark") {
         expect(result.campaignHeading?.fill).toBe("rgba(0, 0, 0, 0)");
         expect(result.campaignCopy?.color).toBe("rgb(197, 180, 220)");
