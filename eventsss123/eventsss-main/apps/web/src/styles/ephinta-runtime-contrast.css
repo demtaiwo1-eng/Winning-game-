@@ -1002,3 +1002,18 @@ html[data-ephinta-theme] body #root .eph-landing a:not(:has(img)):not(.eph-promo
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
 }
+
+/* Keep the lower landing marketing copy on the same readable ink contract
+   as its heading and promo cards; this wins over legacy component text colors. */
+html[data-ephinta-theme="light"] body #root .eph-landing .ephinta-marketing-zone .ephinta-right-copy-visible,
+html[data-ephinta-theme="light"] body #root .eph-landing .ephinta-marketing-zone :where(p,li,small,span,figcaption) {
+  color: #202020 !important;
+  -webkit-text-fill-color: #202020 !important;
+  opacity: 1 !important;
+}
+html[data-ephinta-theme="colorful"] body #root .eph-landing .ephinta-marketing-zone .ephinta-right-copy-visible,
+html[data-ephinta-theme="colorful"] body #root .eph-landing .ephinta-marketing-zone :where(p,li,small,span,figcaption) {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+  opacity: 1 !important;
+}
