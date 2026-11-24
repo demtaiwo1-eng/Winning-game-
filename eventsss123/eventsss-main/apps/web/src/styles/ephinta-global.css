@@ -1129,3 +1129,222 @@ html[data-ephinta-theme="dark"] body #root .eph-landing[data-theme="dark"] .eph-
   color: #f2b66f !important;
   -webkit-text-fill-color: #f2b66f !important;
 }
+
+
+/* EPHINTA THEME CONTRACT — all three themes, all shared application surfaces.
+   Dark retains the approved midnight/lavender treatment. Light uses true dark
+   ink on white surfaces. Multicolor keeps its pastel brand surfaces with dark
+   ink; it must not inherit the dark-mode white-copy rules. The public landing
+   owns a local theme state, so its selectors intentionally use data-theme. */
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising {
+  color: #000 !important;
+  background: linear-gradient(125deg,#ffffff 0%,#f4f1ff 52%,#fff8ed 100%) !important;
+  border-color: #d8d3e8 !important;
+}
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising
+:where(h2,p,.eph-promo-kicker,.eph-promo-footer,.eph-promo-footer span) {
+  color: #202020 !important;
+  -webkit-text-fill-color: #202020 !important;
+  opacity: 1 !important;
+}
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-kicker {
+  color: #4b35b5 !important;
+  -webkit-text-fill-color: #4b35b5 !important;
+}
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card-marketplace,
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card-sponsored {
+  color: #000 !important;
+  background: #fff !important;
+  border: 1px solid #d8d3e8 !important;
+  box-shadow: 0 8px 22px rgba(35,24,55,.08) !important;
+}
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card
+:where(strong,p,small,.eph-ad-meta span) {
+  color: #202020 !important;
+  -webkit-text-fill-color: #202020 !important;
+  opacity: 1 !important;
+}
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card small {
+  color: #4b35b5 !important;
+  -webkit-text-fill-color: #4b35b5 !important;
+}
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card button {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: linear-gradient(110deg,#6941c6,#3978c9 56%,#238f91) !important;
+}
+
+/* Multicolor: pastel brand surface, but every ordinary text element remains
+   dark. Only action controls use white labels on their saturated gradient. */
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising {
+  color: #24143a !important;
+  background: linear-gradient(125deg,#fff1f8 0%,#f1eaff 52%,#fff2d9 100%) !important;
+  border-color: #dfc9ed !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising
+:where(h2,p,.eph-promo-kicker,.eph-promo-footer,.eph-promo-footer span) {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+  opacity: 1 !important;
+  background: none !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-heading h2 {
+  color: #24143a !important;
+  -webkit-text-fill-color: #24143a !important;
+  background: none !important;
+  background-image: none !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-promo-kicker,
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card small {
+  color: #5630a8 !important;
+  -webkit-text-fill-color: #5630a8 !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card-marketplace,
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card-sponsored {
+  color: #24143a !important;
+  background: linear-gradient(155deg,#fff 0%,#fff8fd 100%) !important;
+  border: 1px solid #dfc9ed !important;
+  box-shadow: 0 8px 22px rgba(70,35,95,.09) !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card
+:where(strong,p,.eph-ad-meta span) {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+  opacity: 1 !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card strong {
+  color: #24143a !important;
+  -webkit-text-fill-color: #24143a !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"])
+.eph-promotions .eph-promo-shell.eph-marketplace-advertising .eph-ad-card button {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: linear-gradient(110deg,#a43a9c,#6941c6 55%,#3978c9) !important;
+}
+
+/* The lower landing marketing panel follows the same light/colorful rules. */
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"]) .ephinta-marketing-zone {
+  color: #000 !important;
+  background: linear-gradient(135deg,#fff 0%,#f6f4ff 100%) !important;
+  border-color: #d8d3e8 !important;
+}
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"]) .ephinta-marketing-zone
+:where(h2,p,li,small,span,label,figcaption,.ephinta-human-proof,.ephinta-right-copy-visible) {
+  color: #202020 !important;
+  -webkit-text-fill-color: #202020 !important;
+  opacity: 1 !important;
+}
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"]) .ephinta-marketing-zone h2 {
+  background: none !important;
+  background-image: none !important;
+}
+:is(#root .eph-landing[data-theme="light"], .eph-landing[data-theme="light"]) .ephinta-marketing-zone .ephinta-marketing-zone__eyebrow {
+  color: #4b35b5 !important;
+  -webkit-text-fill-color: #4b35b5 !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"]) .ephinta-marketing-zone {
+  color: #24143a !important;
+  background: linear-gradient(135deg,#fff0f8 0%,#f1eaff 56%,#fff4df 100%) !important;
+  border-color: #dfc9ed !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"]) .ephinta-marketing-zone
+:where(h2,p,li,small,span,label,figcaption,.ephinta-human-proof,.ephinta-right-copy-visible) {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+  opacity: 1 !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"]) .ephinta-marketing-zone h2 {
+  background: none !important;
+  background-image: none !important;
+  color: #24143a !important;
+  -webkit-text-fill-color: #24143a !important;
+}
+:is(#root .eph-landing[data-theme="colorful"], .eph-landing[data-theme="colorful"]) .ephinta-marketing-zone .ephinta-marketing-zone__eyebrow {
+  color: #5630a8 !important;
+  -webkit-text-fill-color: #5630a8 !important;
+}
+
+/* Shared dashboard surfaces and dialogs use the active semantic palette.
+   This is deliberately scoped to EPHINTA-owned app components; decorative
+   brand gradients and primary buttons retain their component treatments. */
+html[data-ephinta-theme="light"] body #root .ess-app,
+html[data-ephinta-theme="colorful"] body #root .ess-app {
+  color: var(--epg-ink) !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app
+:where(.ess-panel,.ess-card,.ess-metric,.ess-wallet-card,.ess-marketplace-welcome,.ess-dialog-surface,.ess-auth-modal),
+html[data-ephinta-theme="colorful"] body #root .ess-app
+:where(.ess-panel,.ess-card,.ess-metric,.ess-wallet-card,.ess-marketplace-welcome,.ess-dialog-surface,.ess-auth-modal) {
+  color: var(--epg-ink) !important;
+  background-color: var(--epg-surface) !important;
+  border-color: var(--epg-border) !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app
+:where(.ess-panel,.ess-card,.ess-metric,.ess-wallet-card,.ess-marketplace-welcome,.ess-dialog-surface,.ess-auth-modal)
+:where(h1,h2,h3,h4,h5,h6,strong,b,label,th,td),
+html[data-ephinta-theme="colorful"] body #root .ess-app
+:where(.ess-panel,.ess-card,.ess-metric,.ess-wallet-card,.ess-marketplace-welcome,.ess-dialog-surface,.ess-auth-modal)
+:where(h1,h2,h3,h4,h5,h6,strong,b,label,th,td) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app
+:where(.ess-panel,.ess-card,.ess-metric,.ess-wallet-card,.ess-marketplace-welcome,.ess-dialog-surface,.ess-auth-modal)
+:where(p,li,small,.ess-muted,.ess-subtitle,.helper-text,.form-hint),
+html[data-ephinta-theme="colorful"] body #root .ess-app
+:where(.ess-panel,.ess-card,.ess-metric,.ess-wallet-card,.ess-marketplace-welcome,.ess-dialog-surface,.ess-auth-modal)
+:where(p,li,small,.ess-muted,.ess-subtitle,.helper-text,.form-hint) {
+  color: var(--epg-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app
+:where(input,select,textarea),
+html[data-ephinta-theme="colorful"] body #root .ess-app
+:where(input,select,textarea) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: var(--epg-surface-raised) !important;
+  border-color: var(--epg-border) !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app :where(.ess-auth-modal,.ess-dialog-surface,.ess-modal,[role="dialog"]),
+html[data-ephinta-theme="colorful"] body #root .ess-app :where(.ess-auth-modal,.ess-dialog-surface,.ess-modal,[role="dialog"]) {
+  color: var(--epg-ink) !important;
+  background: var(--epg-surface) !important;
+  border-color: var(--epg-border) !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app :where(.ess-auth-modal,.ess-dialog-surface,.ess-modal,[role="dialog"]) :where(h1,h2,h3,h4,strong,b,label),
+html[data-ephinta-theme="colorful"] body #root .ess-app :where(.ess-auth-modal,.ess-dialog-surface,.ess-modal,[role="dialog"]) :where(h1,h2,h3,h4,strong,b,label) {
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+html[data-ephinta-theme="light"] body #root .ess-app :where(.ess-auth-modal,.ess-dialog-surface,.ess-modal,[role="dialog"]) :where(p,small,li),
+html[data-ephinta-theme="colorful"] body #root .ess-app :where(.ess-auth-modal,.ess-dialog-surface,.ess-modal,[role="dialog"]) :where(p,small,li) {
+  color: var(--epg-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* Preserve dark-theme surfaces and the approved Marketplace copy values. */
+html[data-ephinta-theme="dark"] body #root .ess-app
+:where(.ess-panel,.ess-card,.ess-metric,.ess-wallet-card,.ess-marketplace-welcome,.ess-dialog-surface,.ess-auth-modal) {
+  color: var(--epg-ink) !important;
+  background-color: var(--epg-surface) !important;
+  border-color: var(--epg-border) !important;
+}
