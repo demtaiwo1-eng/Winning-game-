@@ -1,7 +1,7 @@
 const SEARCH_STOP_WORDS = new Set([
   "a", "an", "and", "are", "around", "at", "can", "for", "find", "get",
   "i", "in", "is", "looking", "me", "my", "near", "of", "on", "please",
-  "the", "to", "want", "with", "need", "book", "hire", "some", "any",
+  "the", "to", "want", "with", "need", "book", "hire", "some", "any", "event", "events", "guest", "guests", "people", "person", "pax",
   "affordable", "cheap", "budget", "luxury", "premium", "best", "top", "wedding", "celebration",
 ]);
 
@@ -9,7 +9,7 @@ export function marketplaceSearchTerms(query?: string): string[] {
   if (!query) return [];
   return [...new Set(
     (query.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
-      .filter((term) => term.length > 1 && !SEARCH_STOP_WORDS.has(term)),
+      .filter((term) => term.length > 1 && !/^\p{N}+$/u.test(term) && !SEARCH_STOP_WORDS.has(term)),
   )].slice(0, 8);
 }
 
