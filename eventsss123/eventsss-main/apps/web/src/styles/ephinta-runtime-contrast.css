@@ -1017,3 +1017,27 @@ html[data-ephinta-theme="colorful"] body #root .eph-landing .ephinta-marketing-z
   -webkit-text-fill-color: #49345f !important;
   opacity: 1 !important;
 }
+
+
+/* Last-mile landing-copy guard: PublicLanding also carries legacy force-visible
+   classes with their own !important white declarations. Scope directly to its
+   local theme and those exact copy classes so the selected light/colorful ink
+   wins even when the component's legacy class rules are present. */
+#root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-right-copy-visible,
+#root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-human-proof,
+#root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-copy-description-force,
+#root .eph-landing[data-theme="light"] .ephinta-marketing-zone p.ephinta-copy-tagline-force {
+  color: #202020 !important;
+  -webkit-text-fill-color: #202020 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+#root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-right-copy-visible,
+#root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-human-proof,
+#root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-copy-description-force,
+#root .eph-landing[data-theme="colorful"] .ephinta-marketing-zone p.ephinta-copy-tagline-force {
+  color: #49345f !important;
+  -webkit-text-fill-color: #49345f !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
