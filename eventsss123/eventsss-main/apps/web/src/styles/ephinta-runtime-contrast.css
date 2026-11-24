@@ -994,8 +994,8 @@ html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-menu-brand {
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
 }
-html[data-ephinta-theme] body #root .ess-app a:not(:has(img)):not([role="button"]):not([class*="button"]),
-html[data-ephinta-theme] body #root .eph-landing a:not(:has(img)):not([role="button"]):not([class*="button"]) {
+html[data-ephinta-theme] body #root .ess-app a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]),
+html[data-ephinta-theme] body #root .eph-landing a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]) {
   background-image: var(--ephinta-brand-gradient) !important;
   background-clip: text !important;
   -webkit-background-clip: text !important;
