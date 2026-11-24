@@ -921,3 +921,58 @@ html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome
 }
 
 /* Preserve the intentionally bright dark campaign and dashboard treatment. */
+
+
+/* EPHINTA brand-gradient system.
+   Shared text links and the header wordmarks use the same brand gradient.
+   Controls with filled backgrounds retain their own high-contrast label colors. */
+:root {
+  --ephinta-brand-gradient: linear-gradient(105deg, #7046d8 0%, #347bd5 48%, #16a6a0 100%);
+  --ephinta-brand-gradient-dark: linear-gradient(105deg, #c5a8ff 0%, #82b8ff 48%, #76e3d5 100%);
+}
+html[data-ephinta-theme="dark"] {
+  --ephinta-brand-gradient: var(--ephinta-brand-gradient-dark);
+}
+html body #root :is(.ess-app, .eph-landing) a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]) {
+  background-image: var(--ephinta-brand-gradient);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-decoration-color: color-mix(in srgb, #7046d8 62%, transparent);
+  text-underline-offset: 3px;
+}
+html body #root :is(.ess-app, .eph-landing) a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]):hover {
+  filter: saturate(1.2) brightness(1.08);
+  text-decoration: underline;
+}
+html body #root :is(.ess-app, .eph-landing) a:not(:has(img)):not(.eph-promo-marketplace-cta):not(.ess-button):not(.ess-primary-button):not(.btn):not([role="button"]):not([class*="button"]):focus-visible {
+  outline: 2px solid var(--epg-focus, #8b5cf6) !important;
+  outline-offset: 3px !important;
+  border-radius: 3px;
+}
+html body #root .ess-topbar .ess-brand-wordmark strong,
+html body #root .eph-nav .eph-brand > span,
+html body #root .eph-nav .eph-menu-brand {
+  display: inline-block;
+  background-image: var(--ephinta-brand-gradient) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  font-weight: 900;
+}
+html body #root .ess-topbar .ess-brand-wordmark strong {
+  letter-spacing: .035em;
+}
+html body #root .eph-nav .eph-brand > span,
+html body #root .eph-nav .eph-menu-brand {
+  letter-spacing: .08em;
+}
+html body #root .ess-topbar .ess-brand-wordmark small {
+  color: var(--epg-muted, var(--ephinta-theme-muted)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
