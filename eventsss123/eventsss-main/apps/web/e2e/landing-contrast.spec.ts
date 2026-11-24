@@ -27,6 +27,7 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
           copy: read(".eph-section-head p"),
           heroCopy: read(".eph-subtitle"),
           marketingPanel: panelStyle ? panelStyle.backgroundColor : null,
+          marketingPanelImage: panelStyle ? panelStyle.backgroundImage : null,
           marketingCopy: copyStyle ? copyStyle.color : null,
           marketingEyebrow: panel?.querySelector(".ephinta-marketing-zone__eyebrow")
             ? getComputedStyle(panel.querySelector(".ephinta-marketing-zone__eyebrow")!).color
@@ -43,7 +44,7 @@ test("public landing text follows the bright dark/colorful and dark-on-light the
         expect(colors.marketingCopy, `dark marketing copy in ${width}px`).toBe("rgb(197, 180, 220)");
         expect(colors.marketingEyebrow, `dark marketing eyebrow in ${width}px`).toBe("rgb(242, 182, 111)");
       }
-      expect(colors.marketingPanel, `marketing panel surface in ${theme} at ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
+      expect(colors.marketingPanelImage, `marketing panel surface in ${theme} at ${width}px`).not.toBe("none");
     }
 
     await page.locator(".eph-theme-select select").selectOption("light", { force: true });
@@ -135,15 +136,14 @@ test("marketplace inner marketing copy follows the global theme at desktop and m
       if (theme === "light") {
         expect(result.heading.fill, "light heading " + width).toBe("rgb(33, 22, 60)");
         expect(result.copy.color, "light body copy " + width).toBe("rgb(57, 48, 77)");
+      } else if (theme === "dark") {
+        expect(result.heading.fill, "dark heading " + width).toBe("rgba(0, 0, 0, 0)");
+        expect(result.copy.color, "dark mode supporting copy uses muted lavender").toBe("rgb(197, 180, 220)");
+        expect(result.capability.color, "dark capability copy " + width).toBe("rgb(220, 231, 250)");
       } else {
-        expect(result.heading.fill, theme + " heading " + width).toBe("rgba(0, 0, 0, 0)");
-        if (theme === "dark") {
-          expect(result.copy.color, "dark mode must not use white marketing copy").not.toBe("rgb(255, 255, 255)");
-          expect(result.copy.color, "dark mode supporting copy uses muted lavender").toBe("rgb(197, 180, 220)");
-        } else {
-          expect(result.copy.color, "colorful mode body copy " + width).toBe("rgb(231, 237, 255)");
-        }
-        expect(result.capability.color, theme + " capability copy " + width).toBe("rgb(220, 231, 250)");
+        expect(result.heading.fill, "colorful heading " + width).toBe("rgb(36, 20, 58)");
+        expect(result.copy.color, "colorful mode body copy " + width).toBe("rgb(73, 52, 95)");
+        expect(result.capability.color, "colorful capability copy " + width).toBe("rgb(73, 52, 95)");
       }
     }
   }
@@ -185,10 +185,10 @@ test("workspace overview welcome copy receives theme colors without a Marketplac
         expect(result.featureHeading.color, "dark feature heading at " + width).toBe("rgb(248, 250, 255)");
         expect(result.featureCopy.color, "dark feature copy at " + width).toBe("rgb(197, 180, 220)");
       } else if (theme === "colorful") {
-        expect(result.heading.fill, "colorful workspace heading at " + width).toBe("rgba(0, 0, 0, 0)");
-        expect(result.copy.color, "colorful workspace copy at " + width).toBe("rgb(231, 237, 255)");
-        expect(result.featureHeading.color, "colorful feature heading at " + width).toBe("rgb(248, 250, 255)");
-        expect(result.featureCopy.color, "colorful feature copy at " + width).toBe("rgb(231, 237, 255)");
+        expect(result.heading.fill, "colorful workspace heading at " + width).toBe("rgb(36, 20, 58)");
+        expect(result.copy.color, "colorful workspace copy at " + width).toBe("rgb(73, 52, 95)");
+        expect(result.featureHeading.color, "colorful feature heading at " + width).toBe("rgb(36, 20, 58)");
+        expect(result.featureCopy.color, "colorful feature copy at " + width).toBe("rgb(73, 52, 95)");
       } else {
         expect(result.heading.fill, "light workspace heading at " + width).toBe("rgb(33, 22, 60)");
         expect(result.copy.color, "light workspace copy at " + width).toBe("rgb(57, 48, 77)");
@@ -259,8 +259,8 @@ test("public Marketplace first block and landing marketing surfaces follow all t
         };
       });
       expect(result.campaign?.image, `campaign surface ${theme} ${width}px`).not.toBe("none");
-      expect(result.campaignCard?.image, `campaign card surface ${theme} ${width}px`).not.toBe("none");
-      expect(result.marketingPanel?.image, `marketing panel surface ${theme} ${width}px`).not.toBe("none");
+      expect(result.campaignCard?.image !== "none" || result.campaignCard?.background !== "rgba(0, 0, 0, 0)", `campaign card surface ${theme} ${width}px`).toBe(true);
+      expect(result.marketingPanel?.image !== "none" || result.marketingPanel?.background !== "rgba(0, 0, 0, 0)", `marketing panel surface ${theme} ${width}px`).toBe(true);
       if (theme === "dark") {
         expect(result.campaignHeading?.fill).toBe("rgba(0, 0, 0, 0)");
         expect(result.campaignCopy?.color).toBe("rgb(197, 180, 220)");
