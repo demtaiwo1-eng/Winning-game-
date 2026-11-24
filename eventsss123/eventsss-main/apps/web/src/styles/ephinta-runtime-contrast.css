@@ -907,8 +907,8 @@ html[data-ephinta-theme="colorful"] body #root .eph-landing .eph-promotions .eph
 }
 html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-copy :is(h1,h2,h3,h4),
 html[data-ephinta-theme="colorful"] body #root .ess-app .ess-marketplace-welcome-grid article :is(h1,h2,h3,h4) {
-  color: #24143a !important;
-  -webkit-text-fill-color: #24143a !important;
+  color: var(--epg-ink) !important;
+  -webkit-text-fill-color: var(--epg-ink) !important;
   background: none !important;
   background-image: none !important;
   -webkit-background-clip: border-box !important;
@@ -975,4 +975,30 @@ html body #root .eph-nav .eph-menu-brand {
 html body #root .ess-topbar .ess-brand-wordmark small {
   color: var(--epg-muted, var(--ephinta-theme-muted)) !important;
   -webkit-text-fill-color: currentColor !important;
+}
+
+
+/* Final brand and colorful marketing overrides: win against legacy theme rules. */
+html[data-ephinta-theme="colorful"] body #root .eph-landing .ephinta-marketing-zone {
+  background-color: var(--epg-surface-soft) !important;
+  background-image: linear-gradient(135deg, #f4eaff 0%, #e6f1ff 52%, #e4fbf3 100%) !important;
+}
+html[data-ephinta-theme] body #root .ess-app .ess-topbar .ess-brand-wordmark strong,
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-brand > span,
+html[data-ephinta-theme] body #root .eph-landing .eph-nav .eph-menu-brand {
+  display: inline-block !important;
+  background: var(--ephinta-brand-gradient) !important;
+  background-image: var(--ephinta-brand-gradient) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html[data-ephinta-theme] body #root .ess-app a:not(:has(img)):not([role="button"]):not([class*="button"]),
+html[data-ephinta-theme] body #root .eph-landing a:not(:has(img)):not([role="button"]):not([class*="button"]) {
+  background-image: var(--ephinta-brand-gradient) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
 }
