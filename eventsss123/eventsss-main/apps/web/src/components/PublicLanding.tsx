@@ -865,6 +865,23 @@ export default function PublicLanding({
           color: #55586d !important; -webkit-text-fill-color: #55586d !important;
           opacity: 1 !important; text-shadow: none !important;
         }
+
+        /* Theme-specific copy overrides must live beside the component's legacy
+           !important rules so the landing's own style block cannot wash them out. */
+        .eph-landing[data-theme="light"] .ephinta-marketing-zone .ephinta-right-copy-visible,
+        .eph-landing[data-theme="light"] .ephinta-marketing-zone .ephinta-human-proof {
+          color: #202020 !important;
+          -webkit-text-fill-color: #202020 !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
+        .eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-right-copy-visible,
+        .eph-landing[data-theme="colorful"] .ephinta-marketing-zone .ephinta-human-proof {
+          color: #49345f !important;
+          -webkit-text-fill-color: #49345f !important;
+          opacity: 1 !important;
+          text-shadow: none !important;
+        }
         .eph-landing .ephinta-marketing-zone .ephinta-marketing-zone__eyebrow {
           color: #5b36b8 !important; -webkit-text-fill-color: #5b36b8 !important;
           opacity: 1 !important; text-shadow: none !important;
