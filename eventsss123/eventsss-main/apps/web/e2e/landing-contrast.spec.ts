@@ -231,3 +231,100 @@ test("public Marketplace campaign and category cards are readable in dark mode",
     expect(result.cardCopy?.color, "category description at " + width).toBe("rgb(197, 180, 220)");
   }
 });
+
+
+test("public Marketplace first block and landing marketing surfaces follow all three themes", async ({ page }) => {
+  await page.goto("/");
+  for (const width of [360, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ["dark", "light", "colorful"] as const) {
+      await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
+      const result = await page.evaluate(() => {
+        const read = (selector: string) => {
+          const el = document.querySelector(selector);
+          if (!el) return null;
+          const style = getComputedStyle(el);
+          return { color: style.color, fill: style.webkitTextFillColor, background: style.backgroundColor, image: style.backgroundImage };
+        };
+        return {
+          campaign: read(".eph-promotions .eph-promo-shell.eph-marketplace-advertising"),
+          campaignHeading: read(".eph-promotions .eph-promo-heading h2"),
+          campaignCopy: read(".eph-promotions .eph-promo-heading p"),
+          campaignKicker: read(".eph-promotions .eph-promo-kicker"),
+          campaignCard: read(".eph-promotions .eph-ad-card-marketplace"),
+          campaignCardCopy: read(".eph-promotions .eph-ad-card-marketplace p"),
+          marketingPanel: read(".ephinta-marketing-zone"),
+          marketingHeading: read(".ephinta-marketing-zone h2"),
+          marketingCopy: read(".ephinta-marketing-zone .ephinta-right-copy-visible"),
+        };
+      });
+      expect(result.campaign?.background, `campaign surface ${theme} ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
+      expect(result.campaignCard?.background, `campaign card surface ${theme} ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
+      expect(result.marketingPanel?.background, `marketing panel surface ${theme} ${width}px`).not.toBe("rgba(0, 0, 0, 0)");
+      if (theme === "dark") {
+        expect(result.campaignHeading?.fill).toBe("rgba(0, 0, 0, 0)");
+        expect(result.campaignCopy?.color).toBe("rgb(197, 180, 220)");
+        expect(result.campaignKicker?.color).toBe("rgb(242, 182, 111)");
+        expect(result.campaignCardCopy?.color).toBe("rgb(197, 180, 220)");
+        expect(result.marketingCopy?.color).toBe("rgb(197, 180, 220)");
+      } else if (theme === "light") {
+        expect(result.campaignHeading?.fill).toBe("rgb(32, 32, 32)");
+        expect(result.campaignCopy?.color).toBe("rgb(32, 32, 32)");
+        expect(result.campaignKicker?.color).toBe("rgb(75, 53, 181)");
+        expect(result.campaignCardCopy?.color).toBe("rgb(32, 32, 32)");
+        expect(result.marketingHeading?.fill).toBe("rgb(32, 32, 32)");
+        expect(result.marketingCopy?.color).toBe("rgb(32, 32, 32)");
+      } else {
+        expect(result.campaignHeading?.fill).toBe("rgb(36, 20, 58)");
+        expect(result.campaignCopy?.color).toBe("rgb(73, 52, 95)");
+        expect(result.campaignKicker?.color).toBe("rgb(86, 48, 168)");
+        expect(result.campaignCardCopy?.color).toBe("rgb(73, 52, 95)");
+        expect(result.marketingHeading?.fill).toBe("rgb(36, 20, 58)");
+        expect(result.marketingCopy?.color).toBe("rgb(73, 52, 95)");
+      }
+    }
+  }
+});
+
+test("shared dashboard panels and dialogs use dark ink in light and multicolor themes", async ({ page }) => {
+  await page.goto("/");
+  for (const width of [360, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ["light", "colorful"] as const) {
+      await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
+      const result = await page.evaluate(() => {
+        const root = document.createElement("div");
+        root.className = "ess-app";
+        root.innerHTML = '<main class="ess-portal-stack"><section class="ess-panel"><h2>Dashboard overview</h2><p>Manage bookings and activity</p><small class="ess-muted">Updated today</small><label>Search<input value="Vendor" /></label><section class="ess-dialog-surface" role="dialog"><h3>Confirm booking</h3><p>Review your event details</p><textarea>Details</textarea></section></section></main>';
+        document.querySelector("#root")!.append(root);
+        const read = (selector: string) => {
+          const el = root.querySelector(selector)!;
+          const style = getComputedStyle(el);
+          return { color: style.color, fill: style.webkitTextFillColor, background: style.backgroundColor };
+        };
+        const values = {
+          panel: read(".ess-panel"),
+          heading: read(".ess-panel h2"),
+          copy: read(".ess-panel > p"),
+          field: read(".ess-panel input"),
+          dialog: read('[role="dialog"]'),
+          dialogHeading: read('[role="dialog"] h3'),
+          dialogCopy: read('[role="dialog"] p'),
+          dialogField: read('[role="dialog"] textarea'),
+        };
+        root.remove();
+        return values;
+      });
+      const ink = theme === "light" ? "rgb(0, 0, 0)" : "rgb(36, 20, 58)";
+      const muted = theme === "light" ? "rgb(32, 32, 32)" : "rgb(73, 52, 95)";
+      expect(result.panel.background, theme).not.toBe("rgba(0, 0, 0, 0)");
+      expect(result.heading.color, theme).toBe(ink);
+      expect(result.copy.color, theme).toBe(muted);
+      expect(result.field.color, theme).toBe(ink);
+      expect(result.dialog.background, theme).not.toBe("rgba(0, 0, 0, 0)");
+      expect(result.dialogHeading.color, theme).toBe(ink);
+      expect(result.dialogCopy.color, theme).toBe(muted);
+      expect(result.dialogField.color, theme).toBe(ink);
+    }
+  }
+});
