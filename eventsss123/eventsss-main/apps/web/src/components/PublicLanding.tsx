@@ -1458,15 +1458,15 @@ export default function PublicLanding({
 
         /* Highest-specificity component contract for the two live marketing paragraphs.
            Their legacy utility classes previously restored slate text in light mode. */
-        .eph-landing[data-theme="light"] section.ephinta-marketing-zone > p.ephinta-right-copy-visible.ephinta-force-visible-description.ephinta-copy-description-force,
-        .eph-landing[data-theme="light"] section.ephinta-marketing-zone > p.ephinta-human-proof.ephinta-right-copy-visible.ephinta-force-visible-tagline.ephinta-copy-tagline-force {
+        #root .eph-landing[data-theme="light"] section.ephinta-marketing-zone > p.ephinta-right-copy-visible.ephinta-force-visible-description.ephinta-copy-description-force,
+        #root .eph-landing[data-theme="light"] section.ephinta-marketing-zone > p.ephinta-human-proof.ephinta-right-copy-visible.ephinta-force-visible-tagline.ephinta-copy-tagline-force {
           color: #202020 !important;
           -webkit-text-fill-color: #202020 !important;
           opacity: 1 !important;
           text-shadow: none !important;
         }
-        .eph-landing[data-theme="colorful"] section.ephinta-marketing-zone > p.ephinta-right-copy-visible.ephinta-force-visible-description.ephinta-copy-description-force,
-        .eph-landing[data-theme="colorful"] section.ephinta-marketing-zone > p.ephinta-human-proof.ephinta-right-copy-visible.ephinta-force-visible-tagline.ephinta-copy-tagline-force {
+        #root .eph-landing[data-theme="colorful"] section.ephinta-marketing-zone > p.ephinta-right-copy-visible.ephinta-force-visible-description.ephinta-copy-description-force,
+        #root .eph-landing[data-theme="colorful"] section.ephinta-marketing-zone > p.ephinta-human-proof.ephinta-right-copy-visible.ephinta-force-visible-tagline.ephinta-copy-tagline-force {
           color: #49345f !important;
           -webkit-text-fill-color: #49345f !important;
           opacity: 1 !important;
