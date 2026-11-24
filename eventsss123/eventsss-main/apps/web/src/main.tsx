@@ -122,7 +122,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <AudioExperience showPrompt autoPlay />
           <OfflineStatus />
           <SyncConflictList />
-          {isNative && <RemoteUpdateNotice />}
+          {isNative && window.matchMedia('(max-width: 767px)').matches && <RemoteUpdateNotice />}
           <EphintaHelpAssistant />
         </>
       </AppRouter>
