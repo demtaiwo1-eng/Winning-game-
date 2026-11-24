@@ -328,3 +328,40 @@ test("shared dashboard panels and dialogs use dark ink in light and multicolor t
     }
   }
 });
+
+
+test("shared text links and EPHINTA header wordmarks use the brand gradient in every theme", async ({ page }) => {
+  await page.goto("/");
+  for (const theme of ["light", "dark", "colorful"] as const) {
+    await page.locator(".eph-theme-select select").selectOption(theme, { force: true });
+    const result = await page.evaluate(() => {
+      const fixture = document.createElement("div");
+      fixture.className = "ess-app";
+      fixture.innerHTML = '<header class="ess-topbar"><button class="ess-brand"><span class="ess-brand-wordmark"><strong>EPHINTA</strong><small>International event infrastructure</small></span></button></header><a class="gradient-link-fixture" href="#home">Open workspace</a>';
+      document.querySelector("#root")!.append(fixture);
+      const read = (element: Element | null) => {
+        if (!element) return null;
+        const style = getComputedStyle(element);
+        return { image: style.backgroundImage, clip: style.backgroundClip, webkitClip: style.webkitBackgroundClip, fill: style.webkitTextFillColor };
+      };
+      const result = {
+        publicLogo: read(document.querySelector(".eph-nav .eph-brand > span")),
+        workspaceLogo: read(fixture.querySelector(".ess-brand-wordmark strong")),
+        link: read(fixture.querySelector(".gradient-link-fixture")),
+        taglineColor: getComputedStyle(fixture.querySelector(".ess-brand-wordmark small")!).color,
+      };
+      fixture.remove();
+      return result;
+    });
+    for (const [label, style] of Object.entries({
+      publicLogo: result.publicLogo,
+      workspaceLogo: result.workspaceLogo,
+      link: result.link,
+    })) {
+      expect(style?.image, label + " gradient in " + theme).toContain("linear-gradient");
+      expect(style?.webkitClip, label + " text clipping in " + theme).toBe("text");
+      expect(style?.fill, label + " gradient text fill in " + theme).toBe("rgba(0, 0, 0, 0)");
+    }
+    expect(result.taglineColor, "tagline remains readable in " + theme).not.toBe("rgba(0, 0, 0, 0)");
+  }
+});
